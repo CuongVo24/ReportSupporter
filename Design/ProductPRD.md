@@ -95,7 +95,7 @@ Core features:
 - **Tháng 1 (Core MVP) Boundary:** Chỉ hỗ trợ lưu trữ liên kết minh chứng đơn giản dưới dạng các trường metadata trong cấu trúc mẫu báo cáo hoặc hiển thị panel dạng tĩnh/placeholder. Chưa có giao diện quản lý riêng hay tự động sinh bảng.
 - **Tháng 2 (Submission MVP / Week 5+) Boundary:**
   - Phát triển giao diện quản lý minh chứng đầy đủ (thêm/sửa/xóa, kiểm tra cú pháp URL ngoại tuyến).
-  - Hỗ trợ quản lý 8 loại minh chứng: video demo, GitHub, deploy link, Drive, Figma, slide, API docs, và test account.
+  - Hỗ trợ quản lý 8 loại minh chứng phổ biến: video demo, GitHub, deploy link, Drive, Figma, slide, API docs, và test account — cộng `other` làm fallback (tổng 9 `EvidenceKind`, xem `Design/Modules/Other/CanonicalTypes.md` §2).
   - Tự động tạo bảng Phụ lục minh chứng (Evidence Appendix Table) tích hợp vào cuối báo cáo và tự động sinh mã QR cho mỗi liên kết minh chứng thông qua thư viện `qrcode`.
   - Tích hợp dữ liệu minh chứng thực tế vào Checker.
 
