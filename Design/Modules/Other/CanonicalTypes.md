@@ -261,7 +261,7 @@ export type CheckResult = {
 
 ## 7. Pipeline Model
 
-Shared AST structures (full contract in `Design/Modules/Other/PipelineContract.md`).
+Shared AST structures (defined here; runtime semantics — caching & worker boundary — in `Design/Modules/Other/PipelineContract.md`).
 
 ```ts
 /**

@@ -25,7 +25,7 @@
 | Function (động từ) | `buildToc`, `parseHeadings`, `numberSections`, `runChecker`, `exportPdf` | `toc`, `headingStuff`, `doIt`, `handle2` | Bắt đầu bằng động từ, mô tả hành động |
 | Boolean | `hasConclusion`, `isOffline`, `shouldNumber` | `conclusion`, `flag`, `check` | Tiền tố `is/has/should` |
 | Checker rule id | `missing-references`, `skipped-heading-level`, `code-block-no-lang` | `rule1`, `checkRefs` | kebab, mô tả lỗi (khớp `ReportIssue.id` prefix) |
-| Type | `ReportSection`, `TocEntry`, `TemplateSchema`, `CheckerRule` | `Section2`, `Data`, `Obj` | PascalCase, danh từ nghiệp vụ |
+| Type | `ReportSection`, `TocNode`, `TemplateSchema`, `CheckRule` | `Section2`, `Data`, `Obj` | PascalCase, danh từ nghiệp vụ (khớp `CanonicalTypes.md`) |
 | Component | `EditorPanel.tsx`, `PreviewPane.tsx`, `IssueList.tsx`, `TemplatePicker.tsx` | `comp.tsx`, `Panel1.tsx` | PascalCase.tsx, mô tả UI |
 | Non-component lib | `markdown-pipeline.ts`, `idb-client.ts`, `toc-normalize.ts` | `utils.ts` (chung chung), `helper.ts` | kebab, một trách nhiệm rõ |
 | Constant | `DEFAULT_TEMPLATE_ID`, `A4_WIDTH_MM`, `DRAFT_STORE_NAME` | `defaultId`, `width` | UPPER_SNAKE cho hằng cấu hình |
