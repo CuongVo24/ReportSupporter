@@ -89,13 +89,13 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 
 ### 2.4. Readiness score tokens (Module 3 — badge 0–100)
 
-> Check module tính **readiness score 0–100** (`Design/Modules/3.Check.md`). Badge điểm dùng ba token ngưỡng dưới đây, KHÔNG tính màu runtime.
+> Check module tính **readiness score 0–100** (`Design/Modules/3.Check.md` §5.3 — công thức trừ điểm theo severity −15/−5/−1). Ngưỡng badge dưới đây phải **khớp 1:1** với §5.3; KHÔNG tính màu runtime.
 
-| Token | Light | Ngưỡng gợi ý |
+| Token | Light | Ngưỡng (khớp 3.Check.md §5.3) |
 | :--- | :--- | :--- |
-| `--rs-color-readiness-good` | `var(--rs-green-600)` | `>= 80` — sẵn sàng nộp |
-| `--rs-color-readiness-medium` | `var(--rs-amber-500)` | `50–79` — còn cảnh báo |
-| `--rs-color-readiness-low` | `var(--rs-red-600)` | `< 50` — còn lỗi chặn |
+| `--rs-color-readiness-good` | `var(--rs-green-600)` | `>= 85` — sẵn sàng nộp |
+| `--rs-color-readiness-medium` | `var(--rs-amber-500)` | `60–84` — còn cảnh báo |
+| `--rs-color-readiness-low` | `var(--rs-red-600)` | `< 60` — còn lỗi chặn |
 
 ### 2.5. Semantic UI tokens — DARK (`[data-theme="dark"]`)
 

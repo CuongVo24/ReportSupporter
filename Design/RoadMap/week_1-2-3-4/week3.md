@@ -38,7 +38,7 @@ Mục tiêu chốt từ MasterRoadMap:
   - Broken/empty image path · skipped heading level · missing figure/table caption · table too wide · code block no language.
   - Text markers (TODO / fix later / lorem ipsum) — đã có từ W1, gom vào engine.
 - Issues grouped by severity (`error | warning | info`) + fix suggestion mỗi issue.
-- Readiness score **draft** (tỉ lệ rule pass → điểm sẵn sàng nộp).
+- Readiness score **draft** (trừ điểm theo severity issue −15/−5/−1, clamp ≥0 → ngưỡng ≥85/60–84/<60; xem `Modules/3.Check.md` §5.3).
 
 ### ⛔ Out of scope
 - A4 print CSS / Times New Roman page layout chi tiết (chuẩn bị token, nhưng layout PDF thật ở W4; hardening ở W7).
@@ -77,7 +77,7 @@ Mục tiêu chốt từ MasterRoadMap:
 
 ### Day 5 — Severity Panel, Readiness Score & QA
 - `[MODIFY]` `src/modules/check/CheckerPanel.tsx` (group by severity + re-run button)
-- `[NEW]` `src/modules/check/readiness-score.ts` (draft score từ tỉ lệ rule pass)
+- `[NEW]` `src/modules/check/readiness-score.ts` (draft score: trừ điểm theo severity −15/−5/−1, clamp ≥0 — `Modules/3.Check.md` §5.3)
 - `[NEW]` `src/modules/check/ReadinessBadge.tsx`
 - `[NEW]` `Design/Reports/Month1/W3/W3_QA_Report.md`, `checker_samples.md`, `build_output.txt`
 
@@ -114,7 +114,7 @@ Mục tiêu chốt từ MasterRoadMap:
 | Numbering không deterministic giữa preview ↔ export | High | Numbering từ một hàm duy nhất trên mdast; export W4 dùng lại (`Modules/2.Format.md` Acceptance). |
 | Checker regex thô gây false positive | Medium | Đọc AST node (`TechnicalStack.md` §3); regex chỉ cho text markers. |
 | Rule logic vỡ thầm khi sửa | Medium | Vitest bắt buộc mỗi rule (`TechnicalStack.md` §7). |
-| Readiness score gây hiểu nhầm "đã hoàn hảo" | Low | Đánh dấu "draft", chỉ phản ánh rule pass, không phải chất lượng nội dung. |
+| Readiness score gây hiểu nhầm "đã hoàn hảo" | Low | Đánh dấu "draft", chỉ phản ánh số/severity issue, không phải chất lượng nội dung. |
 | Checker gọi mạng | High | Cấm network trong Module Check (`VibeCode.md` §4). |
 
 ---
