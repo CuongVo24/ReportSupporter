@@ -34,7 +34,7 @@ Mục tiêu chốt từ MasterRoadMap:
 - Khởi tạo Next.js (App Router) + TypeScript strict + npm scripts (`dev`, `build`, `lint`, `typecheck`).
 - App shell **workspace-first**: route `/` là editor workspace, không landing.
 - Canonical types tại `src/types` (ReportProjectBundle, ReportAsset, EvidenceItem) + zod schema cho template & metadata (khớp [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md)).
-- Template schema chi tiết (requiredMetadata, requiredSections, defaultSections, requiredEvidence, defaultFormatPresetId) + 1 seed: "Software project report".
+- `TemplateSchema` chi tiết (metadataFields, sections, requiredSections, requiredEvidenceKinds, requiresToc — khớp CanonicalTypes §5) + 1 seed: "Software project report".
 - Markdown editor **placeholder** (controlled `<textarea>`) + preview placeholder + placeholder nhập evidence link đơn giản dạng metadata.
 - Local draft save/load proof-of-concept qua IndexedDB (`idb`).
 - Checker issue type + 3 rule văn bản đầu tiên (TODO / lorem / code-language) + checker panel có severity grouping. Chỉ chạy trực tiếp trên main-thread ở W1, viết 1-2 test cơ bản bằng Vitest.
@@ -68,10 +68,10 @@ Mục tiêu chốt từ MasterRoadMap:
 
 ### Day 2 — Product Structure (Types & Template)
 - `[C4]` Initial template schema.
-  - `[NEW]` `src/types/template.ts` (`ReportTemplate`, `TemplateMetadataField`, `TemplateSectionSeed` khớp [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
+  - `[NEW]` `src/types/template.ts` (`TemplateSchema`, `MetadataFieldSpec`, `TemplateSectionSeed` khớp [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
   - `[NEW]` `src/types/schemas.ts` (zod schema cho template + metadata)
 - `[C5]` Software project report template seed.
-  - `[NEW]` `src/modules/write/templates/software-project.ts` (seed sections: Introduction · Members & Responsibility · Implementation · Testing · References · Evidence)
+  - `[NEW]` `src/modules/write/templates/software-project.ts` (seed sections tiếng Việt — khớp `1.Write.md` §3.3: Mở đầu · Thành viên & Phân công · Triển khai · Kiểm thử · Kết luận · Tài liệu tham khảo · Minh chứng)
 - `[C6]` Report project & section types (canonical).
   - `[NEW]` `src/types/report.ts` (`ReportProject`, `ReportSection`, `ReportProjectBundle` — đúng shape [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
   - `[NEW]` `src/types/index.ts` (re-export single surface)

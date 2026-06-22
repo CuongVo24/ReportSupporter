@@ -4,7 +4,7 @@
 
 - **Goal:** Build a reporting workspace that helps students and project teams write, format, check, and export complete submission-ready reports.
 - **Core value:** Fast report creation, usable export, academic formatting, pre-submit checking, and evidence-aware submission workflow.
-- **MVP stack:** Next.js + Node.
+- **MVP stack:** Next.js (App Router) — **client-first**, gần như không server: editor/format/check/export đều chạy trong trình duyệt, PDF qua browser-print, **không backend bắt buộc** ở Core MVP (Node chỉ là runtime dev/build; Puppeteer server-side là hardening tùy chọn sau — xem `Design/Modules/Other/TechnicalStack.md`).
 - **Privacy posture:** Core report editing should work without mandatory login.
 
 ## Phase 1 - Core MVP: Report Workspace (Weeks 1-4)
