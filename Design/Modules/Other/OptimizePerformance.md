@@ -57,7 +57,7 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 | `katex` (+ `rehype-katex`) | Lần đầu doc có `$...$` / `$$...$$` | dynamic import nhánh math của pipeline trong worker |
 | `rehype-highlight` (highlight.js) | Lần đầu có code block có language | dynamic import; nếu doc không có code, không tải |
 | Export path | Khi user bấm "Export" | route export tách bundle riêng |
-| `puppeteer` | **Later hardening only**, worker/server-side nếu được approve | Heavy dep, **không** vào client bundle bao giờ |
+| `puppeteer` | **Later hardening only**, disabled behind feature flag | Heavy server dep (default OFF, not installed in Core MVP) |
 | `docx` | Khi user bấm Export DOCX | dynamic import phía client/worker |
 
 * Dùng `next/dynamic` cho component nặng (vd component preview render mermaid) với `ssr: false` — chúng cần DOM.
@@ -91,12 +91,16 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 
 > Export là tác vụ nặng nhất. PDF MVP dùng browser print / print CSS từ HTML đã format. Puppeteer chỉ là hardening sau nếu có Contract approve. DOCX (`docx` lib) sinh từ AST.
 
-### 6.1. PDF (browser print first, Puppeteer later)
+### 6.1. PDF Exporters: Browser Print vs Puppeteer
 
-* Chạy trong Node route, **không** chiếm main thread của trình duyệt người dùng.
-* **Queue / serialize:** mỗi instance Chromium tốn RAM; với solo-dev một người dùng, giới hạn **1 job render tại một thời điểm** (hàng đợi đơn giản), tránh mở nhiều Chromium song song gây OOM. Reuse browser instance giữa các request thay vì launch mới mỗi lần.
-* **Streaming response:** stream file PDF về client thay vì buffer toàn bộ vào RAM rồi mới gửi.
-* UI hiển thị trạng thái "đang export" (đọc token toast `--rs-z-toast`); request bất đồng bộ, không khoá workspace.
+- **`exportPdfViaBrowserPrint()` (Core MVP, default):**
+  * Chạy hoàn toàn ở **client-side** sử dụng `window.print()` và print CSS.
+  * **Không** chiếm main thread lâu, không gọi Node route, không tốn tài nguyên server.
+- **`renderPdfWithPuppeteer()` (Later hardening only, default OFF):**
+  * Chạy trong Node route ở backend, **không** chiếm main thread của trình duyệt người dùng.
+  * **Queue / serialize:** mỗi instance Chromium tốn RAM; giới hạn **1 job render tại một thời điểm** (hàng đợi đơn giản), tránh mở nhiều Chromium song song gây OOM. Reuse browser instance giữa các request thay vì launch mới mỗi lần.
+  * **Streaming response:** stream file PDF về client thay vì buffer toàn bộ vào RAM rồi mới gửi.
+  * UI hiển thị trạng thái "đang export" (đọc token toast `--rs-z-toast`); request bất đồng bộ, không khoá workspace.
 
 ### 6.2. DOCX (`docx` lib — off the UI thread)
 

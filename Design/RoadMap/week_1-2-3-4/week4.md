@@ -57,9 +57,9 @@ Mục tiêu chốt từ MasterRoadMap:
 - `[NEW]` `src/modules/export/build-cover-page.ts` (metadata → cover HTML)
 
 ### Day 2 — PDF Export via Browser Print
-- `[MODIFY]` `src/modules/export/export-pdf.ts` (open/trigger print surface from formatted HTML)
+- `[MODIFY]` `src/modules/export/export-pdf.ts` (implement `exportPdfViaBrowserPrint()` to open/trigger print surface from formatted HTML)
 - `[NEW]` `src/modules/export/print-preview.ts` (prepare printable HTML surface)
-- *Lý do:* Có PDF submission-friendly sớm, không kéo Chromium/Puppeteer vào MVP.
+- *Lý do:* Có PDF submission-friendly sớm, không kéo Chromium/Puppeteer vào MVP (để dành `renderPdfWithPuppeteer()` cho later hardening).
 
 ### Day 3 — DOCX Export via `docx`
 - `[MODIFY]` `src/modules/export/export-docx.ts` (mdast AST → `docx` Document: heading numbering, table, code block, image, caption)
@@ -68,7 +68,7 @@ Mục tiêu chốt từ MasterRoadMap:
 ### Day 4 — Export Status & Error Handling
 - `[NEW]` `src/modules/export/ExportPanel.tsx` (chọn target, trạng thái idle/running/success/error)
 - `[NEW]` `src/modules/export/use-export.ts` (gọi export, surface error — không nuốt exception)
-- `[NEW]` `src/types/export.ts` (`ExportTarget`, `ExportResult`, `ExportStatus`)
+- `[NEW]` `src/types/export.ts` (`ExportTarget`, `ExportStatus`, `ExportResult`, `ExportJob`)
 - `[MODIFY]` `src/modules/export/index.ts` (public surface)
 
 ### Day 5 — Acceptance Report & QA
