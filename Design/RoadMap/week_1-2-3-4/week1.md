@@ -33,11 +33,11 @@ Mục tiêu chốt từ MasterRoadMap:
 ### ✅ In scope
 - Khởi tạo Next.js (App Router) + TypeScript strict + npm scripts (`dev`, `build`, `lint`, `typecheck`).
 - App shell **workspace-first**: route `/` là editor workspace, không landing.
-- Canonical types tại `src/types` + zod schema cho template & metadata.
-- Template schema + 1 seed: "Software project report".
-- Markdown editor **placeholder** (controlled `<textarea>` — *chưa* CodeMirror) + preview placeholder.
+- Canonical types tại `src/types` (ReportProjectBundle, ReportAsset, EvidenceItem) + zod schema cho template & metadata (khớp [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md)).
+- Template schema chi tiết (requiredMetadata, requiredSections, defaultSections, requiredEvidence, defaultFormatPresetId) + 1 seed: "Software project report".
+- Markdown editor **placeholder** (controlled `<textarea>`) + preview placeholder + placeholder nhập evidence link đơn giản dạng metadata.
 - Local draft save/load proof-of-concept qua IndexedDB (`idb`).
-- Checker issue type + 3 rule văn bản đầu tiên (TODO / lorem / code-language) + checker panel có severity grouping.
+- Checker issue type + 3 rule văn bản đầu tiên (TODO / lorem / code-language) + checker panel có severity grouping. Chỉ chạy trực tiếp trên main-thread ở W1, viết 1-2 test cơ bản bằng Vitest.
 - HTML export stub + PDF/DOCX service **placeholder** (chưa render thật).
 - Build verification + W1 QA report.
 
@@ -68,12 +68,12 @@ Mục tiêu chốt từ MasterRoadMap:
 
 ### Day 2 — Product Structure (Types & Template)
 - `[C4]` Initial template schema.
-  - `[NEW]` `src/types/template.ts` (`ReportTemplate`, `TemplateSection`)
+  - `[NEW]` `src/types/template.ts` (`ReportTemplate`, `TemplateMetadataField`, `TemplateSectionSeed` khớp [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
   - `[NEW]` `src/types/schemas.ts` (zod schema cho template + metadata)
 - `[C5]` Software project report template seed.
   - `[NEW]` `src/modules/write/templates/software-project.ts` (seed sections: Introduction · Members & Responsibility · Implementation · Testing · References · Evidence)
 - `[C6]` Report project & section types (canonical).
-  - `[NEW]` `src/types/report.ts` (`ReportProject`, `ReportSection` — đúng shape Contract W1 §4)
+  - `[NEW]` `src/types/report.ts` (`ReportProject`, `ReportSection`, `ReportProjectBundle` — đúng shape [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
   - `[NEW]` `src/types/index.ts` (re-export single surface)
 
 ### Day 3 — Editor Foundation (placeholder)
@@ -87,13 +87,14 @@ Mục tiêu chốt từ MasterRoadMap:
 
 ### Day 4 — Checker Foundation
 - `[C10]` Checker issue type.
-  - `[MODIFY]` `src/types/report.ts` → thêm `ReportIssue` (đúng shape Module 3 / Contract W1)
+  - `[MODIFY]` `src/types/report.ts` → thêm `ReportIssue` (đúng shape [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
 - `[C11]` Text checks: TODO / lorem / code-language.
   - `[NEW]` `src/modules/check/rules/text-markers.ts` (TODO · fix later · lorem ipsum)
   - `[NEW]` `src/modules/check/rules/code-language.ts` (code block thiếu language)
-  - `[NEW]` `src/modules/check/run-checker.ts` (gom rules → `ReportIssue[]`)
+  - `[NEW]` `src/modules/check/run-checker.ts` (gom rules → `ReportIssue[]`, chạy trực tiếp trên main thread, không worker)
 - `[C12]` Checker panel + severity grouping.
   - `[NEW]` `src/modules/check/CheckerPanel.tsx` (nhóm theo `error | warning | info`)
+- *Lưu ý:* Chỉ cần viết 1-2 unit test rất nhỏ cho các rule văn bản bằng Vitest để verify test runner. Không over-engineer checker engine ở W1.
 
 ### Day 5 — Export Stub & QA
 - `[C13]` HTML export stub.

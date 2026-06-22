@@ -2,6 +2,8 @@
 
 This contract defines the unified data structures, caching strategy, and thread boundaries for the Markdown-to-AST parsing pipeline. It ensures that the Write, Format, Check, and Export modules consume a single source of truth without redundant parsing.
 
+> **Lưu ý:** Các kiểu dữ liệu cơ bản khác (như `ReportProject`, `ReportSection`, `EvidenceItem`, `FormatPreset`) được định nghĩa tập trung tại [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md).
+
 ---
 
 ## 1. Data Structures
