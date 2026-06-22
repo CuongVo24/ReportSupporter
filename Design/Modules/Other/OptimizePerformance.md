@@ -57,7 +57,7 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 | `katex` (+ `rehype-katex`) | Lần đầu doc có `$...$` / `$$...$$` | dynamic import nhánh math của pipeline trong worker |
 | `rehype-highlight` (highlight.js) | Lần đầu có code block có language | dynamic import; nếu doc không có code, không tải |
 | Export path | Khi user bấm "Export" | route export tách bundle riêng |
-| `puppeteer` | **Chỉ server-side**, khi gọi route PDF | `TechnicalStack.md` §4 — heavy dep, **không** vào client bundle bao giờ |
+| `puppeteer` | **Later hardening only**, worker/server-side nếu được approve | Heavy dep, **không** vào client bundle bao giờ |
 | `docx` | Khi user bấm Export DOCX | dynamic import phía client/worker |
 
 * Dùng `next/dynamic` cho component nặng (vd component preview render mermaid) với `ssr: false` — chúng cần DOM.
@@ -72,7 +72,7 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 * **Section-level rendering:** preview dựng từng `ReportSection` thành block riêng. Chỉ section trong viewport (+ buffer 1-2 section trên/dưới) được render đầy đủ; section ngoài viewport giữ placeholder cao đúng bằng chiều cao đã đo.
 * **Virtualization bằng `IntersectionObserver`** (API có sẵn, không cần lib): observer phát hiện section sắp vào màn hình → render thật; section rời màn hình lâu → có thể thu về placeholder để nhẹ DOM.
 * **Section navigator** (Key Screen ở `1.Write.md`) nhảy thẳng tới section bằng anchor, không cuộn qua toàn bộ DOM nặng.
-* **Lưu ý export:** khi export, **tắt** virtualization và render đầy đủ 100% section (Puppeteer/`docx` cần toàn bộ nội dung). Virtualization chỉ là tối ưu *màn hình*, không bao giờ làm mất nội dung khi xuất file.
+* **Lưu ý export:** khi export, **tắt** virtualization và render đầy đủ 100% section (browser print/`docx`/Puppeteer later đều cần toàn bộ nội dung). Virtualization chỉ là tối ưu *màn hình*, không bao giờ làm mất nội dung khi xuất file.
 
 ---
 
@@ -89,9 +89,9 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 
 ## 6. 📤 EXPORT PERFORMANCE
 
-> Export là tác vụ nặng nhất. PDF (Puppeteer) chạy **server-side** (`TechnicalStack.md` §4, **stub tới W4**). DOCX (`docx` lib) sinh từ AST.
+> Export là tác vụ nặng nhất. PDF MVP dùng browser print / print CSS từ HTML đã format. Puppeteer chỉ là hardening sau nếu có Contract approve. DOCX (`docx` lib) sinh từ AST.
 
-### 6.1. PDF (Puppeteer — server-side, stub tới W4)
+### 6.1. PDF (browser print first, Puppeteer later)
 
 * Chạy trong Node route, **không** chiếm main thread của trình duyệt người dùng.
 * **Queue / serialize:** mỗi instance Chromium tốn RAM; với solo-dev một người dùng, giới hạn **1 job render tại một thời điểm** (hàng đợi đơn giản), tránh mở nhiều Chromium song song gây OOM. Reuse browser instance giữa các request thay vì launch mới mỗi lần.
@@ -138,7 +138,7 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 | **Autosave 1 lần ghi** | `< 50ms` main-thread cost | Phần nặng ở `requestIdleCallback`/worker |
 | **First load workspace (TTI)** | `< 2.5s` | Lazy mermaid/katex/export khỏi initial bundle (§3) |
 | **Initial JS bundle (workspace)** | càng nhỏ càng tốt | **Không** chứa puppeteer/mermaid/docx |
-| **Export PDF (40 trang)** | `< 8s` server-side | Puppeteer reuse instance + queue 1 job (§6.1) |
+| **Export PDF (40 trang)** | browser print surface chuẩn bị nhanh; hardening server target `< 8s` nếu có | Browser print first; Puppeteer reuse instance + queue 1 job chỉ khi bật later hardening |
 | **Export DOCX (40 trang)** | `< 4s` | `docx` lib trong worker (§6.2) |
 | **Scroll preview (40 trang)** | `≥ 50 fps` | Virtualization theo section (§4) |
 | **RAM tab khi mở 40 trang** | ổn định, không leak | Virtualization + thu placeholder section ngoài viewport |
@@ -147,7 +147,7 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 
 ## 9. 📎 CROSS-REFERENCES
 
-* `Design/Modules/Other/TechnicalStack.md` — stack đã khoá (unified pipeline, `idb`, puppeteer server-side, `docx`); mọi kỹ thuật ở đây bám đúng các lib này.
+* `Design/Modules/Other/TechnicalStack.md` — stack đã khoá (unified pipeline, `idb`, browser-print PDF first, `docx`, Puppeteer later); mọi kỹ thuật ở đây bám đúng các lib này.
 * `Design/Modules/1.Write.md` — editor/preview/section/autosave mà §1, §4, §5 tối ưu.
 * `Design/Modules/2.Format.md` — preset A4/typography; export tái dùng AST đã format (§6.3).
 * `Design/Modules/3.Check.md` — checker offline + `ReportIssue.severity`; §7 tối ưu re-check.

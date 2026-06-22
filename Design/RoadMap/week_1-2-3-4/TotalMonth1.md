@@ -35,7 +35,7 @@ Cuối Tháng 1, một sinh viên phải có thể: chọn template → điền 
 
 ### 📤 Week 4: Export MVP
 *Trọng tâm: export thật, đóng vòng MVP.*
-- HTML thật (print CSS A4) + PDF thật (Puppeteer server-side) + DOCX thật (`docx` từ mdast).
+- HTML thật (print CSS A4) + PDF usable qua browser print + DOCX basic (`docx` từ mdast).
 - Cover page metadata, export status + error handling.
 - First acceptance report trong `Design/Reports/Month1/W4/`.
 
@@ -67,7 +67,7 @@ Cuối Tháng 1, một sinh viên phải có thể: chọn template → điền 
 
 | Risk | Level | Mitigation |
 |---|---|---|
-| Export stack nặng làm chậm cả phase | High | Stub W1 → real W4; PDF chỉ server-side (`TechnicalStack.md` §4). |
+| Export stack nặng làm chậm cả phase | High | Stub W1 → browser-print PDF W4; Puppeteer chỉ hardening sau khi core ổn. |
 | Preview ↔ export không khớp | High | Một pipeline `unified` + một hàm numbering dùng chung cho preview/check/export. |
 | Scope phình thành converter tổng quát | High | Bám `ProductPRD.md` §6 Non-goals; acceptance khoá vào report template. |
 | Solo dev không có review chéo | Medium | Contract-first + Vitest + 4 trạm gác push (`VibeCode.md`). |

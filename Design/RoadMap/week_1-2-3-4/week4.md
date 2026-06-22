@@ -6,9 +6,9 @@
 
 ## 1. 🎯 Week Goal / Theme
 
-**Theme:** *Replace export stubs with real HTML / PDF / DOCX — close the MVP loop.*
+**Theme:** *Replace export stubs with usable HTML / browser-print PDF / DOCX — close the MVP loop.*
 
-Tuần 4 là tuần "đóng vòng" MVP: biến các export stub/placeholder (W1) thành export **thật**. Đây là tuần PDF/DOCX thật được phép xuất hiện (đúng Risk W1: "implement real export in week 4"). PDF render bằng **Puppeteer** từ HTML đã format (server-side Node route), DOCX sinh bằng **`docx`** từ mdast AST. Cuối tuần ra **acceptance report** đầu tiên trong `Design/Reports/`.
+Tuần 4 là tuần "đóng vòng" MVP: biến các export stub/placeholder (W1) thành export **dùng được**. HTML là export thật, PDF MVP đi qua browser print / print CSS từ HTML đã format, DOCX sinh bằng **`docx`** từ mdast AST ở mức editable basic. Puppeteer chuyển sang hardening sau nếu browser print không đủ. Cuối tuần ra **acceptance report** đầu tiên trong `Design/Reports/`.
 
 Mục tiêu chốt từ MasterRoadMap:
 - Export Markdown to HTML.
@@ -24,7 +24,7 @@ Mục tiêu chốt từ MasterRoadMap:
 - **Builds:** Module 4 — Export (`src/modules/export`) ở mức MVP đầy đủ 3 target.
 - **Depends on:** W2 pipeline `unified` (HTML), W3 Format (heading numbering + TOC + caption), W1 types + export service skeleton.
 - **Depended on by:** Phase 2 — W7 (PDF page-break / DOCX layout hardening), W8 (submission package gói export history + evidence.zip).
-- **Node usage:** PDF render chạy **server-side** trong Node route (`TechnicalStack.md` §1: "chỉ dùng server-side cho tác vụ export nặng").
+- **Node usage:** MVP không cần server-side PDF; Puppeteer worker/service là hardening sau.
 
 ---
 
@@ -32,7 +32,7 @@ Mục tiêu chốt từ MasterRoadMap:
 
 ### ✅ In scope
 - HTML export thật: pipeline `unified` + print CSS nhúng (A4, Times New Roman 13/14, line-height 1.5, justify).
-- PDF export thật: Puppeteer render HTML đã format trong Chromium headless (server-side).
+- PDF export usable: browser print / print CSS từ HTML đã format.
 - DOCX export thật: `docx` sinh từ mdast AST (deterministic, không LibreOffice/Pandoc).
 - Cover page metadata (project title, school, course, lecturer, members) trong cả 3 format.
 - Export status UI (idle / running / success / error) + error visible & recoverable.
@@ -56,10 +56,10 @@ Mục tiêu chốt từ MasterRoadMap:
 - `[NEW]` `src/modules/export/print-css.ts` (A4, Times New Roman 13/14, line-height 1.5, justify — token từ Format W3)
 - `[NEW]` `src/modules/export/build-cover-page.ts` (metadata → cover HTML)
 
-### Day 2 — PDF Export via Puppeteer (server-side)
-- `[NEW]` `src/app/api/export/pdf/route.ts` (Node route, server-side)
-- `[MODIFY]` `src/modules/export/export-pdf.ts` (Puppeteer render HTML formatted → PDF buffer, A4/header/footer/page number)
-- *Lý do:* Puppeteer là heavy dep, chỉ chạy server-side (`TechnicalStack.md` §4).
+### Day 2 — PDF Export via Browser Print
+- `[MODIFY]` `src/modules/export/export-pdf.ts` (open/trigger print surface from formatted HTML)
+- `[NEW]` `src/modules/export/print-preview.ts` (prepare printable HTML surface)
+- *Lý do:* Có PDF submission-friendly sớm, không kéo Chromium/Puppeteer vào MVP.
 
 ### Day 3 — DOCX Export via `docx`
 - `[MODIFY]` `src/modules/export/export-docx.ts` (mdast AST → `docx` Document: heading numbering, table, code block, image, caption)
@@ -81,7 +81,6 @@ Mục tiêu chốt từ MasterRoadMap:
 
 | Library | Why (this week) | Stack ref |
 |---|---|---|
-| `puppeteer` | PDF render từ HTML formatted (headless Chromium, server-side) — A4/page-break/header-footer/page number trung thực | §4 |
 | `docx` | DOCX sinh trực tiếp từ mdast AST, deterministic, không cần LibreOffice/Pandoc | §4 |
 
 > HTML export tái dùng `rehype-stringify` (đã cài W2). **CHƯA cài:** `qrcode` (→W5), `pptxgenjs` (→Phase 3).
@@ -91,7 +90,7 @@ Mục tiêu chốt từ MasterRoadMap:
 ## 6. 📤 Deliverables
 
 - Export HTML thật (print CSS A4 + cover page).
-- Export PDF thật qua Puppeteer (server-side Node route).
+- Export PDF usable qua browser print / print CSS.
 - Export DOCX thật qua `docx` từ mdast.
 - 3 format giữ heading structure / table / code block / image / caption nhất quán.
 - Export status UI + error visible & recoverable.
@@ -103,7 +102,7 @@ Mục tiêu chốt từ MasterRoadMap:
 
 | Risk | Level | Mitigation |
 |---|---|---|
-| Puppeteer/Chromium nặng, deploy/CI khó | High | Chỉ server-side route; document yêu cầu Chromium; chấp nhận heavy dep vì đúng layout học thuật (`TechnicalStack.md` §4). |
+| Browser print khác nhau giữa trình duyệt | Medium | Dùng print CSS chuẩn A4; ghi rõ header/footer/page number là best-effort ở MVP, Puppeteer hardening sau. |
 | PDF ≠ preview HTML (numbering/caption lệch) | High | PDF render từ chính HTML pipeline + numbering W3 (cùng nguồn AST). |
 | DOCX không trung thực Markdown phức tạp | Medium | Map mdast node có kiểm soát; test trên sample đa dạng (table/code/math/image). |
 | Export nuốt exception | Medium | `ExportResult` typed, error visible & recoverable (`Modules/4.Export.md` Acceptance). |
@@ -120,6 +119,6 @@ Mục tiêu chốt từ MasterRoadMap:
 - [ ] 3 export (HTML/PDF/DOCX) chạy thật trên sample report.
 - [ ] Cover page metadata + heading + table + code + image + caption đúng cả 3 format.
 - [ ] Export error visible & recoverable (không nuốt exception).
-- [ ] PDF render từ cùng HTML/numbering với preview (deterministic).
+- [ ] PDF browser print dùng cùng HTML/numbering với preview (deterministic best-effort).
 - [ ] **First acceptance report** + samples tại `Design/Reports/Month1/W4/`.
 - [ ] Commit kèm contract, branch `feature/W4-export-mvp`.

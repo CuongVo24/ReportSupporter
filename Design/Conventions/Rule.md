@@ -25,13 +25,13 @@ Use **only** the approved stack in `TechnicalStack.md`. **DO NOT** suggest or in
 
 * **Framework:** `Next.js (App Router) + TypeScript strict`. Route đầu tiên = workspace, không phải landing page.
 * **Markdown pipeline:** `unified` / `remark` / `rehype` — dùng chung cho Format, Check, Export. Checker đọc AST, không regex thô (trừ check văn bản như `TODO`).
-* **Export:** PDF = `puppeteer` (server-side, **stub tới W4**); DOCX = `docx`; HTML = `rehype-stringify`.
+* **Export:** HTML = `rehype-stringify`; PDF MVP = browser print / print CSS; DOCX = `docx`; Puppeteer chỉ là hardening sau khi có Contract approve.
 * **Storage:** IndexedDB qua `idb`. **No backend, no auth, no cloud** ở MVP.
 
 | ✅ DO | ❌ DON'T |
 |---|---|
 | Dùng đúng lib trong `TechnicalStack.md` | `npm install` lib ngoài danh sách (TipTap, Pandoc, react-pdf, axios...) |
-| PDF qua `puppeteer` (server route, stub tới W4) | Tự build pipeline PDF riêng / dùng `@react-pdf/renderer` |
+| PDF qua browser print/print CSS từ HTML đã format | Tự build pipeline PDF riêng / dùng `@react-pdf/renderer` |
 | HTML qua `rehype-stringify` từ AST chung | Sinh HTML bằng template string thủ công |
 | Lưu draft bằng `idb` (IndexedDB) | Thêm backend DB / cloud SDK / localStorage cho draft lớn |
 

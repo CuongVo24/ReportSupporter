@@ -25,8 +25,8 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
             │                                                  │                        │     → rehype-katex
             ▼                                                  ▼                        │     → rehype-highlight
    remark-rehype → hast ──► rehype-katex ──► rehype-highlight ──► rehype-stringify ─────┤     → rehype-stringify
-            │                                                                            ├─ PDF: HTML → puppeteer
-            ▼                                                                            │     (Chromium, server, W4)
+            │                                                                            ├─ PDF: HTML → browser print
+            ▼                                                                            │     (Puppeteer worker later)
    PREVIEW (client) + mermaid render (client-side / Chromium khi PDF)                    └─ DOCX: mdast → docx
 ```
 
@@ -39,7 +39,7 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 * **Framework:** `Next.js` (App Router) + `React` + `TypeScript` (strict mode bật `"strict": true`).
 * **Package manager:** `npm` (scripts: `dev`, `build`, `lint`, `typecheck` — khớp Contract W1).
 * **Rendering posture:** Workspace-first. Route đầu tiên (`/`) PHẢI là editor workspace, **không** phải landing/marketing page.
-* **Node usage:** chỉ dùng server-side cho tác vụ export nặng (PDF). Phần Write/Format/Check chạy được hoàn toàn client-side.
+* **Node usage:** MVP hạn chế server-side; PDF first path dùng browser print/print CSS. Server-side Puppeteer chỉ là hardening sau nếu có Contract approve.
 
 ---
 
@@ -61,7 +61,7 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 * **Math (LaTeX):** `remark-math` → `rehype-katex` + `katex`
 * **Code highlight:** `rehype-highlight` (highlight.js — deterministic, không cần build step như Shiki)
 * **Markdown → HTML:** `remark-rehype` → `rehype-stringify`
-* **Diagrams:** `mermaid` — render **client-side** (Mermaid cần DOM); ở export PDF, Puppeteer sẽ render trong Chromium nên Mermaid vẫn ra hình.
+* **Diagrams:** `mermaid` — render **client-side** (Mermaid cần DOM). PDF MVP dùng browser print từ DOM đã render; Puppeteer worker later cũng render lại DOM trong Chromium nếu được approve.
 
 **Nguyên tắc:** Checker (Module 3) đọc **mdast/hast AST** (heading levels, code lang, image nodes, table width) — KHÔNG regex thô trên string trừ các check văn bản (`TODO`, `lorem ipsum`).
 
@@ -72,11 +72,11 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 | Target | Library | Ghi chú |
 |---|---|---|
 | `report.html` | `rehype-stringify` + print CSS nhúng | Output của pipeline §3 |
-| `report.pdf` | **`puppeteer`** (headless Chromium) render HTML đã format | **Heavy dep → STUB tới W4** (đúng Risk Contract W1). Chạy server-side trong Node route. Trung thực A4 / page-break / header-footer / page number |
-| `report.docx` | **`docx`** (npm) sinh trực tiếp từ mdast AST | Deterministic, **không** cần LibreOffice/Pandoc |
+| `report.pdf` | Browser print / print CSS từ HTML đã format | MVP first path, không kéo Chromium sớm. Submission-friendly nhưng page number/header-footer là best-effort theo browser |
+| `report.docx` | **`docx`** (npm) sinh trực tiếp từ mdast AST | Editable version, best-effort parity, **không** cần LibreOffice/Pandoc |
 
 * **CẤM** cho MVP: Pandoc binary, LibreOffice headless, `@react-pdf/renderer` (không trung thực Markdown phức tạp).
-* PDF dùng Puppeteer vì cần đúng layout học thuật (A4, Times New Roman 13/14, line-height 1.5, justify, chapter-break) trong `Modules/2.Format.md`.
+* Puppeteer không còn là PDF first path của MVP. Nếu cần header/footer/page number chính xác hơn, thêm Puppeteer bằng Contract riêng sau khi HTML/browser-print ổn.
 
 ---
 
@@ -121,14 +121,14 @@ Vì sao chọn — và vì sao **loại** lựa chọn khác. Đây là lý do s
 
 | Layer | ✅ Chọn | ❌ Rejected alternatives | Lý do loại |
 |---|---|---|---|
-| **Framework** | Next.js (App Router) + TS strict | Vite SPA thuần / CRA | Cần server route cho Puppeteer (PDF) sau này; App Router cho workspace-first + 1 server boundary gọn |
+| **Framework** | Next.js (App Router) + TS strict | Vite SPA thuần / CRA | Workspace-first + server boundary sẵn cho export hardening sau này |
 | **Editor** | `<textarea>` (W1) → CodeMirror 6 (W2+) | TipTap / Slate / Lexical (WYSIWYG) | Sai triết lý "Markdown-first"; contenteditable khó deterministic, lock-in nặng |
 | **Markdown core** | `unified` + remark/rehype | `markdown-it`, `marked` | Cần AST chung (mdast/hast) cho Format/Check/Export; remark-* cho plugin chuẩn (gfm/math) |
 | **Code highlight** | `rehype-highlight` (highlight.js) | Shiki | Shiki cần build/theme step + bất tiện deterministic ở client; highlight.js đủ & nhẹ |
 | **Math** | `remark-math` + `rehype-katex` + `katex` | MathJax | KaTeX nhanh, render đồng nhất, deterministic hơn cho export |
-| **Diagrams** | `mermaid` (client-side) | Graphviz/PlantUML (cần binary/server) | Mermaid render trong DOM + Chromium (Puppeteer) nên export PDF vẫn ra hình, không cần binary ngoài |
-| **PDF** | `puppeteer` (Chromium, server, stub→W4) | `@react-pdf/renderer`, `jsPDF`, Pandoc/LibreOffice | Cần trung thực layout học thuật A4/page-break/header-footer; render từ chính HTML đã format |
-| **DOCX** | `docx` (npm, từ mdast) | Pandoc, LibreOffice headless | Deterministic, không cần binary ngoài, sinh trực tiếp từ AST |
+| **Diagrams** | `mermaid` (client-side) | Graphviz/PlantUML (cần binary/server) | Mermaid render trong DOM; browser print/Puppeteer later đều dùng DOM đã render |
+| **PDF** | Browser print / print CSS first, Puppeteer later | `@react-pdf/renderer`, `jsPDF`, Pandoc/LibreOffice | Có PDF dùng sớm từ HTML source of truth; Puppeteer chỉ hardening khi cần vận hành riêng |
+| **DOCX** | `docx` (npm, từ mdast) | Pandoc, LibreOffice headless | Editable best-effort, không cần binary ngoài, sinh trực tiếp từ AST |
 | **Storage** | IndexedDB qua `idb` | localStorage / backend DB / cloud SDK | Non-goals §6 (no cloud/auth); IndexedDB chứa được draft lớn, sống qua refresh |
 | **Validation** | `zod` | yup, io-ts, ajv | API gọn, type-inference tốt, dùng ở mọi I/O boundary |
 | **Test** | `Vitest` | Jest | Tích hợp tốt với Vite/TS, nhanh; đủ cho Checker unit test |
@@ -145,8 +145,9 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | **W1 (bootstrap)** | `next`, `react`, `react-dom`, `typescript`, `eslint`, `prettier`, `vitest`, `zod`, `idb` | Project shell + types + autosave PoC. **Editor = `<textarea>`, chưa cài editor lib** (Risk W1). Export = stub. |
 | **W2 (Write)** | `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-stringify` | Editor thật + preview qua pipeline cơ bản. |
 | **W3 (Format/Check)** | `remark-math`, `rehype-katex`, `katex`, `rehype-highlight`, `mermaid` | Math/code/diagram cho preview; Format & Checker đọc AST. |
-| **W4 (Export)** | `puppeteer`, `docx` | Mở stub PDF/DOCX thật (đúng Risk Contract W1: heavy dep tới W4 mới cài). |
-| **Phase 2 (W5)** | `qrcode` | Evidence Kit (deferred). |
+| **W4 (Export)** | `docx` | HTML + browser-print PDF first path; DOCX basic editable. Puppeteer chưa cài trong MVP nếu chưa có Contract hardening. |
+| **Phase 2 (W5)** | `qrcode` | Evidence Kit QR (deferred). |
+| **Export hardening (later)** | `puppeteer` | Worker/service riêng cho PDF chính xác hơn khi browser print không đủ. |
 | **Phase 3** | `pptxgenjs`, `playwright` | Present export + E2E (deferred). |
 
 > ⚠️ AI **không** được "cài trước cho tiện". Lib chỉ xuất hiện trong `package.json` đúng tuần dùng nó. Cài lệch lịch / lib ngoài bảng = vi phạm `Rule.md` §2.
@@ -155,10 +156,10 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 
 ## 8d. 📌 VERSION-PINNING POLICY
 
-* **Pin chính xác (exact):** Mọi runtime dep ghi version cứng (VD `"katex": "0.16.x"` → pin số cụ thể, **không** dùng `^`/`~`) để giữ **deterministic** preview ↔ export. Đổi version Markdown/KaTeX/Puppeteer có thể đổi output render.
+* **Pin chính xác (exact):** Mọi runtime dep ghi version cứng (VD `"katex": "0.16.x"` → pin số cụ thể, **không** dùng `^`/`~`) để giữ **deterministic** preview ↔ export. Đổi version Markdown/KaTeX/export renderer có thể đổi output render.
 * **Lockfile bắt buộc:** Commit `package-lock.json`. CI/local cài bằng `npm ci` (tôn trọng lockfile), không `npm install` tuỳ tiện ở môi trường build.
 * **Nâng version = một task có Contract:** Bump major/minor của lib pipeline/export phải có Contract riêng + chạy lại evidence export mẫu để xác nhận output không vỡ (`Design/Reports/`).
-* **Puppeteer Chromium:** ghim cả version Puppeteer (kéo Chromium tương ứng) — đây là nguồn dễ gây non-deterministic nhất cho PDF.
+* **Puppeteer Chromium (later only):** nếu bật hardening sau, ghim cả version Puppeteer (kéo Chromium tương ứng) — đây là nguồn dễ gây non-deterministic nhất cho PDF.
 * **Không auto-upgrade:** Tắt/không dùng bot bump tự động cho runtime dep ở MVP — mọi thay đổi version đi qua review thủ công.
 
 ---
@@ -174,6 +175,7 @@ src/
     format/             # Module 2 — numbering, TOC, A4 presets
     check/              # Module 3 — checker engine + rules (Vitest)
     export/             # Module 4 — html / pdf / docx exporters
+    evidence/           # Supporting module — evidence kit (Phase 2)
   lib/                  # unified pipeline, idb client, helpers
   types/                # canonical types (single source) + zod schemas
 ```

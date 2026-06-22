@@ -3,7 +3,7 @@
 ## Project Overview
 
 - **Goal:** Build a reporting workspace that helps students and project teams write, format, check, and export complete submission-ready reports.
-- **Core value:** Fast report creation, academic formatting, pre-submit checking, and multi-format export.
+- **Core value:** Fast report creation, usable export, academic formatting, pre-submit checking, and evidence-aware submission workflow.
 - **MVP stack:** Next.js + Node.
 - **Privacy posture:** Core report editing should work without mandatory login.
 
@@ -36,10 +36,19 @@
 ### Week 4: Export MVP
 
 - Export Markdown to HTML.
-- Export formatted report to PDF.
-- Export formatted report to DOCX.
+- Export formatted report to PDF through browser print / print CSS.
+- Export formatted report to basic editable DOCX.
 - Add export status and error handling.
 - Produce first acceptance report in `Design/Reports/`.
+
+## Build Priority
+
+- **P0 Write core:** template picker, Markdown editor, preview, autosave, image insert.
+- **P1 Export usable:** HTML export, browser-print PDF, DOCX basic.
+- **P2 Format academic:** A4 preset, heading numbering, TOC, captions.
+- **P3 Check before submit:** missing sections, TODO, broken image, evidence gaps, readiness score.
+- **P4 Evidence Kit:** evidence manager, appendix, QR later.
+- **P5 Present:** slide outline, script, Q&A, PPTX later.
 
 ## Phase 2 - Report Quality and Evidence (Weeks 5-8)
 
@@ -48,7 +57,7 @@
 - Add evidence link manager.
 - Track video demo, GitHub, deploy link, slide, Figma, Drive, test account, and API documentation.
 - Generate evidence appendix table.
-- Generate QR codes for evidence links.
+- Generate QR codes for evidence links after `qrEnabled` is already stored in MVP data.
 
 ### Week 6: Advanced Templates
 
@@ -100,4 +109,3 @@
 - Validate exports on sample reports.
 - Polish UI states and accessibility.
 - Prepare public demo and README evidence.
-

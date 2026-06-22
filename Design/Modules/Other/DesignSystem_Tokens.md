@@ -15,7 +15,7 @@ ReportSupporter có **hai bề mặt thị giác tách biệt nhưng phải số
 
 ## 1. 🧬 TOKEN PHILOSOPHY (TRIẾT LÝ)
 
-Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến JS/SCSS. Lý do: preview chạy trong DOM thật, và Puppeteer (`Design/Modules/4.Export.md`) render lại **chính DOM đó** trong Chromium — nên nếu token là CSS variable thuần, preview và PDF ăn chung một nguồn, deterministic đúng tinh thần "intermediate document model" của `Design/Modules/Other/TechnicalStack.md` §3.
+Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến JS/SCSS. Lý do: preview chạy trong DOM thật, và browser print/Puppeteer later (`Design/Modules/4.Export.md`) dùng lại **chính DOM đó** — nên nếu token là CSS variable thuần, preview và PDF ăn chung một nguồn, deterministic đúng tinh thần "intermediate document model" của `Design/Modules/Other/TechnicalStack.md` §3.
 
 **Naming convention** — tiền tố `--rs-` (ReportSupporter), rồi tới *category*, rồi tới *role*, rồi tới *variant*:
 
@@ -203,7 +203,7 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 
 ## 5. 📄 A4 LAYOUT TOKENS (Report Output)
 
-> Định nghĩa hình học tờ A4 cho **preview pane** và **export**. Puppeteer (`4.Export.md`) phải dùng đúng các margin này qua `@page` CSS để PDF khớp preview. DOCX (`docx` lib) đọc cùng số đo để section/margin trùng khớp.
+> Định nghĩa hình học tờ A4 cho **preview pane** và **export**. Browser print/Puppeteer later (`4.Export.md`) phải dùng đúng các margin này qua `@page` CSS để PDF khớp preview. DOCX (`docx` lib) đọc cùng số đo để section/margin trùng khớp.
 
 | Token | Giá trị | Ý nghĩa |
 | :--- | :--- | :--- |
@@ -298,7 +298,7 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | **1. Write** | `--rs-color-*`, `--rs-font-family-ui/mono`, component `--rs-editor-*`, `--rs-template-*`, `--rs-field-*` | Vỏ workspace, editor, form metadata |
 | **2. Format** | **`--rs-report-*`** + A4 tokens (§5) | Áp typography học thuật + layout A4 lên cây hast trước khi render |
 | **3. Check** | `--rs-color-severity-*` + `--rs-checker-*` | Tô badge theo `ReportIssue.severity`; đọc `--rs-report-content-width` để xét bảng quá rộng |
-| **4. Export** | **`--rs-report-*`** + A4 tokens (§5) — **cùng tập với Module 2** | HTML nhúng đúng token; Puppeteer render lại chính DOM đó → PDF; `docx` lib map số đo A4/font sang DOCX |
+| **4. Export** | **`--rs-report-*`** + A4 tokens (§5) — **cùng tập với Module 2** | HTML nhúng đúng token; browser print dùng chính DOM đó → PDF MVP; `docx` lib map số đo A4/font sang DOCX |
 
 **Vì sao preview ↔ PDF ↔ DOCX khớp nhau:** Module 2 (Format) và Module 4 (Export) đọc **chung một tập `--rs-report-*`**. Preview pane (§6.2) cũng alias chính tập đó. Vậy nên:
 

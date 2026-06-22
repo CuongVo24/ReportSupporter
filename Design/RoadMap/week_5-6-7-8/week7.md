@@ -40,7 +40,7 @@ Mục tiêu chốt từ MasterRoadMap:
 - Citation style engine đầy đủ (APA/IEEE auto) — chỉ rules cơ bản, không parser trích dẫn nâng cao.
 - Slide/present (→ Phase 3).
 - `evidence.zip`/README generator (→ W8).
-- Lib export mới (chỉ tinh chỉnh Puppeteer/`docx` đã có).
+- Lib export mới (chỉ tinh chỉnh browser print/`docx`; Puppeteer nếu đã được approve hardening riêng).
 
 ---
 
@@ -77,11 +77,11 @@ Mục tiêu chốt từ MasterRoadMap:
 
 ## 5. 📦 Dependencies installed this week
 
-> Không cài lib mới — chỉ tinh chỉnh Format + Puppeteer/`docx` đã có (W4) và checker (W3).
+> Không cài lib mới — chỉ tinh chỉnh Format + browser print/`docx` đã có (W4) và checker (W3). Puppeteer chỉ đụng nếu có Contract hardening riêng.
 
 | Library | Why (this week) | Stack ref |
 |---|---|---|
-| *(none new)* | Page-break là CSS Puppeteer; LoF/LoT/references là logic trên AST | §3, §4 |
+| *(none new)* | Page-break là print CSS; LoF/LoT/references là logic trên AST | §3, §4 |
 
 ---
 
@@ -100,7 +100,7 @@ Mục tiêu chốt từ MasterRoadMap:
 
 | Risk | Level | Mitigation |
 |---|---|---|
-| Page-break Puppeteer khác trình duyệt khác | Medium | Khoá Chromium headless cố định; test trên sample đa template (W6). |
+| Browser print page-break khác nhau giữa trình duyệt | Medium | Test print CSS trên sample đa template; nếu không đủ mới mở Puppeteer hardening contract. |
 | Caption numbering lệch giữa LoF/LoT và body | High | Một caption-registry duy nhất feed cả body + LoF/LoT + export. |
 | References rules quá khắt khe → false positive | Medium | Rule cơ bản (rỗng/thứ tự), không ép citation style cụ thể; có suggestion. |
 | DOCX layout không khớp PDF | Medium | Cùng caption/numbering source; checklist verify thủ công + sample. |

@@ -55,7 +55,7 @@ src/
     layout.tsx               # root layout (workspace-first, no marketing hero)
     page.tsx                 # route "/" = workspace editor
     api/
-      export/pdf/route.ts    # server route Puppeteer (stub tới W4)
+      export/print/          # print/PDF browser surface (MVP)
   components/
     EditorPanel.tsx
     PreviewPane.tsx
@@ -86,7 +86,10 @@ src/
     export/
       index.ts               # public surface: { exportHtml, exportPdf, exportDocx }
       export-html.ts         # rehype-stringify + print CSS
-      export-pdf.ts          # gọi /api/export/pdf (Puppeteer) — stub tới W4
+      export-pdf.ts          # browser print/print CSS first path
+    evidence/
+      index.ts               # public surface: { EvidencePanel, validateEvidence }
+      evidence-types.ts
       export-docx.ts         # docx từ mdast
   lib/
     markdown-pipeline.ts     # unified: remark-parse + gfm + math + rehype-katex + highlight

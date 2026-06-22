@@ -22,7 +22,7 @@ Build a useful first version around Markdown reports:
 - User fills project/school/member metadata.
 - App generates a Markdown report structure.
 - User writes content with preview.
-- User adds evidence links.
+- User adds evidence links through Evidence Kit.
 - App checks missing sections and formatting risks.
 - User exports PDF, DOCX, and HTML.
 
@@ -69,11 +69,11 @@ Build a useful first version around Markdown reports:
 
 ### Check
 
-- Missing table of contents.
+- Table of contents disabled when the selected template requires it.
 - Missing conclusion.
 - Missing references.
 - Missing member responsibility table.
-- Missing demo/source/deploy links for project templates.
+- Missing required evidence such as GitHub, demo video, or deploy link for project templates.
 - Broken image paths.
 - Skipped heading levels.
 - Missing figure/table captions.
@@ -83,9 +83,16 @@ Build a useful first version around Markdown reports:
 ### Export
 
 - Markdown to HTML.
-- Markdown to PDF.
-- Markdown to DOCX.
+- Markdown to PDF through browser print / print CSS first.
+- Markdown to DOCX as an editable best-effort version.
 - README/report template to PDF/DOCX.
+
+### Evidence Kit
+
+- Manage video demo, GitHub, deploy link, Drive, Figma, slide, API docs, and test account evidence.
+- Feed evidence requirements into Checker.
+- Generate an evidence appendix later.
+- Store QR intent through `qrEnabled`; actual QR generation is Phase 2.
 
 ## 6. Non-goals For MVP
 
@@ -99,7 +106,6 @@ Build a useful first version around Markdown reports:
 ## 7. Success Criteria
 
 - A student can create a clean report skeleton in under two minutes.
-- A Markdown report can export to HTML, PDF, and DOCX.
+- A Markdown report can export to HTML, browser-print PDF, and editable DOCX.
 - Checker output gives concrete, fixable issues before submission.
 - The first screen is the actual workspace, not a marketing landing page.
-

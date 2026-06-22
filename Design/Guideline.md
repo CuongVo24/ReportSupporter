@@ -35,7 +35,7 @@ Nếu bạn (hoặc AI Agent) lần đầu vào dự án, làm đúng 6 bước 
 | **ReportSection** | 1 mục báo cáo (id, order, title, markdown, status: `draft`/`review`/`done`). |
 | **ReportIssue** | 1 lỗi Checker phát hiện (severity, module, message, suggestion, sectionId?, line?). |
 | **Checker (offline)** | Module 3 quét lỗi trước khi nộp — KHÔNG gọi mạng. |
-| **Stub** | Bản giả/placeholder (VD: export PDF stub tới W4) để không kéo dep nặng sớm. |
+| **Stub** | Bản giả/placeholder (VD: DOCX/export placeholder W1) để không kéo dependency nặng sớm. |
 | **Contract** | File `_contract.md` AI tạo trước khi code, chờ "Approve" (xem `VibeCode.md`). |
 | **Luật 200 dòng** | Cấm thêm/sửa > 200 dòng/file/lần để chống ảo giác AI. |
 | **Non-goals** | 5 thứ KHÔNG làm ở MVP — `ProductPRD.md` §6. |
@@ -77,7 +77,7 @@ Nếu bạn (hoặc AI Agent) lần đầu vào dự án, làm đúng 6 bước 
     3. **Check** — checker offline phát hiện thiếu mục / lỗi format trước khi nộp.
     4. **Export** — HTML / PDF / DOCX (DOCX & PDF deterministic).
     5. **Present** *(Phase 3)* — slide outline, script, Q&A.
-* **Stack chốt cứng:** Next.js + TypeScript · unified/remark pipeline · Puppeteer (PDF) · `docx` · IndexedDB. Chi tiết: `Modules/Other/TechnicalStack.md`.
+* **Stack chốt cứng:** Next.js + TypeScript · unified/remark pipeline · browser-print PDF first · `docx` · IndexedDB. Chi tiết: `Modules/Other/TechnicalStack.md`.
 * **Tiến độ:** lộ trình **12 tuần** (`RoadMap/MasterRoadMap.md`). Phase 1 (W1–4) = MVP workspace.
 * **Mô hình vận hành:** **Solo + AI Agent** — kỷ luật contract-first, không Buddy review nên tự review chặt.
 
@@ -98,8 +98,9 @@ Design/
     1.Write.md                         # Spec Module 1 — editor, preview, template, autosave (IndexedDB)
     2.Format.md                        # Spec Module 2 — numbering, TOC, caption, A4 layout presets
     3.Check.md                         # Spec Module 3 — checker engine offline + danh sách rules
-    4.Export.md                        # Spec Module 4 — HTML / PDF (Puppeteer) / DOCX (docx)
+    4.Export.md                        # Spec Module 4 — HTML / PDF browser print / DOCX (docx)
     5.Present.md                        # Spec Module 5 — slide outline, script, Q&A (Phase 3)
+    Support.Evidence.md                 # Supporting module — Evidence Kit
     Other/
       TechnicalStack.md                # Stack khoá cứng + rationale + version policy + data-flow
   RoadMap/
