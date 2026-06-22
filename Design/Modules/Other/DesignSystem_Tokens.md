@@ -81,8 +81,8 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | Token | Light | Map tới `ReportIssue.severity` | Dùng ở |
 | :--- | :--- | :--- | :--- |
 | `--rs-color-severity-error` | `var(--rs-red-600)` | `"error"` | Thiếu mục bắt buộc (TOC, kết luận, references) |
-| `--rs-color-severity-warning` | `var(--rs-amber-500)` | `"warning"` | Bảng quá rộng, heading nhảy cấp, code thiếu language |
-| `--rs-color-severity-info` | `var(--rs-sky-600)` | `"info"` | Còn `TODO` / `lorem ipsum`, gợi ý cải thiện |
+| `--rs-color-severity-warning` | `var(--rs-amber-500)` | `"warning"` | Heading nhảy cấp, code thiếu language, còn `TODO` / `lorem ipsum` (`placeholder-text`) |
+| `--rs-color-severity-info` | `var(--rs-sky-600)` | `"info"` | Bảng quá rộng có thể tràn trang (`table-too-wide`), gợi ý cải thiện |
 | `--rs-color-severity-error-bg` | `#FEF2F2` | nền badge/row error | |
 | `--rs-color-severity-warning-bg` | `#FFFBEB` | nền badge/row warning | |
 | `--rs-color-severity-info-bg` | `#F0F9FF` | nền badge/row info | |
