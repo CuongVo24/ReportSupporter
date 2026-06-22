@@ -1,0 +1,119 @@
+# 📅 WEEK 5: EVIDENCE KIT
+
+> Phase 2 — Report Quality & Evidence (W5-W8). Reference: `Design/RoadMap/MasterRoadMap.md` §Week 5.
+
+---
+
+## 1. 🎯 Week Goal / Theme
+
+**Theme:** *Turn scattered project links into a structured, verifiable evidence appendix.*
+
+Tuần 5 mở Phase 2. Báo cáo dự án không chỉ là chữ — nó cần **bằng chứng**: video demo, GitHub, deploy link, slide, Figma, Drive, test account, API docs. Tuần này xây evidence link manager, sinh **evidence appendix table** tự động vào report, và sinh **QR code** cho từng link để chấm bài quét nhanh.
+
+Mục tiêu chốt từ MasterRoadMap:
+- Add evidence link manager.
+- Track video demo, GitHub, deploy link, slide, Figma, Drive, test account, and API documentation.
+- Generate evidence appendix table.
+- Generate QR codes for evidence links.
+
+---
+
+## 2. 🧩 Context — Modules & Dependencies
+
+- **Builds:** mở rộng Module 1 (Write) — quản lý `ReportProject.evidence` (đã có chỗ trong data model `Modules/1.Write.md`).
+- **Depends on:** W1-W4 (types, pipeline, format numbering, export). Evidence appendix table render qua pipeline `unified` và xuất được ra cả 3 format.
+- **Depended on by:** W8 (submission package gói evidence vào `evidence.zip`), W3 checker (rule "missing demo/source/deploy" giờ có dữ liệu evidence để đối chiếu).
+
+---
+
+## 3. 🔭 Scope
+
+### ✅ In scope
+- Evidence type + zod schema (kind, label, url, note).
+- Evidence link manager UI (add/edit/remove, validate URL).
+- Hỗ trợ 8 loại: video demo · GitHub · deploy link · slide · Figma · Drive · test account · API documentation.
+- Generate evidence appendix table (Markdown/AST → vào report + xuất 3 format).
+- Generate QR code cho mỗi link (`qrcode`) — hiển thị trong preview và export.
+
+### ⛔ Out of scope
+- Cloud lưu evidence file (Non-goal — chỉ lưu link + asset reference local).
+- Auto-verify link "còn sống" qua network (checker offline — `VibeCode.md` §4).
+- `evidence.zip` đóng gói (→ W8).
+- AI gợi ý evidence (→ Phase 3, W11 optional).
+
+---
+
+## 4. 🛠️ Task Breakdown (Day 1 → Day 5)
+
+> Branch: `feature/W5-evidence-kit`.
+
+### Day 1 — Evidence Types & Schema
+- `[NEW]` `src/types/evidence.ts` (`EvidenceLink`, `EvidenceKind` union 8 loại)
+- `[MODIFY]` `src/types/report.ts` (`ReportProject.evidence: EvidenceLink[]`)
+- `[MODIFY]` `src/types/schemas.ts` (zod schema cho evidence + URL validate)
+
+### Day 2 — Evidence Link Manager UI
+- `[NEW]` `src/modules/write/EvidenceManager.tsx` (list + add/edit/remove)
+- `[NEW]` `src/modules/write/EvidenceForm.tsx` (chọn kind, nhập label/url/note, validate qua zod)
+- `[MODIFY]` `src/modules/write/use-draft-autosave.ts` (persist evidence cùng draft)
+
+### Day 3 — Evidence Appendix Table
+- `[NEW]` `src/modules/format/evidence-appendix.ts` (evidence[] → bảng Markdown/AST)
+- `[MODIFY]` `src/modules/format/index.ts` (export appendix builder)
+- `[MODIFY]` `src/modules/write/PreviewPanel.tsx` (hiển thị appendix table trong preview)
+
+### Day 4 — QR Code Generation
+- `[NEW]` `src/modules/format/evidence-qr.ts` (`qrcode` → data URL cho mỗi link)
+- `[NEW]` `src/modules/write/EvidenceQrPreview.tsx`
+- `[MODIFY]` `src/modules/export/export-html.ts` + `export-pdf.ts` + `export-docx.ts` (nhúng QR vào appendix khi export)
+
+### Day 5 — Checker Hook & QA
+- `[MODIFY]` `src/modules/check/rules/evidence-gaps.ts` (đối chiếu evidence thật: thiếu demo/source/deploy)
+- `[NEW]` `src/modules/check/rules/evidence-gaps.test.ts`
+- `[NEW]` `Design/Reports/Month2/W5/W5_QA_Report.md`, `evidence_samples.md`, `build_output.txt`
+
+---
+
+## 5. 📦 Dependencies installed this week
+
+| Library | Why (this week) | Stack ref |
+|---|---|---|
+| `qrcode` | Sinh QR cho evidence links (data URL, nhúng preview + export) | §8 (Deferred → unlock Phase 2 W5) |
+
+> `qrcode` nằm trong danh sách Deferred của `TechnicalStack.md` §8, mở khoá đúng W5 Evidence Kit. Evidence appendix tái dùng pipeline `unified` + export libs đã có.
+
+---
+
+## 6. 📤 Deliverables
+
+- `EvidenceLink` type + schema + 8 kind hỗ trợ.
+- Evidence link manager UI (add/edit/remove, validate).
+- Evidence appendix table tự sinh, vào report + xuất 3 format.
+- QR code mỗi link, hiển thị preview + nhúng export.
+- Checker rule evidence-gaps đối chiếu dữ liệu thật.
+- `Design/Reports/Month2/W5/` QA + evidence samples.
+
+---
+
+## 7. ⚠️ Risks
+
+| Risk | Level | Mitigation |
+|---|---|---|
+| Validate URL gọi mạng phá nguyên tắc offline | High | Chỉ validate cú pháp URL (zod), không fetch (`VibeCode.md` §4). |
+| QR data URL phình draft IndexedDB | Medium | Sinh QR on-demand khi export/preview, không lưu blob trong draft. |
+| Appendix không xuất nhất quán 3 format | Medium | Appendix là AST node, đi qua cùng pipeline export (`TechnicalStack.md` §3). |
+| Scope evidence trượt sang cloud storage | Medium | Chỉ link + reference local (`ProductPRD.md` §6 no cloud). |
+
+---
+
+## 8. ✅ Definition of Done
+
+- [ ] `npm run lint` + `typecheck` + `build` xanh.
+- [ ] `Vitest` xanh (evidence schema + evidence-gaps rule).
+- [ ] Add/edit/remove evidence link hoạt động, persist qua refresh.
+- [ ] Evidence appendix table render đúng trong preview + export 3 format.
+- [ ] QR code sinh đúng cho mỗi link, nhúng được vào export.
+- [ ] Checker phát hiện thiếu demo/source/deploy dựa trên evidence thật.
+- [ ] Không gọi mạng (offline).
+- [ ] Evidence tại `Design/Reports/Month2/W5/`.
+- [ ] Commit kèm contract, branch `feature/W5-evidence-kit`.

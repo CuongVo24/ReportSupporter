@@ -8,6 +8,32 @@ ReportSupporter là một **workspace tạo báo cáo** chạy chủ yếu phía
 
 ---
 
+## 0. 🌊 DATA-FLOW DIAGRAM (Markdown → AST → preview / check / export)
+
+Xương sống deterministic: **một nguồn Markdown + metadata → một AST → mọi nhánh tiêu thụ**.
+
+```text
+   ReportProject.metadata ──┐
+                            ▼
+  ReportSection.markdown ──► remark-parse (+gfm, +math) ──► mdast (AST)
+                                                              │
+            ┌─────────────────────────────────────────────────┼───────────────────────────────┐
+            ▼                                                   ▼                               ▼
+   FORMAT (Module 2)                                   CHECK (Module 3)                 EXPORT (Module 4)
+   numbering / TOC / caption                           runChecker đọc mdast/hast        ăn chung AST:
+   (sinh từ AST, không hardcode)                       → ReportIssue[] (OFFLINE)        ├─ HTML: remark-rehype
+            │                                                  │                        │     → rehype-katex
+            ▼                                                  ▼                        │     → rehype-highlight
+   remark-rehype → hast ──► rehype-katex ──► rehype-highlight ──► rehype-stringify ─────┤     → rehype-stringify
+            │                                                                            ├─ PDF: HTML → puppeteer
+            ▼                                                                            │     (Chromium, server, W4)
+   PREVIEW (client) + mermaid render (client-side / Chromium khi PDF)                    └─ DOCX: mdast → docx
+```
+
+**Bất biến:** Format, Check, Export **không** parse Markdown riêng — tất cả tiêu thụ cùng AST. Đây chính là "intermediate document model" trong `Modules/4.Export.md`. Đổi parser/plugin ⇒ ảnh hưởng cả 3 nhánh ⇒ phải qua Contract.
+
+---
+
 ## 1. ⚙️ FRAMEWORK & RUNTIME
 
 * **Framework:** `Next.js` (App Router) + `React` + `TypeScript` (strict mode bật `"strict": true`).
@@ -86,6 +112,54 @@ ReportSupporter là một **workspace tạo báo cáo** chạy chủ yếu phía
 | `pptxgenjs` | Export slides `.pptx` | Phase 3 (Module 5 Present) |
 
 > Liệt kê ở đây để AI **không tự chọn lib khác** khi tới phase đó — vẫn phải xin approve trước khi cài.
+
+---
+
+## 8b. 🧠 RATIONALE & REJECTED ALTERNATIVES (per layer)
+
+Vì sao chọn — và vì sao **loại** lựa chọn khác. Đây là lý do stack bị khoá; AI không được mở lại các "Rejected".
+
+| Layer | ✅ Chọn | ❌ Rejected alternatives | Lý do loại |
+|---|---|---|---|
+| **Framework** | Next.js (App Router) + TS strict | Vite SPA thuần / CRA | Cần server route cho Puppeteer (PDF) sau này; App Router cho workspace-first + 1 server boundary gọn |
+| **Editor** | `<textarea>` (W1) → CodeMirror 6 (W2+) | TipTap / Slate / Lexical (WYSIWYG) | Sai triết lý "Markdown-first"; contenteditable khó deterministic, lock-in nặng |
+| **Markdown core** | `unified` + remark/rehype | `markdown-it`, `marked` | Cần AST chung (mdast/hast) cho Format/Check/Export; remark-* cho plugin chuẩn (gfm/math) |
+| **Code highlight** | `rehype-highlight` (highlight.js) | Shiki | Shiki cần build/theme step + bất tiện deterministic ở client; highlight.js đủ & nhẹ |
+| **Math** | `remark-math` + `rehype-katex` + `katex` | MathJax | KaTeX nhanh, render đồng nhất, deterministic hơn cho export |
+| **Diagrams** | `mermaid` (client-side) | Graphviz/PlantUML (cần binary/server) | Mermaid render trong DOM + Chromium (Puppeteer) nên export PDF vẫn ra hình, không cần binary ngoài |
+| **PDF** | `puppeteer` (Chromium, server, stub→W4) | `@react-pdf/renderer`, `jsPDF`, Pandoc/LibreOffice | Cần trung thực layout học thuật A4/page-break/header-footer; render từ chính HTML đã format |
+| **DOCX** | `docx` (npm, từ mdast) | Pandoc, LibreOffice headless | Deterministic, không cần binary ngoài, sinh trực tiếp từ AST |
+| **Storage** | IndexedDB qua `idb` | localStorage / backend DB / cloud SDK | Non-goals §6 (no cloud/auth); IndexedDB chứa được draft lớn, sống qua refresh |
+| **Validation** | `zod` | yup, io-ts, ajv | API gọn, type-inference tốt, dùng ở mọi I/O boundary |
+| **Test** | `Vitest` | Jest | Tích hợp tốt với Vite/TS, nhanh; đủ cho Checker unit test |
+| **E2E** | Playwright (Phase 3) | Cypress | Hoãn tới Phase 3; không cài ở MVP |
+
+---
+
+## 8c. 📦 DEPENDENCY INSTALL MATRIX (tuần nào cài gì)
+
+Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cài phải nằm trong file này.
+
+| Tuần | Cài mới | Lý do |
+|---|---|---|
+| **W1 (bootstrap)** | `next`, `react`, `react-dom`, `typescript`, `eslint`, `prettier`, `vitest`, `zod`, `idb` | Project shell + types + autosave PoC. **Editor = `<textarea>`, chưa cài editor lib** (Risk W1). Export = stub. |
+| **W2 (Write)** | `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-stringify` | Editor thật + preview qua pipeline cơ bản. |
+| **W3 (Format/Check)** | `remark-math`, `rehype-katex`, `katex`, `rehype-highlight`, `mermaid` | Math/code/diagram cho preview; Format & Checker đọc AST. |
+| **W4 (Export)** | `puppeteer`, `docx` | Mở stub PDF/DOCX thật (đúng Risk Contract W1: heavy dep tới W4 mới cài). |
+| **Phase 2 (W5)** | `qrcode` | Evidence Kit (deferred). |
+| **Phase 3** | `pptxgenjs`, `playwright` | Present export + E2E (deferred). |
+
+> ⚠️ AI **không** được "cài trước cho tiện". Lib chỉ xuất hiện trong `package.json` đúng tuần dùng nó. Cài lệch lịch / lib ngoài bảng = vi phạm `Rule.md` §2.
+
+---
+
+## 8d. 📌 VERSION-PINNING POLICY
+
+* **Pin chính xác (exact):** Mọi runtime dep ghi version cứng (VD `"katex": "0.16.x"` → pin số cụ thể, **không** dùng `^`/`~`) để giữ **deterministic** preview ↔ export. Đổi version Markdown/KaTeX/Puppeteer có thể đổi output render.
+* **Lockfile bắt buộc:** Commit `package-lock.json`. CI/local cài bằng `npm ci` (tôn trọng lockfile), không `npm install` tuỳ tiện ở môi trường build.
+* **Nâng version = một task có Contract:** Bump major/minor của lib pipeline/export phải có Contract riêng + chạy lại evidence export mẫu để xác nhận output không vỡ (`Design/Reports/`).
+* **Puppeteer Chromium:** ghim cả version Puppeteer (kéo Chromium tương ứng) — đây là nguồn dễ gây non-deterministic nhất cho PDF.
+* **Không auto-upgrade:** Tắt/không dùng bot bump tự động cho runtime dep ở MVP — mọi thay đổi version đi qua review thủ công.
 
 ---
 
