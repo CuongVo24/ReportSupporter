@@ -54,7 +54,7 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 
 ## 3. 📄 MARKDOWN PIPELINE (dùng chung cho Format · Check · Export)
 
-> Đây là **xương sống deterministic**. Cùng một input Markdown + metadata → cùng một AST → preview, checker, và export đều ăn chung nguồn. Đây chính là "intermediate document model" nhắc trong `Modules/4.Export.md`.
+> Đây là **xương sống deterministic**. Cùng một input Markdown + metadata → cùng một AST → preview, checker, và export đều ăn chung nguồn. Chi tiết các type và cơ chế cache/thread xem tại [PipelineContract.md](file:///e:/ReportSupporter/Design/Modules/Other/PipelineContract.md).
 
 * **Core:** `unified`
 * **Parse:** `remark-parse` + `remark-gfm` (bảng, task list, strikethrough)
@@ -62,6 +62,11 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 * **Code highlight:** `rehype-highlight` (highlight.js — deterministic, không cần build step như Shiki)
 * **Markdown → HTML:** `remark-rehype` → `rehype-stringify`
 * **Diagrams:** `mermaid` — render **client-side** (Mermaid cần DOM). PDF MVP dùng browser print từ DOM đã render; Puppeteer worker later cũng render lại DOM trong Chromium nếu được approve.
+
+**Pipeline Contract Types:**
+- `ParsedSection`: Cấu trúc AST (mdast) và metadata của một section đơn lẻ.
+- `PipelineResult`: Kết quả gộp tất cả các `ParsedSection` thành một AST chung của toàn bộ document.
+- `FormattedReport`: AST (cả mdast và hast) kèm theo TOC, figure/table captions và preset đã được Module 2 xử lý.
 
 **Nguyên tắc:** Checker (Module 3) đọc **mdast/hast AST** (heading levels, code lang, image nodes, table width) — KHÔNG regex thô trên string trừ các check văn bản (`TODO`, `lorem ipsum`).
 
