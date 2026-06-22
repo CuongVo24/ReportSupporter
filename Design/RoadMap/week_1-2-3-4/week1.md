@@ -70,10 +70,14 @@ Mục tiêu chốt từ MasterRoadMap:
 - `[C4]` Initial template schema.
   - `[NEW]` `src/types/template.ts` (`TemplateSchema`, `MetadataFieldSpec`, `TemplateSectionSeed` khớp [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
   - `[NEW]` `src/types/schemas.ts` (zod schema cho template + metadata)
-- `[C5]` Software project report template seed.
+- `[C5]` Software project report template seed + project mapper.
   - `[NEW]` `src/modules/write/templates/software-project.ts` (seed sections tiếng Việt — khớp `1.Write.md` §3.3: Mở đầu · Thành viên & Phân công · Triển khai · Kiểm thử · Kết luận · Tài liệu tham khảo · Minh chứng)
-- `[C6]` Report project & section types (canonical).
-  - `[NEW]` `src/types/report.ts` (`ReportProject`, `ReportSection`, `ReportProjectBundle` — đúng shape [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
+  - `[NEW]` `src/modules/write/create-project.ts` (`createProjectFromTemplate`: `TemplateSchema` → `ReportProject` + `ReportProjectBundle`; `id=crypto.randomUUID()`, seeds → sections với `order`+`status:"draft"`, `assets:[]`, `evidence:[]`, `formatSettings=DEFAULT_FORMAT_SETTINGS`, `schemaVersion=SCHEMA_VERSION`) — **đây là thứ Vitest §8 verify**
+- `[C6]` Canonical project/section/asset/evidence/bundle types + defaults.
+  - `[NEW]` `src/types/report.ts` (`ReportProject`, `ReportSection`, `ReportAsset`, `SnippetKind`, `ReportProjectBundle` — CanonicalTypes §1/§4)
+  - `[NEW]` `src/types/evidence.ts` (`EvidenceKind`, `EvidenceItem` — §2; cần cho `bundle.evidence` dù Evidence Kit UI là W5, W1 để `[]`)
+  - `[MODIFY]` `src/types/schemas.ts` → thêm `evidenceItemSchema`, `formatSettingsSchema`, `storedBundleSchema` (phủ HẾT bundle — `1.Write.md` §3.4)
+  - `[NEW]` `src/types/defaults.ts` (`DEFAULT_TEMPLATE_ID`, `DEFAULT_FORMAT_SETTINGS` với `presetId:"academic-default"`, `SCHEMA_VERSION = 1`)
   - `[NEW]` `src/types/index.ts` (re-export single surface)
 
 ### Day 3 — Editor Foundation (placeholder)
@@ -88,10 +92,10 @@ Mục tiêu chốt từ MasterRoadMap:
 ### Day 4 — Checker Foundation
 - `[C10]` Checker issue type.
   - `[MODIFY]` `src/types/report.ts` → thêm `ReportIssue` (đúng shape [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md))
-- `[C11]` Text checks: TODO / lorem / code-language.
-  - `[NEW]` `src/modules/check/rules/text-markers.ts` (TODO · fix later · lorem ipsum)
-  - `[NEW]` `src/modules/check/rules/code-language.ts` (code block thiếu language)
-  - `[NEW]` `src/modules/check/run-checker.ts` (gom rules → `ReportIssue[]`, chạy trực tiếp trên main thread, không worker)
+- `[C11]` Text checks (subset văn bản — KHÔNG dùng canonical `CheckRule`/`CheckContext` vì chưa có mdast/unified ở W1).
+  - `[NEW]` `src/modules/check/rules/text-markers.ts` (`placeholder-text`: TODO · fix later · lorem ipsum)
+  - `[NEW]` `src/modules/check/rules/code-language.ts` (`code-block-no-lang`: code block thiếu language — regex trên raw Markdown ở W1, bản AST để W3)
+  - `[NEW]` `src/modules/check/run-checker.ts` (rule type tối giản `(markdown: string) => ReportIssue[]`, gom → `ReportIssue[]`, main-thread sync, không worker; full engine `CheckRule`/`CheckContext` ở W3)
 - `[C12]` Checker panel + severity grouping.
   - `[NEW]` `src/modules/check/CheckerPanel.tsx` (nhóm theo `error | warning | info`)
 - *Lưu ý:* Chỉ cần viết 1-2 unit test rất nhỏ cho các rule văn bản bằng Vitest để verify test runner. Không over-engineer checker engine ở W1.
@@ -100,7 +104,7 @@ Mục tiêu chốt từ MasterRoadMap:
 - `[C13]` HTML export stub.
   - `[NEW]` `src/modules/export/export-html.ts` (trả HTML tối giản — pipeline thật ở W4)
 - `[C14]` PDF/DOCX service placeholders.
-  - `[NEW]` `src/modules/export/export-pdf.ts`, `src/modules/export/export-docx.ts` (throw "not implemented until W4", visible error)
+  - `[NEW]` `src/modules/export/export-pdf.ts`, `src/modules/export/export-docx.ts` (**trả** `ExportResult { ok:false, error:{ stage:"render-pdf"|"render-docx", message:"not implemented until W4", recoverable:false } }` — KHÔNG throw; call site W1 dùng đúng shape W4)
   - `[NEW]` `src/modules/export/index.ts`
 - `[C15]` Build + W1 QA report.
   - `[NEW]` `Design/Reports/Month1/W1/W1_QA_Report.md`, `build_output.txt`
@@ -153,9 +157,9 @@ Mục tiêu chốt từ MasterRoadMap:
 - [ ] `npm run lint` xanh (ESLint không lỗi đỏ).
 - [ ] `npm run typecheck` xanh (strict, không `any`).
 - [ ] `npm run build` xanh.
-- [ ] `Vitest` xanh cho 3 checker rule (text-markers + code-language).
+- [ ] `Vitest` xanh cho rule văn bản (`placeholder-text` + `code-block-no-lang`) **và** `createProjectFromTemplate` (đúng số `ReportSection`, `order`, `status="draft"`).
 - [ ] Route `/` render workspace editor (không landing) — xác nhận local.
 - [ ] Draft autosave sống qua refresh (IndexedDB) — kiểm chứng thủ công.
-- [ ] PDF/DOCX placeholder ném lỗi "until W4" rõ ràng (visible, recoverable).
+- [ ] PDF/DOCX placeholder **trả** `ExportResult { ok:false, error }` (message "until W4", recoverable) — visible, không throw/nuốt.
 - [ ] Evidence ghi tại `Design/Reports/Month1/W1/` (QA report + build log).
 - [ ] Commit kèm `w1_project_bootstrap_contract.md`, branch `feature/W1-project-bootstrap`.
