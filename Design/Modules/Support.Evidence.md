@@ -41,61 +41,21 @@ Evidence là supporting module riêng để:
 
 ---
 
-## 3. Public Types
+## 3. Public Types (định nghĩa tại CanonicalTypes — Evidence chỉ tiêu thụ)
 
-```ts
-type EvidenceKind =
-  | "video"
-  | "github"
-  | "deploy"
-  | "drive"
-  | "figma"
-  | "account"
-  | "api-docs"
-  | "slide"
-  | "other";
+Evidence Kit **không** định nghĩa lại type — mọi shape sống một lần ở
+`Design/Modules/Other/CanonicalTypes.md`:
 
-type EvidenceItem = {
-  id: string;
-  kind: EvidenceKind;
-  title: string;
-  url?: string;
-  note?: string;
-  qrEnabled: boolean;
-  createdAt: string; // ISO 8601
-};
-```
-
-Evidence nằm trong bundle chung:
-
-```ts
-type ReportProjectBundle = {
-  project: ReportProject;
-  assets: ReportAsset[];
-  evidence: EvidenceItem[];
-  formatSettings: FormatSettings;
-  schemaVersion: number;
-};
-```
+- `EvidenceKind` (CanonicalTypes §2) — 8 loại phổ biến (`video`, `github`, `deploy`, `drive`, `figma`, `account`, `api-docs`, `slide`) + `other` fallback = 9 kind.
+- `EvidenceItem` (§2) — `{ id, kind, title, url?, note?, qrEnabled, createdAt }`.
+- `ReportProjectBundle` (§4) — evidence sống trong bundle chung: `bundle.evidence: EvidenceItem[]`.
 
 ---
 
 ## 4. Template-Aware Requirements
 
-Template có thể khai báo evidence bắt buộc:
-
-```ts
-type TemplateSchema = {
-  id: string;
-  name: string;
-  description: string;
-  metadataFields: MetadataFieldSpec[];
-  sections: TemplateSectionSeed[];
-  requiredSections: string[];
-  requiredEvidenceKinds: EvidenceKind[];
-  requiresToc: boolean;
-};
-```
+Template khai báo evidence bắt buộc qua `TemplateSchema.requiredEvidenceKinds`
+(`TemplateSchema` định nghĩa ở CanonicalTypes §5 — không tái định nghĩa ở đây).
 
 Ví dụ template báo cáo đồ án phần mềm nên yêu cầu:
 
