@@ -22,7 +22,7 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
     *   *Chi tiết:* Editor dùng `<textarea>` đơn giản, đồng bộ trực tiếp trên main thread. Checker chạy đồng bộ trực tiếp khi bấm check. Không sử dụng Web Worker, không cache AST.
 *   **Tuần 2 (Markdown Editor & Preview):**
     *   *Mức tối ưu:* Áp dụng Debounce & Throttling cơ bản.
-    *   *Chi tiết:* Sự kiện thay đổi trên CodeMirror 6 được **debounce ~150-200ms** trước khi cập nhật preview. Lưu nháp tự động (autosave) qua IndexedDB được **throttle ~2000ms**.
+    *   *Chi tiết:* Sự kiện thay đổi trên CodeMirror 6 được **debounce ~120-180ms** (khớp §1.1 và §8 budget) trước khi cập nhật preview. Lưu nháp tự động (autosave) qua IndexedDB được **throttle ~2000ms**.
 *   **Tuần 3 & 4 (Checker Engine & Export):**
     *   *Mức tối ưu:* Chuyển luồng CPU-bound ra ngoài.
     *   *Chi tiết:* Nếu độ trễ render trên tài liệu mẫu (40 trang) vượt quá 200ms, di chuyển `unified` parser pipeline và Checker engine xuống chạy ở Web Worker. Tránh block main thread khi đang gõ phím.
