@@ -13,6 +13,25 @@ Không có backend nóng, không realtime, không 5000 CCU — vì PRD §6 Non-g
 
 ---
 
+## 0. PHASE-LEVEL ROLLOUT SCHEDULE (Lộ trình áp dụng hiệu năng)
+
+Để tránh over-engineering quá sớm trong quá trình dựng khung ban đầu, các giải pháp tối ưu hiệu năng được triển khai dần dần theo lộ trình phát triển:
+
+*   **Tuần 1 (Project Bootstrap):**
+    *   *Mức tối ưu:* Chưa áp dụng tối ưu phức tạp.
+    *   *Chi tiết:* Editor dùng `<textarea>` đơn giản, đồng bộ trực tiếp trên main thread. Checker chạy đồng bộ trực tiếp khi bấm check. Không sử dụng Web Worker, không cache AST.
+*   **Tuần 2 (Markdown Editor & Preview):**
+    *   *Mức tối ưu:* Áp dụng Debounce & Throttling cơ bản.
+    *   *Chi tiết:* Sự kiện thay đổi trên CodeMirror 6 được **debounce ~150-200ms** trước khi cập nhật preview. Lưu nháp tự động (autosave) qua IndexedDB được **throttle ~2000ms**.
+*   **Tuần 3 & 4 (Checker Engine & Export):**
+    *   *Mức tối ưu:* Chuyển luồng CPU-bound ra ngoài.
+    *   *Chi tiết:* Nếu độ trễ render trên tài liệu mẫu (40 trang) vượt quá 200ms, di chuyển `unified` parser pipeline và Checker engine xuống chạy ở Web Worker. Tránh block main thread khi đang gõ phím.
+*   **Tháng 2 (Hardening - Quản lý Báo cáo Lớn):**
+    *   *Mức tối ưu:* Section-level caching & Virtualization.
+    *   *Chi tiết:* Dùng `IntersectionObserver` để làm ảo hóa danh sách section hiển thị trong preview. Triển khai cache AST theo từng section dựa trên ID và nội dung băm của section.
+
+---
+
 ## 1. ✍️ EDITOR & PREVIEW (Module 1 — Write)
 
 ### 1.1. Debounce preview re-render

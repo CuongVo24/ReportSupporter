@@ -92,10 +92,12 @@ Core features:
 
 #### Evidence Kit (Submission MVP - Phase 2 / Week 5)
 
-- Manage video demo, GitHub, deploy link, Drive, Figma, slide, API docs, and test account evidence.
-- Feed evidence requirements into Checker (W5+; W1–W4 uses placeholder validation).
-- Generate an evidence appendix.
-- Store QR intent through `qrEnabled` in Core MVP; actual QR generation is performed in W5.
+- **Tháng 1 (Core MVP) Boundary:** Chỉ hỗ trợ lưu trữ liên kết minh chứng đơn giản dưới dạng các trường metadata trong cấu trúc mẫu báo cáo hoặc hiển thị panel dạng tĩnh/placeholder. Chưa có giao diện quản lý riêng hay tự động sinh bảng.
+- **Tháng 2 (Submission MVP / Week 5+) Boundary:**
+  - Phát triển giao diện quản lý minh chứng đầy đủ (thêm/sửa/xóa, kiểm tra cú pháp URL ngoại tuyến).
+  - Hỗ trợ quản lý 8 loại minh chứng: video demo, GitHub, deploy link, Drive, Figma, slide, API docs, và test account.
+  - Tự động tạo bảng Phụ lục minh chứng (Evidence Appendix Table) tích hợp vào cuối báo cáo và tự động sinh mã QR cho mỗi liên kết minh chứng thông qua thư viện `qrcode`.
+  - Tích hợp dữ liệu minh chứng thực tế vào Checker.
 
 ## 6. Non-goals For MVP
 
