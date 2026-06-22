@@ -7,7 +7,7 @@
 - **MVP stack:** Next.js + Node.
 - **Privacy posture:** Core report editing should work without mandatory login.
 
-## Phase 1 - MVP Report Workspace (Weeks 1-4)
+## Phase 1 - Core MVP: Report Workspace (Weeks 1-4)
 
 ### Week 1: Project Bootstrap and Design System
 
@@ -50,7 +50,7 @@
 - **P4 Evidence Kit:** evidence manager, appendix, QR later.
 - **P5 Present:** slide outline, script, Q&A, PPTX later.
 
-## Phase 2 - Report Quality and Evidence (Weeks 5-8)
+## Phase 2 - Submission MVP / Evidence MVP (Weeks 5-8)
 
 ### Week 5: Evidence Kit
 

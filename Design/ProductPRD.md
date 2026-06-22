@@ -16,13 +16,16 @@ ReportSupporter should not feel like a generic converter site. Its main identity
 
 ## 3. MVP Goal
 
-Build a useful first version around Markdown reports:
+Build a useful first version around Markdown reports, structured into two incremental milestones:
+- **Core MVP (Month 1 / W1–W4)**: The editor loop (write → format → check → export HTML, browser-print PDF, basic DOCX).
+- **Submission MVP / Evidence MVP (Month 2 / W5)**: Verifiable submission package (adding evidence links through Evidence Kit, generating evidence appendix, and printing QR codes).
 
+Core features:
 - User chooses a report template.
 - User fills project/school/member metadata.
 - App generates a Markdown report structure.
 - User writes content with preview.
-- User adds evidence links through Evidence Kit.
+- User adds evidence links through Evidence Kit (Submission MVP).
 - App checks missing sections and formatting risks.
 - User exports PDF, DOCX, and HTML.
 
@@ -37,7 +40,7 @@ Build a useful first version around Markdown reports:
    - group members
 3. Generate report skeleton.
 4. Write content in Markdown.
-5. Add screenshots, tables, code blocks, Mermaid diagrams, and evidence links.
+5. Add screenshots, tables, code blocks, Mermaid diagrams, and evidence links (Submission MVP).
 6. Run "Check before submit".
 7. Fix reported issues.
 8. Export:
@@ -87,12 +90,12 @@ Build a useful first version around Markdown reports:
 - Markdown to DOCX as an editable best-effort version.
 - README/report template to PDF/DOCX.
 
-### Evidence Kit
+#### Evidence Kit (Submission MVP - Phase 2 / Week 5)
 
 - Manage video demo, GitHub, deploy link, Drive, Figma, slide, API docs, and test account evidence.
-- Feed evidence requirements into Checker.
-- Generate an evidence appendix later.
-- Store QR intent through `qrEnabled`; actual QR generation is Phase 2.
+- Feed evidence requirements into Checker (W5+; W1–W4 uses placeholder validation).
+- Generate an evidence appendix.
+- Store QR intent through `qrEnabled` in Core MVP; actual QR generation is performed in W5.
 
 ## 6. Non-goals For MVP
 

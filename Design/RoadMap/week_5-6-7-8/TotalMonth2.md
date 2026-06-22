@@ -1,4 +1,4 @@
-# 🚀 MONTH 2 SUMMARY: REPORT QUALITY & EVIDENCE (W5-W8)
+# 🚀 MONTH 2 SUMMARY: SUBMISSION MVP / EVIDENCE MVP (W5-W8)
 
 > Phase 2 of `Design/RoadMap/MasterRoadMap.md`. Covers Week 5 → Week 8.
 
@@ -8,7 +8,7 @@
 
 **Raise the report from "exports correctly" to "submits convincingly."**
 
-Tháng 1 đóng được vòng MVP (write→format→check→export). Tháng 2 nâng **chất lượng** và **bằng chứng**: quản lý evidence + QR, đa template báo cáo thật, định dạng học thuật cứng cáp (page-break/LoF/LoT/references), và đóng gói nộp hoàn chỉnh (`evidence.zip`, `README.md`, submission checklist, export history). Vẫn tuyệt đối không login/cloud/realtime/AI (`ProductPRD.md` §6).
+Tháng 1 đóng được vòng **Core MVP** (write→format→check→export). Tháng 2 nâng **chất lượng** và **bằng chứng** làm cột mốc **Submission MVP / Evidence MVP**: quản lý evidence + QR, đa template báo cáo thật, định dạng học thuật cứng cáp (page-break/LoF/LoT/references), và đóng gói nộp hoàn chỉnh (`evidence.zip`, `README.md`, submission checklist, export history). Vẫn tuyệt đối không login/cloud/realtime/AI (`ProductPRD.md` §6).
 
 ---
 
@@ -50,7 +50,7 @@ Tháng 1 đóng được vòng MVP (write→format→check→export). Tháng 2 n
 
 ## 📦 Cumulative Deliverables (cuối Tháng 2, cộng dồn Tháng 1)
 
-- Toàn bộ MVP loop Tháng 1 (write/format/check/export) còn xanh.
+- Toàn bộ Core MVP loop Tháng 1 (write/format/check/export) còn xanh.
 - Evidence kit: manager + appendix + QR + checker hook.
 - Thư viện 4 template + 2 reusable section + README import.
 - Format cứng: caption registry, LoF/LoT, references rules, PDF page-break, DOCX layout checklist.

@@ -1,4 +1,4 @@
-# 🚀 MONTH 1 SUMMARY: MVP REPORT WORKSPACE (W1-W4)
+# 🚀 MONTH 1 SUMMARY: CORE MVP (W1-W4)
 
 > Phase 1 of `Design/RoadMap/MasterRoadMap.md`. Covers Week 1 → Week 4.
 
@@ -6,9 +6,9 @@
 
 ## 🎯 Phase Goal
 
-**Build the end-to-end MVP loop: write → format → check → export.**
+**Build the end-to-end Core MVP loop: write → format → check → export.**
 
-Cuối Tháng 1, một sinh viên phải có thể: chọn template → điền metadata → sinh skeleton → viết Markdown với preview → chạy checker → export ra `report.html` / `report.pdf` / `report.docx`. Đây chính là "MVP Goal" trong `ProductPRD.md` §3 — vòng tròn báo cáo khép kín, **không** login, **không** cloud, **không** AI.
+Cuối Tháng 1, một sinh viên phải có thể: chọn template → điền metadata → sinh skeleton → viết Markdown với preview → chạy checker → export ra `report.html` / `report.pdf` / `report.docx`. Đây chính là "**Core MVP**" — vòng tròn báo cáo khép kín, **không** login, **không** cloud, **không** AI (các tính năng Evidence Kit chính thức và QR code sẽ được phát triển ở Submission MVP vào W5).
 
 ---
 
@@ -57,7 +57,7 @@ Cuối Tháng 1, một sinh viên phải có thể: chọn template → điền 
 - Module 1 (Write): CodeMirror editor, preview, template, autosave, image insert.
 - Shared pipeline `unified` ở `src/lib` (xương sống deterministic).
 - Module 2 (Format): heading numbering + TOC.
-- Module 3 (Check): checker engine + full MVP rules + Vitest + readiness score.
+- Module 3 (Check): checker engine + full Core MVP rules + Vitest + readiness score.
 - Module 4 (Export): HTML/PDF/DOCX thật + status/error handling.
 - Evidence: `Design/Reports/Month1/W1..W4/` (QA reports, build logs, checker samples, export samples, acceptance report).
 
@@ -80,7 +80,7 @@ Cuối Tháng 1, một sinh viên phải có thể: chọn template → điền 
 - [ ] Tất cả 4 tuần đạt Definition of Done riêng.
 - [ ] `npm run lint` + `typecheck` + `build` xanh trên nhánh tích hợp tháng 1.
 - [ ] `Vitest` xanh cho toàn bộ checker rules.
-- [ ] Full MVP loop chạy được: template → metadata → skeleton → write → preview → check → export 3 format.
+- [ ] Full Core MVP loop chạy được: template → metadata → skeleton → write → preview → check → export 3 format.
 - [ ] Export PDF/DOCX/HTML trung thực cover page + heading + table + code + image + caption.
 - [ ] First acceptance report đã nộp trong `Design/Reports/Month1/W4/`.
 - [ ] Không vi phạm Non-goals (no login/cloud/realtime/AI), không import lậu lib ngoài stack.
