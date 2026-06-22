@@ -87,7 +87,17 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-severity-warning-bg` | `#FFFBEB` | nền badge/row warning | |
 | `--rs-color-severity-info-bg` | `#F0F9FF` | nền badge/row info | |
 
-### 2.4. Semantic UI tokens — DARK (`[data-theme="dark"]`)
+### 2.4. Readiness score tokens (Module 3 — badge 0–100)
+
+> Check module tính **readiness score 0–100** (`Design/Modules/3.Check.md`). Badge điểm dùng ba token ngưỡng dưới đây, KHÔNG tính màu runtime.
+
+| Token | Light | Ngưỡng gợi ý |
+| :--- | :--- | :--- |
+| `--rs-color-readiness-good` | `var(--rs-green-600)` | `>= 80` — sẵn sàng nộp |
+| `--rs-color-readiness-medium` | `var(--rs-amber-500)` | `50–79` — còn cảnh báo |
+| `--rs-color-readiness-low` | `var(--rs-red-600)` | `< 50` — còn lỗi chặn |
+
+### 2.5. Semantic UI tokens — DARK (`[data-theme="dark"]`)
 
 > Chỉ override nhánh UI. Severity giữ độ tương phản tối thiểu AA trên nền tối. `--rs-report-*` **không** đổi.
 
@@ -103,6 +113,11 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-severity-error` | `#F87171` |
 | `--rs-color-severity-warning` | `#FBBF24` |
 | `--rs-color-severity-info` | `#38BDF8` |
+| `--rs-color-severity-error-bg` | `rgba(248,113,113,.12)` |
+| `--rs-color-severity-warning-bg` | `rgba(251,191,36,.12)` |
+| `--rs-color-severity-info-bg` | `rgba(56,189,248,.12)` |
+
+> 🔒 Severity background **bắt buộc** override ở dark mode: nếu giữ nguyên nền sáng `#FEF2F2`/`#FFFBEB`/`#F0F9FF`, row issue sẽ chói lóa giữa UI tối. Báo cáo (`--rs-report-*`) thì ngược lại — **không** override, luôn nền trắng chữ đen kể cả khi app đang dark.
 
 ---
 
@@ -132,24 +147,26 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 
 > Đây là scale học thuật. Mọi giá trị dưới đây **bằng đúng** preset trong `Design/Modules/2.Format.md` (A4, Times New Roman, 13/14, line-height 1.5, justify, numbering `1` / `1.1` / `1.1.1`). Preview pane và export (HTML/PDF/DOCX) đọc **cùng** tập token này → preview ↔ PDF ↔ DOCX không lệch.
 
+> ⚠️ **ĐƠN VỊ BẮT BUỘC LÀ `pt`, KHÔNG dùng `px` cho cỡ chữ report output.** Báo cáo học thuật đo bằng point (Word/PDF dùng pt). CSS quy đổi `1pt = 1/72in`, `1px = 1/96in` → **13pt ≈ 17.33px**, **14pt ≈ 18.67px**. Khai báo `14px` thực tế chỉ ≈ **10.5pt** — nhỏ hơn nhiều so với chuẩn 13/14pt. `pt` render đúng trên cả preview lẫn print nên giữ preview ↔ PDF ↔ DOCX khớp tuyệt đối. **Cấm `px` trong mọi token `--rs-report-*` về cỡ chữ.**
+
 | Token | Giá trị | Khớp với `2.Format.md` |
 | :--- | :--- | :--- |
 | `--rs-report-font-family` | `"Times New Roman", Times, serif` | Font: Times New Roman (configurable equivalent) |
-| `--rs-report-font-size-body` | `14px` *(≈ 13pt)* | Font size 13 hoặc 14 |
-| `--rs-report-font-size-body-alt` | `13px` | Preset thay thế 13 |
-| `--rs-report-line-height` | `1.5` | Line height 1.5 |
+| `--rs-report-font-size-body` | `13pt` | Font size 13 (preset mặc định) |
+| `--rs-report-font-size-body-alt` | `14pt` | Preset thay thế 14 |
+| `--rs-report-line-height` | `1.5` | Line height 1.5 (unitless) |
 | `--rs-report-text-align` | `justify` | Text alignment: justified cho body |
 | `--rs-report-color-text` | `#000000` | Chữ in đen tuyền (khác UI tránh `#000`) |
 
-**Heading hierarchy** — khớp numbering `1` / `1.1` / `1.1.1`:
+**Heading hierarchy** — khớp numbering `1` / `1.1` / `1.1.1` (đơn vị `pt`):
 
 | Token | Cấp | Size | Weight | Numbering |
 | :--- | :--- | :--- | :--- | :--- |
-| `--rs-report-h1-size` | Chương (`1`) | `18px` | `700` | `1.` — sang trang mới ở PDF/DOCX (chapter-break, Format §"Chapter behavior") |
-| `--rs-report-h2-size` | Mục (`1.1`) | `16px` | `700` | `1.1` |
-| `--rs-report-h3-size` | Tiểu mục (`1.1.1`) | `14px` | `700` | `1.1.1` |
-| `--rs-report-heading-lh` | — | `1.4` | — | Line-height riêng cho heading |
-| `--rs-report-caption-size` | Caption hình/bảng | `12px` | `400` *(italic)* | "Hình 1.", "Bảng 1." (Format §captions) |
+| `--rs-report-h1-size` | Chương (`1`) | `16pt` | `700` | `1.` — sang trang mới ở PDF/DOCX (chapter-break, Format §"Chapter behavior") |
+| `--rs-report-h2-size` | Mục (`1.1`) | `14pt` | `700` | `1.1` |
+| `--rs-report-h3-size` | Tiểu mục (`1.1.1`) | `13pt` | `700` | `1.1.1` (cùng cỡ body, phân biệt bằng bold) |
+| `--rs-report-heading-lh` | — | `1.4` | — | Line-height riêng cho heading (unitless) |
+| `--rs-report-caption-size` | Caption hình/bảng | `12pt` | `400` *(italic)* | "Hình 1.", "Bảng 1." (Format §captions) |
 
 > 🔒 Checker rule "Heading jumps levels" (`3.Check.md`) đọc đúng ba cấp h1/h2/h3 này. Nếu đổi hierarchy ở đây, phải đối chiếu lại rule đó.
 
