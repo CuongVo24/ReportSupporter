@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# next / node build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+
+# local env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# generated exports and local caches
+exports/
+exported/
+evidence/
+.cache/
+.tmp/
+tmp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
