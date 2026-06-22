@@ -87,10 +87,10 @@ src/
       index.ts               # public surface: { exportHtml, exportPdf, exportDocx }
       export-html.ts         # rehype-stringify + print CSS
       export-pdf.ts          # browser print/print CSS first path
+      export-docx.ts         # docx từ mdast (public surface của Module Export)
     evidence/
       index.ts               # public surface: { EvidencePanel, validateEvidence }
       evidence-types.ts
-      export-docx.ts         # docx từ mdast
   lib/
     markdown-pipeline.ts     # unified: remark-parse + gfm + math + rehype-katex + highlight
     idb-client.ts            # idb wrapper (stores: projects, drafts)
