@@ -1,0 +1,26 @@
+> report-supporter@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 6.0s
+   Linting and checking validity of types ...
+ ✓ No linting errors or warnings
+ ✓ Checking validity of types
+   Collecting page data ...
+   Generating static pages (5/5) ...
+ ✓ Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    212 kB          302 kB
+└ ○ /_not-found                          883 B          90.9 kB
++ First Load JS shared by all            90 kB
+  ├ chunks/464-a63db7612c6a0c0a.js       30 kB
+  ├ chunks/fd9d1056-a19dbbb8682a8536.js  57.8 kB
+  ├ chunks/main-app-3dfc83b8b60b13d2.js  953 B
+  └ chunks/webpack-69b76c8c49e7555e.js   1.21 kB
+
+○  (Static)  prerendered as static content
