@@ -79,6 +79,6 @@ export function MermaidRenderer(props: { code: string }): JSX.Element; // client
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Đề xuất 2 commit: (1) PreviewPane qua pipeline + katex CSS; (2) MermaidRenderer client-only + test. +1 docs commit.
