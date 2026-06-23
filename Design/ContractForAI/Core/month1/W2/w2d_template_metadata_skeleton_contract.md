@@ -76,6 +76,6 @@ export function generateSkeleton(
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Đề xuất 2 commit: (1) generate-skeleton + seed + test; (2) TemplatePicker + MetadataForm + wire Workspace. +1 docs commit.
