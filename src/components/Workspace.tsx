@@ -146,7 +146,7 @@ export function Workspace() {
           ariaLabel={`Editor: ${activeSection.title}`}
         />
       }
-      preview={<PreviewPane markdown={activeSection.markdown} />}
+      preview={<PreviewPane markdown={activeSection.markdown} assets={bundle.assets} />}
       sidePanel={sidePanel}
     />
   );
