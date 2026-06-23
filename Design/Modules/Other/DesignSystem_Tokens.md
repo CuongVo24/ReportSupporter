@@ -326,6 +326,24 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 
 ---
 
+## 7b. ♿ ACCESSIBILITY (WCAG TARGET)
+
+> Chuẩn đích: **WCAG 2.2 mức AA** cho **Workspace UI**. (Report Output là tài liệu in — a11y của nó là chuyện trình đọc PDF/Word, không áp WCAG màn hình.) Pass a11y đầy đủ là mốc **W12** (`RoadMap/MasterRoadMap.md`, `week12.md` Day 4 + `a11y_checklist.md`), nhưng các tiêu chí dưới đây áp **ngay khi dựng component**, không dồn cuối.
+
+| Tiêu chí | Yêu cầu | Token / cách |
+| :--- | :--- | :--- |
+| **Contrast** | Text/nền & badge severity đạt AA (≥ 4.5:1 text thường, ≥ 3:1 text lớn/UI component) | Palette §2 chọn theo AA; dark mode override severity (§2.5) để không chói |
+| **Focus visible** | Mọi phần tử tương tác có focus ring rõ | `--rs-color-focus-ring` (§2.2); **cấm** `outline: none` trần |
+| **Keyboard** | Toàn bộ flow thao tác được bằng bàn phím (editor, template picker, asset menu, checker jump-to-issue) | Tab order hợp lý; menu/dialog bẫy focus + Esc đóng |
+| **Không chỉ dựa màu** | Severity **không** phân biệt chỉ bằng màu | Badge kèm icon/nhãn text (`error/warning/info`), không chỉ `--rs-color-severity-*` |
+| **Target size** | Nút/ý tương tác đủ lớn để bấm | ≥ 24×24px (WCAG 2.2 Target Size AA) |
+| **Motion** | Tôn trọng `prefers-reduced-motion` | Tắt animation không cần thiết |
+| **Semantics** | Landmark/role/aria-label cho pane & danh sách issue | `aria-label` cho editor/preview/checker; issue list điều hướng được |
+
+> 🔗 Acceptance a11y theo module: editor/form xem `Design/Modules/1.Write.md` §9; checker issue list xem `Design/Modules/3.Check.md` §9.
+
+---
+
 ## 8. 📎 CROSS-REFERENCES
 
 * `Design/Modules/2.Format.md` — preset A4 / Times New Roman 13-14 / line-height 1.5 / justify / numbering mà §3.2 và §5 phải khớp.

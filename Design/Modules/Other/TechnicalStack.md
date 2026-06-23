@@ -32,6 +32,8 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 
 **Bất biến:** Format, Check, Export **không** parse Markdown riêng — tất cả tiêu thụ cùng AST. Đây chính là "intermediate document model" trong `Modules/4.Export.md`. Đổi parser/plugin ⇒ ảnh hưởng cả 3 nhánh ⇒ phải qua Contract.
 
+**🔒 Bảo mật:** nhánh HTML (preview + export) chèn `rehype-sanitize` ngay sau `remark-rehype` (trước katex/highlight). Mọi HTML đẩy vào DOM phải là output đã sanitize — xem `Modules/Other/Security.md`.
+
 ---
 
 ## 1. ⚙️ FRAMEWORK & RUNTIME
@@ -60,7 +62,8 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 * **Parse:** `remark-parse` + `remark-gfm` (bảng, task list, strikethrough)
 * **Math (LaTeX):** `remark-math` → `rehype-katex` + `katex`
 * **Code highlight:** `rehype-highlight` (highlight.js — deterministic, không cần build step như Shiki)
-* **Markdown → HTML:** `remark-rehype` → `rehype-stringify`
+* **Markdown → HTML:** `remark-rehype` → `rehype-sanitize` → `rehype-stringify`
+* **🔒 Sanitize (bảo mật):** `rehype-sanitize` chèn ngay sau `remark-rehype`, **trước** katex/highlight (để markup katex/highlight là trusted). Raw HTML bị bỏ mặc định — **không** `allowDangerousHtml`, **không** `rehype-raw`. Threat model + schema mở rộng (giữ class `math-*`/`language-*`, chặn `javascript:` URI): [Security.md](file:///e:/ReportSupporter/Design/Modules/Other/Security.md).
 * **Diagrams:** `mermaid` — render **client-side** (Mermaid cần DOM). PDF MVP dùng browser print từ DOM đã render; Puppeteer worker later cũng render lại DOM trong Chromium nếu được approve.
 
 **Pipeline Contract Types:**
@@ -129,6 +132,7 @@ Vì sao chọn — và vì sao **loại** lựa chọn khác. Đây là lý do s
 | **Framework** | Next.js (App Router) + TS strict | Vite SPA thuần / CRA | Workspace-first + server boundary sẵn cho export hardening sau này |
 | **Editor** | `<textarea>` (W1) → CodeMirror 6 (W2+) | TipTap / Slate / Lexical (WYSIWYG) | Sai triết lý "Markdown-first"; contenteditable khó deterministic, lock-in nặng |
 | **Markdown core** | `unified` + remark/rehype | `markdown-it`, `marked` | Cần AST chung (mdast/hast) cho Format/Check/Export; remark-* cho plugin chuẩn (gfm/math) |
+| **Sanitize HTML** | `rehype-sanitize` (schema mở rộng) | Không sanitize / `DOMPurify` riêng | Cùng hệ unified/hast, chèn thẳng pipeline; tránh kéo runtime DOM lib ngoài; raw HTML bỏ mặc định (`Security.md`) |
 | **Code highlight** | `rehype-highlight` (highlight.js) | Shiki | Shiki cần build/theme step + bất tiện deterministic ở client; highlight.js đủ & nhẹ |
 | **Math** | `remark-math` + `rehype-katex` + `katex` | MathJax | KaTeX nhanh, render đồng nhất, deterministic hơn cho export |
 | **Diagrams** | `mermaid` (client-side) | Graphviz/PlantUML (cần binary/server) | Mermaid render trong DOM; browser print/Puppeteer later đều dùng DOM đã render |
@@ -148,7 +152,7 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | Tuần | Cài mới | Lý do |
 |---|---|---|
 | **W1 (bootstrap)** | `next`, `react`, `react-dom`, `typescript`, `eslint`, `prettier`, `vitest`, `zod`, `idb` | Project shell + types + autosave PoC. **Editor = `<textarea>`, chưa cài editor lib** (Risk W1). Export = stub. |
-| **W2 (Write)** | `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-stringify` | Editor thật + preview qua pipeline cơ bản. |
+| **W2 (Write)** | `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-sanitize`, `rehype-stringify` | Editor thật + preview qua pipeline cơ bản (preview chèn `rehype-sanitize` — `Security.md`). |
 | **W3 (Format/Check)** | `remark-math`, `rehype-katex`, `katex`, `rehype-highlight`, `mermaid` | Math/code/diagram cho preview; Format & Checker đọc AST. |
 | **W4 (Export)** | `docx` | HTML + browser-print PDF first path; DOCX basic editable. Puppeteer chưa cài trong MVP nếu chưa có Contract hardening. |
 | **Phase 2 (W5)** | `qrcode` | Evidence Kit QR (deferred). |
