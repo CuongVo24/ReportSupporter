@@ -1,5 +1,65 @@
 :root {
   color-scheme: light;
+
+  /* Primitive palette (DesignSystem §2.1) */
+  --rs-blue-600: #2563eb;
+  --rs-blue-700: #1d4ed8;
+  --rs-blue-100: #dbeafe;
+  --rs-slate-900: #0f172a;
+  --rs-slate-700: #334155;
+  --rs-slate-500: #64748b;
+  --rs-slate-300: #cbd5e1;
+  --rs-slate-100: #f1f5f9;
+  --rs-slate-50: #f8fafc;
+  --rs-white: #ffffff;
+  --rs-green-600: #16a34a;
+
+  /* Semantic UI — light (DesignSystem §2.2) */
+  --rs-color-bg: var(--rs-slate-50);
+  --rs-color-surface: var(--rs-white);
+  --rs-color-surface-muted: var(--rs-slate-100);
+  --rs-color-border: var(--rs-slate-300);
+  --rs-color-text: var(--rs-slate-900);
+  --rs-color-text-muted: var(--rs-slate-500);
+  --rs-color-primary: var(--rs-blue-600);
+  --rs-color-primary-hover: var(--rs-blue-700);
+  --rs-color-focus-ring: var(--rs-blue-600);
+  --rs-color-success: var(--rs-green-600);
+
+  /* Spacing — 4px grid (DesignSystem §4.1) */
+  --rs-space-1: 4px;
+  --rs-space-2: 8px;
+  --rs-space-3: 12px;
+  --rs-space-4: 16px;
+  --rs-space-5: 20px;
+  --rs-space-6: 24px;
+  --rs-space-8: 32px;
+
+  /* Typography — UI scale (DesignSystem §3.1) */
+  --rs-font-family-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rs-font-family-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --rs-font-size-xs: 12px;
+  --rs-font-size-sm: 13px;
+  --rs-font-size-md: 14px;
+  --rs-font-size-lg: 16px;
+  --rs-font-size-xl: 20px;
+  --rs-font-weight-regular: 400;
+  --rs-font-weight-medium: 500;
+  --rs-font-weight-bold: 700;
+  --rs-font-lh-ui: 1.45;
+
+  /* Radius (DesignSystem §4.2) */
+  --rs-radius-sm: 6px;
+  --rs-radius-md: 10px;
+  --rs-radius-lg: 14px;
+  --rs-radius-full: 9999px;
+
+  /* Elevation (DesignSystem §4.3) */
+  --rs-elevation-1: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --rs-elevation-2: 0 4px 12px rgba(15, 23, 42, 0.12);
+
+  /* Z-index (DesignSystem §4.4) */
+  --rs-z-sticky: 100;
 }
 
 * {
@@ -10,4 +70,77 @@ html,
 body {
   margin: 0;
   padding: 0;
+}
+
+body {
+  background: var(--rs-color-bg);
+  color: var(--rs-color-text);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  line-height: var(--rs-font-lh-ui);
+}
+
+/* Workspace shell — Module 1 (Write), W1 Group B */
+.ws-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.ws-topbar {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 var(--rs-space-4);
+  background: var(--rs-color-surface);
+  border-bottom: 1px solid var(--rs-color-border);
+  box-shadow: var(--rs-elevation-1);
+  z-index: var(--rs-z-sticky);
+}
+
+.ws-brand {
+  font-weight: var(--rs-font-weight-bold);
+  font-size: var(--rs-font-size-lg);
+}
+
+.ws-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr 320px;
+  gap: 1px;
+  flex: 1;
+  min-height: 0;
+  background: var(--rs-color-border);
+}
+
+.ws-zone {
+  background: var(--rs-color-surface);
+  padding: var(--rs-space-4);
+  overflow: auto;
+}
+
+.ws-editor {
+  font-family: var(--rs-font-family-mono);
+}
+
+.ws-side {
+  background: var(--rs-color-surface-muted);
+}
+
+.ws-zone-title {
+  margin: 0 0 var(--rs-space-2);
+  font-size: var(--rs-font-size-lg);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-zone-hint {
+  margin: 0;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+@media (max-width: 900px) {
+  .ws-main {
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(180px, auto);
+  }
 }

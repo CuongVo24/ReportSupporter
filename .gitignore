@@ -22,10 +22,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# generated exports and local caches
-exports/
-exported/
-evidence/
+# generated exports and local caches (root-level only — do not ignore src/modules/evidence)
+/exports/
+/exported/
+/evidence/
 .cache/
 .tmp/
 tmp/
@@ -33,6 +33,9 @@ tmp/
 # typescript / next generated
 next-env.d.ts
 *.tsbuildinfo
+
+# local preview helper
+.claude/launch.json
 
 # OS / editor
 .DS_Store
