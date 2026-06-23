@@ -152,8 +152,8 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | Tuần | Cài mới | Lý do |
 |---|---|---|
 | **W1 (bootstrap)** | `next`, `react`, `react-dom`, `typescript`, `eslint`, `prettier`, `vitest`, `zod`, `idb` | Project shell + types + autosave PoC. **Editor = `<textarea>`, chưa cài editor lib** (Risk W1). Export = stub. |
-| **W2 (Write)** | `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-sanitize`, `rehype-stringify` | Editor thật + preview qua pipeline cơ bản (preview chèn `rehype-sanitize` — `Security.md`). |
-| **W3 (Format/Check)** | `remark-math`, `rehype-katex`, `katex`, `rehype-highlight`, `mermaid` | Math/code/diagram cho preview; Format & Checker đọc AST. |
+| **W2 (Write)** | `@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `unified`, `remark-parse`, `remark-gfm`, `remark-math`, `remark-rehype`, `rehype-sanitize`, `rehype-katex`, `rehype-highlight`, `rehype-stringify`, `katex`, `mermaid` | Editor thật + live preview đầy đủ (GFM + math KaTeX + code highlight + Mermaid client-side). `rehype-sanitize` chèn ngay sau `remark-rehype` (`Security.md`). Quyết định review-agreed (w2 §Locked): kéo math/highlight/mermaid vào W2 để preview "real" ngay, khớp `RoadMap/week_1-2-3-4/week2.md`. |
+| **W3 (Format/Check)** | *(không cài lib mới — pipeline đã đủ ở W2)* | Format (numbering/TOC/caption) & Checker engine đọc AST từ pipeline W2; không thêm dependency. |
 | **W4 (Export)** | `docx` | HTML + browser-print PDF first path; DOCX basic editable. Puppeteer chưa cài trong MVP nếu chưa có Contract hardening. |
 | **Phase 2 (W5)** | `qrcode` | Evidence Kit QR (deferred). |
 | **Export hardening (later)** | `puppeteer` | Worker/service riêng cho PDF chính xác hơn khi browser print không đủ. |
