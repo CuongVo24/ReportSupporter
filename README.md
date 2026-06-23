@@ -1,6 +1,6 @@
 # 📝 ReportSupporter — Trợ lý Số hóa & Chuẩn hóa Báo cáo Học thuật
 
-[![Next.js](https://img.shields.io/badge/Framework-Next.js%2014-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Framework-Next.js%2015-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
@@ -69,7 +69,7 @@ graph TD
 
 Sản phẩm tuân thủ triết lý hiệu năng cao, tối giản thư viện ngoài và bảo mật tối đa:
 
-* **Frontend Framework**: Next.js 14 (App Router), React, TypeScript.
+* **Frontend Framework**: Next.js 15 (App Router), React, TypeScript.
 * **Markdown Pipeline**: Bộ công cụ `unified` (`remark-parse`, `remark-gfm`, `rehype-katex`, `rehype-highlight`, `rehype-stringify`) xử lý AST mượt mà.
 * **Performance**: Unified pipeline và Checker được chạy ngầm dưới **Web Worker** để không gây giật lag luồng xử lý giao diện chính (main thread).
 * **Storage**: Lưu trữ cục bộ thông qua IndexedDB (thư viện `idb`), không gửi dữ liệu báo cáo lên máy chủ đám mây (Privacy-First).
@@ -83,7 +83,7 @@ Toàn bộ tài liệu phân tích kỹ thuật và lộ trình phát triển đ
 * [`Design/ProductPRD.md`](Design/ProductPRD.md): Yêu cầu sản phẩm chi tiết và phạm vi tính năng MVP.
 * [`Design/Modules/Other/TechnicalStack.md`](Design/Modules/Other/TechnicalStack.md): Stack công nghệ đã khóa và cấu trúc thư mục quy chuẩn.
 * [`Design/Modules/Other/PipelineContract.md`](Design/Modules/Other/PipelineContract.md): Quy ước chi tiết về mô hình dữ liệu AST dùng chung.
-* [`Design/RoadMap/MasterRoadMap.md`](Design/RoadMap/MasterRoadMap.md): Lộ trình 8 tuần phát triển từ Core MVP đến bản hoàn thiện.
+* [`Design/RoadMap/MasterRoadMap.md`](Design/RoadMap/MasterRoadMap.md): Lộ trình 12 tuần phát triển từ Core MVP đến bản hoàn thiện.
 
 ---
 
