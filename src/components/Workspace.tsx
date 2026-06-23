@@ -1,8 +1,5 @@
 "use client";
 
-// W1 Group D orchestrator: load/bootstrap a draft, edit the active section, render
-// raw preview, and autosave to IndexedDB (throttled). Container that wires the
-// presentational WorkspaceLayout slots (Coding & Git Standard §4b).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
@@ -13,9 +10,11 @@ import {
   loadBundle,
   saveBundle,
   softwareProjectTemplate,
+  generateSkeleton,
+  ProjectInitializer,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
-import type { ReportIssue, ReportProjectBundle } from "@/types";
+import type { ReportIssue, ReportProjectBundle, TemplateSchema } from "@/types";
 
 type SaveStatus = "idle" | "saving" | "saved";
 
@@ -26,6 +25,7 @@ export function Workspace() {
   const [quotaFull, setQuotaFull] = useState(false);
   const [issues, setIssues] = useState<ReportIssue[]>([]);
   const [hasRun, setHasRun] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   const saverRef = useRef(
     createThrottledSaver<ReportProjectBundle>(async (next) => {
@@ -34,12 +34,11 @@ export function Workspace() {
         setQuotaFull(false);
         setStatus("saved");
       } catch {
-        setQuotaFull(true); // keep RAM state; surface a banner (1.Write §6)
+        setQuotaFull(true);
       }
     }, 2000),
   );
 
-  // Load existing draft or bootstrap the default template (1.Write §5.1 / §6).
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -48,6 +47,10 @@ export function Workspace() {
       if (!active) return;
       setBundle(next);
       setActiveId(next.project.sections[0]?.id ?? null);
+      setIsInitializing(!existing || (
+        next.project.title === softwareProjectTemplate.name &&
+        Object.keys(next.project.metadata).length === 0
+      ));
       if (!existing) void saveBundle(next).catch(() => setQuotaFull(true));
     })();
     return () => {
@@ -55,7 +58,6 @@ export function Workspace() {
     };
   }, []);
 
-  // Flush the pending save before the tab is hidden/closed.
   useEffect(() => {
     const saver = saverRef.current;
     const flush = () => saver.flush();
@@ -68,28 +70,25 @@ export function Workspace() {
   }, []);
 
   const activeSection = useMemo(
-    () => bundle?.project.sections.find((section) => section.id === activeId) ?? null,
+    () => bundle?.project.sections.find((sec) => sec.id === activeId) ?? null,
     [bundle, activeId],
   );
 
-  const handleChange = useCallback(
-    (markdown: string) => {
-      setBundle((prev) => {
-        if (!prev || !activeId) return prev;
-        const sections = prev.project.sections.map((section) =>
-          section.id === activeId ? { ...section, markdown } : section,
-        );
-        const next: ReportProjectBundle = {
-          ...prev,
-          project: { ...prev.project, sections, updatedAt: new Date().toISOString() },
-        };
-        setStatus("saving");
-        saverRef.current.schedule(next);
-        return next;
-      });
-    },
-    [activeId],
-  );
+  const handleChange = useCallback((markdown: string) => {
+    setBundle((prev) => {
+      if (!prev || !activeId) return prev;
+      const sections = prev.project.sections.map((sec) =>
+        sec.id === activeId ? { ...sec, markdown } : sec,
+      );
+      const next: ReportProjectBundle = {
+        ...prev,
+        project: { ...prev.project, sections, updatedAt: new Date().toISOString() },
+      };
+      setStatus("saving");
+      saverRef.current.schedule(next);
+      return next;
+    });
+  }, [activeId]);
 
   const handleCheck = useCallback(() => {
     if (!bundle) return;
@@ -97,31 +96,71 @@ export function Workspace() {
     setHasRun(true);
   }, [bundle]);
 
-  if (!bundle || !activeSection) {
+  const handleInitialize = useCallback((
+    template: TemplateSchema,
+    title: string,
+    metadata: Record<string, string | string[]>
+  ) => {
+    if (!bundle) return;
+    const generatedSections = generateSkeleton(template, { title, ...metadata });
+    const next: ReportProjectBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        title,
+        metadata,
+        sections: generatedSections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+    setBundle(next);
+    setActiveId(generatedSections[0]?.id ?? null);
+    setIsInitializing(false);
+    setStatus("saving");
+    saverRef.current.schedule(next);
+  }, [bundle]);
+
+  const handleReset = useCallback(() => {
+    if (!confirm("Tạo mới báo cáo? Toàn bộ nội dung hiện tại sẽ bị xóa.")) return;
+    const fresh = createProjectFromTemplate(softwareProjectTemplate);
+    setBundle(fresh);
+    setActiveId(fresh.project.sections[0]?.id ?? null);
+    setIsInitializing(true);
+    setIssues([]);
+    setHasRun(false);
+    void saveBundle(fresh).catch(() => setQuotaFull(true));
+  }, []);
+
+  if (!bundle) {
+    return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
+  }
+
+  if (isInitializing) {
     return (
-      <WorkspaceLayout
-        editor={<p className="ws-zone-hint">Đang tải…</p>}
-        preview={null}
-        sidePanel={null}
+      <ProjectInitializer
+        templates={[softwareProjectTemplate]}
+        initialTitle={bundle.project.title}
+        initialMetadata={bundle.project.metadata}
+        onInitialize={handleInitialize}
       />
     );
   }
 
+  if (!activeSection) {
+    return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
+  }
+
   const sidePanel = (
     <div className="ws-side-inner">
-      <label className="ws-side-label" htmlFor="ws-section-select">
-        Sections
-      </label>
+      <label className="ws-side-label" htmlFor="ws-section-select">Sections</label>
       <select
         id="ws-section-select"
         className="ws-section-select"
         value={activeSection.id}
-        onChange={(event) => setActiveId(event.target.value)}
+        onChange={(e) => setActiveId(e.target.value)}
       >
-        {bundle.project.sections.map((section) => (
-          <option key={section.id} value={section.id}>
-            {section.title}
-          </option>
+        {bundle.project.sections.map((sec) => (
+          <option key={sec.id} value={sec.id}>{sec.title}</option>
         ))}
       </select>
       <p className="ws-save-status" aria-live="polite">
@@ -133,6 +172,22 @@ export function Workspace() {
               ? "Saved"
               : ""}
       </p>
+      <button
+        onClick={handleReset}
+        style={{
+          padding: "var(--rs-space-2)",
+          border: "1px solid var(--rs-color-border)",
+          borderRadius: "var(--rs-radius-sm)",
+          backgroundColor: "var(--rs-color-surface)",
+          color: "var(--rs-color-text-muted)",
+          fontSize: "var(--rs-font-size-xs)",
+          cursor: "pointer",
+          marginBottom: "var(--rs-space-3)",
+          width: "100%",
+        }}
+      >
+        Tạo mới báo cáo
+      </button>
       <CheckerPanel issues={issues} onRun={handleCheck} hasRun={hasRun} />
     </div>
   );
@@ -151,3 +206,4 @@ export function Workspace() {
     />
   );
 }
+
