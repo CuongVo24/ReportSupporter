@@ -69,17 +69,17 @@ export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
           
           return <MermaidRenderer key={index} code={code} />;
         } else {
+          // Resolve offline asset references asset:<id> -> base64 data URLs on the markdown first
+          const resolvedMarkdown = resolveAssetRefs(part, assets);
           // Render HTML through the unified markdown pipeline
-          const rawHtml = renderMarkdown(part);
-          // Resolve offline asset references asset:<id> -> base64 data URLs
-          const resolvedHtml = resolveAssetRefs(rawHtml, assets);
+          const renderedHtml = renderMarkdown(resolvedMarkdown);
 
           return (
             <div
               key={index}
               className="ws-preview-html-section"
               style={{ display: "contents" }}
-              dangerouslySetInnerHTML={{ __html: resolvedHtml }}
+              dangerouslySetInnerHTML={{ __html: renderedHtml }}
             />
           );
         }

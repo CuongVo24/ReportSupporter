@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { resolveAssetRefs } from "./resolve-assets";
 import type { ReportAsset } from "@/types";
+import { renderMarkdown } from "../../lib/markdown-pipeline";
 
 describe("resolveAssetRefs", () => {
   const assets: ReportAsset[] = [
@@ -39,4 +40,19 @@ describe("resolveAssetRefs", () => {
     const htmlOutput = resolveAssetRefs(htmlInput, []);
     expect(htmlOutput).toBe('<img src="asset:a1">');
   });
+
+  it("integrates with renderMarkdown to ensure resolved data URLs are not stripped by sanitization", () => {
+    const mdInput = "![test](asset:a1)";
+    const resolvedMd = resolveAssetRefs(mdInput, assets);
+    const htmlOutput = renderMarkdown(resolvedMd);
+    expect(htmlOutput).toContain('src="data:image/png;base64,iVBORw0KGgoAAAANS"');
+    expect(htmlOutput).not.toContain("asset:a1");
+  });
+
+  it("does not throw if asset ID is missing in the assets array", () => {
+    const mdInput = "![test](asset:missing)";
+    const resolvedMd = resolveAssetRefs(mdInput, assets);
+    expect(() => renderMarkdown(resolvedMd)).not.toThrow();
+  });
 });
+
