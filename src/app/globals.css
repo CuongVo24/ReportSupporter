@@ -13,6 +13,9 @@
   --rs-slate-50: #f8fafc;
   --rs-white: #ffffff;
   --rs-green-600: #16a34a;
+  --rs-red-600: #dc2626;
+  --rs-amber-500: #f59e0b;
+  --rs-sky-600: #0284c7;
 
   /* Semantic UI — light (DesignSystem §2.2) */
   --rs-color-bg: var(--rs-slate-50);
@@ -25,6 +28,11 @@
   --rs-color-primary-hover: var(--rs-blue-700);
   --rs-color-focus-ring: var(--rs-blue-600);
   --rs-color-success: var(--rs-green-600);
+
+  /* Severity — map 1:1 to ReportIssue.severity (DesignSystem §2.3) */
+  --rs-color-severity-error: var(--rs-red-600);
+  --rs-color-severity-warning: var(--rs-amber-500);
+  --rs-color-severity-info: var(--rs-sky-600);
 
   /* Spacing — 4px grid (DesignSystem §4.1) */
   --rs-space-1: 4px;
@@ -196,6 +204,104 @@ body {
 .ws-save-status {
   margin: 0;
   font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+}
+
+/* Checker panel — Module 3 (Check), W1 Group E */
+.ws-checker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-3);
+  border-top: 1px solid var(--rs-color-border);
+  padding-top: var(--rs-space-3);
+}
+
+.ws-checker-run {
+  align-self: flex-start;
+  padding: var(--rs-space-2) var(--rs-space-4);
+  border: none;
+  border-radius: var(--rs-radius-sm);
+  background: var(--rs-color-primary);
+  color: var(--rs-white);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+}
+
+.ws-checker-run:hover {
+  background: var(--rs-color-primary-hover);
+}
+
+.ws-checker-run:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-checker-empty {
+  margin: 0;
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-success);
+}
+
+.ws-checker-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-checker-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  margin: 0;
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-sev {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--rs-radius-full);
+  color: var(--rs-white);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-sev-error {
+  background: var(--rs-color-severity-error);
+}
+
+.ws-sev-warning {
+  background: var(--rs-color-severity-warning);
+}
+
+.ws-sev-info {
+  background: var(--rs-color-severity-info);
+}
+
+.ws-checker-list {
+  margin: 0;
+  padding-left: var(--rs-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-checker-item {
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-checker-msg {
+  display: block;
+  color: var(--rs-color-text);
+}
+
+.ws-checker-hint {
+  display: block;
   color: var(--rs-color-text-muted);
 }
 

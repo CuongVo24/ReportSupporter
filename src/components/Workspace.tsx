@@ -14,7 +14,8 @@ import {
   saveBundle,
   softwareProjectTemplate,
 } from "@/modules/write";
-import type { ReportProjectBundle } from "@/types";
+import { CheckerPanel, runChecker } from "@/modules/check";
+import type { ReportIssue, ReportProjectBundle } from "@/types";
 
 type SaveStatus = "idle" | "saving" | "saved";
 
@@ -23,6 +24,8 @@ export function Workspace() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [quotaFull, setQuotaFull] = useState(false);
+  const [issues, setIssues] = useState<ReportIssue[]>([]);
+  const [hasRun, setHasRun] = useState(false);
 
   const saverRef = useRef(
     createThrottledSaver<ReportProjectBundle>(async (next) => {
@@ -88,6 +91,12 @@ export function Workspace() {
     [activeId],
   );
 
+  const handleCheck = useCallback(() => {
+    if (!bundle) return;
+    setIssues(runChecker(bundle));
+    setHasRun(true);
+  }, [bundle]);
+
   if (!bundle || !activeSection) {
     return (
       <WorkspaceLayout
@@ -124,6 +133,7 @@ export function Workspace() {
               ? "Saved"
               : ""}
       </p>
+      <CheckerPanel issues={issues} onRun={handleCheck} hasRun={hasRun} />
     </div>
   );
 
