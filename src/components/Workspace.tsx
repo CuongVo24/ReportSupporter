@@ -66,7 +66,7 @@ export function Workspace() {
 
   const handleCheck = useCallback(() => {
     if (!bundle) return;
-    setIssues(runChecker(bundle));
+    setIssues(runChecker(bundle).issues);
     setHasRun(true);
   }, [bundle]);
 
