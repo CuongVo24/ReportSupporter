@@ -12,6 +12,7 @@ export type {
 export type { EvidenceKind, EvidenceItem } from "./evidence";
 export type { FormatPreset, FormatSettings } from "./format";
 export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./template";
+export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob } from "./export";
 
 export {
   reportSectionSchema,
