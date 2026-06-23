@@ -79,6 +79,6 @@ export type { NumberedHeading } from "./number-headings";
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Suggested commits: (1) generate-toc + format index + tests; (2) PreviewPane numbering + TOC; +1 docs commit.
