@@ -1,15 +1,73 @@
-// Presentational preview — W1 shows RAW Markdown text (no HTML rendering).
-// The real unified (remark/rehype) pipeline arrives in W2.
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import { renderMarkdown } from "@/lib/markdown-pipeline";
+import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
+import type { ReportAsset } from "@/types";
+import "@/lib/katex-styles"; // Import KaTeX CSS styles
 
 type PreviewPaneProps = {
   markdown: string;
+  assets?: ReportAsset[];
 };
 
-export function PreviewPane({ markdown }: PreviewPaneProps) {
-  const hasContent = markdown.trim().length > 0;
+export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
+  const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
+
+  // Debounce markdown changes to prevent rendering on every keystroke
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMarkdown(markdown);
+    }, 250); // 250ms debounce threshold
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [markdown]);
+
+  const hasContent = debouncedMarkdown.trim().length > 0;
+
+  // Split markdown to isolate Mermaid diagrams and render them client-only
+  const contentParts = useMemo(() => {
+    if (!hasContent) return [];
+    return debouncedMarkdown.split(/(```mermaid[\s\S]*?```)/g);
+  }, [debouncedMarkdown, hasContent]);
+
+  if (!hasContent) {
+    return (
+      <div className="ws-preview-empty">
+        Chưa có nội dung xem trước.
+      </div>
+    );
+  }
+
   return (
-    <pre className="ws-preview-raw" aria-label="Raw Markdown preview">
-      {hasContent ? markdown : "Chưa có nội dung."}
-    </pre>
+    <div className="ws-preview-container">
+      {contentParts.map((part, index) => {
+        const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
+
+        if (isMermaid) {
+          // Extract the mermaid code content (strip block fences)
+          const code = part
+            .replace(/^```mermaid\s*/, "")
+            .replace(/\s*```$/, "");
+          
+          return <MermaidRenderer key={index} code={code} />;
+        } else {
+          // Resolve offline asset references asset:<id> -> base64 data URLs on the markdown first
+          const resolvedMarkdown = resolveAssetRefs(part, assets);
+          // Render HTML through the unified markdown pipeline
+          const renderedHtml = renderMarkdown(resolvedMarkdown);
+
+          return (
+            <div
+              key={index}
+              className="ws-preview-html-section"
+              dangerouslySetInnerHTML={{ __html: renderedHtml }}
+            />
+          );
+        }
+      })}
+    </div>
   );
 }

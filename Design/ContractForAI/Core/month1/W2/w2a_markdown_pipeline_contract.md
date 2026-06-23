@@ -84,6 +84,6 @@ export function parseMarkdown(markdown: string): MdastRoot;  // Markdown → mda
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất 2 commit: (1) cài deps + pipeline + types + test; (2) (nếu tách) — mặc định gộp 1 commit feat + 1 docs contract.

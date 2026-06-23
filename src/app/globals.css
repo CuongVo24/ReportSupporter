@@ -311,3 +311,154 @@ body {
     grid-auto-rows: minmax(180px, auto);
   }
 }
+
+/* visible error style */
+.ws-preview-error {
+  color: var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+  margin-top: var(--rs-space-1);
+}
+
+/* EditorPanel extracted styles */
+.ws-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  overflow: hidden;
+  background: var(--rs-color-surface);
+}
+
+.ws-editor-toolbar {
+  display: flex;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  background: var(--rs-color-surface-muted);
+  border-bottom: 1px solid var(--rs-color-border);
+  overflow-x: auto;
+}
+
+.ws-editor-toolbar-btn {
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-slate-700);
+  background: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.ws-editor-cm-parent {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* PreviewPane extracted styles */
+.ws-preview-empty {
+  color: var(--rs-color-text-muted);
+  font-style: italic;
+  padding: var(--rs-space-2);
+}
+
+.ws-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  line-height: 1.6;
+  color: var(--rs-color-text);
+  background-color: var(--rs-color-surface);
+}
+
+.ws-preview-html-section {
+  display: contents;
+}
+
+/* Workspace extracted styles */
+.ws-reset-btn {
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  cursor: pointer;
+  margin-bottom: var(--rs-space-3);
+  width: 100%;
+}
+
+/* MetadataForm extracted styles */
+.ws-meta-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-form-label {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-slate-700);
+}
+
+.ws-form-label-required {
+  color: var(--rs-color-severity-error);
+}
+
+.ws-form-input {
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-sm);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+}
+
+.ws-form-input-list-hint {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  margin-top: 2px;
+}
+
+.ws-form-error {
+  color: var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+  margin-top: 2px;
+}
+
+/* TemplatePicker extracted styles */
+.ws-template-picker-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-template-picker-select {
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+.ws-template-picker-desc {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  margin-top: 2px;
+}
+

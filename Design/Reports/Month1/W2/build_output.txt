@@ -1,0 +1,28 @@
+> report-supporter@0.1.0 build E:\ReportSupporter
+> next build
+
+   ▲ Next.js 15.5.19
+   - Environment: Production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/6) ...
+   Generating static pages (1/6)
+ ✓ Generating static pages (6/6)
+   Finalizing page optimization ...
+
+Route (app)                              Size     First Load JS
+┌ 🗺️  /                                  69.5 kB         188 kB
+├ 📡 /api/export/status                  0 B                0 B
+├ 📡 /api/export/submit                  0 B                0 B
+└ 📡 /api/format                         0 B                0 B
++ First Load JS shared by all            118 kB
+  ├ chunks/914-fb5e09f4e24efec0.js       34.6 kB
+  ├ chunks/fd9d1056-b097b6ea5ef66431.js  81.7 kB
+  └ CSS shared by all                    6 kB
+    └ css/74fdb8858e932ee4.css           6 kB
+
+○  (Static)   prerendered as static content
+📡 (Dynamic)  force-dynamic, dev-server redirects, or runtime API usage
