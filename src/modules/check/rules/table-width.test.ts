@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { placeholderTextRule } from "./text-markers";
+import { tableTooWideRule } from "./table-width";
 import type { CheckContext } from "@/types";
-
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 
 const mockCtx = (markdown: string): CheckContext => {
@@ -34,26 +33,33 @@ const mockCtx = (markdown: string): CheckContext => {
   };
 };
 
-describe("placeholderTextRule", () => {
+describe("tableTooWideRule", () => {
   it("has the canonical rule id and severity (3.Check.md §5.2)", () => {
-    expect(placeholderTextRule.id).toBe("placeholder-text");
-    expect(placeholderTextRule.severity).toBe("warning");
+    expect(tableTooWideRule.id).toBe("table-too-wide");
+    expect(tableTooWideRule.severity).toBe("info");
   });
 
-  it("flags TODO / lorem ipsum / fix later (case-insensitive)", () => {
-    const md = "Mở đầu\nTODO: viết phần này\nLorem Ipsum dolor\nwill FIX LATER";
-    const issues = placeholderTextRule.run(mockCtx(md));
-    expect(issues).toHaveLength(3);
-    expect(issues.every((i) => i.id === "placeholder-text")).toBe(true);
-    expect(issues[0].line).toBe(2);
-    expect(issues[0].sectionId).toBe("sec");
+  it("flags a table with more than 6 columns", () => {
+    const md = `
+| C1 | C2 | C3 | C4 | C5 | C6 | C7 |
+|---|---|---|---|---|---|---|
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+`;
+    const ctx = mockCtx(md);
+    const issues = tableTooWideRule.run(ctx);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].id).toBe("table-too-wide");
+    expect(issues[0].message).toContain("7 cột");
   });
 
-  it("returns [] for clean content", () => {
-    expect(placeholderTextRule.run(mockCtx("Một đoạn văn hoàn chỉnh."))).toEqual([]);
-  });
-
-  it("does not match 'todos' as a TODO marker (word boundary)", () => {
-    expect(placeholderTextRule.run(mockCtx("Danh sach todos cua nhom"))).toEqual([]);
+  it("does not flag tables with 6 columns or less", () => {
+    const md = `
+| C1 | C2 | C3 | C4 | C5 | C6 |
+|---|---|---|---|---|---|
+| 1 | 2 | 3 | 4 | 5 | 6 |
+`;
+    const ctx = mockCtx(md);
+    const issues = tableTooWideRule.run(ctx);
+    expect(issues).toEqual([]);
   });
 });

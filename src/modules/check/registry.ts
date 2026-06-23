@@ -12,6 +12,11 @@ import {
   missingRequiredEvidenceRule,
   brokenEvidenceUrlShapeRule,
 } from "./rules/evidence-gaps";
+import { skippedHeadingLevelRule } from "./rules/heading-levels";
+import { hardcodedHeadingNumberRule, emptySectionRule } from "./rules/structure";
+import { missingCaptionsRule } from "./rules/captions";
+import { brokenImageRule } from "./rules/images";
+import { tableTooWideRule } from "./rules/table-width";
 
 /**
  * Ordered registry of all active checker rules.
@@ -28,7 +33,16 @@ export const RULES_REGISTRY: CheckRule[] = [
   missingRequiredEvidenceRule,
   brokenEvidenceUrlShapeRule,
 
+  // Structural AST rules
+  skippedHeadingLevelRule,
+  hardcodedHeadingNumberRule,
+  emptySectionRule,
+  missingCaptionsRule,
+  brokenImageRule,
+  tableTooWideRule,
+
   // Text-based and code-block checks
   placeholderTextRule,
   codeLanguageRule,
 ];
+

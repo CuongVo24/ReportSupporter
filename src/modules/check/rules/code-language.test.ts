@@ -2,30 +2,37 @@ import { describe, expect, it } from "vitest";
 import { codeLanguageRule } from "./code-language";
 import type { CheckContext } from "@/types";
 
-const mockCtx = (markdown: string): CheckContext => ({
-  bundle: {
-    project: {
-      id: "p",
-      title: "t",
-      templateId: "temp",
-      metadata: {},
-      sections: [{ id: "sec", order: 1, title: "t", markdown, status: "draft" as const }],
-      updatedAt: "",
+import { parseMarkdown } from "@/lib/markdown-pipeline";
+
+const mockCtx = (markdown: string): CheckContext => {
+  const ast = parseMarkdown(markdown);
+  return {
+    bundle: {
+      project: {
+        id: "p",
+        title: "t",
+        templateId: "temp",
+        metadata: {},
+        sections: [{ id: "sec", order: 1, title: "t", markdown, status: "draft" as const }],
+        updatedAt: "",
+      },
+      assets: [],
+      evidence: [],
+      formatSettings: {
+        presetId: "academic-default",
+        includeToc: true,
+        includeListOfFigures: false,
+        includeListOfTables: false,
+        captionNumbering: "continuous",
+      },
+      schemaVersion: 1,
     },
-    assets: [],
-    evidence: [],
-    formatSettings: {
-      presetId: "academic-default",
-      includeToc: true,
-      includeListOfFigures: false,
-      includeListOfTables: false,
-      captionNumbering: "continuous",
+    sectionAsts: {
+      sec: ast,
     },
-    schemaVersion: 1,
-  },
-  sectionAsts: {},
-  templateId: "temp",
-});
+    templateId: "temp",
+  };
+};
 
 describe("codeLanguageRule", () => {
   it("has the canonical rule id and severity (3.Check.md §5.2)", () => {
