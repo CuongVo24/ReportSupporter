@@ -139,47 +139,24 @@ export function EditorPanel({
       onPaste={handlePaste}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      style={{ display: "flex", flexDirection: "column", height: "100%", border: "1px solid var(--rs-color-border)", borderRadius: "var(--rs-radius-md)", overflow: "hidden", background: "var(--rs-color-surface)" }}
     >
       {/* Minimal Formatting Toolbar */}
-      <div 
-        className="editor-toolbar"
-        style={{
-          display: "flex",
-          gap: "var(--rs-space-2)",
-          padding: "var(--rs-space-2)",
-          background: "var(--rs-color-surface-muted)",
-          borderBottom: "1px solid var(--rs-color-border)",
-          overflowX: "auto"
-        }}
-      >
-        <button type="button" onClick={() => handleInsert("table")} style={buttonStyle}>Bảng</button>
-        <button type="button" onClick={() => handleInsert("code")} style={buttonStyle}>Code</button>
-        <button type="button" onClick={() => handleInsert("math")} style={buttonStyle}>Công thức</button>
-        <button type="button" onClick={() => handleInsert("mermaid")} style={buttonStyle}>Mermaid</button>
-        <button type="button" onClick={() => handleInsert("callout")} style={buttonStyle}>Chú thích</button>
-        <button type="button" onClick={() => handleInsert("image")} style={buttonStyle}>Ảnh</button>
+      <div className="ws-editor-toolbar">
+        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn">Bảng</button>
+        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn">Code</button>
+        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn">Công thức</button>
+        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn">Mermaid</button>
+        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn">Chú thích</button>
+        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn">Ảnh</button>
       </div>
 
       {/* CodeMirror DOM Parent */}
       <div 
         ref={containerRef} 
         aria-label={ariaLabel} 
-        style={{ flex: 1, minHeight: 0, overflow: "auto" }}
+        className="ws-editor-cm-parent"
       />
     </div>
   );
 }
 
-const buttonStyle = {
-  padding: "var(--rs-space-1) var(--rs-space-2)",
-  fontSize: "var(--rs-font-size-xs)",
-  fontWeight: "var(--rs-font-weight-medium)",
-  color: "var(--rs-slate-700)",
-  background: "var(--rs-color-surface)",
-  border: "1px solid var(--rs-color-border)",
-  borderRadius: "var(--rs-radius-sm)",
-  cursor: "pointer",
-  whiteSpace: "nowrap" as const,
-  transition: "all 0.15s ease",
-};

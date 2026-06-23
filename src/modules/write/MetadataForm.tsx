@@ -45,21 +45,21 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-3)" }}>
+    <div className="ws-meta-form">
       {/* Document Title (always present and implicitly required) */}
-      <div style={formGroupStyle}>
-        <label htmlFor="meta-title" style={labelStyle}>
-          Tiêu đề báo cáo <span style={{ color: "var(--rs-color-severity-error)" }}>*</span>
+      <div className="ws-form-group">
+        <label htmlFor="meta-title" className="ws-form-label">
+          Tiêu đề báo cáo <span className="ws-form-label-required">*</span>
         </label>
         <input
           id="meta-title"
           type="text"
-          style={inputStyle}
+          className="ws-form-input"
           placeholder="Nhập tiêu đề đồ án/báo cáo..."
           value={typeof values.title === "string" ? values.title : ""}
           onChange={(e) => handleTextChange("title", e.target.value)}
         />
-        {errors.title && <span style={errorStyle}>{errors.title}</span>}
+        {errors.title && <span className="ws-form-error">{errors.title}</span>}
       </div>
 
       {fields.map((field) => {
@@ -69,15 +69,15 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
           : (values[field.key] as string ?? "");
 
         return (
-          <div key={field.key} style={formGroupStyle}>
-            <label htmlFor={`meta-${field.key}`} style={labelStyle}>
-              {field.label} {field.required && <span style={{ color: "var(--rs-color-severity-error)" }}>*</span>}
+          <div key={field.key} className="ws-form-group">
+            <label htmlFor={`meta-${field.key}`} className="ws-form-label">
+              {field.label} {field.required && <span className="ws-form-label-required">*</span>}
             </label>
             
             <input
               id={`meta-${field.key}`}
               type="text"
-              style={inputStyle}
+              className="ws-form-input"
               placeholder={field.placeholder ?? `Nhập ${field.label.toLowerCase()}...`}
               value={val}
               onChange={(e) => {
@@ -90,12 +90,12 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
             />
             
             {isList && (
-              <small style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)", marginTop: "2px" }}>
+              <small className="ws-form-input-list-hint">
                 Nhập các thành viên phân tách bằng dấu phẩy
               </small>
             )}
             
-            {errors[field.key] && <span style={errorStyle}>{errors[field.key]}</span>}
+            {errors[field.key] && <span className="ws-form-error">{errors[field.key]}</span>}
           </div>
         );
       })}
@@ -103,30 +103,3 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
   );
 }
 
-const formGroupStyle = {
-  display: "flex",
-  flexDirection: "column" as const,
-  gap: "var(--rs-space-1)",
-};
-
-const labelStyle = {
-  fontSize: "var(--rs-font-size-sm)",
-  fontWeight: "var(--rs-font-weight-medium)",
-  color: "var(--rs-slate-700)",
-};
-
-const inputStyle = {
-  padding: "var(--rs-space-2)",
-  border: "1px solid var(--rs-color-border)",
-  borderRadius: "var(--rs-radius-sm)",
-  fontSize: "var(--rs-font-size-sm)",
-  outline: "none",
-  backgroundColor: "var(--rs-color-surface)",
-  color: "var(--rs-color-text)",
-};
-
-const errorStyle = {
-  color: "var(--rs-color-severity-error)",
-  fontSize: "var(--rs-font-size-xs)",
-  marginTop: "2px",
-};

@@ -10,14 +10,10 @@ type TemplatePickerProps = {
 
 export function TemplatePicker({ templates, value, onSelect }: TemplatePickerProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-1)" }}>
+    <div className="ws-template-picker-container">
       <label 
         htmlFor="template-select" 
-        style={{
-          fontSize: "var(--rs-font-size-sm)",
-          fontWeight: "var(--rs-font-weight-medium)",
-          color: "var(--rs-slate-700)",
-        }}
+        className="ws-form-label"
       >
         Mẫu tài liệu (Template)
       </label>
@@ -26,16 +22,7 @@ export function TemplatePicker({ templates, value, onSelect }: TemplatePickerPro
         id="template-select"
         value={value}
         onChange={(e) => onSelect(e.target.value)}
-        style={{
-          padding: "var(--rs-space-2)",
-          border: "1px solid var(--rs-color-border)",
-          borderRadius: "var(--rs-radius-sm)",
-          backgroundColor: "var(--rs-color-surface)",
-          color: "var(--rs-color-text)",
-          fontSize: "var(--rs-font-size-sm)",
-          outline: "none",
-          cursor: "pointer",
-        }}
+        className="ws-template-picker-select"
       >
         {templates.map((tpl) => (
           <option key={tpl.id} value={tpl.id}>
@@ -45,7 +32,7 @@ export function TemplatePicker({ templates, value, onSelect }: TemplatePickerPro
       </select>
       
       {templates.find(t => t.id === value) && (
-        <small style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)", marginTop: "2px" }}>
+        <small className="ws-template-picker-desc">
           {templates.find(t => t.id === value)?.description}
         </small>
       )}

@@ -35,29 +35,14 @@ export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
 
   if (!hasContent) {
     return (
-      <div 
-        className="ws-preview-empty" 
-        style={{ color: "var(--rs-color-text-muted)", fontStyle: "italic", padding: "var(--rs-space-2)" }}
-      >
+      <div className="ws-preview-empty">
         Chưa có nội dung xem trước.
       </div>
     );
   }
 
   return (
-    <div 
-      className="ws-preview-container" 
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--rs-space-3)",
-        fontFamily: "var(--rs-font-family-ui)",
-        fontSize: "var(--rs-font-size-md)",
-        lineHeight: "1.6",
-        color: "var(--rs-color-text)",
-        backgroundColor: "var(--rs-color-surface)",
-      }}
-    >
+    <div className="ws-preview-container">
       {contentParts.map((part, index) => {
         const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
 
@@ -78,7 +63,6 @@ export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
             <div
               key={index}
               className="ws-preview-html-section"
-              style={{ display: "contents" }}
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
             />
           );

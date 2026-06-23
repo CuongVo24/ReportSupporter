@@ -140,17 +140,7 @@ export function Workspace() {
       </p>
       <button
         onClick={handleReset}
-        style={{
-          padding: "var(--rs-space-2)",
-          border: "1px solid var(--rs-color-border)",
-          borderRadius: "var(--rs-radius-sm)",
-          backgroundColor: "var(--rs-color-surface)",
-          color: "var(--rs-color-text-muted)",
-          fontSize: "var(--rs-font-size-xs)",
-          cursor: "pointer",
-          marginBottom: "var(--rs-space-3)",
-          width: "100%",
-        }}
+        className="ws-reset-btn"
       >
         Tạo mới báo cáo
       </button>
