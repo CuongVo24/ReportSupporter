@@ -30,6 +30,10 @@ evidence/
 .tmp/
 tmp/
 
+# typescript / next generated
+next-env.d.ts
+*.tsbuildinfo
+
 # OS / editor
 .DS_Store
 Thumbs.db
