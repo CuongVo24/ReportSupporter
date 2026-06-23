@@ -4,6 +4,8 @@
 > **Branch:** `feature/W2-markdown-editor`.
 > **Builds on:** W1 `EditorPanel` (`src/components/EditorPanel.tsx`, controlled `<textarea>`, props `{ value, onChange, ariaLabel }`), `Workspace.tsx` wiring, `SnippetKind` (CanonicalTypes §1).
 > **Sources:** `Design/TaskBrief/Core/month1/w2.md` Locked Decision #3, `week2.md` Day 2, `Design/Modules/1.Write.md`, `Design/Modules/Other/DesignSystem_Tokens.md`.
+>
+> **⚠️ Accepted deviation (path).** `week2.md` Day 2 ghi `src/modules/write/EditorPanel.tsx`, nhưng W1 đã đặt editor ở `src/components/EditorPanel.tsx`. Contract giữ vị trí W1 thực tế; logic nặng (CM setup, snippet) đặt ở `src/modules/write/` đúng module ownership (`TechnicalStack.md §9`). Dời `EditorPanel.tsx` về `modules/write/` là refactor riêng, không thuộc W2.
 
 ---
 

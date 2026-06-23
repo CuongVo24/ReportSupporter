@@ -15,7 +15,7 @@ Nâng autosave PoC W1 lên **autosave thật** (debounced save + load-on-mount, 
 
 ### In scope (`[C27]`/`[C28]`/`[C29]`)
 - `[C27]` `src/modules/write/use-draft-autosave.ts`: hook gói `createThrottledSaver` + `loadBundle`/`saveBundle` W1 thành autosave thật (debounced, load on mount, flush on hide). Tách logic khỏi `Workspace.tsx` để Workspace gọn lại.
-- `[C28]` `src/modules/write/use-image-insert.ts`: drag-drop / clipboard paste → tạo `ReportAsset` (kind `"image"`, base64 data URL), chèn reference `![alt](asset:<id>)` vào Markdown. Giới hạn kích thước (vd ≤ N MB) → quá thì báo lỗi recoverable, không cloud.
+- `[C28]` `src/modules/write/use-image-insert.ts`: drag-drop / clipboard paste → tạo `ReportAsset` (kind `"image"`, base64 data URL), chèn reference `![alt](asset:<id>)` vào Markdown. Giới hạn kích thước (vd ≤ N MB) → quá thì báo lỗi recoverable, không cloud. **Vòng hiển thị do `resolveAssetRefs` (Group C) đóng** — insert chỉ tạo asset + reference; preview resolve `asset:<id>` → data URL.
 - `[C29]` Chạy lint/typecheck/test/build; tạo `Design/Reports/Month1/W2/W2_QA_Report.md` + `build_output.txt`.
 - Vitest: image-insert thuần (sinh asset + chèn đúng reference, reject oversize); autosave hook phần thuần (reuse W1 throttle test pattern).
 
