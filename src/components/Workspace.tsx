@@ -158,7 +158,7 @@ export function Workspace() {
           onImageInserted={handleImageInserted}
         />
       }
-      preview={<PreviewPane markdown={activeSection.markdown} assets={bundle.assets} />}
+      preview={<PreviewPane markdown={activeSection.markdown} assets={bundle.assets} formatSettings={bundle.formatSettings} />}
       sidePanel={sidePanel}
     />
   );

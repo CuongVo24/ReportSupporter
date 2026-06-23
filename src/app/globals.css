@@ -462,3 +462,82 @@ body {
   margin-top: 2px;
 }
 
+/* TOC (Table of Contents) block styles - Module 2, W3 Group B */
+.ws-toc-container {
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  margin-bottom: var(--rs-space-4);
+}
+
+.ws-toc-title {
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin-bottom: var(--rs-space-2);
+  border-bottom: 1px solid var(--rs-color-border);
+  padding-bottom: var(--rs-space-1);
+}
+
+.ws-toc-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-toc-item {
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-toc-link {
+  text-decoration: none;
+  color: var(--rs-color-primary);
+  display: inline-flex;
+  gap: var(--rs-space-1);
+  transition: color 0.15s ease;
+}
+
+.ws-toc-link:hover {
+  color: var(--rs-color-primary-hover);
+  text-decoration: underline;
+}
+
+.ws-toc-number {
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-toc-text {
+  color: var(--rs-color-text);
+}
+
+/* Indentation levels for hierarchical TOC */
+.ws-toc-level-1 {
+  padding-left: 0;
+}
+
+.ws-toc-level-2 {
+  padding-left: var(--rs-space-4);
+}
+
+.ws-toc-level-3 {
+  padding-left: calc(var(--rs-space-4) * 2);
+}
+
+.ws-toc-level-4 {
+  padding-left: calc(var(--rs-space-4) * 3);
+}
+
+.ws-toc-level-5 {
+  padding-left: calc(var(--rs-space-4) * 4);
+}
+
+.ws-toc-level-6 {
+  padding-left: calc(var(--rs-space-4) * 5);
+}
+
+

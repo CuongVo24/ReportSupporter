@@ -42,6 +42,13 @@ const renderProcessor = unified()
   .use(rehypeHighlight)
   .use(rehypeStringify);
 
+const astRenderProcessor = unified()
+  .use(remarkRehype)
+  .use(rehypeSanitize, customSchema)
+  .use(rehypeKatex)
+  .use(rehypeHighlight)
+  .use(rehypeStringify);
+
 /**
  * Parses raw Markdown text into a fully processed mdast AST Root.
  * remark-gfm and remark-math transforms are run on the tree.
@@ -65,3 +72,18 @@ export function renderMarkdown(markdown: string): string {
     return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
   }
 }
+
+/**
+ * Renders an already parsed mdast AST Root to a sanitized HTML string.
+ */
+export function renderMdastToHtml(ast: MdastRoot): string {
+  try {
+    const hast = astRenderProcessor.runSync(ast);
+    const result = astRenderProcessor.stringify(hast);
+    return result.toString();
+  } catch (error) {
+    console.error("Failed to render MDAST:", error);
+    return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
+  }
+}
+
