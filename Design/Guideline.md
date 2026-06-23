@@ -55,6 +55,9 @@ Nếu bạn (hoặc AI Agent) lần đầu vào dự án, làm đúng 6 bước 
 | Biết luật cho AI (typing, scope, boundaries) | `Conventions/Rule.md` |
 | Biết naming / commit / branch / folder | `Conventions/Coding & Git Standard.md` |
 | Biết quy trình tuần + self quality gate + DoD | `Conventions/WorkFlow.md` |
+| Biết chiến lược test / fixtures / golden-file | `Conventions/TestStrategy.md` |
+| Biết sanitize HTML / privacy / threat model | `Modules/Other/Security.md` |
+| Biết cách build & host (deploy demo) | `Modules/Other/Deployment.md` |
 | Tạo / sửa một Contract cho AI | `ContractForAI/CONTRACT_STRUCTURE_RULE.md` |
 | Code **editor / preview / template / autosave** | `Modules/1.Write.md` |
 | Code **numbering / TOC / layout A4** | `Modules/2.Format.md` |
@@ -94,6 +97,7 @@ Design/
     Rule.md                            # Luật cho AI: stack constraints, typing, boundaries, git protocol
     WorkFlow.md                        # Quy trình solo Agile-AI 4 giai đoạn + 3S gate + DoD
     Coding & Git Standard.md           # Naming, source structure, 200-line rule, commit, branch, PR review
+    TestStrategy.md                    # Tầng test + fixtures + golden-file determinism
   Modules/
     1.Write.md                         # Spec Module 1 — editor, preview, template, autosave (IndexedDB)
     2.Format.md                        # Spec Module 2 — numbering, TOC, caption, A4 layout presets
@@ -103,6 +107,8 @@ Design/
     Support.Evidence.md                 # Supporting module — Evidence Kit
     Other/
       TechnicalStack.md                # Stack khoá cứng + rationale + version policy + data-flow
+      Security.md                      # Threat model + sanitize HTML + privacy (IndexedDB)
+      Deployment.md                    # Build / Next output mode / hosting demo (client-first)
   RoadMap/
     MasterRoadMap.md                   # Lộ trình 12 tuần; Phase 1 (W1–4) = MVP workspace
   TaskBrief/Core/
