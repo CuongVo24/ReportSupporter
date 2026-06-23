@@ -7,9 +7,8 @@ describe("Markdown Pipeline", () => {
       const ast = parseMarkdown("# Tiêu đề 1\nNội dung đơn giản");
       expect(ast.type).toBe("root");
       
-      const headingNode = ast.children[0];
+      const headingNode = ast.children[0] as { type: string; depth: number };
       expect(headingNode.type).toBe("heading");
-      // @ts-expect-error - depth is not typed on generic Content node
       expect(headingNode.depth).toBe(1);
       
       const paragraphNode = ast.children[1];
@@ -18,12 +17,10 @@ describe("Markdown Pipeline", () => {
 
     it("parses math blocks correctly as math nodes", () => {
       const ast = parseMarkdown("Inline $E=mc^2$ math.");
-      const paragraph = ast.children[0];
+      const paragraph = ast.children[0] as { type: string; children: Array<{ type: string; value: string }> };
       expect(paragraph.type).toBe("paragraph");
-      // @ts-expect-error - children does not exist on generic Content node
       const mathNode = paragraph.children[1];
       expect(mathNode.type).toBe("inlineMath");
-      // @ts-expect-error - value does not exist on generic Content node
       expect(mathNode.value).toBe("E=mc^2");
     });
   });
