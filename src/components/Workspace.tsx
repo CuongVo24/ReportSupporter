@@ -1,43 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
 import {
   createProjectFromTemplate,
-  createThrottledSaver,
   loadBundle,
   saveBundle,
   softwareProjectTemplate,
   generateSkeleton,
   ProjectInitializer,
+  useDraftAutosave,
+  useImageInsert,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import type { ReportIssue, ReportProjectBundle, TemplateSchema } from "@/types";
 
-type SaveStatus = "idle" | "saving" | "saved";
-
 export function Workspace() {
   const [bundle, setBundle] = useState<ReportProjectBundle | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [status, setStatus] = useState<SaveStatus>("idle");
-  const [quotaFull, setQuotaFull] = useState(false);
   const [issues, setIssues] = useState<ReportIssue[]>([]);
   const [hasRun, setHasRun] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
-  const saverRef = useRef(
-    createThrottledSaver<ReportProjectBundle>(async (next) => {
-      try {
-        await saveBundle(next);
-        setQuotaFull(false);
-        setStatus("saved");
-      } catch {
-        setQuotaFull(true);
-      }
-    }, 2000),
-  );
+  const { status, quotaFull } = useDraftAutosave(bundle);
+  const { handleImageInserted } = useImageInsert(setBundle);
 
   useEffect(() => {
     let active = true;
@@ -51,21 +39,10 @@ export function Workspace() {
         next.project.title === softwareProjectTemplate.name &&
         Object.keys(next.project.metadata).length === 0
       ));
-      if (!existing) void saveBundle(next).catch(() => setQuotaFull(true));
+      if (!existing) void saveBundle(next);
     })();
     return () => {
       active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const saver = saverRef.current;
-    const flush = () => saver.flush();
-    window.addEventListener("beforeunload", flush);
-    document.addEventListener("visibilitychange", flush);
-    return () => {
-      window.removeEventListener("beforeunload", flush);
-      document.removeEventListener("visibilitychange", flush);
     };
   }, []);
 
@@ -80,13 +57,10 @@ export function Workspace() {
       const sections = prev.project.sections.map((sec) =>
         sec.id === activeId ? { ...sec, markdown } : sec,
       );
-      const next: ReportProjectBundle = {
+      return {
         ...prev,
         project: { ...prev.project, sections, updatedAt: new Date().toISOString() },
       };
-      setStatus("saving");
-      saverRef.current.schedule(next);
-      return next;
     });
   }, [activeId]);
 
@@ -116,8 +90,6 @@ export function Workspace() {
     setBundle(next);
     setActiveId(generatedSections[0]?.id ?? null);
     setIsInitializing(false);
-    setStatus("saving");
-    saverRef.current.schedule(next);
   }, [bundle]);
 
   const handleReset = useCallback(() => {
@@ -128,7 +100,7 @@ export function Workspace() {
     setIsInitializing(true);
     setIssues([]);
     setHasRun(false);
-    void saveBundle(fresh).catch(() => setQuotaFull(true));
+    void saveBundle(fresh);
   }, []);
 
   if (!bundle) {
@@ -164,13 +136,7 @@ export function Workspace() {
         ))}
       </select>
       <p className="ws-save-status" aria-live="polite">
-        {quotaFull
-          ? "Bộ nhớ trình duyệt đầy — nội dung vẫn giữ trong phiên."
-          : status === "saving"
-            ? "Saving…"
-            : status === "saved"
-              ? "Saved"
-              : ""}
+        {quotaFull ? "Bộ nhớ trình duyệt đầy — nội dung vẫn giữ trong phiên." : status === "saving" ? "Saving…" : status === "saved" ? "Saved" : ""}
       </p>
       <button
         onClick={handleReset}
@@ -199,6 +165,7 @@ export function Workspace() {
           value={activeSection.markdown}
           onChange={handleChange}
           ariaLabel={`Editor: ${activeSection.title}`}
+          onImageInserted={handleImageInserted}
         />
       }
       preview={<PreviewPane markdown={activeSection.markdown} assets={bundle.assets} />}

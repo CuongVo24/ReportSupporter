@@ -2,16 +2,22 @@
 
 import { useEffect, useRef } from "react";
 import { EditorView } from "@codemirror/view";
-import { createEditorState, insertSnippet } from "@/modules/write";
-import type { SnippetKind } from "@/types";
+import { createEditorState, insertSnippet, createImageAsset } from "@/modules/write";
+import type { SnippetKind, ReportAsset } from "@/types";
 
 type EditorPanelProps = {
   value: string;
   onChange: (value: string) => void;
   ariaLabel?: string;
+  onImageInserted?: (asset: ReportAsset, ref: string) => void;
 };
 
-export function EditorPanel({ value, onChange, ariaLabel = "Markdown editor" }: EditorPanelProps) {
+export function EditorPanel({
+  value,
+  onChange,
+  ariaLabel = "Markdown editor",
+  onImageInserted,
+}: EditorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
@@ -69,9 +75,70 @@ export function EditorPanel({ value, onChange, ariaLabel = "Markdown editor" }: 
     view.focus();
   };
 
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find((item) => item.type.startsWith("image/"));
+    if (!imageItem || !onImageInserted) return;
+
+    const file = imageItem.getAsFile();
+    if (!file) return;
+
+    e.preventDefault();
+    const result = await createImageAsset(file, 5 * 1024 * 1024); // max size 5MB
+    if (result.ok) {
+      const view = viewRef.current;
+      if (view) {
+        const { from, to } = view.state.selection.main;
+        view.dispatch({
+          changes: { from, to, insert: result.ref },
+          selection: { anchor: from + result.ref.length },
+        });
+        view.focus();
+      }
+      onImageInserted(result.asset, result.ref);
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find((file) => file.type.startsWith("image/"));
+    if (!imageFile || !onImageInserted) return;
+
+    e.preventDefault();
+    const result = await createImageAsset(imageFile, 5 * 1024 * 1024); // max size 5MB
+    if (result.ok) {
+      const view = viewRef.current;
+      if (view) {
+        const x = e.clientX;
+        const y = e.clientY;
+        const pos = view.posAtCoords({ x, y }) ?? view.state.selection.main.from;
+        view.dispatch({
+          changes: { from: pos, to: pos, insert: result.ref },
+          selection: { anchor: pos + result.ref.length },
+        });
+        view.focus();
+      }
+      onImageInserted(result.asset, result.ref);
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    const hasFiles = e.dataTransfer.types.includes("Files");
+    if (hasFiles) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div 
       className="ws-editor-container" 
+      onPaste={handlePaste}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
       style={{ display: "flex", flexDirection: "column", height: "100%", border: "1px solid var(--rs-color-border)", borderRadius: "var(--rs-radius-md)", overflow: "hidden", background: "var(--rs-color-surface)" }}
     >
       {/* Minimal Formatting Toolbar */}

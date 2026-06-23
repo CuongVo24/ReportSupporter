@@ -10,4 +10,6 @@ export { generateSkeleton, validateMetadata } from "./generate-skeleton";
 export { TemplatePicker } from "./TemplatePicker";
 export { MetadataForm } from "./MetadataForm";
 export { ProjectInitializer } from "./ProjectInitializer";
+export { useDraftAutosave } from "./use-draft-autosave";
+export { createImageAsset, useImageInsert } from "./use-image-insert";
 
