@@ -1,5 +1,7 @@
 export { runChecker } from "./run-checker";
 export { CheckerPanel } from "./CheckerPanel";
+export { computeReadiness, scoreBand } from "./readiness-score";
+export { ReadinessBadge } from "./ReadinessBadge";
 export {
   tocDisabledRule,
   missingConclusionRule,

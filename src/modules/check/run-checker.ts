@@ -8,6 +8,7 @@ import type {
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 import { RULES_REGISTRY } from "./registry";
 import type { Root as MdastRoot } from "mdast";
+import { computeReadiness } from "./readiness-score";
 
 /**
  * Runs the check engine over the project bundle.
@@ -45,9 +46,7 @@ export function runChecker(bundle: ReportProjectBundle, formatted?: FormattedRep
   const warningIssues = issues.filter((i) => i.severity === "warning");
   const infoIssues = issues.filter((i) => i.severity === "info");
 
-  // Draft score: start at 100, error -15, warning -5, info -1. Clamped at 0.
-  const scoreRaw = 100 - (errorIssues.length * 15 + warningIssues.length * 5 + infoIssues.length * 1);
-  const readinessScore = Math.max(0, scoreRaw);
+  const readinessScore = computeReadiness(issues);
 
   const ranAt = new Date().toISOString();
 

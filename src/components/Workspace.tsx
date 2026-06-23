@@ -15,12 +15,19 @@ import {
   useImageInsert,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
-import type { ReportIssue, ReportProjectBundle, TemplateSchema } from "@/types";
+import type { CheckResult, ReportProjectBundle, TemplateSchema } from "@/types";
+
+const emptyCheckResult: CheckResult = {
+  issues: [],
+  grouped: { error: [], warning: [], info: [] },
+  readinessScore: 100,
+  ranAt: "",
+};
 
 export function Workspace() {
   const [bundle, setBundle] = useState<ReportProjectBundle | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [issues, setIssues] = useState<ReportIssue[]>([]);
+  const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
   const [hasRun, setHasRun] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -66,9 +73,15 @@ export function Workspace() {
 
   const handleCheck = useCallback(() => {
     if (!bundle) return;
-    setIssues(runChecker(bundle).issues);
+    setCheckResult(runChecker(bundle));
     setHasRun(true);
   }, [bundle]);
+
+  const handleJump = useCallback((sectionId?: string) => {
+    if (sectionId) {
+      setActiveId(sectionId);
+    }
+  }, []);
 
   const handleInitialize = useCallback((
     template: TemplateSchema,
@@ -98,7 +111,7 @@ export function Workspace() {
     setBundle(fresh);
     setActiveId(fresh.project.sections[0]?.id ?? null);
     setIsInitializing(true);
-    setIssues([]);
+    setCheckResult(null);
     setHasRun(false);
     void saveBundle(fresh);
   }, []);
@@ -144,7 +157,12 @@ export function Workspace() {
       >
         Tạo mới báo cáo
       </button>
-      <CheckerPanel issues={issues} onRun={handleCheck} hasRun={hasRun} />
+      <CheckerPanel
+        result={checkResult ?? emptyCheckResult}
+        onRun={handleCheck}
+        onJump={handleJump}
+        hasRun={hasRun}
+      />
     </div>
   );
 
