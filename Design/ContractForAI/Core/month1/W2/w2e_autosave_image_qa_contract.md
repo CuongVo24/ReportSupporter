@@ -77,6 +77,6 @@ export function createImageAsset(file: File, maxBytes: number):
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Chốt W2. Đề xuất 3 commit: (1) autosave hook + image-insert + test; (2) QA evidence (`build_output.txt` + `W2_QA_Report.md`); (3) cập nhật status các contract W2 → DONE. Sau khi gates xanh: merge `feature/W2-markdown-editor` → `develop` → `main`.
