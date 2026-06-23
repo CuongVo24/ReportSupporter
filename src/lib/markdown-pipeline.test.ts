@@ -92,5 +92,12 @@ console.log(x);
       expect(renderMarkdown("")).toBe("");
       expect(renderMarkdown("   ")).toBe("");
     });
+
+    it("returns error placeholder if rendering throws an exception", () => {
+      const html = renderMarkdown(Symbol("test") as unknown as string);
+      expect(html).toContain("ws-preview-error");
+      expect(html).toContain("Không render được nội dung");
+    });
   });
 });
+

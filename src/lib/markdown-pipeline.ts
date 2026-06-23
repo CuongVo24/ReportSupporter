@@ -62,6 +62,6 @@ export function renderMarkdown(markdown: string): string {
     return result.toString();
   } catch (error) {
     console.error("Failed to render markdown:", error);
-    return "";
+    return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
   }
 }
