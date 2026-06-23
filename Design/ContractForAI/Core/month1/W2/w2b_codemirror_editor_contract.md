@@ -80,6 +80,6 @@ export function insertSnippet(doc: string, from: number, to: number, kind: Snipp
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Đề xuất 2 commit: (1) deps + editor-setup + insert-snippet + test; (2) EditorPanel CM6 + wire. +1 docs commit cho contract.
