@@ -1,4 +1,5 @@
 import type { TemplateSchema } from "@/types";
+import { buildMemberResponsibility } from "../sections/member-responsibility";
 
 /**
  * Seed template for a software-project report (Vietnamese).
@@ -43,8 +44,7 @@ export const softwareProjectTemplate: TemplateSchema = {
       title: "Thành viên & Phân công",
       order: 1,
       status: "draft",
-      starterMarkdown:
-        "# Thành viên & Phân công\n\n| Thành viên | Nhiệm vụ |\n| --- | --- |\n| ... | ... |\n",
+      starterMarkdown: buildMemberResponsibility(),
     },
     {
       title: "Triển khai",

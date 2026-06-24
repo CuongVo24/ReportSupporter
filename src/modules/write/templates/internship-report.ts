@@ -1,4 +1,5 @@
 import type { TemplateSchema } from "@/types";
+import { buildProjectTimeline } from "../sections/project-timeline";
 
 export const internshipReportTemplate: TemplateSchema = {
   id: "internship-report",
@@ -52,7 +53,7 @@ export const internshipReportTemplate: TemplateSchema = {
       title: "Nội dung Công việc",
       order: 1,
       status: "draft",
-      starterMarkdown: "# Nội dung Công việc\n\nMô tả chi tiết các công việc, dự án được giao thực hiện tại doanh nghiệp.\n",
+      starterMarkdown: buildProjectTimeline(),
     },
     {
       title: "Kỹ năng đạt được",
