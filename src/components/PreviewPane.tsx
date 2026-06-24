@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
-import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
+import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode } from "@/modules/format";
 import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as EvidenceUnistNode } from "@/modules/evidence";
-import type { ReportAsset, FormatSettings, TocNode, EvidenceItem } from "@/types";
+import type { ReportAsset, FormatSettings, TocNode, EvidenceItem, CaptionEntry } from "@/types";
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 
@@ -118,6 +118,48 @@ function TocBlock({ toc }: { toc: TocNode[] }) {
   );
 }
 
+function LofBlock({ lof }: { lof: CaptionEntry[] }) {
+  if (lof.length === 0) {
+    return null;
+  }
+  return (
+    <div className="ws-lof-container ws-toc-container">
+      <div className="ws-lof-title ws-toc-title">Danh mục hình ảnh</div>
+      <ul className="ws-lof-list ws-toc-list">
+        {lof.map((node) => (
+          <li key={node.id} className="ws-lof-item ws-toc-item">
+            <a href={`#${node.id}`} className="ws-lof-link ws-toc-link">
+              <span className="ws-lof-number ws-toc-number">{node.label}</span>{" "}
+              <span className="ws-lof-text ws-toc-text">{node.text}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function LotBlock({ lot }: { lot: CaptionEntry[] }) {
+  if (lot.length === 0) {
+    return null;
+  }
+  return (
+    <div className="ws-lot-container ws-toc-container">
+      <div className="ws-lot-title ws-toc-title">Danh mục bảng biểu</div>
+      <ul className="ws-lot-list ws-toc-list">
+        {lot.map((node) => (
+          <li key={node.id} className="ws-lot-item ws-toc-item">
+            <a href={`#${node.id}`} className="ws-lot-link ws-toc-link">
+              <span className="ws-lot-number ws-toc-number">{node.label}</span>{" "}
+              <span className="ws-lot-text ws-toc-text">{node.text}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function PreviewPane({
   markdown,
   assets = [],
@@ -169,32 +211,61 @@ export function PreviewPane({
     return finalMarkdown.split(/(```mermaid[\s\S]*?```)/g);
   }, [finalMarkdown, hasContent]);
 
-  // Compute global numbered headings once for correct counter ordering across split content parts
-  const globalNumberedHeadings = useMemo(() => {
+  // Parse ASTs of all sections once for consistent headings and captions numbering
+  const parsedSections = useMemo(() => {
     if (!hasContent) {
       return [];
     }
     if (sections && sections.length > 0) {
       const sortedSections = [...sections].sort((a, b) => a.order - b.order);
-      const allHeadings = [];
-      for (const sec of sortedSections) {
+      return sortedSections.map((sec) => {
         let content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
         if (sec.id === lastSectionId && appendixMarkdown) {
           content = content + "\n\n" + appendixMarkdown;
         }
         const resolvedMarkdown = resolveAssetRefs(content, assets);
         const ast = parseMarkdown(resolvedMarkdown);
-        const secHeadings = parseHeadings(ast, sec.id);
-        allHeadings.push(...secHeadings);
-      }
-      const globalNumbered = numberHeadings(allHeadings);
-      return globalNumbered.filter((h) => h.sectionId === activeSectionId);
+        return { id: sec.id, ast };
+      });
     } else {
       const ast = parseMarkdown(finalMarkdown);
-      const headings = parseHeadings(ast, activeSectionId);
-      return numberHeadings(headings);
+      return [{ id: activeSectionId || "default", ast }];
     }
-  }, [sections, activeSectionId, debouncedMarkdown, finalMarkdown, lastSectionId, appendixMarkdown, assets, hasContent]);
+  }, [sections, activeSectionId, debouncedMarkdown, lastSectionId, appendixMarkdown, assets, finalMarkdown, hasContent]);
+
+  // Compute global numbered headings once for correct counter ordering across split content parts
+  const globalNumberedHeadings = useMemo(() => {
+    const allHeadings: HeadingNode[] = [];
+    for (const { id, ast } of parsedSections) {
+      const secHeadings = parseHeadings(ast, id);
+      allHeadings.push(...secHeadings);
+    }
+    const globalNumbered = numberHeadings(allHeadings);
+    return globalNumbered.filter((h) => h.sectionId === activeSectionId);
+  }, [parsedSections, activeSectionId]);
+
+  // Build the unified caption registry
+  const captionRegistry = useMemo(() => {
+    return buildCaptionRegistry(
+      parsedSections,
+      formatSettings || { captionNumbering: "continuous" }
+    );
+  }, [parsedSections, formatSettings]);
+
+  // Extract Lists of Figures and Tables
+  const lofData = useMemo(() => {
+    if (!formatSettings?.includeListOfFigures) {
+      return [];
+    }
+    return generateListOfFigures(captionRegistry);
+  }, [captionRegistry, formatSettings?.includeListOfFigures]);
+
+  const lotData = useMemo(() => {
+    if (!formatSettings?.includeListOfTables) {
+      return [];
+    }
+    return generateListOfTables(captionRegistry);
+  }, [captionRegistry, formatSettings?.includeListOfTables]);
 
   // Build the Table of Contents tree
   const tocData = useMemo(() => {
@@ -245,10 +316,13 @@ export function PreviewPane({
 
   // Render cursor to track heading index across parts
   const renderState = { index: 0 };
+  const captionState = { figIdx: 0, tableIdx: 0 };
 
   return (
     <div className="ws-preview-container">
       {formatSettings?.includeToc && <TocBlock toc={tocData} />}
+      {formatSettings?.includeListOfFigures && <LofBlock lof={lofData} />}
+      {formatSettings?.includeListOfTables && <LotBlock lot={lotData} />}
       {contentParts.map((part, index) => {
         const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
 
@@ -268,6 +342,10 @@ export function PreviewPane({
           
           // Inject correct heading prefix numbers
           const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
+
+          // Normalize captions using registry and rendering state
+          const activeRegistry = captionRegistry.filter((e) => e.sectionId === (activeSectionId || "default"));
+          normalizeCaptions([{ id: activeSectionId || "default", ast: numberedAst }], activeRegistry, captionState);
           
           // Inject QR code images into AST before HTML generation
           injectQrImages(numberedAst as unknown as EvidenceUnistNode, qrMap);

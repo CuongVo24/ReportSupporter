@@ -5,12 +5,16 @@ import { buildPrintableHtml } from "./print-preview";
 /**
  * Triggers PDF export via the browser's native print surface.
  * Reuses the formatted HTML structure from Group A to guarantee formatting parity.
- * Note: Headers, footers, and page numbers are browser best-effort.
+ * 
+ * Note on running headers, footers, and page numbers:
+ * - These are browser best-effort.
+ * - CSS @page rules are provided in `print-css.ts` to support running headers/footers.
+ * - For browsers that override @page margins (like Chrome/Edge), the user must enable 
+ *   "Headers and footers" in the browser's print options dialog to display page numbers 
+ *   and document titles correctly.
  * 
  * @param bundle The report project bundle.
- * @returns An ExportResult containing the printable HTML Blob. The returned Blob is 
- * HTML-based representation of the printable output, not a binary PDF document. Callers
- * must not download this Blob under a `.pdf` file extension.
+ * @returns An ExportResult containing the printable HTML Blob.
  */
 export function exportPdfViaBrowserPrint(bundle: ReportProjectBundle): ExportResult {
   // 1. Client-only guard (no-window context)

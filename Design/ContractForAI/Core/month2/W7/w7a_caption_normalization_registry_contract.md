@@ -80,6 +80,6 @@ export function normalizeCaptions(/* ... */): /* numbered captions / mutated AST
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(format): caption normalization + single caption registry`; +1 docs commit.
