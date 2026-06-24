@@ -13,12 +13,19 @@ import type { MdastRoot } from "./pipeline-types";
 // data: URIs are allowed for images (offline assets), style attributes are stripped.
 const customSchema = {
   ...defaultSchema,
+  clobberPrefix: "",
   attributes: {
     ...defaultSchema.attributes,
     span: [...(defaultSchema.attributes?.span || []), "className"],
     div: [...(defaultSchema.attributes?.div || []), "className"],
     code: [...(defaultSchema.attributes?.code || []), "className"],
     pre: [...(defaultSchema.attributes?.pre || []), "className"],
+    h1: [...(defaultSchema.attributes?.h1 || []), "id"],
+    h2: [...(defaultSchema.attributes?.h2 || []), "id"],
+    h3: [...(defaultSchema.attributes?.h3 || []), "id"],
+    h4: [...(defaultSchema.attributes?.h4 || []), "id"],
+    h5: [...(defaultSchema.attributes?.h5 || []), "id"],
+    h6: [...(defaultSchema.attributes?.h6 || []), "id"],
   },
   protocols: {
     ...defaultSchema.protocols,
