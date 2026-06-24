@@ -9,10 +9,11 @@ import {
   loadBundle,
   saveBundle,
   softwareProjectTemplate,
-  generateSkeleton,
+  ALL_TEMPLATES,
   ProjectInitializer,
   useDraftAutosave,
   useImageInsert,
+  buildInitialSections,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel } from "@/modules/export";
@@ -91,13 +92,17 @@ export function Workspace() {
     metadata: Record<string, string | string[]>
   ) => {
     if (!bundle) return;
-    const generatedSections = generateSkeleton(template, { title, ...metadata });
+    const generatedSections = buildInitialSections(template, { title, ...metadata });
+
+    const cleanMetadata = { ...metadata };
+    delete cleanMetadata.readmeContent;
+
     const next: ReportProjectBundle = {
       ...bundle,
       project: {
         ...bundle.project,
         title,
-        metadata,
+        metadata: cleanMetadata,
         sections: generatedSections,
         updatedAt: new Date().toISOString(),
       },
@@ -139,7 +144,7 @@ export function Workspace() {
   if (isInitializing) {
     return (
       <ProjectInitializer
-        templates={[softwareProjectTemplate]}
+        templates={ALL_TEMPLATES}
         initialTitle={bundle.project.title}
         initialMetadata={bundle.project.metadata}
         onInitialize={handleInitialize}

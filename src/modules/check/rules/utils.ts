@@ -1,16 +1,13 @@
-import { softwareProjectTemplate } from "@/modules/write";
+import { getTemplate } from "@/modules/write";
+import { flattenNodeText } from "@/lib/markdown-pipeline";
 import type { TemplateSchema } from "@/types";
 import type { Root as MdastRoot, PhrasingContent } from "mdast";
-
-const ALL_TEMPLATES: Record<string, TemplateSchema> = {
-  [softwareProjectTemplate.id]: softwareProjectTemplate,
-};
 
 /**
  * Returns the template schema registered for the given template ID.
  */
 export function getTemplateSchema(templateId: string): TemplateSchema | undefined {
-  return ALL_TEMPLATES[templateId];
+  return getTemplate(templateId);
 }
 
 interface UnistNode {
@@ -20,17 +17,10 @@ interface UnistNode {
 
 /**
  * Helper to extract flat text from AST phrasing content children.
+ * Reuses the shared flattenNodeText helper from @/lib.
  */
 export function getFlatText(nodes: PhrasingContent[]): string {
-  let text = "";
-  for (const node of nodes) {
-    if ("value" in node && typeof node.value === "string") {
-      text += node.value;
-    } else if ("children" in node && Array.isArray(node.children)) {
-      text += getFlatText(node.children as PhrasingContent[]);
-    }
-  }
-  return text;
+  return flattenNodeText({ children: nodes });
 }
 
 /**

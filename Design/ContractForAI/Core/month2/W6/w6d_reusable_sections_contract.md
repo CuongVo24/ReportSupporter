@@ -77,6 +77,6 @@ export function buildProjectTimeline(): string; // Markdown block
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(write): reusable member + timeline section blocks`; (2) `feat(write): embed reusable sections into templates`; +1 docs commit.

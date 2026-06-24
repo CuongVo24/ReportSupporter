@@ -1,4 +1,5 @@
 import type { TemplateSchema } from "@/types";
+import { buildMemberResponsibility } from "../sections/member-responsibility";
 
 /**
  * Seed template for a software-project report (Vietnamese).
@@ -43,8 +44,7 @@ export const softwareProjectTemplate: TemplateSchema = {
       title: "Thành viên & Phân công",
       order: 1,
       status: "draft",
-      starterMarkdown:
-        "# Thành viên & Phân công\n\n| Thành viên | Nhiệm vụ |\n| --- | --- |\n| ... | ... |\n",
+      starterMarkdown: buildMemberResponsibility(),
     },
     {
       title: "Triển khai",
@@ -77,7 +77,7 @@ export const softwareProjectTemplate: TemplateSchema = {
       starterMarkdown: "# Minh chứng\n\nLiên kết GitHub, video demo, deploy.\n",
     },
   ],
-  requiredSections: ["Kết luận", "Tài liệu tham khảo"],
+  requiredSections: ["Mở đầu", "Triển khai", "Kiểm thử", "Kết luận", "Tài liệu tham khảo"],
   requiredEvidenceKinds: ["github", "video", "deploy"],
   requiresToc: true,
 };

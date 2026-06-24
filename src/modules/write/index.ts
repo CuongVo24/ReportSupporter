@@ -1,6 +1,9 @@
 // Public surface for Module 1 — Write.
 export { createProjectFromTemplate } from "./create-project";
 export { softwareProjectTemplate } from "./templates/software-project";
+export { readmeReportTemplate } from "./templates/readme-report";
+export { ALL_TEMPLATES, getTemplate } from "./templates";
+export { importReadme } from "./readme-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
 export { createEditorState } from "./editor-setup";
 export { insertSnippet } from "./insert-snippet";
@@ -12,4 +15,6 @@ export { MetadataForm } from "./MetadataForm";
 export { ProjectInitializer } from "./ProjectInitializer";
 export { useDraftAutosave } from "./use-draft-autosave";
 export { createImageAsset, useImageInsert } from "./use-image-insert";
-
+export { buildMemberResponsibility } from "./sections/member-responsibility";
+export { buildProjectTimeline } from "./sections/project-timeline";
+export { buildInitialSections } from "./buildInitialSections";

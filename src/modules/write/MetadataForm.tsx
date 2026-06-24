@@ -91,20 +91,30 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
               {field.label} {field.required && <span className="ws-form-label-required">*</span>}
             </label>
             
-            <input
-              id={`meta-${field.key}`}
-              type="text"
-              className="ws-form-input"
-              placeholder={field.placeholder ?? `Nhập ${field.label.toLowerCase()}...`}
-              value={val}
-              onChange={(e) => {
-                if (isList) {
-                  handleListChange(field.key, e.target.value);
-                } else {
-                  handleTextChange(field.key, e.target.value);
-                }
-              }}
-            />
+            {field.key === "readmeContent" ? (
+              <textarea
+                id={`meta-${field.key}`}
+                className="ws-form-input ws-form-textarea"
+                placeholder={field.placeholder ?? "Dán nội dung README.md ở đây..."}
+                value={val}
+                onChange={(e) => handleTextChange(field.key, e.target.value)}
+              />
+            ) : (
+              <input
+                id={`meta-${field.key}`}
+                type="text"
+                className="ws-form-input"
+                placeholder={field.placeholder ?? `Nhập ${field.label.toLowerCase()}...`}
+                value={val}
+                onChange={(e) => {
+                  if (isList) {
+                    handleListChange(field.key, e.target.value);
+                  } else {
+                    handleTextChange(field.key, e.target.value);
+                  }
+                }}
+              />
+            )}
             
             {isList && (
               <small className="ws-form-input-list-hint">
