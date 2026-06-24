@@ -15,7 +15,7 @@ export type {
 export type { EvidenceKind, EvidenceItem } from "./evidence";
 export type { FormatPreset, FormatSettings, TocNode, CaptionEntry } from "./format";
 export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./template";
-export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob } from "./export";
+export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob, PackageManifest, SubmissionPackage } from "./export";
 export type { ParsedSection, PipelineResult, FormattedReport } from "./pipeline";
 
 

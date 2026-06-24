@@ -23,3 +23,15 @@ export type ExportJob = {
   fileName: string;
   error?: ExportError;
 };
+
+export type PackageManifest = {
+  generatedAt: string;
+  projectTitle: string;
+  files: { name: string; target: ExportTarget | "readme" | "evidence" }[];
+  evidenceCount: number;
+};
+
+export type SubmissionPackage = {
+  manifest: PackageManifest;
+  blob: Blob;
+};
