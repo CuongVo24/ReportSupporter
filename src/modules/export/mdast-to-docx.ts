@@ -19,6 +19,7 @@ import type {
   Table as MdastTable,
   Link as MdastLink,
   Image as MdastImage,
+  Paragraph as MdastParagraph,
 } from "mdast";
 import type { FormattedReport } from "@/types";
 
@@ -201,8 +202,9 @@ function mapBlockNode(
       return blocks;
     }
     case "paragraph": {
-      const runs = (node.children || []).flatMap((child) => mapPhrasingNode(child as MdastContent));
-      const hProps = (node.data as any)?.hProperties || {};
+      const para = node as MdastParagraph;
+      const runs = (para.children || []).flatMap((child) => mapPhrasingNode(child as MdastContent));
+      const hProps = (para.data?.hProperties || {}) as { className?: string; id?: string };
       const isFigCaption = hProps.className === "fig-caption";
       const isTblCaption = hProps.className === "tbl-caption";
       const isCaption = isFigCaption || isTblCaption;

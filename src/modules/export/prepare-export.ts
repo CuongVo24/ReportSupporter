@@ -1,4 +1,4 @@
-import type { ReportProjectBundle, FormattedReport, CaptionEntry } from "@/types";
+import type { ReportProjectBundle, FormattedReport } from "@/types";
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions } from "@/modules/format";
 import { resolveAssetRefs } from "@/modules/write";
@@ -11,7 +11,7 @@ import rehypeHighlight from "rehype-highlight";
 import type { Root as MdastRoot, Content as MdastContent } from "mdast";
 import type { Root as HastRoot } from "hast";
 import type { CoverPageData, ExportInput } from "./types";
-import { getFlatText, injectHeadingNumbers, PRESETS } from "./helpers";
+import { injectHeadingNumbers, PRESETS } from "./helpers";
 
 /**
  * Standard processing pipeline orchestrating:
@@ -96,7 +96,7 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
   const combinedChildren: MdastContent[] = [];
   const renderState = { index: 0 };
 
-  for (const { sec, ast } of parsedSections) {
+  for (const { ast } of parsedSections) {
     const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
     combinedChildren.push(...(numberedAst.children as MdastContent[]));
   }

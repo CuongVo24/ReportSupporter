@@ -1,5 +1,6 @@
 import type { ReportProjectBundle } from "@/types";
 import { prepareExport } from "./prepare-export";
+import type { Root as MdastRoot, Content as MdastContent, Heading as MdastHeading, Paragraph as MdastParagraph, Table as MdastTable } from "mdast";
 
 export type DocxLayoutCheck = { id: string; ok: boolean; detail: string };
 
@@ -36,20 +37,21 @@ export function verifyDocxLayout(bundle: ReportProjectBundle): DocxLayoutCheck[]
   let lastDepth = 0;
   const headingsDetailList: string[] = [];
 
-  const walkHeadings = (node: any) => {
+  const walkHeadings = (node: MdastContent | MdastRoot) => {
     if (node.type === "heading") {
-      const depth = node.depth;
+      const heading = node as MdastHeading;
+      const depth = heading.depth;
       if (depth - lastDepth > 1 && lastDepth > 0) {
         headingsValid = false;
         headingsDetailList.push(`Nhảy cấp tiêu đề từ H${lastDepth} sang H${depth}.`);
       }
       lastDepth = depth;
     }
-    if (node.children && Array.isArray(node.children)) {
-      node.children.forEach(walkHeadings);
+    if ("children" in node && Array.isArray(node.children)) {
+      node.children.forEach((child) => walkHeadings(child as MdastContent));
     }
   };
-  mdast.children.forEach(walkHeadings);
+  mdast.children.forEach((child) => walkHeadings(child as MdastContent));
 
   checks.push({
     id: "heading-hierarchy",
@@ -64,26 +66,28 @@ export function verifyDocxLayout(bundle: ReportProjectBundle): DocxLayoutCheck[]
   const captionRegistry = [...figures, ...tables];
   const astCaptions: { id: string; text: string; className: string }[] = [];
 
-  const walkCaptions = (node: any) => {
+  const walkCaptions = (node: MdastContent | MdastRoot) => {
     if (node.type === "paragraph") {
-      const className = node.data?.hProperties?.className;
+      const para = node as MdastParagraph;
+      const hProps = (para.data?.hProperties || {}) as { className?: string; id?: string };
+      const className = hProps.className;
       if (className === "fig-caption" || className === "tbl-caption") {
-        const text = (node.children || [])
-          .map((c: any) => c.value || "")
+        const text = (para.children || [])
+          .map((c) => ("value" in c ? c.value : ""))
           .join("")
           .trim();
         astCaptions.push({
-          id: (node.data as any)?.hProperties?.id || "",
+          id: hProps.id || "",
           text,
-          className,
+          className: className || "",
         });
       }
     }
-    if (node.children && Array.isArray(node.children)) {
-      node.children.forEach(walkCaptions);
+    if ("children" in node && Array.isArray(node.children)) {
+      node.children.forEach((child) => walkCaptions(child as MdastContent));
     }
   };
-  mdast.children.forEach(walkCaptions);
+  mdast.children.forEach((child) => walkCaptions(child as MdastContent));
 
   const unmatched: string[] = [];
   for (const registryEntry of captionRegistry) {
@@ -112,19 +116,20 @@ export function verifyDocxLayout(bundle: ReportProjectBundle): DocxLayoutCheck[]
   // 4. Check Table configurations
   let tablesValid = true;
   let tableCount = 0;
-  const walkTables = (node: any) => {
+  const walkTables = (node: MdastContent | MdastRoot) => {
     if (node.type === "table") {
+      const table = node as MdastTable;
       tableCount++;
-      const rows = node.children || [];
+      const rows = table.children || [];
       if (rows.length === 0 || (rows[0] && (!rows[0].children || rows[0].children.length === 0))) {
         tablesValid = false;
       }
     }
-    if (node.children && Array.isArray(node.children)) {
-      node.children.forEach(walkTables);
+    if ("children" in node && Array.isArray(node.children)) {
+      node.children.forEach((child) => walkTables(child as MdastContent));
     }
   };
-  mdast.children.forEach(walkTables);
+  mdast.children.forEach((child) => walkTables(child as MdastContent));
 
   checks.push({
     id: "table-format",
@@ -136,12 +141,18 @@ export function verifyDocxLayout(bundle: ReportProjectBundle): DocxLayoutCheck[]
 
   // 5. Check Chapter Page Breaks
   let h1Count = 0;
-  const walkH1PageBreaks = (node: any) => {
-    if (node.type === "heading" && node.depth === 1) {
-      h1Count++;
+  const walkH1PageBreaks = (node: MdastContent | MdastRoot) => {
+    if (node.type === "heading") {
+      const heading = node as MdastHeading;
+      if (heading.depth === 1) {
+        h1Count++;
+      }
+    }
+    if ("children" in node && Array.isArray(node.children)) {
+      node.children.forEach((child) => walkH1PageBreaks(child as MdastContent));
     }
   };
-  mdast.children.forEach(walkH1PageBreaks);
+  mdast.children.forEach((child) => walkH1PageBreaks(child as MdastContent));
 
   if (preset.chapterStartsNewPage) {
     checks.push({
