@@ -32,12 +32,12 @@ Wire the three exporters into a UI: an export panel with per-target buttons, an 
 - ❌ Any new dep.
 
 ## 3. Checklist
-- [ ] `src/types/export.ts` matches CanonicalTypes §8 (verified, not duplicated).
-- [ ] `use-export.ts` runs the job lifecycle, triggers download on success, surfaces typed errors + retry, never swallows; calls the 3 sync exporters and awaits `packDocx` only for the DOCX target.
-- [ ] `ExportPanel.tsx` per-target buttons + status + retry + warn-only pre-export banner; a11y (icon+label, keyboard, tokens).
-- [ ] `index.ts` exposes the export public surface; `Workspace.tsx` mounts the panel.
-- [ ] `use-export.test.ts` covers done / error+retry / error-surfaced.
-- [ ] 4 gates green.
+- [x] `src/types/export.ts` matches CanonicalTypes §8 (verified, not duplicated).
+- [x] `use-export.ts` runs the job lifecycle, triggers download on success, surfaces typed errors + retry, never swallows; calls the 3 sync exporters and awaits `packDocx` only for the DOCX target.
+- [x] `ExportPanel.tsx` per-target buttons + status + retry + warn-only pre-export banner; a11y (icon+label, keyboard, tokens).
+- [x] `index.ts` exposes the export public surface; `Workspace.tsx` mounts the panel.
+- [x] `use-export.test.ts` covers done / error+retry / error-surfaced.
+- [x] 4 gates green.
 
 ## 4. Expected Interfaces / Files
 
@@ -86,6 +86,4 @@ export function ExportPanel(props: { bundle: ReportProjectBundle; check?: CheckR
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
-
-> Suggested commits: (1) use-export hook + export-types verify; (2) ExportPanel + index + Workspace wiring + tests; +1 docs commit.
+`DONE`
