@@ -50,7 +50,7 @@ export function buildCaptionRegistry(
       figGlobalCount++;
       const num = captionNumbering === "per-chapter" ? figChapterCount : figGlobalCount;
       const label = captionNumbering === "per-chapter"
-        ? `Hình ${chapterNum}.${figChapterCount}`
+        ? `Hình ${Math.max(chapterNum, 1)}.${figChapterCount}`
         : `Hình ${figGlobalCount}`;
 
       registry.push({
@@ -87,7 +87,7 @@ export function buildCaptionRegistry(
       }
 
       const label = captionNumbering === "per-chapter"
-        ? `Bảng ${chapterNum}.${tableChapterCount}`
+        ? `Bảng ${Math.max(chapterNum, 1)}.${tableChapterCount}`
         : `Bảng ${tableGlobalCount}`;
 
       registry.push({

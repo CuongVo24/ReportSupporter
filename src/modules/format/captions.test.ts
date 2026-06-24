@@ -251,4 +251,35 @@ Bảng 2: Dữ liệu mẫu 2
     const figCaptionTextNode = figCaptionNode.children[0] as MdastText;
     expect(figCaptionTextNode.value).toBe("Hình 2.1: Hình ảnh kết quả");
   });
+
+  it("should clamp chapter index to 1 when a figure appears before the first H1 heading", () => {
+    const sections = [
+      {
+        id: "intro",
+        ast: parseMarkdown(`
+![First Image](intro.png)
+
+| Col 1 |
+|---|
+| A |
+Bảng: Dữ liệu giới thiệu
+
+# Chương 1
+![Second Image](chap1.png)
+`),
+      },
+    ];
+
+    const registry = buildCaptionRegistry(sections, {
+      captionNumbering: "per-chapter",
+    });
+
+    const fig1 = registry.find((e) => e.id === "fig-1");
+    const table1 = registry.find((e) => e.id === "table-1");
+    const fig2 = registry.find((e) => e.id === "fig-2");
+
+    expect(fig1?.label).toBe("Hình 1.1");
+    expect(table1?.label).toBe("Bảng 1.1");
+    expect(fig2?.label).toBe("Hình 1.1");
+  });
 });
