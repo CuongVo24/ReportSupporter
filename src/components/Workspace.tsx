@@ -14,6 +14,7 @@ import {
   ProjectInitializer,
   useDraftAutosave,
   useImageInsert,
+  importReadme,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel } from "@/modules/export";
@@ -92,13 +93,19 @@ export function Workspace() {
     metadata: Record<string, string | string[]>
   ) => {
     if (!bundle) return;
-    const generatedSections = generateSkeleton(template, { title, ...metadata });
+    const generatedSections = template.id === "readme-report"
+      ? importReadme((metadata.readmeContent as string) || "")
+      : generateSkeleton(template, { title, ...metadata });
+
+    const cleanMetadata = { ...metadata };
+    delete cleanMetadata.readmeContent;
+
     const next: ReportProjectBundle = {
       ...bundle,
       project: {
         ...bundle.project,
         title,
-        metadata,
+        metadata: cleanMetadata,
         sections: generatedSections,
         updatedAt: new Date().toISOString(),
       },
