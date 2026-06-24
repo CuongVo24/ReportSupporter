@@ -1,6 +1,6 @@
 import type { ReportProjectBundle, FormattedReport, CaptionEntry } from "@/types";
 import { parseMarkdown } from "@/lib/markdown-pipeline";
-import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
+import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions } from "@/modules/format";
 import { resolveAssetRefs } from "@/modules/write";
 import { buildEvidenceAppendix, injectQrImages, type UnistNode } from "@/modules/evidence";
 import { unified } from "unified";
@@ -79,103 +79,25 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
   const presetId = formatSettings.presetId || "academic-default";
   const preset = PRESETS[presetId] || PRESETS["academic-default"];
 
-  // 3. Assemble combined AST, inject numbers, and collect figure/table captions
+  // 3. Build unified caption registry and normalize captions in-place
+  const captionRegistry = buildCaptionRegistry(
+    parsedSections.map((p) => ({ id: p.sec.id, ast: p.ast })),
+    preset
+  );
+  normalizeCaptions(
+    parsedSections.map((p) => ({ id: p.sec.id, ast: p.ast })),
+    captionRegistry
+  );
+
+  const figures = captionRegistry.filter((e) => e.kind === "figure");
+  const tables = captionRegistry.filter((e) => e.kind === "table");
+
+  // 4. Assemble combined AST and inject heading numbers
   const combinedChildren: MdastContent[] = [];
   const renderState = { index: 0 };
 
-  const figures: CaptionEntry[] = [];
-  const tables: CaptionEntry[] = [];
-
-  let chapterNum = 0;
-  let figChapterCount = 0;
-  let tableChapterCount = 0;
-  let figGlobalCount = 0;
-  let tableGlobalCount = 0;
-
   for (const { sec, ast } of parsedSections) {
     const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
-
-    const walkChildren = (nodeList: MdastContent[]) => {
-      for (let i = 0; i < nodeList.length; i++) {
-        const node = nodeList[i];
-
-        if (node.type === "heading" && node.depth === 1) {
-          chapterNum++;
-          figChapterCount = 0;
-          tableChapterCount = 0;
-        }
-
-        if (node.type === "image") {
-          figChapterCount++;
-          figGlobalCount++;
-          const num = preset.captionNumbering === "per-chapter" ? figChapterCount : figGlobalCount;
-          const label =
-            preset.captionNumbering === "per-chapter"
-              ? `Hình ${chapterNum}.${figChapterCount}`
-              : `Hình ${figGlobalCount}`;
-
-          node.data = {
-            ...node.data,
-            hProperties: { ...(node.data?.hProperties || {}), id: `fig-${figGlobalCount}` },
-          };
-
-          figures.push({
-            id: `fig-${figGlobalCount}`,
-            kind: "figure",
-            number: num,
-            label,
-            text: node.alt || "",
-            sectionId: sec.id,
-          });
-        }
-
-        if (node.type === "table") {
-          tableChapterCount++;
-          tableGlobalCount++;
-          const num = preset.captionNumbering === "per-chapter" ? tableChapterCount : tableGlobalCount;
-
-          let captionText = "";
-          const adjIndices = [i - 1, i + 1];
-          for (const idx of adjIndices) {
-            if (idx >= 0 && idx < nodeList.length) {
-              const adj = nodeList[idx];
-              if (adj.type === "paragraph") {
-                const text = getFlatText(adj.children || []).trim();
-                if (/^(bảng|table)/i.test(text)) {
-                  captionText = text.replace(/^(bảng|table)\s*\d+(\.\d+)*\s*[:.-]?\s*/i, "");
-                  break;
-                }
-              }
-            }
-          }
-
-          const label =
-            preset.captionNumbering === "per-chapter"
-              ? `Bảng ${chapterNum}.${tableChapterCount}`
-              : `Bảng ${tableGlobalCount}`;
-
-          node.data = {
-            ...node.data,
-            hProperties: { ...(node.data?.hProperties || {}), id: `table-${tableGlobalCount}` },
-          };
-
-          tables.push({
-            id: `table-${tableGlobalCount}`,
-            kind: "table",
-            number: num,
-            label,
-            text: captionText,
-            sectionId: sec.id,
-          });
-        }
-
-        if ("children" in node && Array.isArray(node.children)) {
-          walkChildren(node.children as MdastContent[]);
-        }
-      }
-    };
-
-    walkChildren(numberedAst.children);
     combinedChildren.push(...(numberedAst.children as MdastContent[]));
   }
 

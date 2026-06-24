@@ -109,8 +109,8 @@ describe("prepareExport Optimization Parity", () => {
   it("verifies the number of children in mdast is exactly as compiled", () => {
     const result = prepareExport(mockBundle);
     
-    // Check that we have all blocks from both sections (5 from sec-1 + 6 from sec-2 = 11)
-    expect(result.formatted.mdast.children).toHaveLength(11);
+    // Check that we have all blocks from both sections (5 from sec-1 + 6 from sec-2 + 1 injected figure caption = 12)
+    expect(result.formatted.mdast.children).toHaveLength(12);
     
     // Verify first heading has the number prefix injected into MDAST
     const firstHeading = result.formatted.mdast.children[0];

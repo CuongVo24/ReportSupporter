@@ -202,11 +202,17 @@ function mapBlockNode(
     }
     case "paragraph": {
       const runs = (node.children || []).flatMap((child) => mapPhrasingNode(child as MdastContent));
+      const hProps = (node.data as any)?.hProperties || {};
+      const isFigCaption = hProps.className === "fig-caption";
+      const isTblCaption = hProps.className === "tbl-caption";
+      const isCaption = isFigCaption || isTblCaption;
+
       return [
         new Paragraph({
           children: [...(overrides.prefixRuns || []), ...runs],
           indent: overrides.indent,
-          spacing: { after: 120 },
+          spacing: isCaption ? { before: 120, after: 120 } : { after: 120 },
+          alignment: isCaption ? AlignmentType.CENTER : undefined,
         }),
       ];
     }
