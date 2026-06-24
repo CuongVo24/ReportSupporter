@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo } from "react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
 import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
-import type { ReportAsset, FormatSettings, TocNode } from "@/types";
+import { buildEvidenceAppendix } from "@/modules/evidence";
+import type { ReportAsset, FormatSettings, TocNode, EvidenceItem } from "@/types";
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 
@@ -14,6 +15,7 @@ type PreviewPaneProps = {
   formatSettings?: FormatSettings;
   sections?: { id: string; order: number; markdown: string }[];
   activeSectionId?: string;
+  evidence?: EvidenceItem[];
 };
 
 interface UnistNode {
@@ -116,7 +118,14 @@ function TocBlock({ toc }: { toc: TocNode[] }) {
   );
 }
 
-export function PreviewPane({ markdown, assets = [], formatSettings, sections, activeSectionId }: PreviewPaneProps) {
+export function PreviewPane({
+  markdown,
+  assets = [],
+  formatSettings,
+  sections,
+  activeSectionId,
+  evidence = [],
+}: PreviewPaneProps) {
   const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
 
   // Debounce markdown changes to prevent rendering on every keystroke
@@ -130,15 +139,35 @@ export function PreviewPane({ markdown, assets = [], formatSettings, sections, a
     };
   }, [markdown]);
 
-  const hasContent = debouncedMarkdown.trim().length > 0;
+  const lastSectionId = useMemo(() => {
+    if (!sections || sections.length === 0) {
+      return null;
+    }
+    const sorted = [...sections].sort((a, b) => a.order - b.order);
+    return sorted[sorted.length - 1]?.id || null;
+  }, [sections]);
+
+  const appendixMarkdown = useMemo(() => {
+    return buildEvidenceAppendix(evidence);
+  }, [evidence]);
+
+  const finalMarkdown = useMemo(() => {
+    const isLast = !sections || sections.length === 0 || activeSectionId === lastSectionId;
+    if (isLast && appendixMarkdown) {
+      return debouncedMarkdown + "\n\n" + appendixMarkdown;
+    }
+    return debouncedMarkdown;
+  }, [debouncedMarkdown, sections, activeSectionId, lastSectionId, appendixMarkdown]);
+
+  const hasContent = finalMarkdown.trim().length > 0;
 
   // Split markdown to isolate Mermaid diagrams and render them client-only
   const contentParts = useMemo(() => {
     if (!hasContent) {
       return [];
     }
-    return debouncedMarkdown.split(/(```mermaid[\s\S]*?```)/g);
-  }, [debouncedMarkdown, hasContent]);
+    return finalMarkdown.split(/(```mermaid[\s\S]*?```)/g);
+  }, [finalMarkdown, hasContent]);
 
   // Compute global numbered headings once for correct counter ordering across split content parts
   const globalNumberedHeadings = useMemo(() => {
@@ -149,7 +178,10 @@ export function PreviewPane({ markdown, assets = [], formatSettings, sections, a
       const sortedSections = [...sections].sort((a, b) => a.order - b.order);
       const allHeadings = [];
       for (const sec of sortedSections) {
-        const content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
+        let content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
+        if (sec.id === lastSectionId && appendixMarkdown) {
+          content = content + "\n\n" + appendixMarkdown;
+        }
         const resolvedMarkdown = resolveAssetRefs(content, assets);
         const ast = parseMarkdown(resolvedMarkdown);
         const secHeadings = parseHeadings(ast, sec.id);
@@ -158,11 +190,11 @@ export function PreviewPane({ markdown, assets = [], formatSettings, sections, a
       const globalNumbered = numberHeadings(allHeadings);
       return globalNumbered.filter((h) => h.sectionId === activeSectionId);
     } else {
-      const ast = parseMarkdown(debouncedMarkdown);
+      const ast = parseMarkdown(finalMarkdown);
       const headings = parseHeadings(ast, activeSectionId);
       return numberHeadings(headings);
     }
-  }, [sections, activeSectionId, debouncedMarkdown, assets, hasContent]);
+  }, [sections, activeSectionId, debouncedMarkdown, finalMarkdown, lastSectionId, appendixMarkdown, assets, hasContent]);
 
   // Build the Table of Contents tree
   const tocData = useMemo(() => {

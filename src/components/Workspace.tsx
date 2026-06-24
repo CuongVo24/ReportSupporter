@@ -16,7 +16,7 @@ import {
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel } from "@/modules/export";
-import { EvidencePanel } from "@/modules/evidence/EvidencePanel";
+import { EvidencePanel } from "@/modules/evidence";
 import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem } from "@/types";
 
 const emptyCheckResult: CheckResult = {
@@ -207,6 +207,7 @@ export function Workspace() {
           formatSettings={bundle.formatSettings}
           sections={bundle.project.sections}
           activeSectionId={activeSection.id}
+          evidence={bundle.evidence}
         />
       }
       sidePanel={sidePanel}
