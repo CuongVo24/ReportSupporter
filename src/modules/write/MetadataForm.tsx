@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import type { MetadataFieldSpec } from "@/types";
 
+export function parseTextList(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 type MetadataFormProps = {
   fields: MetadataFieldSpec[];
   values: Record<string, string | string[]>;
@@ -15,14 +22,27 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
 
   // Sync textList inputs representation with parent state
   useEffect(() => {
-    const nextInputs: Record<string, string> = {};
-    fields.forEach((field) => {
-      if (field.type === "textList") {
-        const val = values[field.key];
-        nextInputs[field.key] = Array.isArray(val) ? val.join(", ") : "";
-      }
+    setListInputs((prev) => {
+      const nextInputs = { ...prev };
+      let changed = false;
+
+      fields.forEach((field) => {
+        if (field.type === "textList") {
+          const val = values[field.key];
+          const incomingStr = Array.isArray(val) ? val.join(", ") : "";
+          
+          const localVal = prev[field.key] ?? "";
+          const localParsedStr = parseTextList(localVal).join(", ");
+          
+          if (incomingStr !== localParsedStr) {
+            nextInputs[field.key] = incomingStr;
+            changed = true;
+          }
+        }
+      });
+
+      return changed ? nextInputs : prev;
     });
-    setListInputs(nextInputs);
   }, [values, fields]);
 
   const handleTextChange = (key: string, val: string) => {
@@ -34,10 +54,7 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
 
   const handleListChange = (key: string, rawVal: string) => {
     setListInputs((prev) => ({ ...prev, [key]: rawVal }));
-    const list = rawVal
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const list = parseTextList(rawVal);
     onChange({
       ...values,
       [key]: list,
