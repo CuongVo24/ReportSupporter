@@ -1,95 +1,100 @@
-﻿=== LINT ===
+=== LINT ===
 
 > report-supporter@0.1.0 lint
 > eslint .
 
 === TYPECHECK ===
+
+> npx tsc --noEmit
+
 === TEST ===
 
 > report-supporter@0.1.0 test
 > vitest run
 
 
-[1m[30m[46m RUN [49m[39m[22m [36mv4.1.9 [39m[90mE:/ReportSupporter[39m
+ RUN  v4.1.9 E:/ReportSupporter
 
- [32mΓ£ô[39m src/modules/export/print-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 342[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export-docx.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 617[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 717[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-qr.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 259[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export-pdf.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 202[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/prepare-export.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 192[2mms[22m[39m
- [32mΓ£ô[39m src/lib/markdown-pipeline.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 348[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/run-checker.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 175[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/sections/sections.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 106[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-appendix.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 123[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/resolve-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 79[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/missing-sections.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 175[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/structure.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 104[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/readme-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 50[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/w3_break_toc_numbering.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 83[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/evidence-gaps.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 61[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/buildInitialSections.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 56[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/captions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 54[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/images.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 47[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/number-headings.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 40[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/heading-levels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 29[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/use-image-insert.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 39[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/text-markers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 42[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/code-language.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 43[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/mdast-to-docx.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 34[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/use-export.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 30[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/table-width.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/generate-skeleton.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 23[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/autosave.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/create-project.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 22[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/validate.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 15[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/MetadataForm.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/internship-report.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 25[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/readme-report.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-reducer.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/lab-report.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/generate-toc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/kind-meta.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/insert-snippet.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/index.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/lib/slugify.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/readiness-score.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/ProjectInitializer.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/extract-mermaid.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ ✓ src/modules/evidence/evidence-qr.test.ts (3 tests) 607ms
+     ✓ translates placeholder spans to image nodes in prepareExport  504ms
+ ✓ src/modules/export/export.test.ts (6 tests) 543ms
+ ✓ src/modules/export/export-docx.test.ts (3 tests) 682ms
+     ✓ should synchronously build a valid Document  521ms
+ ✓ src/lib/markdown-pipeline.test.ts (9 tests) 245ms
+ ✓ src/modules/export/print-preview.test.ts (3 tests) 532ms
+ ✓ src/modules/export/export-pdf.test.ts (5 tests) 665ms
+       ✓ should successfully trigger browser print when popup window opens  435ms
+ ✓ src/modules/check/run-checker.test.ts (11 tests) 296ms
+ ✓ src/modules/export/prepare-export.test.ts (3 tests) 209ms
+ ✓ src/modules/check/rules/missing-sections.test.ts (16 tests) 172ms
+ ✓ src/modules/evidence/evidence-appendix.test.ts (6 tests) 133ms
+ ✓ src/modules/check/rules/captions.test.ts (6 tests) 46ms
+ ✓ src/modules/write/sections/sections.test.ts (7 tests) 80ms
+ ✓ src/modules/write/resolve-assets.test.ts (5 tests) 66ms
+ ✓ src/modules/format/w3_break_toc_numbering.test.ts (3 tests) 78ms
+ ✓ src/modules/check/rules/structure.test.ts (6 tests) 151ms
+ ✓ src/modules/write/readme-import.test.ts (5 tests) 49ms
+ ✓ src/modules/write/buildInitialSections.test.ts (5 tests) 44ms
+ ✓ src/modules/check/rules/images.test.ts (5 tests) 41ms
+ ✓ src/modules/format/number-headings.test.ts (7 tests) 34ms
+ ✓ src/modules/check/rules/table-width.test.ts (3 tests) 38ms
+ ✓ src/modules/check/rules/evidence-gaps.test.ts (9 tests) 42ms
+ ✓ src/modules/write/use-image-insert.test.ts (3 tests) 49ms
+ ✓ src/modules/check/rules/code-language.test.ts (4 tests) 96ms
+ ✓ src/modules/check/rules/heading-levels.test.ts (4 tests) 31ms
+ ✓ src/modules/check/rules/text-markers.test.ts (4 tests) 32ms
+ ✓ src/modules/write/templates/readme-report.test.ts (2 tests) 20ms
+ ✓ src/modules/export/use-export.test.ts (7 tests) 39ms
+ ✓ src/modules/write/templates/internship-report.test.ts (3 tests) 16ms
+ ✓ src/modules/evidence/evidence-reducer.test.ts (6 tests) 12ms
+ ✓ src/modules/export/mdast-to-docx.test.ts (6 tests) 32ms
+ ✓ src/modules/write/create-project.test.ts (4 tests) 22ms
+ ✓ src/modules/write/templates/lab-report.test.ts (3 tests) 24ms
+ ✓ src/modules/evidence/validate.test.ts (7 tests) 18ms
+ ✓ src/modules/write/generate-skeleton.test.ts (4 tests) 20ms
+ ✓ src/modules/format/generate-toc.test.ts (4 tests) 10ms
+ ✓ src/modules/write/autosave.test.ts (3 tests) 18ms
+ ✓ src/modules/evidence/kind-meta.test.ts (1 test) 10ms
+ ✓ src/modules/write/ProjectInitializer.test.tsx (1 test) 9ms
+ ✓ src/modules/write/insert-snippet.test.ts (7 tests) 9ms
+ ✓ src/modules/check/readiness-score.test.ts (7 tests) 9ms
+ ✓ src/modules/write/extract-mermaid.test.ts (3 tests) 9ms
+ ✓ src/modules/write/MetadataForm.test.ts (3 tests) 8ms
+ ✓ src/modules/write/templates/index.test.ts (5 tests) 9ms
+ ✓ src/lib/slugify.test.ts (6 tests) 9ms
+ ✓ src/smoke.test.ts (1 test) 4ms
 
-[2m Test Files [22m [1m[32m45 passed[39m[22m[90m (45)[39m
-[2m      Tests [22m [1m[32m221 passed[39m[22m[90m (221)[39m
-[2m   Start at [22m 20:58:21
-[2m   Duration [22m 25.48s[2m (transform 2.99s, setup 0ms, import 48.45s, tests 4.35s, environment 13ms)[22m
+ Test Files  45 passed (45)
+      Tests  224 passed (224)
+   Start at  21:06:51
+   Duration  26.47s (transform 3.10s, setup 0ms, import 49.05s, tests 5.27s, environment 13ms)
 
 === BUILD ===
 
 > report-supporter@0.1.0 build
 > next build
 
-   Γû▓ Next.js 15.5.19
+   ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- Γ£ô Compiled successfully in 15.7s
+ ✓ Compiled successfully in 27.0s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...
    Generating static pages (1/4) 
    Generating static pages (2/4) 
    Generating static pages (3/4) 
- Γ£ô Generating static pages (4/4)
+ ✓ Generating static pages (4/4)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                                 Size  First Load JS
-Γöî Γùï /                                     511 kB         615 kB
-Γöö Γùï /_not-found                             1 kB         104 kB
+┌ ○ /                                     511 kB         615 kB
+└ ○ /_not-found                             1 kB         104 kB
 + First Load JS shared by all             103 kB
-  Γö£ chunks/1255-b8cf77ab14370e57.js        46 kB
-  Γö£ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
-  Γöö other shared chunks (total)          2.94 kB
+  ├ chunks/1255-b8cf77ab14370e57.js        46 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.94 kB
 
 
-Γùï  (Static)  prerendered as static content
-
+○  (Static)  prerendered as static content

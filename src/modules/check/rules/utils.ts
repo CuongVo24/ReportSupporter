@@ -1,4 +1,5 @@
 import { getTemplate } from "@/modules/write";
+import { flattenNodeText } from "@/lib/markdown-pipeline";
 import type { TemplateSchema } from "@/types";
 import type { Root as MdastRoot, PhrasingContent } from "mdast";
 
@@ -16,17 +17,10 @@ interface UnistNode {
 
 /**
  * Helper to extract flat text from AST phrasing content children.
+ * Reuses the shared flattenNodeText helper from @/lib.
  */
 export function getFlatText(nodes: PhrasingContent[]): string {
-  let text = "";
-  for (const node of nodes) {
-    if ("value" in node && typeof node.value === "string") {
-      text += node.value;
-    } else if ("children" in node && Array.isArray(node.children)) {
-      text += getFlatText(node.children as PhrasingContent[]);
-    }
-  }
-  return text;
+  return flattenNodeText({ children: nodes });
 }
 
 /**

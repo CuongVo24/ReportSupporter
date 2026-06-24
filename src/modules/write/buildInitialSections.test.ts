@@ -87,4 +87,33 @@ describe("buildInitialSections helper", () => {
     const hasMemberTableWarning = checkResult.issues.some(issue => issue.id === "missing-member-table");
     expect(hasMemberTableWarning).toBe(false);
   });
+
+  it("should NOT prepend Member table section if the metadata contains 1 member or fewer (individual report)", () => {
+    const template = getTemplate("readme-report")!;
+    const metadata = {
+      school: "Đại học Bách Khoa",
+      members: ["Nguyễn Văn A - 123456"],
+      readmeContent: "# Project Title\n\nProject description\n",
+    };
+
+    const sections = buildInitialSections(template, metadata);
+    // Since it's an individual report, no member table should be prepended.
+    // Length should be 1 (just the imported section), and its order should be 0.
+    expect(sections).toHaveLength(1);
+    expect(sections[0].title).toBe("Project Title");
+    expect(sections[0].order).toBe(0);
+  });
+
+  it("should NOT prepend Member table section if README content is empty", () => {
+    const template = getTemplate("readme-report")!;
+    const metadata = {
+      school: "Đại học Bách Khoa",
+      members: ["Nguyễn Văn A - 123456", "Trần Thị B - 654321"],
+      readmeContent: "",
+    };
+
+    const sections = buildInitialSections(template, metadata);
+    // Empty README content means 0 imported sections. Prepend should be skipped.
+    expect(sections).toHaveLength(0);
+  });
 });

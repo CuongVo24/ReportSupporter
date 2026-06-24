@@ -156,9 +156,13 @@ export const missingMemberTableRule: CheckRule = {
   run(ctx: CheckContext): ReportIssue[] {
     const template = getTemplateSchema(ctx.templateId);
     
-    // Check if it is a group/software template
-    const isGroupTemplate = template?.id === "software-project" || 
-      template?.metadataFields.some((f) => f.key === "members" && f.type === "textList");
+    const members = ctx.bundle.project.metadata.members;
+    const isMultipleMembers = Array.isArray(members) && members.length > 1;
+
+    // Check if it is a group/software template and has multiple members
+    const isGroupTemplate = (template?.id === "software-project" || 
+      template?.metadataFields.some((f) => f.key === "members" && f.type === "textList")) &&
+      isMultipleMembers;
 
     if (!isGroupTemplate) {
       return [];

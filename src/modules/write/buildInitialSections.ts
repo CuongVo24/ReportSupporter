@@ -15,23 +15,30 @@ export function buildInitialSections(
     const readmeContent = (metadata.readmeContent as string) || "";
     const importedSections = importReadme(readmeContent);
 
-    // Prepend a "Thành viên & Phân công" section for readme-report templates
-    const memberMarkdown = buildMemberResponsibility(metadata.members as string[]);
-    const memberSection: ReportSection = {
-      id: crypto.randomUUID(),
-      title: "Thành viên & Phân công",
-      order: 0,
-      status: "draft",
-      markdown: memberMarkdown,
-    };
+    const members = metadata.members;
+    const isGroup = Array.isArray(members) && members.length > 1;
 
-    // Shift orders of imported sections by 1 to accommodate the prepended member section
-    const shifted = importedSections.map((sec) => ({
-      ...sec,
-      order: sec.order + 1,
-    }));
+    if (importedSections.length > 0 && isGroup) {
+      // Prepend a "Thành viên & Phân công" section for readme-report templates
+      const memberMarkdown = buildMemberResponsibility(members as string[]);
+      const memberSection: ReportSection = {
+        id: crypto.randomUUID(),
+        title: "Thành viên & Phân công",
+        order: 0,
+        status: "draft",
+        markdown: memberMarkdown,
+      };
 
-    return [memberSection, ...shifted];
+      // Shift orders of imported sections by 1 to accommodate the prepended member section
+      const shifted = importedSections.map((sec) => ({
+        ...sec,
+        order: sec.order + 1,
+      }));
+
+      return [memberSection, ...shifted];
+    }
+
+    return importedSections;
   }
 
   return generateSkeleton(template, metadata);

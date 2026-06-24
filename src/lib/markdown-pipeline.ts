@@ -110,5 +110,3 @@ export function flattenNodeText(node: { value?: string; children?: unknown[] }):
   }
   return text;
 }
-
-

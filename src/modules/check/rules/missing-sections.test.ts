@@ -13,7 +13,7 @@ describe("Missing Sections Check Rules (Template-Aware)", () => {
       templateId,
       metadata: {
         school: "Trường Đại học",
-        members: ["Nguyễn Văn A"],
+        members: ["Nguyễn Văn A", "Trần Văn B"],
       },
       sections: sections.map((s, idx) => ({
         id: `sec-${idx}`,
@@ -134,6 +134,15 @@ describe("Missing Sections Check Rules (Template-Aware)", () => {
       const bundle = createMockBundle("individual-report", [
         { title: "Mở đầu", markdown: "# Mở đầu\n" },
       ]);
+      const result = runChecker(bundle);
+      expect(result.issues.some(i => i.id === "missing-member-table")).toBe(false);
+    });
+
+    it("should NOT trigger missing-member-table for software-project if it is an individual project (1 member or fewer)", () => {
+      const bundle = createMockBundle("software-project", [
+        { title: "Mở đầu", markdown: "# Mở đầu\n" },
+      ]);
+      bundle.project.metadata.members = ["Nguyễn Văn A"];
       const result = runChecker(bundle);
       expect(result.issues.some(i => i.id === "missing-member-table")).toBe(false);
     });

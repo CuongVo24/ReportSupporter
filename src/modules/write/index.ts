@@ -18,4 +18,3 @@ export { createImageAsset, useImageInsert } from "./use-image-insert";
 export { buildMemberResponsibility } from "./sections/member-responsibility";
 export { buildProjectTimeline } from "./sections/project-timeline";
 export { buildInitialSections } from "./buildInitialSections";
-
