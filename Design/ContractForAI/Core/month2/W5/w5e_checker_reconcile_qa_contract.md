@@ -68,6 +68,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `test(check): evidence-gaps coverage for W5 evidence-kit data`; (2) `docs(w5): W5 QA report + evidence samples`; +1 docs commit. Đóng Evidence Kit (Phase 2 mở màn).

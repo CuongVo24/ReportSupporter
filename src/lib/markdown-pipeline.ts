@@ -16,7 +16,7 @@ const customSchema = {
   clobberPrefix: "",
   attributes: {
     ...defaultSchema.attributes,
-    span: [...(defaultSchema.attributes?.span || []), "className"],
+    span: [...(defaultSchema.attributes?.span || []), "className", "data-url"],
     div: [...(defaultSchema.attributes?.div || []), "className"],
     code: [...(defaultSchema.attributes?.code || []), "className"],
     pre: [...(defaultSchema.attributes?.pre || []), "className"],

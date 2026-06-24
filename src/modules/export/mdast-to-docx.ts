@@ -76,7 +76,7 @@ function getImageType(mimeType: string): "jpg" | "png" | "gif" | "bmp" {
 function mapPhrasingNode(
   node: MdastContent,
   styles: PhrasingStyles = {}
-): Array<TextRun | ExternalHyperlink> {
+): Array<TextRun | ExternalHyperlink | ImageRun> {
   if (node.type === "text" && "value" in node) {
     return [
       new TextRun({
@@ -116,13 +116,37 @@ function mapPhrasingNode(
     const linkNode = node as MdastLink;
     const runs = (linkNode.children || []).flatMap((child) =>
       mapPhrasingNode(child as MdastContent, styles)
-    ) as TextRun[];
+    ) as Array<TextRun | ImageRun>;
     return [
       new ExternalHyperlink({
         children: runs,
         link: linkNode.url,
       }),
     ];
+  }
+  if (node.type === "image") {
+    const imgNode = node as MdastImage;
+    const urlStr = imgNode.url || "";
+    const altText = imgNode.alt || "Hình ảnh";
+    const isQr = altText.startsWith("QR:");
+
+    try {
+      const base64Info = extractBase64Data(urlStr);
+      if (base64Info) {
+        return [
+          new ImageRun({
+            data: base64Info.data,
+            type: getImageType(base64Info.type),
+            transformation: {
+              width: isQr ? 80 : 450,
+              height: isQr ? 80 : 300,
+            },
+          }),
+        ];
+      }
+    } catch {
+      // ignore
+    }
   }
   return [];
 }
@@ -252,7 +276,7 @@ function mapBlockNode(
         for (const cell of row.children) {
           const runs = (cell.children || []).flatMap((child) =>
             mapPhrasingNode(child as MdastContent)
-          ) as TextRun[];
+          ) as Array<TextRun | ExternalHyperlink | ImageRun>;
           cells.push(
             new TableCell({
               children: [new Paragraph({ children: runs })],
@@ -334,6 +358,7 @@ function mapBlockNode(
       const altText = imgNode.alt || "Hình ảnh";
       const urlStr = imgNode.url || "";
       const currentIndent = overrides.indent?.left || 0;
+      const isQr = altText.startsWith("QR:");
 
       try {
         const base64Info = extractBase64Data(urlStr);
@@ -345,13 +370,13 @@ function mapBlockNode(
                   data: base64Info.data,
                   type: getImageType(base64Info.type),
                   transformation: {
-                    width: 450,
-                    height: 300,
+                    width: isQr ? 80 : 450,
+                    height: isQr ? 80 : 300,
                   },
                 }),
               ],
               indent: { left: currentIndent },
-              alignment: AlignmentType.CENTER,
+              alignment: isQr ? AlignmentType.LEFT : AlignmentType.CENTER,
               spacing: { before: 120, after: 120 },
             }),
           ];

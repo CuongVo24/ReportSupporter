@@ -85,6 +85,6 @@ export function EvidenceQrPreview(props: { url: string }): JSX.Element; // clien
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(evidence): install qrcode + local QR data URL`; (2) `feat(evidence): QR preview in appendix`; (+ `feat(export): embed QR` nếu W4 thật); +1 docs commit.

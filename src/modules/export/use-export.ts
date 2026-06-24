@@ -3,6 +3,7 @@ import type { ExportJob, ExportTarget, ReportProjectBundle, ExportError } from "
 import { exportHtml } from "./export-html";
 import { exportPdf } from "./export-pdf";
 import { exportDocx, packDocx } from "./export-docx";
+import { toQrDataUrl } from "@/modules/evidence";
 
 async function executeExport(
   target: ExportTarget,
@@ -10,8 +11,26 @@ async function executeExport(
 ): Promise<Blob> {
   let blob: Blob;
 
+  const qrDataUrls: Record<string, string> = {};
+  if (bundle.evidence && bundle.evidence.length > 0) {
+    for (const item of bundle.evidence) {
+      if (item.qrEnabled && item.url) {
+        try {
+          const dataUrl = await toQrDataUrl(item.url);
+          if (dataUrl) {
+            qrDataUrls[item.url] = dataUrl;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
   if (target === "html") {
-    const res = exportHtml(bundle);
+    const res = Object.keys(qrDataUrls).length > 0
+      ? exportHtml(bundle, qrDataUrls)
+      : exportHtml(bundle);
     if (!res.ok) {
       throw res.error;
     }
@@ -23,7 +42,9 @@ async function executeExport(
     }
     blob = res.blob;
   } else if (target === "docx") {
-    const res = exportDocx(bundle);
+    const res = Object.keys(qrDataUrls).length > 0
+      ? exportDocx(bundle, qrDataUrls)
+      : exportDocx(bundle);
     if (!res.ok) {
       throw res.error;
     }

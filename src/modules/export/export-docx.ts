@@ -280,9 +280,9 @@ function buildDocxToc(toc: TocNode[], preset: FormatPreset): Paragraph[] {
  * Synchronously compiles the project bundle into a docx Document object.
  * Applies FormatPreset options (Times New Roman, margins, font sizing).
  */
-export function exportDocx(bundle: ReportProjectBundle): DocxBuildResult {
+export function exportDocx(bundle: ReportProjectBundle, qrDataUrls?: Record<string, string>): DocxBuildResult {
   try {
-    const { cover, formatted } = prepareExport(bundle);
+    const { cover, formatted } = prepareExport(bundle, qrDataUrls);
     const { preset } = formatted;
 
     const coverBlocks = buildDocxCoverPage(cover, preset);

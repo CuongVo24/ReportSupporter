@@ -16,7 +16,8 @@ import {
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel } from "@/modules/export";
-import type { CheckResult, ReportProjectBundle, TemplateSchema } from "@/types";
+import { EvidencePanel } from "@/modules/evidence";
+import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem } from "@/types";
 
 const emptyCheckResult: CheckResult = {
   issues: [],
@@ -117,6 +118,20 @@ export function Workspace() {
     void saveBundle(fresh);
   }, []);
 
+  const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
+    setBundle((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        evidence,
+        project: {
+          ...prev.project,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    });
+  }, []);
+
   if (!bundle) {
     return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
   }
@@ -168,6 +183,10 @@ export function Workspace() {
         bundle={bundle}
         check={checkResult ?? undefined}
       />
+      <EvidencePanel
+        evidence={bundle.evidence}
+        onChange={handleEvidenceChange}
+      />
     </div>
   );
 
@@ -188,6 +207,7 @@ export function Workspace() {
           formatSettings={bundle.formatSettings}
           sections={bundle.project.sections}
           activeSectionId={activeSection.id}
+          evidence={bundle.evidence}
         />
       }
       sidePanel={sidePanel}

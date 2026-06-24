@@ -78,6 +78,6 @@ export function validateEvidence(input: unknown):
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(evidence): kind metadata + offline validateEvidence + tests`; +1 docs commit.

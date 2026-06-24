@@ -2,6 +2,7 @@ import type { ReportProjectBundle, FormattedReport, CaptionEntry } from "@/types
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
 import { resolveAssetRefs } from "@/modules/write";
+import { buildEvidenceAppendix, injectQrImages, type UnistNode } from "@/modules/evidence";
 import { unified } from "unified";
 import remarkRehype from "remark-rehype";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
@@ -19,7 +20,7 @@ import { getFlatText, injectHeadingNumbers, PRESETS } from "./helpers";
  * 3. Resolving figure and table captions
  * 4. Compiling the AST to HAST and MDAST formats
  */
-export function prepareExport(bundle: ReportProjectBundle): ExportInput {
+export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<string, string> = {}): ExportInput {
   const { project, assets, formatSettings } = bundle;
   const sortedSections = [...project.sections].sort((a, b) => a.order - b.order);
 
@@ -50,8 +51,15 @@ export function prepareExport(bundle: ReportProjectBundle): ExportInput {
   };
 
   // 2. Parse all sections once and resolve hierarchical numbering and Table of Contents
-  const parsedSections = sortedSections.map((sec) => {
-    const resolvedMarkdown = resolveAssetRefs(sec.markdown, assets);
+  const parsedSections = sortedSections.map((sec, idx) => {
+    let markdown = sec.markdown;
+    if (idx === sortedSections.length - 1) {
+      const appendix = buildEvidenceAppendix(bundle.evidence || []);
+      if (appendix) {
+        markdown += "\n\n" + appendix;
+      }
+    }
+    const resolvedMarkdown = resolveAssetRefs(markdown, assets);
     const ast = parseMarkdown(resolvedMarkdown);
     return { sec, ast };
   });
@@ -176,11 +184,13 @@ export function prepareExport(bundle: ReportProjectBundle): ExportInput {
     children: combinedChildren,
   };
 
+  injectQrImages(combinedMdast as unknown as UnistNode, qrDataUrls);
+
   const customSchema = {
     ...defaultSchema,
     attributes: {
       ...defaultSchema.attributes,
-      span: [...(defaultSchema.attributes?.span || []), "className"],
+      span: [...(defaultSchema.attributes?.span || []), "className", "data-url"],
       div: [...(defaultSchema.attributes?.div || []), "className"],
       code: [...(defaultSchema.attributes?.code || []), "className"],
       pre: [...(defaultSchema.attributes?.pre || []), "className"],
