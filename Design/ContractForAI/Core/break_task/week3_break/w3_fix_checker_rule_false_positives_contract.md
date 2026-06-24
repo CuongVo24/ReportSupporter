@@ -88,6 +88,4 @@ const HARDCODED_HEADING_REGEX = /^(\d+(\.\d+)+|\d+\.\s|(Chương|Chapter)\s+\d+)
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
-
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `fix(check): robust project-link detection + tighter hardcoded-heading regex`; (2) `fix(check): empty-section via AST + surface rule errors`; +1 docs commit (contract này).
+`DONE`

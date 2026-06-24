@@ -1,8 +1,8 @@
 import type { CheckRule, CheckContext, ReportIssue } from "@/types";
 import { findNodes, getFlatText } from "./utils";
-import type { Heading as MdastHeading } from "mdast";
+import type { Heading as MdastHeading, Content as MdastContent, Root as MdastRoot } from "mdast";
 
-const HARDCODED_HEADING_REGEX = /^(\d+(\.\d+)*[\s\.]|Chương\s+\d+|Chapter\s+\d+)/i;
+const HARDCODED_HEADING_REGEX = /^(\d+(\.\d+)+|\d+\.\s|(Chương|Chapter)\s+\d+)/i;
 
 /**
  * Rule: hardcoded-heading-number
@@ -47,14 +47,36 @@ export const emptySectionRule: CheckRule = {
     const issues: ReportIssue[] = [];
 
     for (const section of ctx.bundle.project.sections) {
-      const lines = section.markdown.split("\n");
-      // Remove lines that are markdown headers (starting with #)
-      const nonHeadingText = lines
-        .filter((line) => !line.trim().startsWith("#"))
-        .join("\n")
-        .trim();
+      const ast = ctx.sectionAsts[section.id];
+      let hasContent = false;
 
-      if (nonHeadingText.length === 0) {
+      const walk = (node: MdastContent) => {
+        if (hasContent) return;
+        if (node.type === "paragraph") {
+          const text = getFlatText(node.children || []).trim();
+          if (text.length > 0 || findNodes(node as unknown as MdastRoot, "image").length > 0) {
+            hasContent = true;
+          }
+        } else if (["table", "code", "list", "blockquote", "thematicBreak", "math", "html"].includes(node.type)) {
+          hasContent = true;
+        } else if ("children" in node && Array.isArray(node.children)) {
+          for (const child of node.children) {
+            if (child.type !== "heading") {
+              walk(child as MdastContent);
+            }
+          }
+        }
+      };
+
+      if (ast && ast.children) {
+        for (const child of ast.children) {
+          if (child.type !== "heading") {
+            walk(child);
+          }
+        }
+      }
+
+      if (!hasContent) {
         issues.push({
           id: "empty-section",
           severity: "warning",

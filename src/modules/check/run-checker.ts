@@ -39,6 +39,13 @@ export function runChecker(bundle: ReportProjectBundle, formatted?: FormattedRep
       issues.push(...ruleIssues);
     } catch (error) {
       console.error(`Rule ${rule.id} failed to run:`, error);
+      issues.push({
+        id: "checker-rule-error",
+        severity: "info",
+        module: "check",
+        message: `Rule "${rule.id}" lỗi khi chạy.`,
+        suggestion: "Đã xảy ra lỗi hệ thống khi chạy quy tắc kiểm tra này. Vui lòng kiểm tra lại cấu trúc Markdown của bạn.",
+      });
     }
   }
 

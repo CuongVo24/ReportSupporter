@@ -18,6 +18,65 @@ function isValidUrl(urlStr: string): boolean {
  * Rule: missing-project-links
  * Triggers for software templates if no GitHub, demo, or deploy links are found in project metadata or AST link nodes.
  */
+function hasProjectLink(ctx: CheckContext): boolean {
+  const keywords = ["github", "demo", "deploy", "source", "repo", "url"];
+
+  // 1. Check project metadata keys and values
+  const metadata = ctx.bundle.project.metadata;
+  for (const key in metadata) {
+    const val = metadata[key];
+    const items = Array.isArray(val) ? val : [val];
+    const lowerKey = key.toLowerCase();
+    const keyHasKeyword = keywords.some((kw) => lowerKey.includes(kw));
+
+    for (const item of items) {
+      if (typeof item === "string" && isValidUrl(item)) {
+        if (keyHasKeyword) return true;
+        const lowerItem = item.toLowerCase();
+        if (keywords.some((kw) => lowerItem.includes(kw))) return true;
+      }
+    }
+  }
+
+  // 2. Check bundle.evidence list
+  const evidenceList = ctx.bundle.evidence || [];
+  for (const item of evidenceList) {
+    if (item.url && isValidUrl(item.url)) {
+      if (item.kind === "github" || item.kind === "deploy") return true;
+      const lowerUrl = item.url.toLowerCase();
+      if (keywords.some((kw) => lowerUrl.includes(kw))) return true;
+    }
+  }
+
+  // 3. Check AST link nodes for keywords or common hosting domains
+  const commonHosts = ["github.com", "vercel.app", "netlify.app", "github.io"];
+  for (const ast of Object.values(ctx.sectionAsts)) {
+    const links = findNodes(ast, "link") as MdastLink[];
+    for (const link of links) {
+      if (link.url && isValidUrl(link.url)) {
+        const lowerUrl = link.url.toLowerCase();
+        if (keywords.some((kw) => lowerUrl.includes(kw))) return true;
+        try {
+          const parsed = new URL(link.url);
+          const hostname = parsed.hostname.toLowerCase();
+          if (commonHosts.some((host) => hostname === host || hostname.endsWith("." + host))) {
+            return true;
+          }
+          if (hostname.endsWith(".github.io") || hostname.endsWith(".io")) return true;
+        } catch {
+          // ignore invalid URLs in links
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Rule: missing-project-links
+ * Triggers for software templates if no GitHub, demo, or deploy links are found in project metadata or AST link nodes.
+ */
 export const missingProjectLinksRule: CheckRule = {
   id: "missing-project-links",
   severity: "error",
@@ -28,48 +87,7 @@ export const missingProjectLinksRule: CheckRule = {
       return [];
     }
 
-    const keywords = ["github", "demo", "deploy", "source"];
-    let hasLink = false;
-
-    // 1. Check project metadata values for matches
-    const metadata = ctx.bundle.project.metadata;
-    for (const key in metadata) {
-      const val = metadata[key];
-      const items = Array.isArray(val) ? val : [val];
-      for (const item of items) {
-        if (typeof item === "string" && isValidUrl(item)) {
-          const lowerItem = item.toLowerCase();
-          if (keywords.some((kw) => lowerItem.includes(kw))) {
-            hasLink = true;
-            break;
-          }
-        }
-      }
-      if (hasLink) {
-        break;
-      }
-    }
-
-    // 2. Check AST link nodes if metadata check didn't find any links
-    if (!hasLink) {
-      for (const ast of Object.values(ctx.sectionAsts)) {
-        const links = findNodes(ast, "link") as MdastLink[];
-        for (const link of links) {
-          if (link.url && isValidUrl(link.url)) {
-            const lowerUrl = link.url.toLowerCase();
-            if (keywords.some((kw) => lowerUrl.includes(kw))) {
-              hasLink = true;
-              break;
-            }
-          }
-        }
-        if (hasLink) {
-          break;
-        }
-      }
-    }
-
-    if (!hasLink) {
+    if (!hasProjectLink(ctx)) {
       return [
         {
           id: "missing-project-links",

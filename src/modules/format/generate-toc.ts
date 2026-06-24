@@ -8,18 +8,6 @@ import type { NumberedHeading } from "./number-headings";
 export function generateToc(headings: NumberedHeading[], maxDepth = 3): TocNode[] {
   const filtered = headings.filter((h) => h.depth <= maxDepth);
   const result: TocNode[] = [];
-  const idCounts = new Map<string, number>();
-
-  // Helper to ensure all IDs in the TOC tree are unique
-  function getUniqueId(baseId: string): string {
-    if (!idCounts.has(baseId)) {
-      idCounts.set(baseId, 1);
-      return baseId;
-    }
-    const count = idCounts.get(baseId)! + 1;
-    idCounts.set(baseId, count);
-    return `${baseId}-${count}`;
-  }
 
   type StackEntry = {
     node: TocNode;
@@ -28,9 +16,8 @@ export function generateToc(headings: NumberedHeading[], maxDepth = 3): TocNode[
   const stack: StackEntry[] = [];
 
   for (const heading of filtered) {
-    const uniqueId = getUniqueId(heading.id);
     const node: TocNode = {
-      id: uniqueId,
+      id: heading.id,
       number: heading.number,
       text: heading.text,
       level: heading.depth,

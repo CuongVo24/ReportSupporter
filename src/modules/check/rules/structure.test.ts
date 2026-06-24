@@ -64,6 +64,8 @@ describe("hardcodedHeadingNumberRule", () => {
       "## Lời nói đầu",
       "# Bài học số 1",
       "# Tiêu chuẩn ISO 9001",
+      "# 2024 Tổng kết",
+      "# 5 bài học",
     ];
 
     for (const md of nonTriggers) {
@@ -100,6 +102,7 @@ describe("emptySectionRule", () => {
       "# Mở đầu\nĐây là nội dung.",
       "# Mở đầu\n- Một danh sách\n- Hai danh sách",
       "# Mở đầu\n![](asset:img)",
+      "# Mở đầu\n```ts\nconst x = 42;\n```",
     ];
 
     for (const md of nonTriggers) {

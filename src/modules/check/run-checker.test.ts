@@ -150,6 +150,7 @@ describe("runChecker Engine Core & Rules", () => {
   it("should trigger missing-project-links for software projects if missing in metadata and AST", () => {
     const badBundle = {
       ...baseBundle,
+      evidence: [],
       project: {
         ...baseBundle.project,
         metadata: {
@@ -193,5 +194,71 @@ describe("runChecker Engine Core & Rules", () => {
     };
     const res = runChecker(badBundle);
     expect(res.issues.some((i) => i.id === "broken-evidence-url-shape")).toBe(true);
+  });
+
+  it("should NOT trigger missing-project-links if project link is supplied in metadata key, evidence kind, or vercel host", () => {
+    // 1. Provided via metadata key containing keyword
+    const metaKeyBundle = {
+      ...baseBundle,
+      project: {
+        ...baseBundle.project,
+        metadata: {
+          school: "Trường",
+          sourceUrl: "https://my-project-repo.com",
+        },
+      },
+    };
+    const resMetaKey = runChecker(metaKeyBundle);
+    expect(resMetaKey.issues.some((i) => i.id === "missing-project-links")).toBe(false);
+
+    // 2. Provided via evidence array kind
+    const evidenceKindBundle = {
+      ...baseBundle,
+      project: {
+        ...baseBundle.project,
+        metadata: { school: "Trường" },
+      },
+      evidence: [
+        { id: "e1", kind: "deploy" as const, title: "Deploy", url: "https://my-app.com", qrEnabled: true, createdAt: "" },
+      ],
+    };
+    const resEvidenceKind = runChecker(evidenceKindBundle);
+    expect(resEvidenceKind.issues.some((i) => i.id === "missing-project-links")).toBe(false);
+
+    // 3. Provided via AST link pointing to vercel host
+    const vercelHostBundle = {
+      ...baseBundle,
+      project: {
+        ...baseBundle.project,
+        metadata: { school: "Trường" },
+        sections: [
+          { id: "s1", order: 1, title: "Body", markdown: "# Body\n[Deploy Link](https://my-demo-app.vercel.app)", status: "draft" as const },
+        ],
+      },
+    };
+    const resVercelHost = runChecker(vercelHostBundle);
+    expect(resVercelHost.issues.some((i) => i.id === "missing-project-links")).toBe(false);
+  });
+
+  it("should catch throwing rules and surface a checker-rule-error issue", async () => {
+    const { RULES_REGISTRY } = await import("./registry");
+    const mockRule = {
+      id: "throwing-rule",
+      severity: "error" as const,
+      detect: ["meta" as const],
+      run: () => {
+        throw new Error("Simulated rule failure");
+      },
+    };
+    RULES_REGISTRY.push(mockRule);
+    try {
+      const res = runChecker(baseBundle);
+      const errorIssue = res.issues.find((i) => i.id === "checker-rule-error");
+      expect(errorIssue).toBeDefined();
+      expect(errorIssue?.message).toContain("throwing-rule");
+      expect(errorIssue?.severity).toBe("info");
+    } finally {
+      RULES_REGISTRY.pop();
+    }
   });
 });

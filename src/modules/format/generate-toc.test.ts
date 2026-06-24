@@ -42,15 +42,15 @@ describe("generateToc", () => {
     expect(tree2[0].children[0].children).toHaveLength(0); // depth 3 is cut off
   });
 
-  it("should disambiguate duplicate slugs", () => {
+  it("should preserve input IDs", () => {
     const headings: NumberedHeading[] = [
-      { depth: 1, text: "Giới thiệu", number: "1", id: "gioi-thieu", levelJumped: false },
-      { depth: 1, text: "Giới thiệu", number: "2", id: "gioi-thieu", levelJumped: false },
+      { depth: 1, text: "Giới thiệu", number: "1", id: "1-gioi-thieu", levelJumped: false },
+      { depth: 1, text: "Giới thiệu", number: "2", id: "2-gioi-thieu", levelJumped: false },
     ];
 
     const tree = generateToc(headings);
     expect(tree).toHaveLength(2);
-    expect(tree[0].id).toBe("gioi-thieu");
-    expect(tree[1].id).toBe("gioi-thieu-2");
+    expect(tree[0].id).toBe("1-gioi-thieu");
+    expect(tree[1].id).toBe("2-gioi-thieu");
   });
 });

@@ -12,6 +12,8 @@ type PreviewPaneProps = {
   markdown: string;
   assets?: ReportAsset[];
   formatSettings?: FormatSettings;
+  sections?: { id: string; order: number; markdown: string }[];
+  activeSectionId?: string;
 };
 
 interface UnistNode {
@@ -19,11 +21,23 @@ interface UnistNode {
   children?: UnistNode[];
 }
 
+function getHeadingText(nodes: PhrasingContent[]): string {
+  let text = "";
+  for (const node of nodes) {
+    if ("value" in node && typeof node.value === "string") {
+      text += node.value;
+    } else if ("children" in node && Array.isArray(node.children)) {
+      text += getHeadingText(node.children as PhrasingContent[]);
+    }
+  }
+  return text;
+}
+
 /**
  * Traverses MDAST in-place to inject heading numbers before heading children.
  * Uses index state tracking to map back to the globalNumberedHeadings correctly across split blocks.
  */
-function injectHeadingNumbers(
+export function injectHeadingNumbers(
   ast: MdastRoot,
   globalNumberedHeadings: { number: string; text: string; id: string }[],
   state: { index: number }
@@ -36,23 +50,26 @@ function injectHeadingNumbers(
 
     if (n.type === "heading") {
       const heading = n as unknown as MdastHeading;
-      const numHeading = globalNumberedHeadings[state.index++];
-      if (numHeading && numHeading.text) {
-        // Unshift the text node representing the hierarchy prefix (e.g. "1.1 ")
-        const numberTextNode: PhrasingContent = {
-          type: "text",
-          value: `${numHeading.number} `,
-        };
-        heading.children.unshift(numberTextNode);
+      const text = getHeadingText(heading.children).trim();
+      if (text !== "") {
+        const numHeading = globalNumberedHeadings[state.index++];
+        if (numHeading && numHeading.text) {
+          // Unshift the text node representing the hierarchy prefix (e.g. "1.1 ")
+          const numberTextNode: PhrasingContent = {
+            type: "text",
+            value: `${numHeading.number} `,
+          };
+          heading.children.unshift(numberTextNode);
 
-        // Assign correct HTML element ID for TOC anchor linking
-        heading.data = {
-          ...heading.data,
-          hProperties: {
-            ...(heading.data?.hProperties || {}),
-            id: numHeading.id,
-          },
-        };
+          // Assign correct HTML element ID for TOC anchor linking
+          heading.data = {
+            ...heading.data,
+            hProperties: {
+              ...(heading.data?.hProperties || {}),
+              id: numHeading.id,
+            },
+          };
+        }
       }
     }
 
@@ -99,7 +116,7 @@ function TocBlock({ toc }: { toc: TocNode[] }) {
   );
 }
 
-export function PreviewPane({ markdown, assets = [], formatSettings }: PreviewPaneProps) {
+export function PreviewPane({ markdown, assets = [], formatSettings, sections, activeSectionId }: PreviewPaneProps) {
   const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
 
   // Debounce markdown changes to prevent rendering on every keystroke
@@ -128,10 +145,24 @@ export function PreviewPane({ markdown, assets = [], formatSettings }: PreviewPa
     if (!hasContent) {
       return [];
     }
-    const ast = parseMarkdown(debouncedMarkdown);
-    const headings = parseHeadings(ast);
-    return numberHeadings(headings);
-  }, [debouncedMarkdown, hasContent]);
+    if (sections && sections.length > 0) {
+      const sortedSections = [...sections].sort((a, b) => a.order - b.order);
+      const allHeadings = [];
+      for (const sec of sortedSections) {
+        const content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
+        const resolvedMarkdown = resolveAssetRefs(content, assets);
+        const ast = parseMarkdown(resolvedMarkdown);
+        const secHeadings = parseHeadings(ast, sec.id);
+        allHeadings.push(...secHeadings);
+      }
+      const globalNumbered = numberHeadings(allHeadings);
+      return globalNumbered.filter((h) => h.sectionId === activeSectionId);
+    } else {
+      const ast = parseMarkdown(debouncedMarkdown);
+      const headings = parseHeadings(ast, activeSectionId);
+      return numberHeadings(headings);
+    }
+  }, [sections, activeSectionId, debouncedMarkdown, assets, hasContent]);
 
   // Build the Table of Contents tree
   const tocData = useMemo(() => {
