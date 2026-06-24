@@ -74,6 +74,6 @@ Dọn ba điểm nợ còn lại của W7 — **không** chặn merge nhưng là
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `fix(export): boundary-accurate caption parity check in docx checklist`; (2) `fix(format): clamp caption chapter index to ≥1 before first h1`; (3) `docs(w7): sync contract status to DONE`.

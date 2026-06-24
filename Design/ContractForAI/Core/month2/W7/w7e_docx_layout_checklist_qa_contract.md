@@ -75,6 +75,6 @@ export function verifyDocxLayout(/* docx model / mdast + registry + preset */): 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(export): DOCX layout checklist + numbering/page-setup parity`; (2) `docs(w7): W7 QA report + format samples (before/after)`; +1 docs commit. Đóng Format Hardening (Phase 2).

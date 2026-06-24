@@ -68,6 +68,6 @@ Siết **page-break PDF**: chương lớn (h1) bắt đầu trang mới, tránh 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `fix(export): PDF page-break for chapters + widow/orphan control`; (2) `feat(export): stable page number/header/footer (best-effort)`; +1 docs commit.

@@ -71,6 +71,6 @@ export const referencesRule: CheckRule;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(check): references section rules + register in registry`; +1 docs commit.
