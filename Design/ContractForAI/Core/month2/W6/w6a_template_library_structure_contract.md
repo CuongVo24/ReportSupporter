@@ -80,6 +80,6 @@ export function getTemplate(id: string): TemplateSchema | undefined;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(write): template registry (ALL_TEMPLATES + getTemplate)`; (2) `refactor(write): feed registry into initializer`; +1 docs commit.
