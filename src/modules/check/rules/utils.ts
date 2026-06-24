@@ -1,16 +1,12 @@
-import { softwareProjectTemplate } from "@/modules/write";
+import { getTemplate } from "@/modules/write";
 import type { TemplateSchema } from "@/types";
 import type { Root as MdastRoot, PhrasingContent } from "mdast";
-
-const ALL_TEMPLATES: Record<string, TemplateSchema> = {
-  [softwareProjectTemplate.id]: softwareProjectTemplate,
-};
 
 /**
  * Returns the template schema registered for the given template ID.
  */
 export function getTemplateSchema(templateId: string): TemplateSchema | undefined {
-  return ALL_TEMPLATES[templateId];
+  return getTemplate(templateId);
 }
 
 interface UnistNode {
