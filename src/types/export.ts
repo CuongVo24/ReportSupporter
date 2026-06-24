@@ -1,4 +1,6 @@
 // Export types - see Design/Modules/Other/CanonicalTypes.md §8
+import type { ReportIssueSeverity } from "./report";
+
 export type ExportTarget = "html" | "pdf" | "docx";
 
 export type ExportStatus = "idle" | "running" | "done" | "error";
@@ -34,4 +36,12 @@ export type PackageManifest = {
 export type SubmissionPackage = {
   manifest: PackageManifest;
   blob: Blob;
+};
+
+export type SubmissionChecklistItem = {
+  id: string;
+  label: string;
+  done: boolean;
+  detail: string;
+  severity?: ReportIssueSeverity;
 };

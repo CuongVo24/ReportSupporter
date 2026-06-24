@@ -342,4 +342,12 @@ export type SubmissionPackage = {
   manifest: PackageManifest;
   blob: Blob;
 };
+
+export type SubmissionChecklistItem = {
+  id: string;
+  label: string;
+  done: boolean;
+  detail: string;
+  severity?: ReportIssueSeverity;
+};
 ```
