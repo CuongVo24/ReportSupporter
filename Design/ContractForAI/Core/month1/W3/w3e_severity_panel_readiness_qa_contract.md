@@ -34,13 +34,13 @@ Surface the engine's `CheckResult` to the user: a draft readiness score (0–100
 - ❌ Any new dep.
 
 ## 3. Checklist
-- [ ] `readiness-score.ts` implements `−15/−5/−1`, clamp ≥ 0, bands ≥85/60–84/<60; pure + tested.
-- [ ] `ReadinessBadge.tsx` shows score + band + text label + "draft"; tokens only.
-- [ ] `CheckerPanel.tsx` consumes `CheckResult`, re-run button, jump-to-issue (Enter/Space), icon+label severity (not colour alone).
-- [ ] `Workspace.tsx` runs the engine, holds `CheckResult`, re-run updates, `onJump` wired.
-- [ ] `readiness-score.test.ts` covers the `75` case + clamp + band edges.
-- [ ] `Design/Reports/Month1/W3/` has QA report + checker samples + build output.
-- [ ] 4 gates green.
+- [x] `readiness-score.ts` implements `−15/−5/−1`, clamp ≥ 0, bands ≥85/60–84/<60; pure + tested.
+- [x] `ReadinessBadge.tsx` shows score + band + text label + "draft"; tokens only.
+- [x] `CheckerPanel.tsx` consumes `CheckResult`, re-run button, jump-to-issue (Enter/Space), icon+label severity (not colour alone).
+- [x] `Workspace.tsx` runs the engine, holds `CheckResult`, re-run updates, `onJump` wired.
+- [x] `readiness-score.test.ts` covers the `75` case + clamp + band edges.
+- [x] `Design/Reports/Month1/W3/` has QA report + checker samples + build output.
+- [x] 4 gates green.
 
 ## 4. Expected Interfaces / Files
 
@@ -90,6 +90,6 @@ type CheckerPanelProps = { result: CheckResult; onRun: () => void; onJump: (sect
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Suggested commits: (1) readiness-score + badge + tests; (2) CheckerPanel + Workspace wiring; (3) QA report + checker samples + build output; +1 docs commit.

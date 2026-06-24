@@ -34,13 +34,13 @@ Implement the structural rules that read mdast nodes and register them in the Gr
 - ❌ Auto-fix (Non-goal — Checker reports + suggests only).
 
 ## 3. Checklist
-- [ ] Each rule reads AST nodes from `CheckContext` (no structural regex); `placeholder-text` is the only text-regex rule.
-- [ ] Rule ids exactly match `3.Check.md` §5.2; severities match the catalog.
-- [ ] `broken-image` resolves `asset:<id>` against `bundle.assets`.
-- [ ] `table-too-wide` threshold > 6 columns; `missing-captions` uses image alt as caption (MVP).
-- [ ] One `*.test.ts` per rule, each hard-asserting id + severity + trigger + non-trigger.
-- [ ] All rules registered in the engine registry; each file ≤200 lines.
-- [ ] 4 gates green.
+- [x] Each rule reads AST nodes from `CheckContext` (no structural regex); `placeholder-text` is the only text-regex rule.
+- [x] Rule ids exactly match `3.Check.md` §5.2; severities match the catalog.
+- [x] `broken-image` resolves `asset:<id>` against `bundle.assets`.
+- [x] `table-too-wide` threshold > 6 columns; `missing-captions` uses image alt as caption (MVP).
+- [x] One `*.test.ts` per rule, each hard-asserting id + severity + trigger + non-trigger.
+- [x] All rules registered in the engine registry; each file ≤200 lines.
+- [x] 4 gates green.
 
 ## 4. Expected Interfaces / Files
 
@@ -92,6 +92,6 @@ export const tableTooWideRule: CheckRule;               // table-width.ts
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Suggested commits: (1) heading/structure/caption/image/table rules; (2) per-rule tests + migrate W1 text/code rules + registry; +1 docs commit.

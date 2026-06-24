@@ -92,6 +92,6 @@ export type { CheckRule, CheckContext, CheckResult } from "./report"; // or ./ch
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > VibeCode Step 2: no `src/` changes until Approve. Suggested commits: (1) types + slugify; (2) parse + number headings + tests; +1 docs commit for this contract.

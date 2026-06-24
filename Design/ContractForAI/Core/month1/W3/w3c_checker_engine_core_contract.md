@@ -97,6 +97,6 @@ export const brokenEvidenceUrlShapeRule: CheckRule;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > Suggested commits: (1) engine core + context + schemas + registry; (2) missing-sections + evidence-gaps rules + tests; +1 docs commit.
