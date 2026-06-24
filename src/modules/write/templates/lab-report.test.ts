@@ -18,10 +18,11 @@ describe("Lab Report Template", () => {
     };
 
     const sections = generateSkeleton(labReportTemplate, validMetadata);
-    expect(sections).toHaveLength(6);
+    expect(sections).toHaveLength(7);
 
     const expectedTitles = [
       "Mục tiêu",
+      "Thành viên & Phân công",
       "Phương pháp",
       "Kết quả",
       "Thảo luận",

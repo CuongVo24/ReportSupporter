@@ -77,4 +77,4 @@ Sửa **bất nhất dữ liệu template** khiến checker báo nhầm và làm
 
 ## 7. Status
 
-`PLANNED`
+`COMPLETED`

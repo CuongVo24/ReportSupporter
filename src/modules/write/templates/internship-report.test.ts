@@ -19,10 +19,11 @@ describe("Internship Report Template", () => {
     };
 
     const sections = generateSkeleton(internshipReportTemplate, validMetadata);
-    expect(sections).toHaveLength(6);
+    expect(sections).toHaveLength(7);
 
     const expectedTitles = [
       "Tổng quan về Công ty",
+      "Thành viên & Phân công",
       "Nội dung Công việc",
       "Kỹ năng đạt được",
       "Tự đánh giá",

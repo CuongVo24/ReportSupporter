@@ -12,56 +12,55 @@
 
 [1m[30m[46m RUN [49m[39m[22m [36mv4.1.9 [39m[90mE:/ReportSupporter[39m
 
- [32mΓ£ô[39m src/lib/markdown-pipeline.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 252[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export-docx.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 808[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m should synchronously build a valid Document [33m 432[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 587[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/missing-sections.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 83[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/print-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 243[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export-pdf.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 212[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-qr.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 192[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/prepare-export.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 204[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/run-checker.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 135[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-appendix.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 89[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/sections/sections.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 96[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/w3_break_toc_numbering.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 82[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/structure.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 78[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/resolve-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 77[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/captions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 59[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/number-headings.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 48[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/readme-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 58[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/evidence-gaps.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 45[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/images.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 34[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/table-width.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 37[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/use-image-insert.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 32[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/code-language.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 41[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/text-markers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 37[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/autosave.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 23[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/heading-levels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 31[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/use-export.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 26[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/mdast-to-docx.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 31[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/generate-skeleton.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/validate.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/internship-report.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/readme-report.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/templates/lab-report.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-reducer.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 13[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/create-project.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/evidence/evidence-appendix.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/run-checker.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 158[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/export-docx.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 454[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/resolve-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 106[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/print-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 260[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/missing-sections.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 214[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/evidence/evidence-qr.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 185[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/export-pdf.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 189[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/markdown-pipeline.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 212[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/prepare-export.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 233[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/sections/sections.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 143[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/format/w3_break_toc_numbering.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 79[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/structure.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/captions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/evidence-gaps.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/readme-import.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/images.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/code-language.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/format/number-headings.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/mdast-to-docx.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/use-image-insert.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/table-width.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/text-markers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/use-export.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/autosave.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/heading-levels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/evidence/validate.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/ProjectInitializer.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/templates/internship-report.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/create-project.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/generate-skeleton.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/evidence/evidence-reducer.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/templates/lab-report.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 18[2mms[22m[39m
  [32mΓ£ô[39m src/modules/write/templates/index.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/kind-meta.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/generate-toc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/MetadataForm.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/lib/slugify.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/ProjectInitializer.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/extract-mermaid.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/insert-snippet.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/readiness-score.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/insert-snippet.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/format/generate-toc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/templates/readme-report.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/slugify.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/MetadataForm.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/evidence/kind-meta.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/readiness-score.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/extract-mermaid.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
  [32mΓ£ô[39m src/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
 
 [2m Test Files [22m [1m[32m44 passed[39m[22m[90m (44)[39m
-[2m      Tests [22m [1m[32m216 passed[39m[22m[90m (216)[39m
-[2m   Start at [22m 20:35:15
-[2m   Duration [22m 22.06s[2m (transform 2.74s, setup 0ms, import 42.38s, tests 3.85s, environment 10ms)[22m
+[2m      Tests [22m [1m[32m218 passed[39m[22m[90m (218)[39m
+[2m   Start at [22m 20:52:44
+[2m   Duration [22m 22.80s[2m (transform 2.16s, setup 0ms, import 43.40s, tests 3.44s, environment 12ms)[22m
 
 === BUILD ===
 
@@ -71,7 +70,7 @@
    Γû▓ Next.js 15.5.19
 
    Creating an optimized production build ...
- Γ£ô Compiled successfully in 15.0s
+ Γ£ô Compiled successfully in 20.5s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...

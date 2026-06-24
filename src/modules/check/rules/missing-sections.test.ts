@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { runChecker } from "../run-checker";
 import { DEFAULT_FORMAT_SETTINGS } from "@/types";
 import type { ReportProjectBundle } from "@/types";
+import { createProjectFromTemplate, getTemplate } from "@/modules/write";
 
 describe("Missing Sections Check Rules (Template-Aware)", () => {
   // Helper to create a base mock bundle
@@ -101,14 +102,13 @@ describe("Missing Sections Check Rules (Template-Aware)", () => {
       expect(result.issues.some(i => i.id === "missing-references")).toBe(false);
     });
 
-    it("should NOT trigger missing-references for internship-report even when References heading is missing", () => {
+    it("should trigger missing-references for internship-report when References heading is missing", () => {
       const bundle = createMockBundle("internship-report", [
         { title: "Tổng quan về Công ty", markdown: "# Tổng quan về Công ty\n" },
       ]);
-      // internship-report requiredSections are: "Tổng quan về Công ty", "Nội dung Công việc", "Tự đánh giá", "Đánh giá của người hướng dẫn"
-      // "Tài liệu tham khảo" is in sections but NOT in requiredSections.
+      // internship-report requiredSections now include "Tài liệu tham khảo"
       const result = runChecker(bundle);
-      expect(result.issues.some(i => i.id === "missing-references")).toBe(false);
+      expect(result.issues.some(i => i.id === "missing-references")).toBe(true);
     });
   });
 
@@ -135,6 +135,35 @@ describe("Missing Sections Check Rules (Template-Aware)", () => {
         { title: "Mở đầu", markdown: "# Mở đầu\n" },
       ]);
       const result = runChecker(bundle);
+      expect(result.issues.some(i => i.id === "missing-member-table")).toBe(false);
+    });
+
+    it("should NOT trigger missing-member-table for the default lab-report skeleton", () => {
+      const labReportTemplate = getTemplate("lab-report")!;
+      const skeletonBundle = createProjectFromTemplate(labReportTemplate, {
+        metadata: {
+          school: "Đại học",
+          subject: "Môn",
+          labNumber: "1",
+          members: ["A"],
+        },
+      });
+      const result = runChecker(skeletonBundle);
+      expect(result.issues.some(i => i.id === "missing-member-table")).toBe(false);
+    });
+
+    it("should NOT trigger missing-member-table for the default internship-report skeleton", () => {
+      const internshipReportTemplate = getTemplate("internship-report")!;
+      const skeletonBundle = createProjectFromTemplate(internshipReportTemplate, {
+        metadata: {
+          school: "Đại học",
+          company: "Công ty",
+          mentor: "Mentor",
+          position: "Intern",
+          members: ["A"],
+        },
+      });
+      const result = runChecker(skeletonBundle);
       expect(result.issues.some(i => i.id === "missing-member-table")).toBe(false);
     });
   });

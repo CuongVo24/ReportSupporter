@@ -1,4 +1,5 @@
 import type { TemplateSchema } from "@/types";
+import { buildMemberResponsibility } from "../sections/member-responsibility";
 
 export const labReportTemplate: TemplateSchema = {
   id: "lab-report",
@@ -48,32 +49,38 @@ export const labReportTemplate: TemplateSchema = {
       starterMarkdown: "# Mục tiêu\n\nNêu rõ mục tiêu của bài thực hành thí nghiệm.\n",
     },
     {
-      title: "Phương pháp",
+      title: "Thành viên & Phân công",
       order: 1,
+      status: "draft",
+      starterMarkdown: buildMemberResponsibility(),
+    },
+    {
+      title: "Phương pháp",
+      order: 2,
       status: "draft",
       starterMarkdown: "# Phương pháp\n\nMô tả các bước tiến hành thực hiện thí nghiệm, công cụ sử dụng.\n",
     },
     {
       title: "Kết quả",
-      order: 2,
+      order: 3,
       status: "draft",
       starterMarkdown: "# Kết quả\n\nBảng dữ liệu kết quả, sơ đồ, ảnh chụp màn hình minh họa kết quả.\n",
     },
     {
       title: "Thảo luận",
-      order: 3,
+      order: 4,
       status: "draft",
       starterMarkdown: "# Thảo luận\n\nPhân tích kết quả, so sánh lý thuyết với thực tế thí nghiệm.\n",
     },
     {
       title: "Kết luận",
-      order: 4,
+      order: 5,
       status: "draft",
       starterMarkdown: "# Kết luận\n\nĐánh giá mức độ hoàn thành mục tiêu bài thực hành.\n",
     },
     {
       title: "Tài liệu tham khảo",
-      order: 5,
+      order: 6,
       status: "draft",
       starterMarkdown: "# Tài liệu tham khảo\n\n1. Sách hướng dẫn thực hành môn học...\n",
     },
