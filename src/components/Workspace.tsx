@@ -9,6 +9,7 @@ import {
   loadBundle,
   saveBundle,
   softwareProjectTemplate,
+  ALL_TEMPLATES,
   generateSkeleton,
   ProjectInitializer,
   useDraftAutosave,
@@ -139,7 +140,7 @@ export function Workspace() {
   if (isInitializing) {
     return (
       <ProjectInitializer
-        templates={[softwareProjectTemplate]}
+        templates={ALL_TEMPLATES}
         initialTitle={bundle.project.title}
         initialMetadata={bundle.project.metadata}
         onInitialize={handleInitialize}

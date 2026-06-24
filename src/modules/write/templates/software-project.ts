@@ -77,7 +77,7 @@ export const softwareProjectTemplate: TemplateSchema = {
       starterMarkdown: "# Minh chứng\n\nLiên kết GitHub, video demo, deploy.\n",
     },
   ],
-  requiredSections: ["Kết luận", "Tài liệu tham khảo"],
+  requiredSections: ["Mở đầu", "Triển khai", "Kiểm thử", "Kết luận", "Tài liệu tham khảo"],
   requiredEvidenceKinds: ["github", "video", "deploy"],
   requiresToc: true,
 };
