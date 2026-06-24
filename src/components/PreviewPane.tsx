@@ -1,17 +1,122 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { renderMarkdown } from "@/lib/markdown-pipeline";
+import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
-import type { ReportAsset } from "@/types";
+import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
+import type { ReportAsset, FormatSettings, TocNode } from "@/types";
+import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 
 type PreviewPaneProps = {
   markdown: string;
   assets?: ReportAsset[];
+  formatSettings?: FormatSettings;
+  sections?: { id: string; order: number; markdown: string }[];
+  activeSectionId?: string;
 };
 
-export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
+interface UnistNode {
+  type: string;
+  children?: UnistNode[];
+}
+
+function getHeadingText(nodes: PhrasingContent[]): string {
+  let text = "";
+  for (const node of nodes) {
+    if ("value" in node && typeof node.value === "string") {
+      text += node.value;
+    } else if ("children" in node && Array.isArray(node.children)) {
+      text += getHeadingText(node.children as PhrasingContent[]);
+    }
+  }
+  return text;
+}
+
+/**
+ * Traverses MDAST in-place to inject heading numbers before heading children.
+ * Uses index state tracking to map back to the globalNumberedHeadings correctly across split blocks.
+ */
+export function injectHeadingNumbers(
+  ast: MdastRoot,
+  globalNumberedHeadings: { number: string; text: string; id: string }[],
+  state: { index: number }
+): MdastRoot {
+  function walk(node: unknown) {
+    if (!node || typeof node !== "object") {
+      return;
+    }
+    const n = node as UnistNode;
+
+    if (n.type === "heading") {
+      const heading = n as unknown as MdastHeading;
+      const text = getHeadingText(heading.children).trim();
+      if (text !== "") {
+        const numHeading = globalNumberedHeadings[state.index++];
+        if (numHeading && numHeading.text) {
+          // Unshift the text node representing the hierarchy prefix (e.g. "1.1 ")
+          const numberTextNode: PhrasingContent = {
+            type: "text",
+            value: `${numHeading.number} `,
+          };
+          heading.children.unshift(numberTextNode);
+
+          // Assign correct HTML element ID for TOC anchor linking
+          heading.data = {
+            ...heading.data,
+            hProperties: {
+              ...(heading.data?.hProperties || {}),
+              id: numHeading.id,
+            },
+          };
+        }
+      }
+    }
+
+    if (n.children && Array.isArray(n.children)) {
+      for (const child of n.children) {
+        walk(child);
+      }
+    }
+  }
+
+  walk(ast);
+  return ast;
+}
+
+/**
+ * Component displaying the table of contents block.
+ */
+function TocBlock({ toc }: { toc: TocNode[] }) {
+  if (toc.length === 0) {
+    return null;
+  }
+
+  function renderNodes(nodes: TocNode[]) {
+    return (
+      <ul className="ws-toc-list">
+        {nodes.map((node) => (
+          <li key={node.id} className={`ws-toc-item ws-toc-level-${node.level}`}>
+            <a href={`#${node.id}`} className="ws-toc-link">
+              <span className="ws-toc-number">{node.number}</span>{" "}
+              <span className="ws-toc-text">{node.text}</span>
+            </a>
+            {node.children && node.children.length > 0 && renderNodes(node.children)}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <div className="ws-toc-container">
+      <div className="ws-toc-title">Mục lục</div>
+      {renderNodes(toc)}
+    </div>
+  );
+}
+
+export function PreviewPane({ markdown, assets = [], formatSettings, sections, activeSectionId }: PreviewPaneProps) {
   const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
 
   // Debounce markdown changes to prevent rendering on every keystroke
@@ -29,20 +134,54 @@ export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
 
   // Split markdown to isolate Mermaid diagrams and render them client-only
   const contentParts = useMemo(() => {
-    if (!hasContent) return [];
+    if (!hasContent) {
+      return [];
+    }
     return debouncedMarkdown.split(/(```mermaid[\s\S]*?```)/g);
   }, [debouncedMarkdown, hasContent]);
 
+  // Compute global numbered headings once for correct counter ordering across split content parts
+  const globalNumberedHeadings = useMemo(() => {
+    if (!hasContent) {
+      return [];
+    }
+    if (sections && sections.length > 0) {
+      const sortedSections = [...sections].sort((a, b) => a.order - b.order);
+      const allHeadings = [];
+      for (const sec of sortedSections) {
+        const content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
+        const resolvedMarkdown = resolveAssetRefs(content, assets);
+        const ast = parseMarkdown(resolvedMarkdown);
+        const secHeadings = parseHeadings(ast, sec.id);
+        allHeadings.push(...secHeadings);
+      }
+      const globalNumbered = numberHeadings(allHeadings);
+      return globalNumbered.filter((h) => h.sectionId === activeSectionId);
+    } else {
+      const ast = parseMarkdown(debouncedMarkdown);
+      const headings = parseHeadings(ast, activeSectionId);
+      return numberHeadings(headings);
+    }
+  }, [sections, activeSectionId, debouncedMarkdown, assets, hasContent]);
+
+  // Build the Table of Contents tree
+  const tocData = useMemo(() => {
+    if (!hasContent || !formatSettings?.includeToc) {
+      return [];
+    }
+    return generateToc(globalNumberedHeadings);
+  }, [globalNumberedHeadings, hasContent, formatSettings?.includeToc]);
+
   if (!hasContent) {
-    return (
-      <div className="ws-preview-empty">
-        Chưa có nội dung xem trước.
-      </div>
-    );
+    return <div className="ws-preview-empty">Chưa có nội dung xem trước.</div>;
   }
+
+  // Render cursor to track heading index across parts
+  const renderState = { index: 0 };
 
   return (
     <div className="ws-preview-container">
+      {formatSettings?.includeToc && <TocBlock toc={tocData} />}
       {contentParts.map((part, index) => {
         const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
 
@@ -51,13 +190,20 @@ export function PreviewPane({ markdown, assets = [] }: PreviewPaneProps) {
           const code = part
             .replace(/^```mermaid\s*/, "")
             .replace(/\s*```$/, "");
-          
+
           return <MermaidRenderer key={index} code={code} />;
         } else {
           // Resolve offline asset references asset:<id> -> base64 data URLs on the markdown first
           const resolvedMarkdown = resolveAssetRefs(part, assets);
+          
+          // Parse resolved markdown text into AST
+          const ast = parseMarkdown(resolvedMarkdown);
+          
+          // Inject correct heading prefix numbers
+          const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
+          
           // Render HTML through the unified markdown pipeline
-          const renderedHtml = renderMarkdown(resolvedMarkdown);
+          const renderedHtml = renderMdastToHtml(numberedAst);
 
           return (
             <div

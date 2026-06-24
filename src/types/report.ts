@@ -49,3 +49,42 @@ export type ReportProjectBundle = {
   formatSettings: FormatSettings;
   schemaVersion: number;
 };
+
+// --- Checker types verbatim from CanonicalTypes.md §6 ---
+import type { Root as MdastRoot } from "mdast";
+import type { FormattedReport } from "./pipeline";
+
+/**
+ * A single rule in the checker engine.
+ */
+export type CheckRule = {
+  id: string;
+  severity: ReportIssueSeverity;
+  detect: ("ast" | "text" | "meta")[]; // AST node / plain text / bundle metadata
+  run: (ctx: CheckContext) => ReportIssue[];
+};
+
+/**
+ * Context passed to every rule (parsed once, shared across rules).
+ */
+export type CheckContext = {
+  bundle: ReportProjectBundle;
+  formatted?: FormattedReport;
+  sectionAsts: Record<string /* sectionId */, MdastRoot>; // parse-once cache
+  templateId: string;
+};
+
+/**
+ * Aggregate result of running the whole engine.
+ */
+export type CheckResult = {
+  issues: ReportIssue[];
+  grouped: {
+    error: ReportIssue[];
+    warning: ReportIssue[];
+    info: ReportIssue[];
+  };
+  readinessScore: number; // 0..100
+  ranAt: string;          // ISO 8601
+};
+

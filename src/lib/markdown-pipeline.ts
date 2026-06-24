@@ -13,12 +13,19 @@ import type { MdastRoot } from "./pipeline-types";
 // data: URIs are allowed for images (offline assets), style attributes are stripped.
 const customSchema = {
   ...defaultSchema,
+  clobberPrefix: "",
   attributes: {
     ...defaultSchema.attributes,
     span: [...(defaultSchema.attributes?.span || []), "className"],
     div: [...(defaultSchema.attributes?.div || []), "className"],
     code: [...(defaultSchema.attributes?.code || []), "className"],
     pre: [...(defaultSchema.attributes?.pre || []), "className"],
+    h1: [...(defaultSchema.attributes?.h1 || []), "id"],
+    h2: [...(defaultSchema.attributes?.h2 || []), "id"],
+    h3: [...(defaultSchema.attributes?.h3 || []), "id"],
+    h4: [...(defaultSchema.attributes?.h4 || []), "id"],
+    h5: [...(defaultSchema.attributes?.h5 || []), "id"],
+    h6: [...(defaultSchema.attributes?.h6 || []), "id"],
   },
   protocols: {
     ...defaultSchema.protocols,
@@ -36,6 +43,13 @@ const renderProcessor = unified()
   .use(remarkParse)
   .use(remarkGfm)
   .use(remarkMath)
+  .use(remarkRehype)
+  .use(rehypeSanitize, customSchema)
+  .use(rehypeKatex)
+  .use(rehypeHighlight)
+  .use(rehypeStringify);
+
+const astRenderProcessor = unified()
   .use(remarkRehype)
   .use(rehypeSanitize, customSchema)
   .use(rehypeKatex)
@@ -65,3 +79,18 @@ export function renderMarkdown(markdown: string): string {
     return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
   }
 }
+
+/**
+ * Renders an already parsed mdast AST Root to a sanitized HTML string.
+ */
+export function renderMdastToHtml(ast: MdastRoot): string {
+  try {
+    const hast = astRenderProcessor.runSync(ast);
+    const result = astRenderProcessor.stringify(hast);
+    return result.toString();
+  } catch (error) {
+    console.error("Failed to render MDAST:", error);
+    return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
+  }
+}
+

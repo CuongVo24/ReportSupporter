@@ -8,12 +8,16 @@ export type {
   ReportIssue,
   ReportIssueSeverity,
   ReportProjectBundle,
+  CheckRule,
+  CheckContext,
+  CheckResult,
 } from "./report";
 export type { EvidenceKind, EvidenceItem } from "./evidence";
-export type { FormatPreset, FormatSettings } from "./format";
+export type { FormatPreset, FormatSettings, TocNode, CaptionEntry } from "./format";
 export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./template";
 export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob } from "./export";
-export type { ParsedSection, PipelineResult } from "./pipeline";
+export type { ParsedSection, PipelineResult, FormattedReport } from "./pipeline";
+
 
 export {
   reportSectionSchema,
