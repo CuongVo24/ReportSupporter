@@ -31,7 +31,7 @@ Mục tiêu chốt từ MasterRoadMap:
 ### ✅ In scope
 - Evidence type + zod schema (kind, label, url, note).
 - Evidence link manager UI (add/edit/remove, validate URL).
-- Hỗ trợ 8 loại: video demo · GitHub · deploy link · slide · Figma · Drive · test account · API documentation.
+- Hỗ trợ 9 loại: video demo · GitHub · deploy link · slide · Figma · Drive · test account · API documentation · other.
 - Generate evidence appendix table (Markdown/AST → vào report + xuất 3 format).
 - Generate QR code cho mỗi link (`qrcode`) — hiển thị trong preview và export.
 
@@ -48,26 +48,28 @@ Mục tiêu chốt từ MasterRoadMap:
 > Branch: `feature/W5-evidence-kit`.
 
 ### Day 1 — Evidence Types & Schema
-- `[NEW]` `src/types/evidence.ts` (`EvidenceItem`, `EvidenceKind` union 8 loại)
-- `[MODIFY]` `src/types/report.ts` (`ReportProjectBundle.evidence: EvidenceItem[]`)
-- `[MODIFY]` `src/types/schemas.ts` (zod schema cho evidence + URL validate)
+> ⚠️ **Reconciliation:** `src/types/evidence.ts` (`EvidenceKind` 9 loại + `EvidenceItem`), `evidenceItemSchema`, và `ReportProjectBundle.evidence` **đã ship ở W1** → Day 1 là **verify no-op**, không tái khai báo (xem `TaskBrief/Core/month2/w5.md`).
+- `[VERIFY]` `src/types/evidence.ts` (`EvidenceItem`, `EvidenceKind` union 9 loại) — đã có từ W1.
+- `[VERIFY]` `src/types/report.ts` (`ReportProjectBundle.evidence: EvidenceItem[]`) — đã có.
+- `[VERIFY]` `src/types/schemas.ts` (`evidenceItemSchema` + URL shape) — đã có.
+- `[NEW]` `src/modules/evidence/kind-meta.ts` + `validate.ts` (metadata 9 kind + `validateEvidence` offline).
 
 ### Day 2 — Evidence Link Manager UI
 - `[NEW]` `src/modules/evidence/EvidencePanel.tsx` (list + add/edit/remove)
 - `[NEW]` `src/modules/evidence/EvidenceForm.tsx` (chọn kind, nhập label/url/note, validate qua zod)
 - `[NEW]` `src/modules/evidence/validate.ts` (validateEvidence function)
-- `[MODIFY]` `src/modules/write/use-draft-autosave.ts` (persist evidence cùng draft)
+- `[VERIFY]` autosave **không cần sửa** — `useDraftAutosave` lưu cả bundle (`saveBundle`), `evidence` đi kèm tự động; chỉ wire mutation vào `bundle.evidence` state qua `Workspace.tsx`.
 - *Lưu ý:* Module Write chỉ import public surface (`EvidencePanel`) từ `@/modules/evidence`.
 
 ### Day 3 — Evidence Appendix Table
 - `[NEW]` `src/modules/evidence/evidence-appendix.ts` (evidence[] → bảng Markdown/AST)
 - `[NEW]` `src/modules/evidence/index.ts` (export public surface: EvidencePanel, validateEvidence, buildEvidenceAppendix)
-- `[MODIFY]` `src/modules/write/PreviewPanel.tsx` (hiển thị appendix table trong preview)
+- `[MODIFY]` `src/components/PreviewPane.tsx` (nối appendix vào source Markdown trước `parseMarkdown` — preview thật ở `components/`, không phải `modules/write/PreviewPanel.tsx`).
 
 ### Day 4 — QR Code Generation
 - `[NEW]` `src/modules/evidence/evidence-qr.ts` (`qrcode` → data URL cho mỗi link)
 - `[NEW]` `src/modules/evidence/EvidenceQrPreview.tsx`
-- `[MODIFY]` `src/modules/export/export-html.ts` + `export-pdf.ts` + `export-docx.ts` (nhúng QR vào appendix khi export)
+- `[MODIFY]` `src/modules/export/export-html.ts` + `export-docx.ts` (export thật → nhúng QR/appendix). `export-pdf.ts` còn Puppeteer stub → QR-embed follow-up khi engine PDF thật.
 
 ### Day 5 — Checker Hook & QA
 - `[MODIFY]` `src/modules/check/rules/evidence-gaps.ts` (đối chiếu evidence thật: thiếu demo/source/deploy)

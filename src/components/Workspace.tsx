@@ -15,6 +15,7 @@ import {
   useImageInsert,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
+import { ExportPanel } from "@/modules/export";
 import type { CheckResult, ReportProjectBundle, TemplateSchema } from "@/types";
 
 const emptyCheckResult: CheckResult = {
@@ -162,6 +163,10 @@ export function Workspace() {
         onRun={handleCheck}
         onJump={handleJump}
         hasRun={hasRun}
+      />
+      <ExportPanel
+        bundle={bundle}
+        check={checkResult ?? undefined}
       />
     </div>
   );

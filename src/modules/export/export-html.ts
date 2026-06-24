@@ -1,4 +1,9 @@
-import type { ReportProjectBundle, ExportResult } from "@/types";
+import type { ReportProjectBundle, ExportResult, TocNode } from "@/types";
+import { prepareExport } from "./prepare-export";
+import { buildCoverPage } from "./build-cover-page";
+import { buildPrintCss } from "./print-css";
+import { unified } from "unified";
+import rehypeStringify from "rehype-stringify";
 
 function escapeHtml(str: string): string {
   return str
@@ -9,100 +14,86 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
+/**
+ * Exports the project bundle to a self-contained HTML Blob.
+ * Integrates the cover page, Table of Contents, print stylesheet, inlined images,
+ * and client-side Mermaid rendering scripts.
+ */
 export function exportHtml(bundle: ReportProjectBundle): ExportResult {
   try {
-    const { project, schemaVersion } = bundle;
-    
-    // Sort sections by order
-    const sortedSections = [...project.sections].sort((a, b) => a.order - b.order);
-    
-    // Build metadata list
-    const metadataEntries = Object.entries(project.metadata)
-      .map(([key, val]) => {
-        const valStr = Array.isArray(val) ? val.join(", ") : val;
-        return `<li><strong>${escapeHtml(key)}:</strong> ${escapeHtml(valStr)}</li>`;
-      })
-      .join("\n");
+    // 1. Run pipeline
+    const { cover, formatted } = prepareExport(bundle);
 
-    // Build sections HTML
-    const sectionsHtml = sortedSections
-      .map(sec => {
+    // 2. Build cover page
+    const coverHtml = buildCoverPage(cover);
+
+    // 3. Build TOC block
+    let tocHtml = "";
+    if (bundle.formatSettings.includeToc && formatted.toc.length > 0) {
+      const renderNodes = (nodes: TocNode[]): string => {
         return `
-          <section id="section-${escapeHtml(sec.id)}">
-            <h2>${escapeHtml(sec.title)}</h2>
-            <div class="status-badge status-${escapeHtml(sec.status)}">${escapeHtml(sec.status)}</div>
-            <pre class="raw-markdown">${escapeHtml(sec.markdown)}</pre>
-          </section>
+          <ul class="ws-toc-list">
+            ${nodes
+              .map(
+                (node) => `
+              <li class="ws-toc-item ws-toc-level-${node.level}">
+                <a href="#${node.id}" class="ws-toc-link">
+                  <span class="ws-toc-number">${node.number}</span>
+                  <span class="ws-toc-text">${node.text}</span>
+                </a>
+                ${node.children && node.children.length > 0 ? renderNodes(node.children) : ""}
+              </li>
+            `,
+              )
+              .join("")}
+          </ul>
         `;
-      })
-      .join("\n");
+      };
 
+      tocHtml = `
+        <div class="ws-toc-container">
+          <div class="ws-toc-title">Mục lục</div>
+          ${renderNodes(formatted.toc)}
+        </div>
+        <div class="page-break"></div>
+      `;
+    }
+
+    // 4. Stringify HAST to HTML body
+    const bodyHtml = unified().use(rehypeStringify).stringify(formatted.hast);
+
+    // 5. Build full HTML document
+    const printCss = buildPrintCss(formatted.preset);
     const htmlContent = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>${escapeHtml(project.title)}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(bundle.project.title)}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
   <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      line-height: 1.6;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
-      color: #333;
-    }
-    h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
-    h2 { border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 40px; }
-    .metadata {
-      background: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 15px;
-      margin-bottom: 30px;
-    }
-    .metadata ul { list-style: none; padding: 0; margin: 0; }
-    .status-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 3px;
-      text-transform: uppercase;
-      font-weight: bold;
-    }
-    .status-draft { background: #ffeeba; color: #856404; }
-    .status-review { background: #b8daff; color: #004085; }
-    .status-done { background: #c3e6cb; color: #155724; }
-    .raw-markdown {
-      background: #f4f4f4;
-      padding: 15px;
-      border-radius: 4px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
+    ${printCss}
   </style>
 </head>
 <body>
-  <h1>${escapeHtml(project.title)}</h1>
-  <div class="metadata">
-    <h3>Thông tin dự án</h3>
-    <ul>
-      <li><strong>Template ID:</strong> ${escapeHtml(project.templateId)}</li>
-      <li><strong>Schema Version:</strong> ${schemaVersion}</li>
-      <li><strong>Cập nhật lần cuối:</strong> ${escapeHtml(project.updatedAt)}</li>
-      ${metadataEntries}
-    </ul>
+  ${coverHtml}
+  ${tocHtml}
+  <div class="report-body">
+    ${bodyHtml}
   </div>
-  
-  <div class="sections">
-    ${sectionsHtml}
-  </div>
+
+  <!-- Mermaid Client-side Renderer -->
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
 </body>
 </html>`;
 
     const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
     return { ok: true, blob };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to render HTML stub.";
+    const message = error instanceof Error ? error.message : "Failed to render HTML report.";
     return {
       ok: false,
       error: {
