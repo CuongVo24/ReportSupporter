@@ -92,6 +92,6 @@ export function buildSubmissionZip(input: {
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(export): submission package types + evidence.zip builder (jszip)`; (2) `chore(deps): pin jszip + record in TechnicalStack install matrix`; +1 docs commit.
