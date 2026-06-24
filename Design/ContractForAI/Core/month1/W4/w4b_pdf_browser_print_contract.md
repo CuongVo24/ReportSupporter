@@ -74,6 +74,4 @@ export function buildPrintableHtml(input: ExportInput): string;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
-
-> Suggested commits: (1) print-preview + printable HTML; (2) export-pdf browser print + Puppeteer-off stub + tests; +1 docs commit.
+`DONE`
