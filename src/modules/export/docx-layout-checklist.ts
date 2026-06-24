@@ -109,7 +109,7 @@ export function verifyDocxLayout(bundle: ReportProjectBundle): DocxLayoutCheck[]
     // Fallback to matching by regex boundary
     if (!astMatch) {
       const escapedPrefix = escapeRegExp(labelPrefix);
-      const boundaryRegex = new RegExp(`^${escapedPrefix}(?=[\\s:.\\-]|$|$)`);
+      const boundaryRegex = new RegExp(`^${escapedPrefix}(?=[\\s:.\\-]|$)`);
       astMatch = astCaptions.find((ac) => boundaryRegex.test(ac.text));
     }
 
