@@ -40,9 +40,10 @@ describe("buildEvidenceAppendix", () => {
     expect(result).toContain("| --- | --- | --- | --- |");
 
     // Check row 1
-    expect(result).toContain("| Mã nguồn (GitHub) | Report Supporter repo | [Liên kết](https://github.com/CuongVo24/ReportSupporter) | Trang mã nguồn chính |");
+    expect(result).toContain("| Mã nguồn (GitHub) | Report Supporter repo | [Liên kết](https://github.com/CuongVo24/ReportSupporter) <span class=\"ws-evidence-qr-placeholder\" data-url=\"https://github.com/CuongVo24/ReportSupporter\"></span> | Trang mã nguồn chính |");
 
     // Check row 2
+    // qrEnabled is false, so it does not contain the placeholder span
     expect(result).toContain("| Video demo | Demo video | [Liên kết](https://youtube.com/demo) |  |");
   });
 
@@ -85,6 +86,6 @@ describe("buildEvidenceAppendix", () => {
     
     // Ensure no raw | breaks columns
     // The row pattern should match the escaped content
-    expect(result).toContain("| Tài liệu (Google Drive) | Tài liệu \\| File chính | [Liên kết](https://drive.google.com/xyz?id=1\\|2) | Chú ý: - Đọc kỹ hướng dẫn - Check log |");
+    expect(result).toContain("| Tài liệu (Google Drive) | Tài liệu \\| File chính | [Liên kết](https://drive.google.com/xyz?id=1\\|2) <span class=\"ws-evidence-qr-placeholder\" data-url=\"https://drive.google.com/xyz?id=1|2\"></span> | Chú ý: - Đọc kỹ hướng dẫn - Check log |");
   });
 });

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
 import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
-import { buildEvidenceAppendix } from "@/modules/evidence";
+import { buildEvidenceAppendix, EvidenceQrPreview } from "@/modules/evidence";
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem } from "@/types";
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
@@ -204,6 +205,17 @@ export function PreviewPane({
     return generateToc(globalNumberedHeadings);
   }, [globalNumberedHeadings, hasContent, formatSettings?.includeToc]);
 
+  const [placeholders, setPlaceholders] = useState<{ element: HTMLElement; url: string }[]>([]);
+
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll(".ws-evidence-qr-placeholder")) as HTMLElement[];
+    const nextPlaceholders = elements.map((el) => {
+      const url = el.getAttribute("data-url") || "";
+      return { element: el, url };
+    });
+    setPlaceholders(nextPlaceholders);
+  }, [finalMarkdown]);
+
   if (!hasContent) {
     return <div className="ws-preview-empty">Chưa có nội dung xem trước.</div>;
   }
@@ -245,6 +257,10 @@ export function PreviewPane({
             />
           );
         }
+      })}
+      {placeholders.map((p, idx) => {
+        if (!p.element || !p.url) return null;
+        return createPortal(<EvidenceQrPreview key={idx} url={p.url} />, p.element);
       })}
     </div>
   );
