@@ -915,5 +915,173 @@ body {
   outline: 2px solid var(--rs-color-severity-error);
   outline-offset: 1px;
 }
+ 
+ 
+/* Evidence Kit panel — Module 5 (Present/Evidence), W5 Group B */
+.ws-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-3);
+  border-top: 1px solid var(--rs-color-border);
+  padding-top: var(--rs-space-3);
+}
+
+.ws-evidence-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-evidence-title {
+  margin: 0;
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+}
+
+.ws-evidence-add-btn {
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-primary);
+  border: none;
+  color: var(--rs-white);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.ws-evidence-add-btn:hover {
+  background-color: var(--rs-color-primary-hover);
+}
+
+.ws-evidence-add-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 1px;
+}
+
+.ws-evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-evidence-empty {
+  margin: 0;
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  font-style: italic;
+}
+
+.ws-evidence-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface);
+}
+
+.ws-evidence-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--rs-space-2);
+}
+
+.ws-evidence-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-semibold);
+  color: var(--rs-color-text-muted);
+  background-color: var(--rs-color-surface-muted);
+  padding: 2px 6px;
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-evidence-item-title {
+  margin: 2px 0 0 0;
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+  color: var(--rs-color-text);
+  word-break: break-word;
+}
+
+.ws-evidence-item-url {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.ws-evidence-item-url:hover {
+  text-decoration: underline;
+}
+
+.ws-evidence-item-note {
+  margin: 2px 0 0 0;
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ws-evidence-item-qr {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-green-600);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-evidence-actions {
+  display: flex;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-1);
+  border-top: 1px dashed var(--rs-color-border);
+  padding-top: var(--rs-space-1);
+}
+
+.ws-evidence-action-btn {
+  padding: 2px 6px;
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-border);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-evidence-action-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text);
+}
+
+.ws-evidence-action-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 1px;
+}
+
+.ws-evidence-action-btn-delete {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: var(--rs-color-severity-error);
+}
+
+.ws-evidence-action-btn-delete:hover {
+  background-color: #fef2f2;
+  color: var(--rs-color-severity-error);
+}
+
+.ws-evidence-action-btn-delete:focus-visible {
+  outline: 2px solid var(--rs-color-severity-error);
+  outline-offset: 1px;
+}
 
 
