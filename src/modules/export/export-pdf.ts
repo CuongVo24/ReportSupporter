@@ -6,6 +6,11 @@ import { buildPrintableHtml } from "./print-preview";
  * Triggers PDF export via the browser's native print surface.
  * Reuses the formatted HTML structure from Group A to guarantee formatting parity.
  * Note: Headers, footers, and page numbers are browser best-effort.
+ * 
+ * @param bundle The report project bundle.
+ * @returns An ExportResult containing the printable HTML Blob. The returned Blob is 
+ * HTML-based representation of the printable output, not a binary PDF document. Callers
+ * must not download this Blob under a `.pdf` file extension.
  */
 export function exportPdfViaBrowserPrint(bundle: ReportProjectBundle): ExportResult {
   // 1. Client-only guard (no-window context)

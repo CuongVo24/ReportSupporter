@@ -36,4 +36,28 @@ describe("export-docx Document Builder & Packer", () => {
       expect(bytes[3]).toBe(4);
     }
   });
+
+  it("should output cover page without '\\n' in any TextRun text and split members to individual lines", () => {
+    const bundleWithMembers = JSON.parse(JSON.stringify(bundle));
+    bundleWithMembers.project.metadata = {
+      lecturer: "Prof. John Doe",
+      members: ["Alice Smith", "Bob Jones", "Charlie Brown"],
+    };
+
+    const result = exportDocx(bundleWithMembers);
+    expect(result.ok).toBe(true);
+
+    if (result.ok) {
+      const docJsonStr = JSON.stringify(result.doc);
+      
+      expect(docJsonStr).toContain("Prof. John Doe");
+      expect(docJsonStr).toContain("Alice Smith");
+      expect(docJsonStr).toContain("Bob Jones");
+      expect(docJsonStr).toContain("Charlie Brown");
+
+      expect(docJsonStr).not.toContain("Prof. John Doe\\n");
+      expect(docJsonStr).not.toContain("Alice Smith\\n");
+      expect(docJsonStr).not.toContain("Thành viên thực hiện:\\n");
+    }
+  });
 });

@@ -59,7 +59,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         throw new Error(`Unsupported export target: ${target}`);
       }
 
-      if (typeof window !== "undefined" && typeof document !== "undefined") {
+      if (target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -148,7 +148,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
           throw new Error(`Unsupported export target: ${target}`);
         }
 
-        if (typeof window !== "undefined" && typeof document !== "undefined") {
+        if (target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;

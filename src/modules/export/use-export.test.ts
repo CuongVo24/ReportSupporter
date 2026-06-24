@@ -138,4 +138,84 @@ describe("useExport hook logic", () => {
     expect(jobsArray[0].error).toBeUndefined();
     expect(exportHtml).toHaveBeenCalledTimes(2);
   });
+
+  it("should bypass client download for PDF export but complete job state", async () => {
+    const originalWindow = global.window;
+    const originalDocument = global.document;
+
+    const mockAnchor = {
+      href: "",
+      download: "",
+      click: vi.fn(),
+    };
+    const mockDoc = {
+      createElement: vi.fn().mockReturnValue(mockAnchor),
+      body: {
+        appendChild: vi.fn(),
+        removeChild: vi.fn(),
+      },
+    };
+
+    global.window = {} as unknown as typeof window;
+    global.document = mockDoc as unknown as typeof document;
+
+    try {
+      const mockBlob = new Blob(["pdf html representation"], { type: "text/html" });
+      const { exportPdf } = await import("./export-pdf");
+      vi.mocked(exportPdf).mockReturnValue({ ok: true, blob: mockBlob });
+
+      const { runExport } = useExport();
+      await runExport("pdf", mockBundle);
+
+      expect(jobsArray).toHaveLength(1);
+      expect(jobsArray[0].status).toBe("done");
+      expect(mockDoc.createElement).not.toHaveBeenCalled();
+    } finally {
+      global.window = originalWindow;
+      global.document = originalDocument;
+    }
+  });
+
+  it("should trigger client download for HTML export", async () => {
+    const originalWindow = global.window;
+    const originalDocument = global.document;
+
+    const mockAnchor = {
+      href: "",
+      download: "",
+      click: vi.fn(),
+    };
+    const mockDoc = {
+      createElement: vi.fn().mockReturnValue(mockAnchor),
+      body: {
+        appendChild: vi.fn(),
+        removeChild: vi.fn(),
+      },
+    };
+
+    global.window = {
+      URL: {
+        createObjectURL: vi.fn().mockReturnValue("blob:mockurl"),
+        revokeObjectURL: vi.fn(),
+      },
+    } as unknown as typeof window;
+    global.document = mockDoc as unknown as typeof document;
+
+    try {
+      const mockBlob = new Blob(["html content"]);
+      vi.mocked(exportHtml).mockReturnValue({ ok: true, blob: mockBlob });
+
+      const { runExport } = useExport();
+      await runExport("html", mockBundle);
+
+      expect(jobsArray).toHaveLength(1);
+      expect(jobsArray[0].status).toBe("done");
+      expect(mockDoc.createElement).toHaveBeenCalledWith("a");
+      expect(mockAnchor.download).toBe("test-report-title.html");
+      expect(mockAnchor.click).toHaveBeenCalled();
+    } finally {
+      global.window = originalWindow;
+      global.document = originalDocument;
+    }
+  });
 });

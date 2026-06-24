@@ -124,54 +124,63 @@ function buildDocxCoverPage(cover: CoverPageData, preset: FormatPreset): Paragra
   blocks.push(new Paragraph({ spacing: { before: 1440 } }));
 
   // 4. Info (Lecturer & Members)
-  const infoRuns: TextRun[] = [];
   if (cover.lecturer) {
-    infoRuns.push(
-      new TextRun({
-        text: "Giảng viên hướng dẫn: ",
-        bold: true,
-        size: 26, // 13pt
-        font: fontFamily,
-      })
-    );
-    infoRuns.push(
-      new TextRun({
-        text: cover.lecturer + "\n",
-        size: 26,
-        font: fontFamily,
+    blocks.push(
+      new Paragraph({
+        alignment: AlignmentType.LEFT,
+        indent: { left: 1440 },
+        children: [
+          new TextRun({
+            text: "Giảng viên hướng dẫn: ",
+            bold: true,
+            size: 26, // 13pt
+            font: fontFamily,
+          }),
+          new TextRun({
+            text: cover.lecturer,
+            size: 26,
+            font: fontFamily,
+          }),
+        ],
+        spacing: { after: (!cover.members || cover.members.length === 0) ? 1440 : 120 },
       })
     );
   }
 
   if (cover.members && cover.members.length > 0) {
-    infoRuns.push(
-      new TextRun({
-        text: "Thành viên thực hiện:\n",
-        bold: true,
-        size: 26,
-        font: fontFamily,
-      })
-    );
-    for (const member of cover.members) {
-      infoRuns.push(
-        new TextRun({
-          text: `  • ${member}\n`,
-          size: 26,
-          font: fontFamily,
-        })
-      );
-    }
-  }
-
-  if (infoRuns.length > 0) {
     blocks.push(
       new Paragraph({
         alignment: AlignmentType.LEFT,
-        children: infoRuns,
-        indent: { left: 1440 }, // Indent the block slightly
-        spacing: { after: 1440 },
+        indent: { left: 1440 },
+        children: [
+          new TextRun({
+            text: "Thành viên thực hiện:",
+            bold: true,
+            size: 26, // 13pt
+            font: fontFamily,
+          }),
+        ],
+        spacing: { after: 120 },
       })
     );
+
+    cover.members.forEach((member, index) => {
+      const isLast = index === (cover.members?.length ?? 0) - 1;
+      blocks.push(
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          indent: { left: 1440 },
+          children: [
+            new TextRun({
+              text: `  • ${member}`,
+              size: 26, // 13pt
+              font: fontFamily,
+            }),
+          ],
+          spacing: { after: isLast ? 1440 : 120 },
+        })
+      );
+    });
   }
 
   // Spacing before date
