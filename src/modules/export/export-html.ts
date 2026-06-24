@@ -19,10 +19,10 @@ function escapeHtml(str: string): string {
  * Integrates the cover page, Table of Contents, print stylesheet, inlined images,
  * and client-side Mermaid rendering scripts.
  */
-export function exportHtml(bundle: ReportProjectBundle): ExportResult {
+export function exportHtml(bundle: ReportProjectBundle, qrDataUrls?: Record<string, string>): ExportResult {
   try {
     // 1. Run pipeline
-    const { cover, formatted } = prepareExport(bundle);
+    const { cover, formatted } = prepareExport(bundle, qrDataUrls);
 
     // 2. Build cover page
     const coverHtml = buildCoverPage(cover);
