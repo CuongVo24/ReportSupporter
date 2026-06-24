@@ -11,13 +11,13 @@ import { flattenNodeText } from "@/lib/markdown-pipeline";
  */
 export function normalizeCaptions(
   sections: { id: string; ast: MdastRoot }[],
-  registry: CaptionEntry[]
+  registry: CaptionEntry[],
+  state?: { figIdx: number; tableIdx: number }
 ): void {
   const figures = registry.filter((r) => r.kind === "figure");
   const tables = registry.filter((r) => r.kind === "table");
 
-  let figIdx = 0;
-  let tableIdx = 0;
+  const activeState = state || { figIdx: 0, tableIdx: 0 };
 
   for (const sec of sections) {
     const ast = sec.ast;
@@ -49,7 +49,7 @@ export function normalizeCaptions(
 
           if (imagesInPara.length > 0) {
             for (const img of imagesInPara) {
-              const entry = figures[figIdx++];
+              const entry = figures[activeState.figIdx++];
               if (entry) {
                 // Set stable ID on the image node
                 img.data = {
@@ -71,7 +71,7 @@ export function normalizeCaptions(
           }
         } else if (node.type === "table") {
           const tableNode = node as MdastTable;
-          const entry = tables[tableIdx++];
+          const entry = tables[activeState.tableIdx++];
           newChildren.push(tableNode);
 
           if (entry) {

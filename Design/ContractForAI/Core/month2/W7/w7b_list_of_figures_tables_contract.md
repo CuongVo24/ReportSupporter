@@ -77,6 +77,6 @@ export function generateListOfTables(registry: CaptionEntry[]): CaptionEntry[];
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(format): list of figures + list of tables generator`; (2) `feat(preview): render LoF/LoT after TOC`; +1 docs commit.
