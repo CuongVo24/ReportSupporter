@@ -41,11 +41,11 @@ Vá 2 lỗi observable khi người dùng bấm export thật trên browser (tes
 - ❌ Tái cấu trúc trùng lặp `runExport`/`retry` và các điểm code-quality khác → **Contract 2** (`w4_improve_export_dedup_and_report_accuracy_contract.md`).
 
 ## 3. Checklist
-- [ ] `use-export.ts`: `target === "pdf"` **không** chạy download-anchor (cả `runExport` lẫn `retry`); job vẫn `done`. HTML/DOCX vẫn tải.
-- [ ] `export-pdf.ts`: JSDoc ghi rõ Blob là đại diện, không tải dưới `.pdf`. Logic in không đổi.
-- [ ] `export-docx.ts` `buildDocxCoverPage`: không còn `"\n"` trong `TextRun`; giảng viên + từng thành viên ở dòng riêng (Paragraph hoặc `break: 1`).
-- [ ] Tests: PDF không tạo anchor download · DOCX cover mỗi thành viên một dòng (không `\n`).
-- [ ] 4 gates xanh (lint / typecheck / test / build).
+- [x] `use-export.ts`: `target === "pdf"` **không** chạy download-anchor (cả `runExport` lẫn `retry`); job vẫn `done`. HTML/DOCX vẫn tải.
+- [x] `export-pdf.ts`: JSDoc ghi rõ Blob là đại diện, không tải dưới `.pdf`. Logic in không đổi.
+- [x] `export-docx.ts` `buildDocxCoverPage`: không còn `"\n"` trong `TextRun`; giảng viên + từng thành viên ở dòng riêng (Paragraph hoặc `break: 1`).
+- [x] Tests: PDF không tạo anchor download · DOCX cover mỗi thành viên một dòng (không `\n`).
+- [x] 4 gates xanh (lint / typecheck / test / build).
 
 ## 4. Expected Interfaces / Files
 
@@ -83,6 +83,4 @@ Vá 2 lỗi observable khi người dùng bấm export thật trên browser (tes
 
 ## 7. Status
 
-`PENDING` — chờ Approve.
-
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(export): skip phantom .pdf download + DOCX cover line breaks` + 1 docs commit (contract này).
+`DONE`

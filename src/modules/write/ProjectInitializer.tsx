@@ -66,28 +66,37 @@ export function ProjectInitializer({
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h2 style={titleStyle}>Khởi tạo Báo cáo Mới</h2>
-        <p style={subtitleStyle}>Chọn mẫu tài liệu và điền thông tin ban đầu để tạo cấu trúc báo cáo.</p>
+        <div style={headerStyle}>
+          <h2 style={titleStyle}>Khởi tạo Báo cáo Mới</h2>
+          <p style={subtitleStyle}>Chọn mẫu tài liệu và điền thông tin ban đầu để tạo cấu trúc báo cáo.</p>
+        </div>
         
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <TemplatePicker
-            templates={templates}
-            value={selectedTemplateId}
-            onSelect={handleTemplateChange}
-          />
+        <form onSubmit={handleSubmit} style={formContainerStyle}>
+          <div style={scrollAreaStyle}>
+            <TemplatePicker
+              templates={templates}
+              value={selectedTemplateId}
+              onSelect={handleTemplateChange}
+            />
+            
+            <div style={dividerStyle} />
+            
+            <MetadataForm
+              fields={activeTemplate?.metadataFields || []}
+              values={values}
+              onChange={handleFormChange}
+              errors={errors}
+            />
+          </div>
           
-          <div style={dividerStyle} />
-          
-          <MetadataForm
-            fields={activeTemplate?.metadataFields || []}
-            values={values}
-            onChange={handleFormChange}
-            errors={errors}
-          />
-          
-          <button type="submit" style={buttonStyle}>
-            Khởi tạo báo cáo
-          </button>
+          <div style={footerStyle}>
+            <p style={helperStyle}>
+              💡 Bấm Khởi tạo để mở trình soạn thảo — nút Xuất bản (HTML/PDF/Word) nằm trong trình soạn thảo.
+            </p>
+            <button type="submit" style={buttonStyle}>
+              Khởi tạo báo cáo
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -106,11 +115,18 @@ const containerStyle = {
 const cardStyle = {
   width: "100%",
   maxWidth: "520px",
+  maxHeight: "calc(100vh - 80px)",
+  display: "flex",
+  flexDirection: "column" as const,
   backgroundColor: "var(--rs-color-surface)",
   border: "1px solid var(--rs-color-border)",
   borderRadius: "var(--rs-radius-lg)",
   boxShadow: "var(--rs-elevation-1)",
   padding: "var(--rs-space-6)",
+};
+
+const headerStyle = {
+  flexShrink: 0,
 };
 
 const titleStyle = {
@@ -127,7 +143,18 @@ const subtitleStyle = {
   marginBottom: "var(--rs-space-5)",
 };
 
-const formStyle = {
+const formContainerStyle = {
+  display: "flex",
+  flexDirection: "column" as const,
+  flex: 1,
+  minHeight: 0,
+  gap: "var(--rs-space-4)",
+};
+
+const scrollAreaStyle = {
+  flex: 1,
+  overflowY: "auto" as const,
+  paddingRight: "var(--rs-space-2)",
   display: "flex",
   flexDirection: "column" as const,
   gap: "var(--rs-space-4)",
@@ -137,10 +164,28 @@ const dividerStyle = {
   height: "1px",
   backgroundColor: "var(--rs-color-border)",
   margin: "var(--rs-space-2) 0",
+  flexShrink: 0,
+};
+
+const footerStyle = {
+  flexShrink: 0,
+  borderTop: "1px solid var(--rs-color-border)",
+  paddingTop: "var(--rs-space-4)",
+  marginTop: "var(--rs-space-2)",
+  backgroundColor: "var(--rs-color-surface)",
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: "var(--rs-space-2)",
+};
+
+const helperStyle = {
+  fontSize: "var(--rs-font-size-xs)",
+  color: "var(--rs-color-text-muted)",
+  margin: 0,
+  lineHeight: 1.4,
 };
 
 const buttonStyle = {
-  marginTop: "var(--rs-space-3)",
   padding: "var(--rs-space-2) var(--rs-space-4)",
   backgroundColor: "var(--rs-slate-800)",
   color: "#ffffff",

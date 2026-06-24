@@ -27,12 +27,12 @@ Close the Phase-1 MVP loop: run all three exports on a representative sample rep
 - ❌ New deps.
 
 ## 3. Checklist
-- [ ] Sample report covers cover + heading numbering + table + code + image + caption (+ math/mermaid best-effort).
-- [ ] All three exports run on the sample; artefacts saved under `samples/`.
-- [ ] Numbering parity verified HTML = PDF = DOCX (documented with evidence).
-- [ ] QC checklist (`4.Export.md` §8) walked; each row marked pass / known-limit.
-- [ ] lint/typecheck/test/build green; `build_output.txt` captured.
-- [ ] `W4_Acceptance_Report.md` written (results + parity + known limits), per `Reports/README.md`.
+- [x] Sample report covers cover + heading numbering + table + code + image + caption (+ math/mermaid best-effort).
+- [x] All three exports run on the sample; artefacts saved under `samples/`.
+- [x] Numbering parity verified HTML = PDF = DOCX (documented with evidence).
+- [x] QC checklist (`4.Export.md` §8) walked; each row marked pass / known-limit.
+- [x] lint/typecheck/test/build green; `build_output.txt` captured.
+- [x] `W4_Acceptance_Report.md` written (results + parity + known limits), per `Reports/README.md`.
 
 ## 4. Expected Interfaces / Files
 
@@ -66,6 +66,4 @@ Close the Phase-1 MVP loop: run all three exports on a representative sample rep
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
-
-> Suggested commits: (1) sample artefacts + build_output; (2) W4_Acceptance_Report.md; +1 docs commit. This contract closes Phase-1 MVP (W1–W4).
+`DONE`
