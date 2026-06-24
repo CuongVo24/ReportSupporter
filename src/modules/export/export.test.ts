@@ -135,13 +135,11 @@ describe("Export Module", () => {
   });
 
   describe("exportDocx", () => {
-    it("returns ok:false with stage:render-docx and not implemented message", () => {
+    it("returns ok:true with assembled Document", () => {
       const result = exportDocx(bundle);
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.stage).toBe("render-docx");
-        expect(result.error.message).toContain("not implemented until W4");
-        expect(result.error.recoverable).toBe(false);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.doc).toBeDefined();
       }
     });
   });

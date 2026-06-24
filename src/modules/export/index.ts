@@ -1,6 +1,7 @@
 export { exportHtml } from "./export-html";
 export { exportPdf, exportPdfViaBrowserPrint, renderPdfWithPuppeteer } from "./export-pdf";
-export { exportDocx } from "./export-docx";
+export { exportDocx, packDocx } from "./export-docx";
+export { mdastToDocxBlocks } from "./mdast-to-docx";
 export { prepareExport } from "./prepare-export";
 export { buildCoverPage } from "./build-cover-page";
 export { buildPrintCss } from "./print-css";
