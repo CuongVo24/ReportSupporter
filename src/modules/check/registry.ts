@@ -17,6 +17,7 @@ import { hardcodedHeadingNumberRule, emptySectionRule } from "./rules/structure"
 import { missingCaptionsRule } from "./rules/captions";
 import { brokenImageRule } from "./rules/images";
 import { tableTooWideRule } from "./rules/table-width";
+import { referencesRule } from "./rules/references";
 
 /**
  * Ordered registry of all active checker rules.
@@ -26,6 +27,7 @@ export const RULES_REGISTRY: CheckRule[] = [
   tocDisabledRule,
   missingConclusionRule,
   missingReferencesRule,
+  referencesRule,
   missingMemberTableRule,
 
   // Evidence gaps
