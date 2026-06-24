@@ -218,4 +218,37 @@ Bảng 2: Dữ liệu mẫu 2
     const tableCaptionTextNode = activeCaption.children[0] as MdastText;
     expect(tableCaptionTextNode.value).toBe("Bảng 1.1: Dữ liệu mẫu 1");
   });
+
+  it("should normalize captions correctly for a non-first section when passing its own registry slice", () => {
+    const parsedSections = mockSections.map((s) => ({
+      id: s.id,
+      ast: parseMarkdown(s.markdown),
+    }));
+
+    const registry = buildCaptionRegistry(parsedSections, {
+      captionNumbering: "per-chapter",
+    });
+
+    const sec2Registry = registry.filter((e) => e.sectionId === "sec-2");
+    expect(sec2Registry).toHaveLength(2); // 1 figure and 1 table
+
+    const sec2State = { figIdx: 0, tableIdx: 0 };
+    normalizeCaptions([parsedSections[1]], sec2Registry, sec2State);
+
+    const sec2Children = parsedSections[1].ast.children;
+    const imgParaIdx = sec2Children.findIndex(
+      (c) => c.type === "paragraph" && "children" in c && Array.isArray(c.children) && c.children.some((child) => child.type === "image")
+    );
+    expect(imgParaIdx).toBeGreaterThan(-1);
+
+    const imgPara = sec2Children[imgParaIdx] as MdastParagraph;
+    const imgNode = imgPara.children.find((c) => c.type === "image") as MdastImage;
+    expect(imgNode.data?.hProperties?.id).toBe("fig-2");
+
+    const figCaptionNode = sec2Children[imgParaIdx + 1] as MdastParagraph;
+    expect(figCaptionNode.type).toBe("paragraph");
+    expect(figCaptionNode.data?.hProperties?.className).toBe("fig-caption");
+    const figCaptionTextNode = figCaptionNode.children[0] as MdastText;
+    expect(figCaptionTextNode.value).toBe("Hình 2.1: Hình ảnh kết quả");
+  });
 });

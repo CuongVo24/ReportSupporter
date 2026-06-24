@@ -344,7 +344,8 @@ export function PreviewPane({
           const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
 
           // Normalize captions using registry and rendering state
-          normalizeCaptions([{ id: activeSectionId || "default", ast: numberedAst }], captionRegistry, captionState);
+          const activeRegistry = captionRegistry.filter((e) => e.sectionId === (activeSectionId || "default"));
+          normalizeCaptions([{ id: activeSectionId || "default", ast: numberedAst }], activeRegistry, captionState);
           
           // Inject QR code images into AST before HTML generation
           injectQrImages(numberedAst as unknown as EvidenceUnistNode, qrMap);
