@@ -83,6 +83,6 @@ export { kindMeta } from "./kind-meta";
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(evidence): appendix table builder + module index`; (2) `feat(preview): render evidence appendix`; +1 docs commit.
