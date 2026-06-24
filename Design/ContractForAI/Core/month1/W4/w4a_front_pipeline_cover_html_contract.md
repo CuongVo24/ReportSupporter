@@ -93,6 +93,4 @@ export function exportHtml(bundle: ReportProjectBundle): ExportResult;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
-
-> VibeCode Step 2: no `src/` changes until Approve. Suggested commits: (1) prepare-export + types + schemas + cover; (2) print-css + real export-html + tests; +1 docs commit.
+`DONE`
