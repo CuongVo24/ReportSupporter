@@ -71,6 +71,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `test(write): template skeleton coverage (4 templates)`; (2) `test(check): missing-sections per-template coverage`; (3) `docs(w6): W6 QA report + template samples`; +1 docs commit. Đóng Advanced Templates.
