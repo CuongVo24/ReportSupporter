@@ -13,6 +13,7 @@ export interface EvidencePanelProps {
 export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
   const handleAddSubmit = (item: EvidenceItem) => {
     onChange([...evidence, item]);
@@ -24,10 +25,17 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
     setEditingItemId(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa minh chứng này?")) {
-      onChange(evidence.filter((item) => item.id !== id));
-    }
+  const handleDeleteClick = (id: string) => {
+    setConfirmingDeleteId(id);
+  };
+
+  const handleConfirmDelete = (id: string) => {
+    onChange(evidence.filter((item) => item.id !== id));
+    setConfirmingDeleteId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmingDeleteId(null);
   };
 
   const editingItem = evidence.find((item) => item.id === editingItemId) || null;
@@ -59,7 +67,10 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
       <div className="ws-evidence-header">
         <h3 className="ws-evidence-title">Minh chứng (Evidence Kit)</h3>
         <button
-          onClick={() => setIsAdding(true)}
+          onClick={() => {
+            setIsAdding(true);
+            setConfirmingDeleteId(null);
+          }}
           className="ws-evidence-add-btn"
           aria-label="Thêm minh chứng mới"
         >
@@ -105,20 +116,44 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
                 )}
 
                 <div className="ws-evidence-actions">
-                  <button
-                    onClick={() => setEditingItemId(item.id)}
-                    className="ws-evidence-action-btn"
-                    aria-label={`Sửa minh chứng: ${item.title}`}
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="ws-evidence-action-btn ws-evidence-action-btn-delete"
-                    aria-label={`Xóa minh chứng: ${item.title}`}
-                  >
-                    Xóa
-                  </button>
+                  {confirmingDeleteId === item.id ? (
+                    <>
+                      <button
+                        onClick={() => handleConfirmDelete(item.id)}
+                        className="ws-evidence-action-btn ws-evidence-action-btn-delete"
+                        aria-label={`Xác nhận xóa minh chứng: ${item.title}`}
+                      >
+                        Xác nhận xóa?
+                      </button>
+                      <button
+                        onClick={handleCancelDelete}
+                        className="ws-evidence-action-btn"
+                        aria-label={`Hủy xóa minh chứng: ${item.title}`}
+                      >
+                        Hủy
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditingItemId(item.id);
+                          setConfirmingDeleteId(null);
+                        }}
+                        className="ws-evidence-action-btn"
+                        aria-label={`Sửa minh chứng: ${item.title}`}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(item.id)}
+                        className="ws-evidence-action-btn ws-evidence-action-btn-delete"
+                        aria-label={`Xóa minh chứng: ${item.title}`}
+                      >
+                        Xóa
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );

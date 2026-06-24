@@ -1040,6 +1040,13 @@ body {
   font-weight: var(--rs-font-weight-medium);
 }
 
+/* Constrain QR code images injected into the evidence appendix table (alt="QR: ...") */
+.ws-preview-html-section img[alt^="QR:"] {
+  width: 100px;
+  height: 100px;
+  vertical-align: middle;
+}
+
 .ws-evidence-actions {
   display: flex;
   gap: var(--rs-space-2);

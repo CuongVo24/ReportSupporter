@@ -78,6 +78,6 @@ const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `fix(evidence): inline 2-step delete confirm`; (2) `docs(w5): correct QA report QR-preview accuracy + known-issue`; +1 docs commit. Đóng W5 break.
+> Đã implement: `W5_QA_Report.md` sửa đúng thực tế (178/178, mô tả AST-injection, bỏ claim "React Portals", thêm §3 Known Issues Resolved in week5_break + link 2 contract). `EvidencePanel` thay `confirm()` bằng xác nhận xóa 2 bước inline (`confirmingDeleteId`), có test chuyển trạng thái (`evidence-reducer.test.ts`). 4 gates xanh.

@@ -1,53 +1,52 @@
-﻿
+
 > report-supporter@0.1.0 test
 > vitest run --run
 
 
-[1m[30m[46m RUN [49m[39m[22m [36mv4.1.9 [39m[90mE:/ReportSupporter[39m
+ RUN  v4.1.9 E:/ReportSupporter
 
- [32mΓ£ô[39m src/lib/markdown-pipeline.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 341[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/prepare-export.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 285[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export-docx.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 409[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 357[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/print-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 310[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/export-pdf.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 402[2mms[22m[39m
-       [33m[2mΓ£ô[22m[39m should return a recoverable error when browser popup is blocked [33m 363[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-qr.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 361[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/resolve-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 84[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/run-checker.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 168[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/structure.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 104[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/number-headings.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 37[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/w3_break_toc_numbering.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 67[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/images.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 38[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/captions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 46[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/table-width.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 35[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/use-image-insert.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 34[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/evidence-gaps.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 174[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/text-markers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 35[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/code-language.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 38[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/use-export.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 24[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/rules/heading-levels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 33[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/create-project.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 26[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/generate-skeleton.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/autosave.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
- [32mΓ£ô[39m src/modules/export/mdast-to-docx.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 27[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-reducer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
- [32mΓ£ô[39m src/modules/format/generate-toc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/validate.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 13[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/evidence-appendix.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/extract-mermaid.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/ProjectInitializer.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/modules/evidence/kind-meta.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/lib/slugify.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
- [32mΓ£ô[39m src/modules/check/readiness-score.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/insert-snippet.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
- [32mΓ£ô[39m src/modules/write/MetadataForm.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32mΓ£ô[39m src/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ ✓ src/modules/check/rules/evidence-gaps.test.ts (9 tests) 78ms
+ ✓ src/modules/export/export-docx.test.ts (3 tests) 504ms
+ ✓ src/modules/export/export.test.ts (6 tests) 345ms
+ ✓ src/modules/export/prepare-export.test.ts (3 tests) 383ms
+ ✓ src/modules/export/export-pdf.test.ts (5 tests) 344ms
+ ✓ src/modules/check/run-checker.test.ts (11 tests) 134ms
+ ✓ src/lib/markdown-pipeline.test.ts (9 tests) 412ms
+ ✓ src/modules/check/rules/captions.test.ts (6 tests) 58ms
+ ✓ src/modules/export/print-preview.test.ts (3 tests) 176ms
+ ✓ src/modules/evidence/evidence-qr.test.ts (3 tests) 362ms
+ ✓ src/modules/check/rules/images.test.ts (5 tests) 67ms
+ ✓ src/modules/write/resolve-assets.test.ts (5 tests) 61ms
+ ✓ src/modules/evidence/evidence-appendix.test.ts (6 tests) 118ms
+ ✓ src/modules/check/rules/structure.test.ts (6 tests) 176ms
+ ✓ src/modules/format/w3_break_toc_numbering.test.ts (3 tests) 89ms
+ ✓ src/modules/write/use-image-insert.test.ts (3 tests) 47ms
+ ✓ src/modules/write/create-project.test.ts (4 tests) 34ms
+ ✓ src/modules/write/generate-skeleton.test.ts (4 tests) 18ms
+ ✓ src/modules/check/rules/code-language.test.ts (4 tests) 43ms
+ ✓ src/modules/format/number-headings.test.ts (7 tests) 37ms
+ ✓ src/modules/check/rules/text-markers.test.ts (4 tests) 42ms
+ ✓ src/modules/check/rules/table-width.test.ts (3 tests) 41ms
+ ✓ src/modules/export/use-export.test.ts (7 tests) 26ms
+ ✓ src/modules/export/mdast-to-docx.test.ts (6 tests) 27ms
+ ✓ src/modules/write/autosave.test.ts (3 tests) 16ms
+ ✓ src/modules/check/rules/heading-levels.test.ts (4 tests) 35ms
+ ✓ src/modules/evidence/validate.test.ts (7 tests) 16ms
+ ✓ src/modules/format/generate-toc.test.ts (4 tests) 10ms
+ ✓ src/modules/write/extract-mermaid.test.ts (3 tests) 7ms
+ ✓ src/modules/write/MetadataForm.test.ts (3 tests) 8ms
+ ✓ src/modules/evidence/evidence-reducer.test.ts (6 tests) 21ms
+ ✓ src/modules/write/insert-snippet.test.ts (7 tests) 17ms
+ ✓ src/modules/evidence/kind-meta.test.ts (1 test) 14ms
+ ✓ src/modules/check/readiness-score.test.ts (7 tests) 15ms
+ ✓ src/modules/write/ProjectInitializer.test.tsx (1 test) 16ms
+ ✓ src/lib/slugify.test.ts (6 tests) 16ms
+ ✓ src/smoke.test.ts (1 test) 3ms
 
-[2m Test Files [22m [1m[32m37 passed[39m[22m[90m (37)[39m
-[2m      Tests [22m [1m[32m175 passed[39m[22m[90m (175)[39m
-[2m   Start at [22m 15:25:09
-[2m   Duration [22m 19.91s[2m (transform 2.23s, setup 0ms, import 38.42s, tests 3.57s, environment 9ms)[22m
+ Test Files  37 passed (37)
+      Tests  178 passed (178)
+   Start at  15:46:43
+   Duration  23.55s (transform 2.61s, setup 0ms, import 42.68s, tests 3.82s, environment 23ms)
 
 
 > report-supporter@0.1.0 typecheck
@@ -61,28 +60,27 @@
 > report-supporter@0.1.0 build
 > next build
 
-   Γû▓ Next.js 15.5.19
+   ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- Γ£ô Compiled successfully in 15.4s
+ ✓ Compiled successfully in 27.6s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...
    Generating static pages (1/4) 
    Generating static pages (2/4) 
    Generating static pages (3/4) 
- Γ£ô Generating static pages (4/4)
+ ✓ Generating static pages (4/4)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                                 Size  First Load JS
-Γöî Γùï /                                     510 kB         613 kB
-Γöö Γùï /_not-found                             1 kB         104 kB
+┌ ○ /                                     510 kB         613 kB
+└ ○ /_not-found                             1 kB         104 kB
 + First Load JS shared by all             103 kB
-  Γö£ chunks/1255-b8cf77ab14370e57.js        46 kB
-  Γö£ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
-  Γöö other shared chunks (total)          2.94 kB
+  ├ chunks/1255-b8cf77ab14370e57.js        46 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.94 kB
 
 
-Γùï  (Static)  prerendered as static content
-
+○  (Static)  prerendered as static content

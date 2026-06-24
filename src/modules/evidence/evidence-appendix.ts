@@ -19,7 +19,7 @@ export function buildEvidenceAppendix(evidence: EvidenceItem[]): string {
     const escapedKind = escapeCell(kindLabel);
     const escapedTitle = escapeCell(item.title);
     const qrPlaceholder = (item.qrEnabled && item.url)
-      ? ` <span class="ws-evidence-qr-placeholder" data-url="${item.url}"></span>`
+      ? ` <span class="ws-evidence-qr-placeholder" data-url="${item.url.replace(/"/g, "&quot;")}"></span>`
       : "";
     const escapedLink = item.url ? `[Liên kết](${escapeCell(item.url)})${qrPlaceholder}` : "";
     const escapedNote = item.note ? escapeCell(item.note) : "";

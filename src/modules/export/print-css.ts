@@ -31,6 +31,7 @@ export function buildPrintCss(preset: FormatPreset): string {
   table { width: 100%; border-collapse: collapse; margin: 15pt 0; }
   table, th, td { border: 1px solid #000; }
   th, td { padding: 6pt; text-align: left; }
+  img[alt^="QR:"] { width: 80pt; height: 80pt; vertical-align: middle; }
 }
 @media screen {
   body { font-family: ${fontFamily}; font-size: 14px; line-height: ${lh}; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f4f4f4; color: #333; }
@@ -40,6 +41,7 @@ export function buildPrintCss(preset: FormatPreset): string {
   table, th, td { border: 1px solid #ddd; }
   th, td { padding: 8px; text-align: left; }
   th { background: #f9f9f9; }
+  img[alt^="QR:"] { width: 100px; height: 100px; vertical-align: middle; }
 }
 /* Common cover page styling */
 .cover-page { text-align: center; font-family: ${fontFamily}; }

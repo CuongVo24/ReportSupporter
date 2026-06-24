@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
 import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
-import { buildEvidenceAppendix, EvidenceQrPreview } from "@/modules/evidence";
+import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as EvidenceUnistNode } from "@/modules/evidence";
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem } from "@/types";
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
@@ -205,16 +204,40 @@ export function PreviewPane({
     return generateToc(globalNumberedHeadings);
   }, [globalNumberedHeadings, hasContent, formatSettings?.includeToc]);
 
-  const [placeholders, setPlaceholders] = useState<{ element: HTMLElement; url: string }[]>([]);
+  const [qrMap, setQrMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const elements = Array.from(document.querySelectorAll(".ws-evidence-qr-placeholder")) as HTMLElement[];
-    const nextPlaceholders = elements.map((el) => {
-      const url = el.getAttribute("data-url") || "";
-      return { element: el, url };
-    });
-    setPlaceholders(nextPlaceholders);
-  }, [finalMarkdown]);
+    let active = true;
+    async function loadQrs() {
+      const urlsToResolve = evidence
+        .filter((item) => item.qrEnabled && item.url)
+        .map((item) => item.url as string);
+
+      if (urlsToResolve.length === 0) {
+        if (active) setQrMap({});
+        return;
+      }
+
+      const uniqueUrls = Array.from(new Set(urlsToResolve));
+      const resolvedMap: Record<string, string> = {};
+
+      await Promise.all(
+        uniqueUrls.map(async (url) => {
+          const dataUrl = await toQrDataUrl(url);
+          resolvedMap[url] = dataUrl;
+        })
+      );
+
+      if (active) {
+        setQrMap(resolvedMap);
+      }
+    }
+
+    loadQrs();
+    return () => {
+      active = false;
+    };
+  }, [evidence]);
 
   if (!hasContent) {
     return <div className="ws-preview-empty">Chưa có nội dung xem trước.</div>;
@@ -246,6 +269,9 @@ export function PreviewPane({
           // Inject correct heading prefix numbers
           const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
           
+          // Inject QR code images into AST before HTML generation
+          injectQrImages(numberedAst as unknown as EvidenceUnistNode, qrMap);
+
           // Render HTML through the unified markdown pipeline
           const renderedHtml = renderMdastToHtml(numberedAst);
 
@@ -257,10 +283,6 @@ export function PreviewPane({
             />
           );
         }
-      })}
-      {placeholders.map((p, idx) => {
-        if (!p.element || !p.url) return null;
-        return createPortal(<EvidenceQrPreview key={idx} url={p.url} />, p.element);
       })}
     </div>
   );

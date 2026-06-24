@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { EvidenceItem } from "@/types";
 import { buildEvidenceAppendix } from "./evidence-appendix";
+import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
+import { injectQrImages, type UnistNode } from "./index";
 
 describe("buildEvidenceAppendix", () => {
   it("should return empty string when evidence list is empty or undefined", () => {
@@ -87,5 +89,56 @@ describe("buildEvidenceAppendix", () => {
     // Ensure no raw | breaks columns
     // The row pattern should match the escaped content
     expect(result).toContain("| Tài liệu (Google Drive) | Tài liệu \\| File chính | [Liên kết](https://drive.google.com/xyz?id=1\\|2) <span class=\"ws-evidence-qr-placeholder\" data-url=\"https://drive.google.com/xyz?id=1|2\"></span> | Chú ý: - Đọc kỹ hướng dẫn - Check log |");
+  });
+
+  describe("appendix rendering through markdown pipeline", () => {
+    it("should inject QR images correctly into the rendered HTML", () => {
+      const items: EvidenceItem[] = [
+        {
+          id: "1",
+          kind: "github",
+          title: "Test QR",
+          url: 'https://github.com/CuongVo24/ReportSupporter?param="test"',
+          qrEnabled: true,
+          createdAt: "2026-06-24T00:00:00Z",
+        },
+      ];
+
+      const markdown = buildEvidenceAppendix(items);
+      const ast = parseMarkdown(markdown);
+      const qrMap = {
+        'https://github.com/CuongVo24/ReportSupporter?param="test"': "data:image/png;base64,fake_qr_data",
+      };
+
+      injectQrImages(ast as unknown as UnistNode, qrMap);
+      const html = renderMdastToHtml(ast);
+
+      expect(html).toContain('src="data:image/png;base64,fake_qr_data"');
+      expect(html).toContain('alt="QR: https://github.com/CuongVo24/ReportSupporter?param=&#x22;test&#x22;"');
+    });
+
+    it("should not inject QR image when qrEnabled is false", () => {
+      const items: EvidenceItem[] = [
+        {
+          id: "1",
+          kind: "github",
+          title: "Test QR Disabled",
+          url: "https://github.com/CuongVo24/ReportSupporter",
+          qrEnabled: false,
+          createdAt: "2026-06-24T00:00:00Z",
+        },
+      ];
+
+      const markdown = buildEvidenceAppendix(items);
+      const ast = parseMarkdown(markdown);
+      const qrMap = {
+        "https://github.com/CuongVo24/ReportSupporter": "data:image/png;base64,fake_qr_data",
+      };
+
+      injectQrImages(ast as unknown as UnistNode, qrMap);
+      const html = renderMdastToHtml(ast);
+
+      expect(html).not.toContain('src="data:image/png;base64,fake_qr_data"');
+    });
   });
 });

@@ -2,7 +2,7 @@ import type { ReportProjectBundle, FormattedReport, CaptionEntry } from "@/types
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 import { parseHeadings, numberHeadings, generateToc } from "@/modules/format";
 import { resolveAssetRefs } from "@/modules/write";
-import { buildEvidenceAppendix } from "@/modules/evidence";
+import { buildEvidenceAppendix, injectQrImages, type UnistNode } from "@/modules/evidence";
 import { unified } from "unified";
 import remarkRehype from "remark-rehype";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
@@ -184,7 +184,7 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
     children: combinedChildren,
   };
 
-  translateQrPlaceholders(combinedMdast as unknown as UnistNode, qrDataUrls);
+  injectQrImages(combinedMdast as unknown as UnistNode, qrDataUrls);
 
   const customSchema = {
     ...defaultSchema,
@@ -224,36 +224,4 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
     cover,
     formatted,
   };
-}
-
-function translateQrPlaceholders(node: UnistNode, qrDataUrls: Record<string, string>) {
-  if (!node) return;
-  if (node.children && Array.isArray(node.children)) {
-    const newChildren: UnistNode[] = [];
-    for (const child of node.children) {
-      if (child.type === "html" && typeof child.value === "string" && child.value.includes("ws-evidence-qr-placeholder")) {
-        const match = child.value.match(/data-url="([^"]+)"/);
-        const url = match ? match[1] : "";
-        if (url && qrDataUrls[url]) {
-          newChildren.push({
-            type: "image",
-            url: qrDataUrls[url],
-            alt: `QR: ${url}`,
-          });
-          continue;
-        }
-      }
-      translateQrPlaceholders(child, qrDataUrls);
-      newChildren.push(child);
-    }
-    node.children = newChildren;
-  }
-}
-
-interface UnistNode {
-  type: string;
-  value?: string;
-  url?: string;
-  alt?: string;
-  children?: UnistNode[];
 }

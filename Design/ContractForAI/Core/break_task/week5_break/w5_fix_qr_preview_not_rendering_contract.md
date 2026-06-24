@@ -100,6 +100,6 @@ const [qrMap, setQrMap] = useState<Record<string, string>>({});
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `fix(evidence): render QR in preview via AST image injection`; (2) `refactor(export): share QR inject helper`; (3) `test(evidence): appendix render-pipeline + QR coverage`; +1 docs commit.
+> Đã implement + verify: QR preview render qua `injectQrImages` (AST image, dùng chung preview+export), bỏ raw-span/portal/querySelectorAll, xóa `EvidenceQrPreview`, escape `data-url`. Test render-qua-pipeline (`evidence-appendix.test.ts`) khẳng định `<img src="data:...">` xuất hiện + escape URL chứa `"`. QR `<img>` được giới hạn kích thước (globals.css + print-css). 4 gates xanh (typecheck/lint/178 test/build).

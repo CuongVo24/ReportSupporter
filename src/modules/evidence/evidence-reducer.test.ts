@@ -72,4 +72,30 @@ describe("Evidence List Operations (Reducer)", () => {
     expect(result).toHaveLength(2);
     expect(result).toEqual(list);
   });
+
+  it("simulates the two-step delete flow state transitions", () => {
+    const list = [item1, item2];
+    let confirmingDeleteId: string | null = null;
+    let currentList = [...list];
+
+    // User clicks "Xóa" on item1 (triggers confirmation, but doesn't delete yet)
+    confirmingDeleteId = "uuid-1";
+    expect(currentList).toHaveLength(2);
+    expect(confirmingDeleteId).toBe("uuid-1");
+
+    // User clicks "Hủy" (cancels deletion)
+    confirmingDeleteId = null;
+    expect(currentList).toHaveLength(2);
+    expect(confirmingDeleteId).toBeNull();
+
+    // User clicks "Xóa" and then "Xác nhận xóa" (actually deletes item)
+    confirmingDeleteId = "uuid-1";
+    if (confirmingDeleteId === "uuid-1") {
+      currentList = deleteEvidence(currentList, "uuid-1");
+      confirmingDeleteId = null;
+    }
+    expect(currentList).toHaveLength(1);
+    expect(currentList[0]).toEqual(item2);
+    expect(confirmingDeleteId).toBeNull();
+  });
 });
