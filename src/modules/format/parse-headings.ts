@@ -23,7 +23,7 @@ interface UnistNode {
 /**
  * Traverses the mdast AST to collect all headings in document order, extracting flat text.
  */
-export function parseHeadings(ast: MdastRoot): HeadingNode[] {
+export function parseHeadings(ast: MdastRoot, sectionId?: string): HeadingNode[] {
   const headings: HeadingNode[] = [];
 
   function walk(node: unknown) {
@@ -38,6 +38,7 @@ export function parseHeadings(ast: MdastRoot): HeadingNode[] {
       headings.push({
         depth: heading.depth, // 1..6
         text,
+        sectionId,
       });
     }
 
