@@ -49,11 +49,15 @@ export function prepareExport(bundle: ReportProjectBundle): ExportInput {
     date,
   };
 
-  // 2. Collect all headings in order to number them
-  const allHeadings = [];
-  for (const sec of sortedSections) {
+  // 2. Parse all sections once and resolve hierarchical numbering and Table of Contents
+  const parsedSections = sortedSections.map((sec) => {
     const resolvedMarkdown = resolveAssetRefs(sec.markdown, assets);
     const ast = parseMarkdown(resolvedMarkdown);
+    return { sec, ast };
+  });
+
+  const allHeadings = [];
+  for (const { sec, ast } of parsedSections) {
     const secHeadings = parseHeadings(ast).map((h) => ({
       ...h,
       sectionId: sec.id,
@@ -80,9 +84,7 @@ export function prepareExport(bundle: ReportProjectBundle): ExportInput {
   let figGlobalCount = 0;
   let tableGlobalCount = 0;
 
-  for (const sec of sortedSections) {
-    const resolvedMarkdown = resolveAssetRefs(sec.markdown, assets);
-    const ast = parseMarkdown(resolvedMarkdown);
+  for (const { sec, ast } of parsedSections) {
     const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
 
     const walkChildren = (nodeList: MdastContent[]) => {

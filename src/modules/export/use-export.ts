@@ -4,6 +4,47 @@ import { exportHtml } from "./export-html";
 import { exportPdf } from "./export-pdf";
 import { exportDocx, packDocx } from "./export-docx";
 
+async function executeExport(
+  target: ExportTarget,
+  bundle: ReportProjectBundle
+): Promise<Blob> {
+  let blob: Blob;
+
+  if (target === "html") {
+    const res = exportHtml(bundle);
+    if (!res.ok) {
+      throw res.error;
+    }
+    blob = res.blob;
+  } else if (target === "pdf") {
+    const res = exportPdf(bundle);
+    if (!res.ok) {
+      throw res.error;
+    }
+    blob = res.blob;
+  } else if (target === "docx") {
+    const res = exportDocx(bundle);
+    if (!res.ok) {
+      throw res.error;
+    }
+    try {
+      blob = await packDocx(res.doc);
+    } catch (packErr: unknown) {
+      const msg = packErr instanceof Error ? packErr.message : "Failed to pack DOCX zip archive.";
+      const docxError: ExportError = {
+        stage: "render-docx",
+        message: msg,
+        recoverable: true,
+      };
+      throw docxError;
+    }
+  } else {
+    throw new Error(`Unsupported export target: ${target}`);
+  }
+
+  return blob;
+}
+
 export function useExport(currentBundle?: ReportProjectBundle) {
   const [jobs, setJobs] = useState<ExportJob[]>([]);
 
@@ -25,39 +66,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
     setJobs((prev) => [newJob, ...prev]);
 
     try {
-      let blob: Blob;
-
-      if (target === "html") {
-        const res = exportHtml(bundle);
-        if (!res.ok) {
-          throw res.error;
-        }
-        blob = res.blob;
-      } else if (target === "pdf") {
-        const res = exportPdf(bundle);
-        if (!res.ok) {
-          throw res.error;
-        }
-        blob = res.blob;
-      } else if (target === "docx") {
-        const res = exportDocx(bundle);
-        if (!res.ok) {
-          throw res.error;
-        }
-        try {
-          blob = await packDocx(res.doc);
-        } catch (packErr: unknown) {
-          const msg = packErr instanceof Error ? packErr.message : "Failed to pack DOCX zip archive.";
-          const docxError: ExportError = {
-            stage: "render-docx",
-            message: msg,
-            recoverable: true,
-          };
-          throw docxError;
-        }
-      } else {
-        throw new Error(`Unsupported export target: ${target}`);
-      }
+      const blob = await executeExport(target, bundle);
 
       if (target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
         const url = URL.createObjectURL(blob);
@@ -120,35 +129,9 @@ export function useExport(currentBundle?: ReportProjectBundle) {
       );
 
       try {
-        let blob: Blob;
-        const target = job.target;
+        const blob = await executeExport(job.target, activeBundle);
 
-        if (target === "html") {
-          const res = exportHtml(activeBundle);
-          if (!res.ok) throw res.error;
-          blob = res.blob;
-        } else if (target === "pdf") {
-          const res = exportPdf(activeBundle);
-          if (!res.ok) throw res.error;
-          blob = res.blob;
-        } else if (target === "docx") {
-          const res = exportDocx(activeBundle);
-          if (!res.ok) throw res.error;
-          try {
-            blob = await packDocx(res.doc);
-          } catch (packErr: unknown) {
-            const msg = packErr instanceof Error ? packErr.message : "Failed to pack DOCX zip archive.";
-            throw {
-              stage: "render-docx",
-              message: msg,
-              recoverable: true,
-            } as ExportError;
-          }
-        } else {
-          throw new Error(`Unsupported export target: ${target}`);
-        }
-
-        if (target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
+        if (job.target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
