@@ -1,0 +1,77 @@
+﻿
+> report-supporter@0.1.0 lint
+> eslint .
+
+
+> report-supporter@0.1.0 typecheck
+> tsc --noEmit
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.9 [39m[90mE:/ReportSupporter[39m
+
+ [32mΓ£ô[39m src/lib/markdown-pipeline.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 482[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/structure.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/export-docx.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 560[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should synchronously build a valid Document [33m 447[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/run-checker.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 230[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/generate-samples.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 569[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should compile and generate sample HTML, PDF and DOCX documents [33m 564[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 410[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/print-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 472[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/export-pdf.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 331[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/format/w3_break_toc_numbering.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/heading-levels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/images.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/mdast-to-docx.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/use-image-insert.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/resolve-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/captions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/format/number-headings.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/table-width.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/text-markers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/create-project.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/autosave.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/rules/code-language.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/export/use-export.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/format/generate-toc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/generate-skeleton.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/slugify.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/extract-mermaid.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/write/insert-snippet.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/modules/check/readiness-score.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m29 passed[39m[22m[90m (29)[39m
+[2m      Tests [22m [1m[32m137 passed[39m[22m[90m (137)[39m
+[2m   Start at [22m 12:14:29
+[2m   Duration [22m 16.58s[2m (transform 2.17s, setup 0ms, import 31.51s, tests 3.88s, environment 8ms)[22m
+
+
+> report-supporter@0.1.0 build
+> next build
+
+   Γû▓ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 32.5s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ Γ£ô Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+Γöî Γùï /                                     497 kB         600 kB
+Γöö Γùï /_not-found                             1 kB         104 kB
++ First Load JS shared by all             103 kB
+  Γö£ chunks/1255-b8cf77ab14370e57.js        46 kB
+  Γö£ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  Γöö other shared chunks (total)          2.94 kB
+
+
+Γùï  (Static)  prerendered as static content
+
