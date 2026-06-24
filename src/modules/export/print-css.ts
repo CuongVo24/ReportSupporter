@@ -10,15 +10,26 @@ export function buildPrintCss(preset: FormatPreset): string {
   const align = preset.bodyAlign || "justify";
   const { top, right, bottom, left } = preset.margin || { top: "20mm", right: "20mm", bottom: "20mm", left: "30mm" };
   const breakPageBeforeH1 = preset.chapterStartsNewPage ? "page-break-before: always; break-before: page;" : "";
+  const firstH1AvoidBreak = preset.chapterStartsNewPage ? "\n  .report-body > h1:first-of-type { page-break-before: avoid !important; break-before: avoid !important; }" : "";
   const fontFamily = `"${preset.fontFamily || "Times New Roman"}", Times, serif`;
 
   return `
 @media print {
-  @page { size: ${preset.page || "A4"}; margin: ${top} ${right} ${bottom} ${left}; }
+  @page {
+    size: ${preset.page || "A4"};
+    margin: ${top} ${right} ${bottom} ${left};
+    ${preset.header ? `@top-center { content: "${preset.header}"; font-family: ${fontFamily}; font-size: 10pt; color: #666; }` : ""}
+    ${preset.footer ? `@bottom-center { content: "${preset.footer}"; font-family: ${fontFamily}; font-size: 10pt; color: #666; }` : ""}
+  }
+  @page :first {
+    @top-center { content: none !important; }
+    @bottom-center { content: none !important; }
+  }
   body { font-family: ${fontFamily}; font-size: ${fontPt}pt; line-height: ${lh}; color: #000; background: #fff; margin: 0; padding: 0; }
-  p, li { text-align: ${align}; }
+  p, li { text-align: ${align}; orphans: 3; widows: 3; }
+  li { page-break-inside: avoid; break-inside: avoid; }
   h1, h2, h3, h4, h5, h6 { font-family: ${fontFamily}; color: #000; page-break-after: avoid; break-after: avoid; }
-  h1 { font-size: 18pt; text-align: center; margin-top: 0; margin-bottom: 20pt; ${breakPageBeforeH1} }
+  h1 { font-size: 18pt; text-align: center; margin-top: 0; margin-bottom: 20pt; ${breakPageBeforeH1} }${firstH1AvoidBreak}
   h2 { font-size: 14pt; margin-top: 24pt; margin-bottom: 12pt; }
   h3 { font-size: 13pt; margin-top: 18pt; margin-bottom: 6pt; }
   .cover-page {
@@ -28,6 +39,9 @@ export function buildPrintCss(preset: FormatPreset): string {
   }
   .page-break { page-break-before: always; break-before: page; }
   figure, img, table, .ws-toc-container { page-break-inside: avoid; break-inside: avoid; }
+  .fig-caption, .tbl-caption { page-break-inside: avoid; break-inside: avoid; }
+  .fig-caption { page-break-before: avoid; break-before: avoid; }
+  .tbl-caption { page-break-after: avoid; break-after: avoid; }
   table { width: 100%; border-collapse: collapse; margin: 15pt 0; }
   table, th, td { border: 1px solid #000; }
   th, td { padding: 6pt; text-align: left; }
