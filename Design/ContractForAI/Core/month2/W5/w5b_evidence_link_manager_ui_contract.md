@@ -84,6 +84,6 @@ export function EvidencePanel(props: {
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(evidence): EvidenceForm + EvidencePanel`; (2) `feat(workspace): wire evidence panel + persist`; +1 docs commit.
