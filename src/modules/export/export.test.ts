@@ -123,13 +123,13 @@ describe("Export Module", () => {
   });
 
   describe("exportPdf", () => {
-    it("returns ok:false with stage:render-pdf and not implemented message", () => {
+    it("returns ok:false with stage:render-pdf in server environment", () => {
       const result = exportPdf(bundle);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");
-        expect(result.error.message).toContain("not implemented until W4");
-        expect(result.error.recoverable).toBe(false);
+        expect(result.error.message).toContain("client environment");
+        expect(result.error.recoverable).toBe(true);
       }
     });
   });
