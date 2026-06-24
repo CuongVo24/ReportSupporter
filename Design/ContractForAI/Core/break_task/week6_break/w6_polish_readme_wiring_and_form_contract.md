@@ -91,4 +91,4 @@ export function flattenNodeText(node: { value?: string; children?: unknown[] }):
 
 ## 7. Status
 
-`PLANNED`
+`COMPLETED`

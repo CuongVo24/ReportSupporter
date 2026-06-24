@@ -1,24 +1,5 @@
-import { parseMarkdown } from "@/lib/markdown-pipeline";
+import { parseMarkdown, flattenNodeText } from "@/lib/markdown-pipeline";
 import type { ReportSection } from "@/types";
-
-interface UnistNode {
-  type: string;
-  value?: string;
-  children?: UnistNode[];
-}
-
-function getHeadingText(node: UnistNode): string {
-  let text = "";
-  if (node.value) {
-    text += node.value;
-  }
-  if (node.children) {
-    for (const child of node.children) {
-      text += getHeadingText(child);
-    }
-  }
-  return text;
-}
 
 /**
  * Parses Markdown README text and maps its headings of depth 1 or 2
@@ -78,7 +59,7 @@ export function importReadme(markdown: string): ReportSection[] {
   for (let i = 0; i < headingIndices.length; i++) {
     const hIdx = headingIndices[i];
     const headingNode = children[hIdx];
-    const title = getHeadingText(headingNode).trim() || `Mục ${order + 1}`;
+    const title = flattenNodeText(headingNode as { value?: string; children?: unknown[] }).trim() || `Mục ${order + 1}`;
 
     const startOffset = headingNode.position?.start?.offset ?? 0;
     let endOffset = markdown.length;

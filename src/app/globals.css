@@ -557,6 +557,13 @@ body {
   color: var(--rs-color-text);
 }
 
+.ws-form-textarea {
+  min-height: 150px;
+  font-family: var(--rs-font-family-mono), monospace;
+  width: 100%;
+  resize: vertical;
+}
+
 .ws-form-input-list-hint {
   color: var(--rs-color-text-muted);
   font-size: var(--rs-font-size-xs);

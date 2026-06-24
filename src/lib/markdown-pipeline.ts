@@ -94,3 +94,21 @@ export function renderMdastToHtml(ast: MdastRoot): string {
   }
 }
 
+/**
+ * Flattens any MDAST/UNIST node value and children text recursively.
+ * Replaces duplicate helpers across modules.
+ */
+export function flattenNodeText(node: { value?: string; children?: unknown[] }): string {
+  let text = "";
+  if (node.value) {
+    text += node.value;
+  }
+  if (node.children && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      text += flattenNodeText(child as { value?: string; children?: unknown[] });
+    }
+  }
+  return text;
+}
+
+

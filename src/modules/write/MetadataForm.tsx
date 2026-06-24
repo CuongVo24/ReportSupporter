@@ -95,7 +95,6 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
               <textarea
                 id={`meta-${field.key}`}
                 className="ws-form-input ws-form-textarea"
-                style={{ minHeight: "150px", fontFamily: "monospace", width: "100%", padding: "var(--rs-space-2)", border: "1px solid var(--rs-color-border)", borderRadius: "var(--rs-radius-md)" }}
                 placeholder={field.placeholder ?? "Dán nội dung README.md ở đây..."}
                 value={val}
                 onChange={(e) => handleTextChange(field.key, e.target.value)}
