@@ -2,6 +2,10 @@ import type { ReportProjectBundle } from "@/types";
 import { prepareExport } from "./prepare-export";
 import type { Root as MdastRoot, Content as MdastContent, Heading as MdastHeading, Paragraph as MdastParagraph, Table as MdastTable } from "mdast";
 
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export type DocxLayoutCheck = { id: string; ok: boolean; detail: string };
 
 /**
@@ -96,9 +100,19 @@ export function verifyDocxLayout(bundle: ReportProjectBundle): DocxLayoutCheck[]
       continue;
     }
     const labelPrefix = registryEntry.label;
-    const astMatch = astCaptions.find(
-      (ac) => ac.text.startsWith(labelPrefix) || ac.text.includes(labelPrefix)
-    );
+    
+    // First, try to match by exact ID
+    let astMatch = registryEntry.id
+      ? astCaptions.find((ac) => ac.id === registryEntry.id)
+      : undefined;
+
+    // Fallback to matching by regex boundary
+    if (!astMatch) {
+      const escapedPrefix = escapeRegExp(labelPrefix);
+      const boundaryRegex = new RegExp(`^${escapedPrefix}(?=[\\s:.\\-]|$|$)`);
+      astMatch = astCaptions.find((ac) => boundaryRegex.test(ac.text));
+    }
+
     if (!astMatch) {
       captionsMatch = false;
       unmatched.push(`Thiếu nhãn caption cho ${labelPrefix}`);

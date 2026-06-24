@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { verifyDocxLayout } from "./docx-layout-checklist";
 import { createProjectFromTemplate, softwareProjectTemplate } from "@/modules/write";
-import type { ReportProjectBundle } from "@/types";
+import type { ReportProjectBundle, FormattedReport } from "@/types";
+import * as prepareExportModule from "./prepare-export";
+import type { Root as MdastRoot, Content as MdastContent } from "mdast";
 
 describe("verifyDocxLayout", () => {
   it("should pass checks on a standard software project template", () => {
@@ -51,5 +53,55 @@ describe("verifyDocxLayout", () => {
     const checks = verifyDocxLayout(customBundle);
     const marginsCheck = checks.find((c) => c.id === "page-setup-margins");
     expect(marginsCheck?.ok).toBe(true);
+  });
+
+  it("should fail caption parity check when a loose prefix match would false-pass", () => {
+    const bundle = createProjectFromTemplate(softwareProjectTemplate);
+    
+    // Spy on prepareExport to inject a controlled mdast and registry
+    const mockReturn = {
+      bundle: {} as unknown as ReportProjectBundle,
+      cover: null,
+      formatted: {
+        projectId: "test",
+        toc: [],
+        hast: { type: "root", children: [] } as unknown as FormattedReport["hast"],
+        mdast: {
+          type: "root",
+          children: [
+            {
+              type: "paragraph",
+              children: [{ type: "text", value: "Hình 12: Alt 12" }],
+              data: { hProperties: { className: "fig-caption" } },
+            } as unknown as MdastContent,
+          ],
+        } as unknown as MdastRoot,
+        preset: { page: "A4" } as unknown as FormattedReport["preset"],
+        figures: [
+          {
+            id: "fig-1",
+            kind: "figure",
+            number: 1,
+            label: "Hình 1",
+            text: "Alt 12",
+            sectionId: "default",
+          },
+        ],
+        tables: [],
+      } as unknown as FormattedReport,
+    };
+
+    const spy = vi.spyOn(prepareExportModule, "prepareExport").mockReturnValue(
+      mockReturn as unknown as ReturnType<typeof prepareExportModule.prepareExport>
+    );
+
+    try {
+      const checks = verifyDocxLayout(bundle);
+      const parityCheck = checks.find((c) => c.id === "caption-numbering-parity");
+      expect(parityCheck?.ok).toBe(false);
+      expect(parityCheck?.detail).toContain("Thiếu nhãn caption cho Hình 1");
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

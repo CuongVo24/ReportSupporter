@@ -63,7 +63,7 @@ export function normalizeCaptions(
                   type: "paragraph",
                   children: [{ type: "text", value: captionText }],
                   data: {
-                    hProperties: { className: "fig-caption" },
+                    hProperties: { className: "fig-caption", id: entry.id },
                   },
                 } as unknown as MdastContent);
               }
@@ -95,7 +95,7 @@ export function normalizeCaptions(
                     paragraphAdj.children = [{ type: "text", value: captionText }];
                     paragraphAdj.data = {
                       ...paragraphAdj.data,
-                      hProperties: { className: "tbl-caption" },
+                      hProperties: { className: "tbl-caption", id: entry.id },
                     };
                     break;
                   }
