@@ -85,6 +85,4 @@ export function parseHeadings(ast: MdastRoot, sectionId?: string): HeadingNode[]
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
-
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `fix(preview): keep heading id through sanitize for TOC anchors`; (2) `fix(format): document-wide heading numbering + skip empty + drop toc dedup`; +1 docs commit (contract này).
+`DONE`
