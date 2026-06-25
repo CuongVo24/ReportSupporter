@@ -24,7 +24,7 @@ Khi mở một phiên làm việc mới, **hành động đầu tiên tuyệt đ
 | # | File | Mục đích |
 |---|------|----------|
 | 7 | `Design/TaskBrief/Core/month<X>/w<Y>.md` | Task Brief tuần hiện tại — xác định phạm vi |
-| 8 | `Design/RoadMap/MasterRoadMap.md` | Lộ trình 12 tuần — biết đang ở đâu |
+| 8 | `Design/RoadMap/MasterRoadMap.md` | Lộ trình 12 tuần lõi + Phase 4 (W13–W15) — biết đang ở đâu |
 
 **Tài liệu module — đọc khi cần:**
 

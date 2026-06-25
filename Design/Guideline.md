@@ -69,7 +69,7 @@ Nếu bạn (hoặc AI Agent) lần đầu vào dự án, làm đúng 6 bước 
 | Code **checker engine / rules** | `Modules/3.Check.md` |
 | Code **export HTML / PDF / DOCX** | `Modules/4.Export.md` |
 | Code **slides / script (Phase 3)** | `Modules/5.Present.md` |
-| Biết đang ở tuần nào trong 12 tuần | `RoadMap/MasterRoadMap.md` |
+| Biết đang ở tuần nào (12 tuần lõi + Phase 4 W13–W15) | `RoadMap/MasterRoadMap.md` |
 | Nhận nhiệm vụ tuần này | `TaskBrief/Core/month<X>/w<Y>.md` |
 | Xem mẫu Contract bootstrap đã duyệt | `ContractForAI/Core/month1/W1/w1_project_bootstrap_contract.md` |
 
@@ -86,7 +86,7 @@ Nếu bạn (hoặc AI Agent) lần đầu vào dự án, làm đúng 6 bước 
     4. **Export** — HTML / PDF / DOCX (DOCX & PDF deterministic).
     5. **Present** *(Phase 3)* — slide outline, script, Q&A.
 * **Stack chốt cứng:** Next.js + TypeScript · unified/remark pipeline · browser-print PDF first · `docx` · IndexedDB. Chi tiết: `Modules/Other/TechnicalStack.md`.
-* **Tiến độ:** lộ trình **12 tuần** (`RoadMap/MasterRoadMap.md`). Phase 1 (W1–4) = MVP workspace.
+* **Tiến độ:** lộ trình **12 tuần lõi (Phase 1–3) + Phase 4 frontend (W13–W15)** (`RoadMap/MasterRoadMap.md`). Phase 1 (W1–4) = MVP workspace.
 * **Mô hình vận hành:** **Solo + AI Agent** — kỷ luật contract-first, không Buddy review nên tự review chặt.
 
 ---
@@ -125,7 +125,7 @@ Design/
     5.Flows/                           # Wireframe-level theo module (Write/Export/Present)
     Other/                             # Motion · Accessibility · VoiceAndContent · Icons
   RoadMap/
-    MasterRoadMap.md                   # Lộ trình 12 tuần; Phase 1 (W1–4) = MVP workspace
+    MasterRoadMap.md                   # Lộ trình 12 tuần lõi + Phase 4 (W13–W15); Phase 1 (W1–4) = MVP workspace
   TaskBrief/Core/
     month<X>/w<Y>.md                   # Nhiệm vụ theo tuần, lane Core (đọc khi nhận task)
   ContractForAI/
@@ -161,7 +161,7 @@ Design/
 3. **`Conventions/WorkFlow.md`** — quy trình solo Agile-AI + self quality gate + DoD.
 
 ### BƯỚC 4: Lộ trình & hành động
-1. **`RoadMap/MasterRoadMap.md`** — kế hoạch 12 tuần.
+1. **`RoadMap/MasterRoadMap.md`** — kế hoạch 12 tuần lõi + Phase 4 (W13–W15).
 2. **`TaskBrief/Core/month<X>/w<Y>.md`** — nhiệm vụ tuần hiện tại.
 3. **`ContractForAI/CONTRACT_STRUCTURE_RULE.md`** — đọc trước khi tạo bất kỳ Contract nào.
 
