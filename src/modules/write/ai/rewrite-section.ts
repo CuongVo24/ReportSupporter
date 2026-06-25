@@ -1,9 +1,5 @@
-import type { ReportSection, AiSuggestion, GatewayState, AiAction } from "@/types";
-
-export interface RewriteGateway {
-  requestSuggestion: (action: AiAction, input: string) => Promise<AiSuggestion>;
-  getGatewayState: () => GatewayState;
-}
+import type { ReportSection, AiSuggestion, AiActionGateway } from "@/types";
+import { buildNoopSuggestion } from "./ai-gateway";
 
 /**
  * AI-assisted section rewrite suggestions.
@@ -14,17 +10,12 @@ export interface RewriteGateway {
  */
 export async function rewriteSection(
   section: ReportSection,
-  gateway: RewriteGateway,
+  gateway: AiActionGateway,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return {
-      id: crypto.randomUUID(),
-      action: "rewrite",
-      original: section.markdown,
-      suggestion: "",
-    };
+    return buildNoopSuggestion("rewrite", section.markdown);
   }
 
   return gateway.requestSuggestion("rewrite", section.markdown);

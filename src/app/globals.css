@@ -1955,3 +1955,366 @@ span.ws-present-slide-speaker {
   margin-top: var(--rs-space-1);
 }
 
+/* ==========================================================================
+   AI Assistant UI Components
+   ========================================================================== */
+
+/* AiOutlineButton */
+.ws-present-ai-outline-btn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--rs-space-1);
+  margin-block: var(--rs-space-3);
+}
+
+.ws-present-ai-outline-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  cursor: pointer;
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  outline: none;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.ws-present-ai-outline-action:disabled {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  cursor: not-allowed;
+}
+
+.ws-present-ai-note {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-severity-warning);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+/* UserControlBar */
+.ws-user-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--rs-space-2) var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  margin-block: var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  flex-wrap: wrap;
+  gap: var(--rs-space-2);
+}
+
+.ws-user-control-bar-left,
+.ws-user-control-bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-3);
+  flex-wrap: wrap;
+}
+
+.ws-user-control-bar-undo-btn {
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  cursor: pointer;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+.ws-user-control-bar-undo-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+}
+
+.ws-user-control-bar-diff-btn {
+  background-color: transparent;
+  border: none;
+  color: var(--rs-color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: var(--rs-font-weight-bold);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  padding: 0;
+  font-size: var(--rs-font-size-xs);
+  outline: none;
+}
+
+.ws-user-control-bar-diff-btn:hover {
+  color: var(--rs-color-primary-hover);
+}
+
+/* SuggestionDiff */
+.ws-suggestion-diff-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-4);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  margin-block: var(--rs-space-3);
+}
+
+.ws-suggestion-diff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--rs-color-border);
+  padding-bottom: var(--rs-space-2);
+}
+
+.ws-suggestion-diff-title {
+  margin: 0;
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-primary);
+}
+
+.ws-suggestion-diff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rs-space-3);
+}
+
+.ws-suggestion-diff-column-original {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-severity-error);
+  background-color: var(--rs-color-error-bg);
+}
+
+.ws-suggestion-diff-column-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-success);
+  background-color: var(--rs-color-success-bg);
+}
+
+.ws-suggestion-diff-column-title-original {
+  margin: 0;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-severity-error);
+}
+
+.ws-suggestion-diff-column-title-suggestion {
+  margin: 0;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-success);
+}
+
+.ws-suggestion-diff-text {
+  margin: 0;
+  font-size: var(--rs-font-size-sm);
+  font-family: var(--rs-font-family-ui);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--rs-color-text);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-suggestion-diff-actions {
+  display: flex;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-suggestion-diff-accept-btn {
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: none;
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.ws-suggestion-diff-accept-btn:disabled {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  border: 1px solid var(--rs-color-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ws-suggestion-diff-reject-btn {
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  font-size: var(--rs-font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ws-suggestion-diff-reject-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+}
+
+/* UserControlBar Label Classes */
+.ws-user-control-bar-label {
+  color: var(--rs-color-text-muted);
+}
+
+.ws-user-control-bar-suggestion-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+/* PresentPanel AI Suggestions Box */
+.ws-present-ai-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-3);
+  flex-wrap: wrap;
+}
+
+.ws-present-ai-error {
+  color: var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-present-ai-suggestion-box {
+  border: 1px solid var(--rs-color-primary);
+  border-radius: var(--rs-radius-md);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-blue-100);
+  margin-block: var(--rs-space-3);
+}
+
+.ws-present-ai-suggestion-title {
+  margin: 0;
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-md);
+}
+
+.ws-present-ai-suggestion-desc {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  margin-block: var(--rs-space-1);
+}
+
+.ws-present-ai-suggestion-actions {
+  display: flex;
+  gap: var(--rs-space-2);
+  margin-block: var(--rs-space-2);
+}
+
+.ws-present-ai-accept-btn {
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: none;
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  cursor: pointer;
+}
+
+.ws-present-ai-reject-btn {
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-xs);
+  cursor: pointer;
+}
+
+.ws-present-ai-suggestion-preview-list {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--rs-color-surface);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-border);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-present-ai-suggestion-preview-item {
+  padding-bottom: var(--rs-space-2);
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-present-ai-suggestion-preview-item:not(:last-child) {
+  border-bottom: 1px solid var(--rs-color-surface-muted);
+}
+
+.ws-present-ai-suggestion-preview-item-title {
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-present-ai-suggestion-preview-item-original-title {
+  text-decoration: line-through;
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-ai-suggestion-preview-item-new-title {
+  color: var(--rs-color-primary);
+}
+
+.ws-present-ai-suggestion-bullets-container {
+  padding-left: var(--rs-space-3);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-ai-suggestion-bullets-diff {
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-present-ai-suggestion-bullets-label-original {
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-ai-suggestion-bullets-list-original {
+  margin: 0;
+  padding-left: var(--rs-space-3);
+}
+
+.ws-present-ai-suggestion-bullets-label-new {
+  color: var(--rs-color-primary);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-ai-suggestion-bullets-list-new {
+  margin: 0;
+  padding-left: var(--rs-space-3);
+}
+
+.ws-present-ai-suggestion-bullets-list-same {
+  margin: 0;
+  padding-left: var(--rs-space-3);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+}
+
+

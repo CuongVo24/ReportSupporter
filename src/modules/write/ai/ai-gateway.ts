@@ -84,12 +84,12 @@ export async function requestSuggestion(
 
   // Guard: disabled (flag OFF) — no network
   if (!config.enabled) {
-    return buildNoopSuggestion(action, input, "disabled");
+    return buildNoopSuggestion(action, input);
   }
 
   // Guard: unconfigured — no network
   if (_adapter === null) {
-    return buildNoopSuggestion(action, input, "unconfigured");
+    return buildNoopSuggestion(action, input);
   }
 
   // Ready path — delegate to adapter
@@ -106,10 +106,9 @@ export async function requestSuggestion(
 // Helpers
 // ---------------------------------------------------------------------------
 
-function buildNoopSuggestion(
+export function buildNoopSuggestion(
   action: AiAction,
   original: string,
-  state: "disabled" | "unconfigured",
 ): AiSuggestion {
   return {
     id: crypto.randomUUID(),
@@ -117,7 +116,5 @@ function buildNoopSuggestion(
     original,
     // Empty suggestion signals no-op; UI should guard on GatewayState instead.
     suggestion: "",
-    // Leave `accepted` undefined — user took no action.
-    ...(state === "unconfigured" ? {} : {}),
   };
 }

@@ -154,49 +154,33 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-3)", flexWrap: "wrap" }}>
+          <div className="ws-present-ai-controls">
             <AiOutlineButton
               state={getGatewayState()}
               isLoading={isAiLoading}
               onClick={handleAiOutlineAssist}
             />
             {aiError && (
-              <span style={{ color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-xs)" }} className="ws-present-ai-error">
+              <span className="ws-present-ai-error">
                 ⚠️ {aiError}
               </span>
             )}
           </div>
 
           {aiSuggestion && (
-            <div style={{
-              border: "1px solid var(--rs-color-primary)",
-              borderRadius: "var(--rs-radius-md)",
-              padding: "var(--rs-space-3)",
-              backgroundColor: "var(--rs-blue-100)",
-              marginBlock: "var(--rs-space-3)",
-            }} className="ws-present-ai-suggestion-box">
-              <h4 style={{ margin: 0, color: "var(--rs-color-primary)", fontSize: "var(--rs-font-size-md)" }}>
+            <div className="ws-present-ai-suggestion-box">
+              <h4 className="ws-present-ai-suggestion-title">
                 ✨ Đề xuất tối ưu Slide Outline từ AI
               </h4>
-              <p style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)", marginBlock: "var(--rs-space-1)" }}>
+              <p className="ws-present-ai-suggestion-desc">
                 AI đề xuất cập nhật các slide bên dưới. Vui lòng duyệt qua trước khi áp dụng.
               </p>
 
-              <div style={{ display: "flex", gap: "var(--rs-space-2)", marginBlock: "var(--rs-space-2)" }}>
+              <div className="ws-present-ai-suggestion-actions">
                 <button
                   onClick={() => {
                     handleAcceptAiOutline(aiSuggestion);
                     setAiSuggestion(null);
-                  }}
-                  style={{
-                    backgroundColor: "var(--rs-color-primary)",
-                    color: "var(--rs-white)",
-                    border: "none",
-                    borderRadius: "var(--rs-radius-sm)",
-                    padding: "var(--rs-space-1) var(--rs-space-3)",
-                    fontSize: "var(--rs-font-size-xs)",
-                    fontWeight: "var(--rs-font-weight-bold)",
-                    cursor: "pointer",
                   }}
                   className="ws-present-ai-accept-btn"
                 >
@@ -204,30 +188,13 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
                 </button>
                 <button
                   onClick={() => setAiSuggestion(null)}
-                  style={{
-                    backgroundColor: "var(--rs-color-surface)",
-                    color: "var(--rs-color-text)",
-                    border: "1px solid var(--rs-color-border)",
-                    borderRadius: "var(--rs-radius-sm)",
-                    padding: "var(--rs-space-1) var(--rs-space-3)",
-                    fontSize: "var(--rs-font-size-xs)",
-                    cursor: "pointer",
-                  }}
                   className="ws-present-ai-reject-btn"
                 >
                   Từ chối
                 </button>
               </div>
 
-              <div style={{
-                maxHeight: "300px",
-                overflowY: "auto",
-                backgroundColor: "var(--rs-color-surface)",
-                padding: "var(--rs-space-2)",
-                borderRadius: "var(--rs-radius-sm)",
-                border: "1px solid var(--rs-color-border)",
-                fontSize: "var(--rs-font-size-sm)",
-              }} className="ws-present-ai-suggestion-preview-list">
+              <div className="ws-present-ai-suggestion-preview-list">
                 {aiSuggestion.map((s, idx) => {
                   const original = slides.find((orig) => orig.id === s.id);
                   const isTitleChanged = original && original.title !== s.title;
@@ -236,35 +203,31 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
                   if (!original) return null;
 
                   return (
-                    <div key={s.id} style={{
-                      paddingBottom: "var(--rs-space-2)",
-                      borderBottom: idx < aiSuggestion.length - 1 ? "1px solid var(--rs-color-surface-muted)" : "none",
-                      marginBottom: "var(--rs-space-2)",
-                    }} className="ws-present-ai-suggestion-preview-item">
-                      <div style={{ fontWeight: "var(--rs-font-weight-bold)" }}>
+                    <div key={s.id} className="ws-present-ai-suggestion-preview-item">
+                      <div className="ws-present-ai-suggestion-preview-item-title">
                         Slide {idx + 1}: {isTitleChanged ? (
                           <>
-                            <span style={{ textDecoration: "line-through", color: "var(--rs-color-text-muted)" }}>{original.title}</span>
+                            <span className="ws-present-ai-suggestion-preview-item-original-title">{original.title}</span>
                             {" → "}
-                            <span style={{ color: "var(--rs-color-primary)" }}>{s.title}</span>
+                            <span className="ws-present-ai-suggestion-preview-item-new-title">{s.title}</span>
                           </>
                         ) : s.title}
                       </div>
 
-                      <div style={{ paddingLeft: "var(--rs-space-3)", marginTop: "var(--rs-space-1)" }}>
+                      <div className="ws-present-ai-suggestion-bullets-container">
                         {isBulletsChanged ? (
-                          <div style={{ fontSize: "var(--rs-font-size-xs)" }}>
-                            <div style={{ color: "var(--rs-color-text-muted)" }}>Gốc:</div>
-                            <ul style={{ margin: 0, paddingLeft: "var(--rs-space-3)" }}>
+                          <div className="ws-present-ai-suggestion-bullets-diff">
+                            <div className="ws-present-ai-suggestion-bullets-label-original">Gốc:</div>
+                            <ul className="ws-present-ai-suggestion-bullets-list-original">
                               {original.bullets.map((b, i) => <li key={i}>{b}</li>)}
                             </ul>
-                            <div style={{ color: "var(--rs-color-primary)", marginTop: "var(--rs-space-1)" }}>AI đề xuất:</div>
-                            <ul style={{ margin: 0, paddingLeft: "var(--rs-space-3)" }}>
+                            <div className="ws-present-ai-suggestion-bullets-label-new">AI đề xuất:</div>
+                            <ul className="ws-present-ai-suggestion-bullets-list-new">
                               {s.bullets.map((b, i) => <li key={i}>{b}</li>)}
                             </ul>
                           </div>
                         ) : (
-                          <ul style={{ margin: 0, paddingLeft: "var(--rs-space-3)", color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)" }}>
+                          <ul className="ws-present-ai-suggestion-bullets-list-same">
                             {s.bullets.map((b, i) => <li key={i}>{b}</li>)}
                           </ul>
                         )}

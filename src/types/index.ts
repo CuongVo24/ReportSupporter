@@ -18,7 +18,7 @@ export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./t
 export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob, PackageManifest, SubmissionPackage, SubmissionChecklistItem } from "./export";
 export type { ParsedSection, PipelineResult, FormattedReport } from "./pipeline";
 export type { SlideOutline, PresentationTimeline, Speaker, SpeakerScript, DefenseQA, WeakSectionHint } from "./present";
-export type { AiAction, AiSuggestion, AiConfig, GatewayState } from "./ai";
+export type { AiAction, AiSuggestion, AiConfig, GatewayState, AiActionGateway } from "./ai";
 export { aiActionSchema, aiSuggestionSchema, aiConfigSchema } from "./ai";
 
 

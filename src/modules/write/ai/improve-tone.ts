@@ -1,9 +1,5 @@
-import type { AiSuggestion, GatewayState, AiAction } from "@/types";
-
-export interface ToneGateway {
-  requestSuggestion: (action: AiAction, input: string) => Promise<AiSuggestion>;
-  getGatewayState: () => GatewayState;
-}
+import type { AiSuggestion, AiActionGateway } from "@/types";
+import { buildNoopSuggestion } from "./ai-gateway";
 
 /**
  * AI-assisted academic tone improvements.
@@ -14,17 +10,12 @@ export interface ToneGateway {
  */
 export async function improveTone(
   text: string,
-  gateway: ToneGateway,
+  gateway: AiActionGateway,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return {
-      id: crypto.randomUUID(),
-      action: "tone",
-      original: text,
-      suggestion: "",
-    };
+    return buildNoopSuggestion("tone", text);
   }
 
   return gateway.requestSuggestion("tone", text);

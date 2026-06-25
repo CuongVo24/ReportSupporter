@@ -73,3 +73,8 @@ export const aiConfigSchema = z.object({
  * - "disabled"     → flag is OFF; no network call is made.
  */
 export type GatewayState = "ready" | "unconfigured" | "disabled";
+
+export interface AiActionGateway {
+  requestSuggestion: (action: AiAction, input: string) => Promise<AiSuggestion>;
+  getGatewayState: () => GatewayState;
+}

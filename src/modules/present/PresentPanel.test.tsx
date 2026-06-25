@@ -1,40 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi } from "vitest";
+// @vitest-environment jsdom
+import { describe, it, expect, vi, afterEach } from "vitest";
+import React from "react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { PresentPanel } from "./PresentPanel";
 import type { ReportProjectBundle, CheckResult } from "@/types";
+import { requestSuggestion } from "@/modules/write";
 
-// Mock React hooks to run components in node environment
-vi.mock("react", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react")>();
-  let stateCallCount = 0;
+afterEach(cleanup);
 
+let mockGatewayState: "disabled" | "unconfigured" | "ready" = "disabled";
+
+// Mock the AI write gateway functions
+vi.mock("@/modules/write", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/write")>();
   return {
     ...actual,
-    useState: () => {
-      // Dynamically check mockActiveTab for the activeTab state (which is the first useState call in PresentPanel)
-      const activeTabVal = (globalThis as any).mockActiveTab || "outline";
-      const stateValues = [
-        [activeTabVal, vi.fn()], // 1. activeTab (in PresentPanel)
-        [{}, vi.fn()],           // 2. editedBullets (in usePresent)
-        [{}, vi.fn()],           // 3. editedTitles (in usePresent)
-        [{}, vi.fn()],           // 4. editedSpeakers (in usePresent)
-        [{}, vi.fn()],           // 5. editedScripts (in usePresent)
-        [10, vi.fn()],           // 6. limitMinutes (in usePresent)
-        [false, vi.fn()],        // 7. isAiLoading (in PresentPanel)
-        [null, vi.fn()],         // 8. aiSuggestion (in PresentPanel)
-        [null, vi.fn()],         // 9. aiError (in PresentPanel)
-      ];
-      const pair = stateValues[stateCallCount % stateValues.length];
-      stateCallCount++;
-      return pair;
-    },
-    useCallback: (fn: (...args: unknown[]) => unknown) => fn,
-    useEffect: vi.fn(),
-    useMemo: (fn: () => unknown) => fn(),
+    getGatewayState: () => mockGatewayState,
+    requestSuggestion: vi.fn(),
   };
 });
 
-describe("PresentPanel Component (pure JSX structure)", () => {
+describe("PresentPanel Component", () => {
   const mockBundle = (markdown: string, members?: string[]): ReportProjectBundle => ({
     project: {
       id: "test-proj-1",
@@ -61,46 +47,35 @@ describe("PresentPanel Component (pure JSX structure)", () => {
     schemaVersion: 1,
   });
 
-  it("renders a slide list with correct counts and elements", () => {
+  it("renders tabs and slide list with correct count", () => {
+    mockGatewayState = "disabled";
     const bundle = mockBundle("# Mở đầu\n\nĐoạn văn mở đầu. Câu 2.\n\n## Lý do chọn đề tài\n\nNội dung lý do.\n");
-    const element = PresentPanel({ bundle });
+    render(<PresentPanel bundle={bundle} />);
 
-    expect(element).toBeDefined();
-    expect(element.type).toBe("div");
-    expect(element.props.className).toBe("ws-present");
+    // Check title
+    expect(screen.getByRole("heading", { name: "Thuyết trình" })).toBeDefined();
 
-    const children = element.props.children;
-    expect(children[0].props.children).toBe("Thuyết trình"); // Title
+    // Check tabs
+    expect(screen.getByRole("button", { name: /Slides Outline/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Kịch bản nói/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Hỏi đáp phản biện/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Gợi ý sửa lỗi/i })).toBeDefined();
 
-    const timelineSummary = children[2].props.children[0];
-    expect(timelineSummary.props.className).toBe("ws-present-timeline-summary");
-
-    // AI button container at index 1
-    const aiBtnContainer = children[2].props.children[1];
-    const aiBtn = aiBtnContainer.props.children[0];
-    expect(aiBtn.props.state).toBeDefined();
-
-    // slidesList is now at index 3
-    const slidesList = children[2].props.children[3];
-    expect(slidesList.props.className).toBe("ws-present-slides-list");
-    const slideViews = slidesList.props.children;
-    expect(slideViews).toHaveLength(2); // H1 slide and H2 slide
-    expect(slideViews[0].props.slide.title).toBe("1. Mở đầu");
+    // Check outline slides list (H1 and H2 slides)
+    expect(screen.getByText("1. Mở đầu")).toBeDefined();
+    expect(screen.getByText("1.1. Lý do chọn đề tài")).toBeDefined();
   });
 
   it("renders empty state warning if report has no valid sections or content", () => {
     const bundle = mockBundle(""); // empty markdown
-    const element = PresentPanel({ bundle });
+    render(<PresentPanel bundle={bundle} />);
 
-    expect(element).toBeDefined();
-    expect(element.props.children[1].props.className).toBe("ws-present-empty");
-    expect(element.props.children[1].props.children).toContain(
-      "Báo cáo chưa có nội dung hoặc chỉ có các chương rỗng"
-    );
+    expect(
+      screen.getByText(/Báo cáo chưa có nội dung hoặc chỉ có các chương rỗng/i)
+    ).toBeDefined();
   });
 
   it("renders hints tab resolving slideId to title", () => {
-    (globalThis as any).mockActiveTab = "hints";
     const bundle = mockBundle("# Mở đầu\n\nĐoạn văn mở đầu. Câu 2.\n");
     const checkResult: CheckResult = {
       issues: [
@@ -130,21 +105,74 @@ describe("PresentPanel Component (pure JSX structure)", () => {
       readinessScore: 80,
       ranAt: "2026-06-25T00:00:00.000Z",
     };
-    const element = PresentPanel({ bundle, checkResult });
+    render(<PresentPanel bundle={bundle} checkResult={checkResult} />);
 
-    expect(element).toBeDefined();
-    // Verify it renders the hints list
-    const tabContent = element.props.children[5];
-    const hintsView = tabContent.props.children;
-    expect(hintsView.props.className).toBe("ws-present-hints-view");
-    const hintsList = hintsView.props.children[1];
-    expect(hintsList.props.className).toBe("ws-present-hints-list");
-    const hintItem = hintsList.props.children[0];
-    const hintHeader = hintItem.props.children[0];
-    const linkSpan = hintHeader.props.children[1];
-    expect(linkSpan.props.children[1].props.children).toBe("1. Mở đầu");
+    // Click on the hints tab
+    const hintsTab = screen.getByRole("button", { name: /Gợi ý sửa lỗi/i });
+    fireEvent.click(hintsTab);
 
-    // Clean up
-    (globalThis as any).mockActiveTab = undefined;
+    // Verify it renders the hints list and resolves the slide title
+    expect(screen.getByText("Các phần cần hoàn thiện (Weak Sections)")).toBeDefined();
+    expect(screen.getByText("1. Mở đầu")).toBeDefined();
+    expect(screen.getByText(/Thiếu kết luận/i)).toBeDefined();
+    expect(screen.getByText(/Bổ sung chương kết luận/i)).toBeDefined();
+  });
+
+  it("renders AI outline button as disabled when state is disabled and shows config note", () => {
+    mockGatewayState = "disabled";
+    const bundle = mockBundle("# Mở đầu\n\nĐoạn văn mở đầu. Câu 2.\n");
+    render(<PresentPanel bundle={bundle} />);
+
+    const aiBtn = screen.getByRole("button", { name: /Tối ưu Outline bằng AI/i });
+    expect((aiBtn as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("⚠️ Bật AI trong cấu hình")).toBeDefined();
+  });
+
+  it("switches tabs on button click", () => {
+    const bundle = mockBundle("# Mở đầu\n\nĐoạn văn mở đầu. Câu 2.\n");
+    render(<PresentPanel bundle={bundle} />);
+
+    // Initial tab is outline, slide list should be visible
+    expect(screen.getByText("1. Mở đầu")).toBeDefined();
+
+    // Switch to Script tab
+    const scriptTab = screen.getByRole("button", { name: /Kịch bản nói/i });
+    fireEvent.click(scriptTab);
+
+    // Slide list from Outline tab should not be visible anymore, but Script view title should be
+    expect(screen.queryByText("Giới hạn (phút):")).toBeNull();
+    expect(screen.getByText("Kịch bản nói (Speaker Script)")).toBeDefined();
+  });
+
+  it("calls AI assist when state is ready, shows loading state and displays suggestions", async () => {
+    mockGatewayState = "ready";
+    vi.mocked(requestSuggestion).mockResolvedValue({
+      id: "mock-suggestion-id",
+      action: "outline",
+      original: "",
+      suggestion: JSON.stringify([
+        { id: "sec-1-slide-0", title: "1. Mở đầu (Tối ưu)", bullets: ["Bullet 1", "Bullet 2"] }
+      ]),
+    });
+
+    const bundle = mockBundle("# Mở đầu\n\nĐoạn văn mở đầu. Câu 2.\n");
+    render(<PresentPanel bundle={bundle} />);
+
+    const aiBtn = screen.getByRole("button", { name: /Tối ưu Outline bằng AI/i });
+    expect((aiBtn as HTMLButtonElement).disabled).toBe(false);
+
+    // Click button
+    fireEvent.click(aiBtn);
+
+    // The button should be disabled and show busy/loading state
+    expect(aiBtn.getAttribute("aria-busy")).toBe("true");
+
+    // Wait for the suggestion box to appear
+    const suggestionTitle = await screen.findByText(/Đề xuất tối ưu Slide Outline từ AI/i);
+    expect(suggestionTitle).toBeDefined();
+
+    // Verify optimized slide titles and bullets
+    expect(screen.getByText("1. Mở đầu (Tối ưu)")).toBeDefined();
+    expect(screen.getByText("Bullet 1")).toBeDefined();
   });
 });

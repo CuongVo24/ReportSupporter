@@ -1,9 +1,5 @@
-import type { SlideOutline, AiSuggestion, GatewayState, AiAction } from "@/types";
-
-export interface OutlineGateway {
-  requestSuggestion: (action: AiAction, input: string) => Promise<AiSuggestion>;
-  getGatewayState: () => GatewayState;
-}
+import type { SlideOutline, AiSuggestion, AiActionGateway } from "@/types";
+import { buildNoopSuggestion } from "@/modules/write/ai/ai-gateway";
 
 /**
  * AI-assisted outline optimization.
@@ -14,17 +10,12 @@ export interface OutlineGateway {
  */
 export async function assistOutline(
   outline: SlideOutline[],
-  gateway: OutlineGateway,
+  gateway: AiActionGateway,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return {
-      id: crypto.randomUUID(),
-      action: "outline",
-      original: JSON.stringify(outline),
-      suggestion: "",
-    };
+    return buildNoopSuggestion("outline", JSON.stringify(outline));
   }
 
   const input = JSON.stringify(outline);

@@ -73,7 +73,7 @@ All rewrite and tone suggestions are reviewed before they are saved to the docum
 The [SuggestionDiff.tsx](file:///e:/ReportSupporter/src/modules/write/ai/SuggestionDiff.tsx) component uses CSS variables to present differences clearly:
 - **Original Content (Left Column)**: Highlighted with a subtle red border and background tint using the design system CSS token `var(--rs-color-error-bg)` (resolving to a HEX tint based on the error color) signifying deprecated/removed content.
 - **AI Suggested Content (Right Column)**: Highlighted with a subtle green border and background tint using the system CSS token `var(--rs-color-success-bg)` (resolving to a HEX tint based on the success color) signifying proposed replacements.
-- Parameterized by `AiAction` to display context-aware headers ("Cải thiện văn văn học thuật" vs. "So sánh đề xuất viết lại") dynamically without duplicating code structures.
+- Parameterized by `AiAction` to display context-aware headers ("Cải thiện văn phong học thuật" vs. "So sánh đề xuất viết lại") dynamically without duplicating code structures.
 
 ### Persistent User Content Control Bar
 The [UserControlBar.tsx](file:///e:/ReportSupporter/src/modules/write/ai/UserControlBar.tsx) ensures that user controls are visible during pending states:
