@@ -12,7 +12,7 @@
 ( indicator active )
 [ TabPanel ]                                       ← Radix Content
 ```
-- Count badge (B10): pill nhỏ cạnh label (vd số issue Checker), dùng `Badge` neutral hoặc severity nếu có lỗi.
+- Count badge (B10): pill nhỏ cạnh label (vd số issue Người soát), dùng `Badge` neutral hoặc severity nếu có lỗi.
 
 ## 2. Variants (cả 2 kiểu — B10)
 | Variant | Hình thái | Khi dùng |
@@ -37,7 +37,7 @@ Size `md`. Tab active: chữ `--rs-color-text` weight medium; tab thường: `--
 - Count badge có text đọc được (vd `aria-label="3 lỗi"`), không chỉ màu.
 
 ## 5. Content / Microcopy
-- Nhãn ngắn 1 từ ("Kiểm tra", "Xuất", "Trình bày"). `Other/VoiceAndContent.md`.
+- Nhãn ngắn, đúng từ vựng sản phẩm ("Người soát", "Xuất", "Trình bày"). `Other/VoiceAndContent.md`.
 
 ## 6. Motion
 - Underline indicator trượt ~150ms ease-out; segmented đổi nền ~120ms. Reduced-motion → nhảy. `Other/Motion.md`.
