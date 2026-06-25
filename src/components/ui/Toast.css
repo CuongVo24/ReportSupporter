@@ -1,0 +1,196 @@
+/* ===== Toast Styles ===== */
+
+.ws-toast-viewport {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--rs-space-6);
+  gap: var(--rs-space-2);
+  width: 380px;
+  max-width: 100vw;
+  margin: 0;
+  list-style: none;
+  z-index: var(--rs-z-toast);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.ws-toast-root {
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-2);
+  padding: var(--rs-space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rs-space-3);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ws-toast-root[data-state="open"] {
+  animation: ws-toast-slide-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ws-toast-root[data-state="closed"] {
+  animation: ws-toast-fade-out 100ms ease-in forwards;
+}
+
+.ws-toast-root[data-swipe="move"] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+
+.ws-toast-root[data-swipe="cancel"] {
+  transform: translateX(0);
+  transition: transform 200ms ease-out;
+}
+
+.ws-toast-root[data-swipe="end"] {
+  animation: ws-toast-swipe-out 100ms ease-in forwards;
+}
+
+/* Icons */
+.ws-toast-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.ws-toast-icon {
+  width: var(--rs-space-5);
+  height: var(--rs-space-5);
+}
+
+.ws-toast-icon-success {
+  color: var(--rs-color-success);
+}
+
+.ws-toast-icon-info {
+  color: var(--rs-color-severity-info);
+}
+
+.ws-toast-icon-error {
+  color: var(--rs-color-severity-error);
+}
+
+/* Content */
+.ws-toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  box-sizing: border-box;
+}
+
+.ws-toast-title {
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ws-toast-description {
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  margin: 0;
+  line-height: var(--rs-font-lh-ui);
+}
+
+/* Action button */
+.ws-toast-action-btn {
+  border: 1px solid var(--rs-color-border);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+
+.ws-toast-action-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  border-color: var(--rs-color-text-muted);
+}
+
+.ws-toast-action-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 1px;
+}
+
+/* Close button */
+.ws-toast-close-btn {
+  border: none;
+  background: transparent;
+  padding: var(--rs-space-1);
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+  flex-shrink: 0;
+}
+
+.ws-toast-close-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text);
+}
+
+.ws-toast-close-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 1px;
+}
+
+.ws-toast-close-icon {
+  width: var(--rs-space-4);
+  height: var(--rs-space-4);
+}
+
+/* Keyframes */
+@keyframes ws-toast-slide-in {
+  from {
+    transform: translateX(calc(100% + var(--rs-space-6)));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes ws-toast-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ws-toast-swipe-out {
+  from {
+    transform: translateX(var(--radix-toast-swipe-end-x));
+  }
+  to {
+    transform: translateX(calc(100% + var(--rs-space-6)));
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .ws-toast-root {
+    animation: none !important;
+    transition: none !important;
+  }
+}
