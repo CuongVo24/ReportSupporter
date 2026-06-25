@@ -1,0 +1,182 @@
+/* ===== Select Primitive Styles ===== */
+
+.ws-select-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.ws-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--rs-field-bg);
+  border: 1px solid var(--rs-field-border);
+  border-radius: var(--rs-field-radius);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  color: var(--rs-color-text);
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left;
+  transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+  user-select: none;
+}
+
+.ws-select-trigger:hover:not(:disabled) {
+  border-color: var(--rs-color-text-muted);
+}
+
+.ws-select-trigger:focus,
+.ws-select-trigger[data-state="open"] {
+  border-color: var(--rs-field-border-focus);
+  box-shadow: 0 0 0 2px var(--rs-color-focus-ring);
+}
+
+.ws-select-trigger:disabled {
+  background-color: var(--rs-color-surface-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.ws-select-trigger-md {
+  height: 36px;
+  padding: var(--rs-space-2) var(--rs-space-3);
+}
+
+.ws-select-trigger-sm {
+  height: 28px;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-size: var(--rs-font-size-sm);
+}
+
+/* Invalid State */
+.ws-select-trigger-invalid {
+  border-color: var(--rs-color-severity-error) !important;
+}
+
+.ws-select-trigger-invalid:focus,
+.ws-select-trigger-invalid[data-state="open"] {
+  box-shadow: 0 0 0 2px var(--rs-color-severity-error) !important;
+}
+
+/* Icons */
+.ws-select-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rs-color-text-muted);
+  flex-shrink: 0;
+}
+
+.ws-select-chevron {
+  width: var(--rs-space-4);
+  height: var(--rs-space-4);
+  transition: transform 120ms ease-out;
+}
+
+.ws-select-trigger[data-state="open"] .ws-select-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-select-chevron {
+    transition: none;
+  }
+}
+
+.ws-select-leading-icon {
+  position: absolute;
+  left: var(--rs-space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rs-color-text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ws-select-trigger-with-leading {
+  padding-left: calc(var(--rs-space-3) + var(--rs-space-4) + var(--rs-space-2));
+}
+
+/* Popover Content */
+.ws-select-content {
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-2);
+  z-index: var(--rs-z-dropdown);
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: ws-select-slide-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ws-select-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-select-content {
+    animation: none;
+  }
+}
+
+.ws-select-viewport {
+  padding: var(--rs-space-1);
+}
+
+/* Select Item */
+.ws-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  color: var(--rs-color-text);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.ws-select-item[data-highlighted] {
+  background-color: var(--rs-color-surface-muted);
+}
+
+.ws-select-item[data-state="checked"] {
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-select-item[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ws-select-item-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rs-color-primary);
+  flex-shrink: 0;
+}
+
+.ws-select-item-check {
+  width: var(--rs-space-4);
+  height: var(--rs-space-4);
+}
