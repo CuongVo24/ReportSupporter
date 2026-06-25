@@ -27,9 +27,10 @@ During Week 10, the Core team completed all deterministic offline present module
 - [x] **Code merged cleanly**: All commits are grouped on the clean `feature/W10-script-qa` branch.
 - [x] **Lint pass**: `npm run lint` yields 0 errors and 0 warnings.
 - [x] **Typecheck pass**: `npm run typecheck` succeeds without compilation issues.
-- [x] **Test suite success**: `npx vitest run` passes 100% of 318 tests.
+- [x] **Test suite success**: `npx vitest run` passes 100% of 322 tests.
 - [x] **Production build**: `npm run build` generates Next.js production artifact cleanly.
-- [x] **No new libraries**: Did not install any unauthorized npm packages. Kept dependency list static.
+- [x] **Testing Libraries**: Added `@testing-library/react` and `jsdom` as devDependencies to support robust JSDOM component tests.
+- [x] **Premium Visuals**: Implemented complete CSS styles for all presenter sub-views (Tabs, Scripts, Q&A, and Hints) using design tokens (`var(--rs-*)`) at `globals.css`.
 - [x] **Deterministic logic**: Same inputs generate byte-identical speaker scripts, Q&A items, and hints.
 - [x] **No-AI constraint**: AI rewrite feature remains a disabled frontend placeholder to be implemented in Week 11. No network requests are made.
 
@@ -39,5 +40,7 @@ During Week 10, the Core team completed all deterministic offline present module
 
 1.  **usePresent Hook Separation**: In order to obey the VibeCode 200-line rule per file, we extracted all business logic and state management from `PresentPanel.tsx` into a custom hook `use-present.ts`. This kept the UI component lightweight (144 lines) and highly readable.
 2.  **Deterministic Caption Regex**: We implemented a robust regex-based scanner (`Hình \d+(\.\d+)*` and `Bảng \d+(\.\d+)*`) that parses section content and slide bullets to dynamically extract action cues (e.g. `chỉ vào Hình 1.1`).
-3.  **Deduplicated Q&A and Hints**: Both `generateDefenseQA` and `buildWeakSectionHints` utilize `Set`-based deduplication to prevent repetitive reasons, suggestions, or cues, delivering a clean and premium visual user experience.
+3.  **Deduplicated Q&A and Hints**: Both `generateDefenseQA` and `buildWeakSectionHints` utilize `Set`-based deduplication to prevent repetitive reasons, suggestions, or cues.
 4.  **No Checker Re-run**: Hints strictly aggregate the pre-existing issues from `CheckResult` mapped to `slideId`. No checker rules are run again, maximizing responsiveness.
+5.  **Word-Boundary Keyword Match**: In the Q&A generator, exact ASCII keywords (such as `git`, `docker`, `setup`) are matched via word boundary regex to avoid false-positive subword matches (e.g. `digital` matching `git`), while preserving substring matching for Vietnamese phrases.
+6.  **Visual Styling and RTL Tests**: Component tests were refactored using React Testing Library to test actual DOM rendering and user interaction (e.g. `fireEvent.change`), ensuring the UI's functionality is fully validated alongside the design tokens style integration in `globals.css`.
