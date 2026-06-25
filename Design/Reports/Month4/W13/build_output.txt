@@ -1,8 +1,8 @@
 === VITEST RUN ===
 Test Files  72 passed (72)
      Tests  377 passed (377)
-  Start at  22:29:47
-  Duration  72.31s (transform 8.57s, setup 0ms, import 97.74s, tests 15.68s, environment 32.78s)
+  Start at  23:14:05
+  Duration  72s
 
 === TYPECHECK RUN ===
 > report-supporter@0.1.0 typecheck
@@ -19,7 +19,7 @@ Test Files  72 passed (72)
    ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 51s
+ ✓ Compiled successfully in 107s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/5) ...

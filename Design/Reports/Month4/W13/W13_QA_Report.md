@@ -20,7 +20,7 @@ This report summarizes the implementation, testing, and accessibility (a11y) val
 
 | DoD Requirement | Status | Verification Detail |
 | :--- | :---: | :--- |
-| **Strict Token-Only Styles** | ✅ PASS | Verified zero hardcoded hex colors or direct px values. All styles reference `--rs-*` design tokens. |
+| **Strict Token-Only Styles** | ✅ PASS | Verified zero hardcoded hex colors. Semantic dimensions (control heights, overlay widths, count-badge font sizes) are fully tokenized. Standard hairlines (1px borders, 2px focus ring outline-offsets) are retained as layout values and documented. |
 | **No External UI Libs** | ✅ PASS | Core Radix UI hooks/primitives utilized headless; CSS written manually. |
 | **Complete State/Variant Map** | ✅ PASS | Covered hover, active, disabled, loading, invalid, and default states for all 8 elements. |
 | **Accessibility (A11y) Standards** | ✅ PASS | Focus-visible ring implemented on all focusable primitives. Appropriate keyboard handlers, role definitions, and ARIA labels. |
@@ -58,6 +58,9 @@ This report summarizes the implementation, testing, and accessibility (a11y) val
    - Dialog close buttons utilize `aria-label="Đóng"` while hiding the icons with `aria-hidden="true"`.
 4. **Motion Preference:**
    - Media query `@media (prefers-reduced-motion: reduce)` disables scale animations, slide actions, and transition timing to avoid motion sickness.
+5. **Toast Announcements & Stacking:**
+   - Toast announcements are aligned: `error` toasts use `type="foreground"` (assertive) to capture user attention, while `success` and `info` use `type="background"` (polite) to prevent screen reader clobbering.
+   - Stacking limits of 3 are documented as baseline responsibilities of the parent toast controller/Provider in W14; the Toast primitives themselves do not self-restrict display limits.
 
 ---
 
