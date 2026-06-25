@@ -20,7 +20,7 @@ Báo cáo này đánh giá mức độ sẵn sàng phát hành thử nghiệm (B
 - **Chi tiết kiểm chứng**:
   - Hệ thống hỗ trợ biên dịch báo cáo ra cả 3 định dạng:
     - **HTML**: Xuất bản ra một tệp tin HTML tĩnh tự chứa (self-contained) bao gồm mục lục, danh mục ảnh/bảng, KaTeX và các biểu đồ Mermaid được hiển thị chuẩn xác.
-    - **PDF**: Hỗ trợ in trực tiếp từ trình duyệt (Browser Print) với cấu trúc phân trang hoàn hảo, ngắt trang sau trang bìa/mục lục và căn chỉnh lề theo cài đặt.
+    - **PDF**: Hỗ trợ xuất bản PDF qua tính năng in trực tiếp từ trình duyệt (Browser Print) từ giao diện in tối ưu (sản sinh tệp tin `*.print.html` chứa định dạng in đặc thù). Đảm bảo cấu trúc phân trang hoàn hảo, ngắt trang sau trang bìa/mục lục và căn chỉnh lề theo thiết lập của trình duyệt, hoàn toàn đáp ứng tiêu chí "browser-print PDF" trong PRD (hệ thống không sinh tệp tin PDF nhị phân trên máy chủ).
     - **Word (DOCX)**: Tự động biên dịch AST Markdown sang cấu trúc XML của tệp `.docx` (sử dụng thư viện `docx`). Văn bản mở được bằng Microsoft Word và hoàn toàn có thể chỉnh sửa tiếp.
 
 ### Tiêu chí 3: Bộ kiểm tra chất lượng báo cáo trực quan

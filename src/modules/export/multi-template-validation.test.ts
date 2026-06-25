@@ -30,7 +30,23 @@ describe("Multi-Template Export Validation Tests", () => {
 
   for (const template of targetTemplates) {
     describe(`Template: ${template.name} (${template.id})`, () => {
-      const bundle = createProjectFromTemplate(template);
+      // Create a bundle with metadata to assert cover page parity
+      const bundle = createProjectFromTemplate(template, {
+        title: `Báo cáo mẫu ${template.name}`,
+        metadata: {
+          school: "Trường Đại học Bách Khoa Hà Nội",
+          course: "Kiểm thử Phần mềm nâng cao",
+          lecturer: "TS. Nguyễn Văn A",
+          members: ["Nguyễn Văn An - 20261111", "Trần Thị Bình - 20262222"],
+          date: "25/06/2026",
+        }
+      });
+
+      // Inject an image and a table to verify caption numbering (continuous/per-chapter)
+      if (bundle.project.sections.length > 0) {
+        const firstSec = bundle.project.sections[0];
+        firstSec.markdown = `# ${firstSec.title}\n\n![Mô tả hình minh họa](https://example.com/figure.png)\n\nBảng 1: Bảng dữ liệu mẫu kiểm thử\n| Cột 1 | Cột 2 |\n|---|---|\n| Giá trị A | Giá trị B |\n`;
+      }
 
       it("should export to HTML successfully and contain key headers/sections", async () => {
         const result = exportHtml(bundle);
@@ -39,6 +55,18 @@ describe("Multi-Template Export Validation Tests", () => {
           const htmlText = await result.blob.text();
           expect(htmlText).toContain("<!DOCTYPE html>");
           expect(htmlText).toContain(bundle.project.title);
+
+          // Assert Cover Page Parity
+          expect(htmlText).toContain("Trường Đại học Bách Khoa Hà Nội");
+          expect(htmlText).toContain("TS. Nguyễn Văn A");
+          expect(htmlText).toContain("Nguyễn Văn An - 20261111");
+
+          // Assert Page-Break Parity
+          expect(htmlText).toContain("class=\"page-break\"");
+
+          // Assert Caption Numbering Parity
+          expect(htmlText).toContain("Hình 1: Mô tả hình minh họa");
+          expect(htmlText).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
 
           // Write actual HTML file for demo evidence
           fs.writeFileSync(path.join(samplesDir, `${template.id}.html`), htmlText);
@@ -53,10 +81,23 @@ describe("Multi-Template Export Validation Tests", () => {
 
       it("should export to PDF (via browser print) successfully when popup is mocked", async () => {
         // Save printable HTML representation to PDF sample file for testing verification
+        const input = prepareExport(bundle);
+        const printableHtml = buildPrintableHtml(input);
+
+        // Assert Cover Page Parity in printable HTML
+        expect(printableHtml).toContain("Trường Đại học Bách Khoa Hà Nội");
+        expect(printableHtml).toContain("TS. Nguyễn Văn A");
+        expect(printableHtml).toContain("Nguyễn Văn An - 20261111");
+
+        // Assert Page-Break Parity in printable HTML
+        expect(printableHtml).toContain("class=\"page-break\"");
+
+        // Assert Caption Numbering Parity in printable HTML
+        expect(printableHtml).toContain("Hình 1: Mô tả hình minh họa");
+        expect(printableHtml).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+
         try {
-          const input = prepareExport(bundle);
-          const printableHtml = buildPrintableHtml(input);
-          fs.writeFileSync(path.join(samplesDir, `${template.id}.pdf`), printableHtml);
+          fs.writeFileSync(path.join(samplesDir, `${template.id}.print.html`), printableHtml);
         } catch (err) {
           console.error("Failed to write PDF HTML preview:", err);
         }
@@ -99,6 +140,15 @@ describe("Multi-Template Export Validation Tests", () => {
 
           const docJson = JSON.stringify(result.doc);
           
+          // Assert Cover Page Parity in DOCX representation
+          expect(docJson).toContain("TRƯỜNG ĐẠI HỌC BÁCH KHOA HÀ NỘI");
+          expect(docJson).toContain("TS. Nguyễn Văn A");
+          expect(docJson).toContain("Nguyễn Văn An - 20261111");
+
+          // Assert Caption Numbering Parity in DOCX representation
+          expect(docJson).toContain("Hình 1: Mô tả hình minh họa");
+          expect(docJson).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+
           // Verify that template specific elements (metadata title or section titles) are present in DOCX
           const sortedSections = [...bundle.project.sections].sort((a, b) => a.order - b.order);
           if (sortedSections.length > 0) {

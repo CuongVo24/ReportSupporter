@@ -27,7 +27,7 @@ ReportSupporter hoạt động đầy đủ chức năng cốt lõi và không p
 - Trình biên tập Markdown hoạt động bình thường, hỗ trợ phím tắt và kéo thả ảnh.
 - Bộ kiểm tra định dạng (Quality Checker) hoạt động tức thời, chấm điểm sẵn sàng và tìm lỗi định dạng.
 - Hệ thống hỗ trợ quản lý minh chứng (Evidence Kit) và chèn mã QR tự động.
-- Tính năng xuất bản (Export) ra 3 định dạng HTML, PDF, DOCX hoạt động chính xác.
+- Tính năng xuất bản (Export) ra các định dạng HTML, bản in PDF qua trình duyệt (Browser Print), và DOCX hoạt động chính xác.
 - Giao diện thuyết trình (Slides Outline, Speaker Script, Q&A) tự động sinh dàn bài thuyết trình từ nội dung Markdown thô.
 
 ---
@@ -38,17 +38,17 @@ Các tệp tin mẫu đã được xuất bản thành công từ 3 mẫu tài l
 
 ### 1. Mẫu Đồ án Phần mềm (Software Project Report)
 - **HTML**: `Design/Reports/Month3/W12/samples/software-project.html`
-- **PDF**: `Design/Reports/Month3/W12/samples/software-project.pdf`
+- **PDF (Bản in HTML - Browser Print)**: `Design/Reports/Month3/W12/samples/software-project.print.html` (Mở tệp này bằng trình duyệt và nhấn Ctrl+P/Cmd+P để in ra PDF)
 - **DOCX**: `Design/Reports/Month3/W12/samples/software-project.docx`
 
 ### 2. Mẫu Báo cáo Thực hành (Lab Report)
 - **HTML**: `Design/Reports/Month3/W12/samples/lab-report.html`
-- **PDF**: `Design/Reports/Month3/W12/samples/lab-report.pdf`
+- **PDF (Bản in HTML - Browser Print)**: `Design/Reports/Month3/W12/samples/lab-report.print.html`
 - **DOCX**: `Design/Reports/Month3/W12/samples/lab-report.docx`
 
 ### 3. Mẫu Báo cáo Thực tập (Internship Report)
 - **HTML**: `Design/Reports/Month3/W12/samples/internship-report.html`
-- **PDF**: `Design/Reports/Month3/W12/samples/internship-report.pdf`
+- **PDF (Bản in HTML - Browser Print)**: `Design/Reports/Month3/W12/samples/internship-report.print.html`
 - **DOCX**: `Design/Reports/Month3/W12/samples/internship-report.docx`
 
-*(Các tệp tin mẫu trên đều chứa định dạng tiêu chuẩn, đánh số phân cấp tiêu đề tự động, và phụ lục minh chứng đính kèm mã QR).*
+*(Các tệp tin mẫu trên đều chứa định dạng tiêu chuẩn, đánh số phân cấp tiêu đề tự động, và phụ lục minh chứng đính kèm mã QR. Để đảm bảo tính trung thực về công nghệ của dự án, các bản mẫu PDF được lưu dưới dạng file HTML in được `.print.html` do hệ thống hỗ trợ xuất bản PDF qua tính năng Browser Print và không sinh tệp tin PDF nhị phân trên máy chủ).*
