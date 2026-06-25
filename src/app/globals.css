@@ -45,6 +45,14 @@
   --rs-color-readiness-medium: var(--rs-color-severity-warning);
   --rs-color-readiness-low: var(--rs-color-severity-error);
 
+  /* Metadata form fields (DesignSystem §6.5) */
+  --rs-field-bg: var(--rs-color-surface);
+  --rs-field-border: var(--rs-color-border);
+  --rs-field-border-focus: var(--rs-color-focus-ring);
+  --rs-field-radius: var(--rs-radius-sm);
+  --rs-field-label-size: var(--rs-font-size-sm);
+  --rs-field-gap: var(--rs-space-3);
+
   /* Spacing — 4px grid (DesignSystem §4.1) */
   --rs-space-1: 4px;
   --rs-space-2: 8px;
@@ -79,6 +87,9 @@
 
   /* Z-index (DesignSystem §4.4) */
   --rs-z-sticky: 100;
+  --rs-z-dropdown: 150;
+  --rs-z-modal: 200;
+  --rs-z-toast: 300;
 }
 
 * {

@@ -1,0 +1,90 @@
+/* ===== Textarea Primitive Styles ===== */
+
+.ws-textarea-container {
+  display: flex;
+  background-color: var(--rs-field-bg);
+  border: 1px solid var(--rs-field-border);
+  border-radius: var(--rs-field-radius);
+  transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ws-textarea-container:hover:not(.ws-textarea-container-disabled):not(.ws-textarea-container-readonly) {
+  border-color: var(--rs-color-text-muted);
+}
+
+.ws-textarea-container:focus-within:not(.ws-textarea-container-disabled):not(.ws-textarea-container-readonly) {
+  border-color: var(--rs-field-border-focus);
+  box-shadow: 0 0 0 2px var(--rs-color-focus-ring);
+  outline: none;
+}
+
+/* Invalid State */
+.ws-textarea-container-invalid {
+  border-color: var(--rs-color-severity-error) !important;
+}
+
+.ws-textarea-container-invalid:focus-within {
+  box-shadow: 0 0 0 2px var(--rs-color-severity-error) !important;
+}
+
+/* Disabled State */
+.ws-textarea-container-disabled {
+  background-color: var(--rs-color-surface-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ws-textarea-container-disabled .ws-textarea {
+  cursor: not-allowed;
+}
+
+/* Readonly State */
+.ws-textarea-container-readonly {
+  background-color: var(--rs-color-surface-muted);
+}
+
+/* Textarea element styling */
+.ws-textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  color: var(--rs-color-text);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  min-height: 80px;
+  width: 100%;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-textarea::placeholder {
+  color: var(--rs-color-text-muted);
+  opacity: 0.8;
+}
+
+.ws-textarea-autogrow {
+  resize: none;
+  overflow-y: hidden;
+}
+
+/* Footer layout for helper/error and counter */
+.ws-field-footer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-field-counter {
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
