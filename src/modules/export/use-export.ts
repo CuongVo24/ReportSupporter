@@ -4,6 +4,7 @@ import { exportHtml } from "./export-html";
 import { exportPdf } from "./export-pdf";
 import { exportDocx, packDocx } from "./export-docx";
 import { toQrDataUrl } from "@/modules/evidence";
+import { recordExport } from "./export-history";
 
 async function executeExport(
   target: ExportTarget,
@@ -100,13 +101,15 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         URL.revokeObjectURL(url);
       }
 
+      const finishedJob: ExportJob = { ...newJob, status: "done", finishedAt: new Date().toISOString() };
       setJobs((prev) =>
         prev.map((job) =>
           job.id === id
-            ? { ...job, status: "done", finishedAt: new Date().toISOString() }
+            ? finishedJob
             : job
         )
       );
+      recordExport(finishedJob);
     } catch (error: unknown) {
       const exportError: ExportError =
         error && typeof error === "object" && "stage" in error && "message" in error
@@ -117,13 +120,15 @@ export function useExport(currentBundle?: ReportProjectBundle) {
               recoverable: true,
             };
 
+      const failedJob: ExportJob = { ...newJob, status: "error", error: exportError, finishedAt: new Date().toISOString() };
       setJobs((prev) =>
         prev.map((job) =>
           job.id === id
-            ? { ...job, status: "error", error: exportError, finishedAt: new Date().toISOString() }
+            ? failedJob
             : job
         )
       );
+      recordExport(failedJob);
     }
   }, []);
 
@@ -163,13 +168,19 @@ export function useExport(currentBundle?: ReportProjectBundle) {
           URL.revokeObjectURL(url);
         }
 
+        let finishedJob: ExportJob | undefined;
         setJobs((prev) =>
-          prev.map((j) =>
-            j.id === jobId
-              ? { ...j, status: "done", finishedAt: new Date().toISOString() }
-              : j
-          )
+          prev.map((j) => {
+            if (j.id === jobId) {
+              finishedJob = { ...j, status: "done", finishedAt: new Date().toISOString() };
+              return finishedJob;
+            }
+            return j;
+          })
         );
+        if (finishedJob) {
+          recordExport(finishedJob);
+        }
       } catch (error: unknown) {
         const exportError: ExportError =
           error && typeof error === "object" && "stage" in error && "message" in error
@@ -180,13 +191,19 @@ export function useExport(currentBundle?: ReportProjectBundle) {
                 recoverable: true,
               };
 
+        let failedJob: ExportJob | undefined;
         setJobs((prev) =>
-          prev.map((j) =>
-            j.id === jobId
-              ? { ...j, status: "error", error: exportError, finishedAt: new Date().toISOString() }
-              : j
-          )
+          prev.map((j) => {
+            if (j.id === jobId) {
+              failedJob = { ...j, status: "error", error: exportError, finishedAt: new Date().toISOString() };
+              return failedJob;
+            }
+            return j;
+          })
         );
+        if (failedJob) {
+          recordExport(failedJob);
+        }
       }
     },
     [jobs, currentBundle]
