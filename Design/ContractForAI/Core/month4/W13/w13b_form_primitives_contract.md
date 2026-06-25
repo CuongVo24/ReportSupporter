@@ -63,6 +63,6 @@ Build 3 field primitive: **Input** (text/number), **Textarea** (multi-line, ≠ 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): add Input + Textarea primitives (states/a11y)`; `feat(ui): add Select on radix (token-styled)`; `docs(ui): commit w13b contract`.

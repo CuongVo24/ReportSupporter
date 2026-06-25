@@ -18,7 +18,7 @@ Build **Tabs** (Radix Tabs — underline + segmented, count badge) và một **t
 ## 2. Scope
 
 ### In scope (`[C142]`/`[C143]`)
-- `src/components/ui/Tabs.{tsx,css}` (**NEW**): variants underline + segmented; count badge (dùng `Badge`, nhãn đọc được); active = primary + medium; export `ui/index.ts`.
+- `src/components/ui/Tabs.{tsx,css}` (**NEW**): variants underline + segmented; count badge (**dedicated inline `<span>` within TabsTrigger**, not a reuse of `Badge` — `Badge` uses a group/value semantic model incompatible with numeric counts; count badge has its own tokenized CSS with `aria-label`); active = primary + medium; export `ui/index.ts`.
 - `src/app/(dev)/ui-gallery/page.tsx` (**NEW**): render 8 component (Button/Input/Textarea/Select/Badge/Dialog[modal+drawer]/Toast/Tabs) × variant/state; toggle light/dark (`data-theme`). Dev-only, gated.
 
 ### Out of scope
@@ -58,6 +58,6 @@ Build **Tabs** (Radix Tabs — underline + segmented, count badge) và một **t
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): add Tabs on radix (underline/segmented/count)`; `feat(ui): add dev-only component gallery`; `docs(ui): commit w13d contract`.

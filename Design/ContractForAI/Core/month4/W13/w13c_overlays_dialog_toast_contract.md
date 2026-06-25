@@ -63,6 +63,6 @@ Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **dr
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): add Dialog variants on radix (focus-trap/token)`; `feat(ui): add Toast on radix (bottom-right/stack/a11y)`; `docs(ui): commit w13c contract`.

@@ -34,9 +34,24 @@
   --rs-color-severity-warning: var(--rs-amber-500);
   --rs-color-severity-info: var(--rs-sky-600);
 
-  /* Background tints for success/error states */
+  /* Background tints for success/error/warning/info states */
   --rs-color-success-bg: #f0fdf4;
   --rs-color-error-bg: #fef2f2;
+  --rs-color-severity-warning-bg: #fffbeb;
+  --rs-color-severity-info-bg: #f0f9ff;
+
+  /* Readiness score tokens (DesignSystem §2.4) */
+  --rs-color-readiness-good: var(--rs-color-success);
+  --rs-color-readiness-medium: var(--rs-color-severity-warning);
+  --rs-color-readiness-low: var(--rs-color-severity-error);
+
+  /* Metadata form fields (DesignSystem §6.5) */
+  --rs-field-bg: var(--rs-color-surface);
+  --rs-field-border: var(--rs-color-border);
+  --rs-field-border-focus: var(--rs-color-focus-ring);
+  --rs-field-radius: var(--rs-radius-sm);
+  --rs-field-label-size: var(--rs-font-size-sm);
+  --rs-field-gap: var(--rs-space-3);
 
   /* Spacing — 4px grid (DesignSystem §4.1) */
   --rs-space-1: 4px;
@@ -69,9 +84,24 @@
   /* Elevation (DesignSystem §4.3) */
   --rs-elevation-1: 0 1px 2px rgba(15, 23, 42, 0.08);
   --rs-elevation-2: 0 4px 12px rgba(15, 23, 42, 0.12);
+  --rs-elevation-3: 0 12px 32px rgba(15, 23, 42, 0.18);
 
   /* Z-index (DesignSystem §4.4) */
   --rs-z-sticky: 100;
+  --rs-z-dropdown: 150;
+  --rs-z-overlay: 180;
+  --rs-z-modal: 200;
+  --rs-z-toast: 300;
+
+  /* Control heights & overlay dimensions (DesignSystem §4.5) */
+  --rs-control-height-md: 36px;
+  --rs-control-height-sm: 28px;
+  --rs-textarea-min-height: 80px;
+  --rs-overlay-width-lg: 520px;
+  --rs-overlay-width-md: 460px;
+  --rs-overlay-width-sm: 400px;
+  --rs-toast-width: 380px;
+  --rs-font-size-xxs: 10px;
 }
 
 * {
@@ -2473,6 +2503,24 @@ span.ws-present-slide-speaker {
 
 .ws-preview-container-empty {
   padding: var(--rs-space-4);
+}
+
+[data-theme="dark"] {
+  --rs-color-bg: #0B1120;
+  --rs-color-surface: #111827;
+  --rs-color-surface-muted: #1E293B;
+  --rs-color-border: #334155;
+  --rs-color-text: #E2E8F0;
+  --rs-color-text-muted: #94A3B8;
+  --rs-color-primary: #3B82F6;
+  --rs-color-severity-error: #F87171;
+  --rs-color-severity-warning: #FBBF24;
+  --rs-color-severity-info: #38BDF8;
+  --rs-color-severity-error-bg: rgba(248, 113, 113, 0.12);
+  --rs-color-severity-warning-bg: rgba(251, 191, 36, 0.12);
+  --rs-color-severity-info-bg: rgba(56, 189, 248, 0.12);
+  --rs-color-success: #4ADE80;
+  --rs-color-success-bg: rgba(74, 222, 128, 0.12);
 }
 
 
