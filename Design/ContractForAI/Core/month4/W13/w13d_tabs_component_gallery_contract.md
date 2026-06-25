@@ -58,6 +58,6 @@ Build **Tabs** (Radix Tabs — underline + segmented, count badge) và một **t
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): add Tabs on radix (underline/segmented/count)`; `feat(ui): add dev-only component gallery`; `docs(ui): commit w13d contract`.

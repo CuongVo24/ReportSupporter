@@ -57,6 +57,6 @@ A11y pass toàn bộ primitive + Visual QA theo Art Direction, chạy 4 gates, v
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(ui): a11y pass primitives (focus/keyboard/aria)`; `docs(reports): add W13 QA report + evidence`; `docs(ui): commit w13e contract`.
