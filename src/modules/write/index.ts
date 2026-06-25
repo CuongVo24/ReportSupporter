@@ -26,4 +26,5 @@ export { rewriteSection } from "./ai/rewrite-section";
 export { SuggestionDiff } from "./ai/SuggestionDiff";
 export { improveTone } from "./ai/improve-tone";
 export { UserControlBar } from "./ai/UserControlBar";
+export { AiAssistBar } from "./ai/AiAssistBar";
 

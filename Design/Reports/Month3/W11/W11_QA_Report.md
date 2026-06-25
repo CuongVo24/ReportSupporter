@@ -27,9 +27,9 @@ During Week 11, the Core team completed all AI Layer and Assistant features (Gro
 - [x] **Code merged cleanly**: All changes are committed and pushed to the clean `feature/W11-ai-assistant` branch.
 - [x] **Lint pass**: `npm run lint` yields 0 errors and 0 warnings.
 - [x] **Typecheck pass**: `npm run typecheck` succeeds without compilation issues.
-- [x] **Test suite success**: `npx vitest run` passes 100% of 331 tests (including new AI config, gateway, assist-outline, rewrite, and tone tests).
+- [x] **Test suite success**: `npx vitest run` passes 100% of 348 tests (including new AI config, gateway, assist-outline, rewrite, tone, and SuggestionDiff component tests).
 - [x] **Production build**: `npm run build` generates Next.js production artifact cleanly.
-- [x] **Premium Visuals**: Implemented premium inline layouts for `SuggestionDiff` (side-by-side columns highlighted red/green), `UserControlBar` (compact gray bar with interactive controls), and `AiOutlineButton` using design tokens (`var(--rs-*)`).
+- [x] **Premium Visuals**: Implemented premium inline layouts for `SuggestionDiff` (side-by-side columns highlighted red/green using design tokens), `UserControlBar` (compact gray bar with interactive controls), and `AiOutlineButton` using design tokens (`var(--rs-*)`).
 - [x] **Explicit Triggering**: No AI generation runs automatically. Suggestion changes are kept in local states and applied only upon explicit user acceptance.
 - [x] **No-fetch Off-state Guard**: Confirmed that no network/gateway fetch request is ever made when the AI enabled flag is set to false (default) or when no adapter is configured.
 
@@ -37,8 +37,9 @@ During Week 11, the Core team completed all AI Layer and Assistant features (Gro
 
 ## 4. Key Design Decisions & Code Polish
 
-1. **Provider-Agnostic Adapter Pattern**: In order to avoid bundling provider SDKs directly (which would violate the TechnicalStack lock), we structured the AI Gateway to communicate with a registered `AiAdapter`. REAL SDK integrations can be injected cleanly without changing the core writing or presenting modules.
-2. **No-fetch Off-state Guard**: Used strict config checks in all helper functions (`assistOutline`, `rewriteSection`, `improveTone`) to return no-op suggestion payloads and prevent calling the gateway adapter when the gateway is disabled or unconfigured.
-3. **Robust Test stateValues scaling**: Fixed a fragile mock React `useState` modulo indexing in `PresentPanel.test.tsx` by updating the mock array size from 5 to 9 to match the exact number of state hooks in the live component, resolving layout testing failures.
-4. **Shared Diff Layout**: Extended `SuggestionDiff` to accept `action` props and dynamically render titles (`Cải thiện văn văn học thuật`, `So sánh đề xuất viết lại`), minimizing UI code duplication.
-5. **Persistent User Controls**: Integrated `UserControlBar` to ensure the original content snippet, undo control, and visual diff access entries are constantly visible to the user during suggestion pending states.
+1. **Workspace UI Integration (`AiAssistBar`)**: To avoid polluting the `Workspace` host component, we encapsulated the buttons, state management, and popup overlays for both rewriting and tone adjustments in `AiAssistBar.tsx`. This component mounts right above the `EditorPanel` and is automatically bypassed/disabled when AI is off.
+2. **Provider-Agnostic Adapter Pattern**: In order to avoid bundling provider SDKs directly (which would violate the TechnicalStack lock), we structured the AI Gateway to communicate with a registered `AiAdapter`. REAL SDK integrations can be injected cleanly without changing the core writing or presenting modules.
+3. **No-fetch Off-state Guard**: Used strict config checks in all helper functions (`assistOutline`, `rewriteSection`, `improveTone`) to return no-op suggestion payloads and prevent calling the gateway adapter when the gateway is disabled or unconfigured.
+4. **Non-destructive Accept Guard**: Prevented user text loss by enforcing validation in `SuggestionDiff`. The Accept button is automatically disabled (`disabled={!canAccept}`) if the suggestion is empty or identical to the original text, preventing empty overwrites.
+5. **Shared Diff Layout**: Extended `SuggestionDiff` to accept `action` props and dynamically render titles (`Cải thiện văn phong học thuật`, `So sánh đề xuất viết lại`), minimizing UI code duplication.
+6. **Persistent User Controls**: Integrated `UserControlBar` to ensure the original content snippet, undo control, and visual diff access entries are constantly visible to the user during suggestion pending states.

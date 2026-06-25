@@ -21,51 +21,63 @@ Lint completed successfully. 0 errors, 0 warnings.
 ---
  RUN  v4.1.9 E:/ReportSupporter
 
- ✓ src/modules/export/use-export.test.ts (7 tests) 129ms
- ✓ src/modules/check/rules/table-width.test.ts (3 tests) 41ms
- ✓ src/modules/format/number-headings.test.ts (7 tests) 42ms
- ✓ src/modules/write/buildInitialSections.test.ts (5 tests) 70ms
- ✓ src/modules/check/rules/code-language.test.ts (4 tests) 34ms
- ✓ src/modules/check/rules/heading-levels.test.ts (4 tests) 40ms
- ✓ src/modules/write/use-image-insert.test.ts (3 tests) 36ms
- ✓ src/modules/export/mdast-to-docx.test.ts (6 tests) 126ms
- ✓ src/modules/write/autosave.test.ts (3 tests) 44ms
- ✓ src/modules/write/templates/internship-report.test.ts (3 tests) 20ms
- ✓ src/modules/write/ai/rewrite-section.test.ts (3 tests) 18ms
- ✓ src/modules/present/generate-qa.test.ts (7 tests) 32ms
- ✓ src/modules/write/ai/improve-tone.test.ts (3 tests) 29ms
- ✓ src/modules/write/create-project.test.ts (4 tests) 21ms
- ✓ src/modules/present/ai/assist-outline.test.ts (3 tests) 31ms
- ✓ src/modules/write/templates/lab-report.test.ts (3 tests) 22ms
- ✓ src/modules/write/generate-skeleton.test.ts (4 tests) 22ms
- ✓ src/modules/present/generate-script.test.ts (5 tests) 15ms
- ✓ src/modules/present/weak-sections.test.ts (5 tests) 15ms
- ✓ src/modules/evidence/validate.test.ts (7 tests) 14ms
- ✓ src/modules/evidence/evidence-reducer.test.ts (6 tests) 16ms
- ✓ src/modules/export/submission-checklist.test.ts (8 tests) 17ms
+ ✓ src/modules/export/use-export.test.ts (7 tests) 100ms
+ ✓ src/modules/present/generate-outline.test.ts (11 tests) 151ms
+ ✓ src/modules/write/readme-import.test.ts (5 tests) 73ms
+ ✓ src/modules/export/mdast-to-docx.test.ts (6 tests) 51ms
+ ✓ src/modules/export/export-history.test.ts (7 tests) 39ms
+ ✓ src/modules/check/rules/captions.test.ts (6 tests) 83ms
+ ✓ src/modules/export/build-submission-zip.test.ts (3 tests) 55ms
+ ✓ src/modules/present/PresentPanel.test.tsx (3 tests) 58ms
+ ✓ src/modules/write/buildInitialSections.test.ts (5 tests) 57ms
+ ✓ src/modules/write/autosave.test.ts (3 tests) 27ms
+ ✓ src/modules/check/rules/images.test.ts (5 tests) 38ms
+ ✓ src/modules/check/rules/text-markers.test.ts (4 tests) 54ms
+ ✓ src/modules/format/number-headings.test.ts (7 tests) 44ms
+ ✓ src/modules/check/rules/table-width.test.ts (3 tests) 40ms
+ ✓ src/modules/write/use-image-insert.test.ts (3 tests) 34ms
+ ✓ src/modules/present/generate-qa.test.ts (7 tests) 20ms
+ ✓ src/modules/check/rules/heading-levels.test.ts (4 tests) 41ms
+ ✓ src/modules/present/ai/assist-outline.test.ts (3 tests) 19ms
+ ✓ src/modules/write/templates/lab-report.test.ts (3 tests) 20ms
+ ✓ src/modules/write/generate-skeleton.test.ts (4 tests) 24ms
+ ✓ src/modules/check/rules/code-language.test.ts (4 tests) 58ms
+ ✓ src/modules/write/templates/internship-report.test.ts (3 tests) 17ms
+ ✓ src/modules/export/submission-checklist.test.ts (8 tests) 14ms
+ ✓ src/modules/present/weak-sections.test.ts (5 tests) 26ms
  ✓ src/modules/write/templates/readme-report.test.ts (2 tests) 17ms
- ✓ src/modules/present/speakers.test.ts (8 tests) 16ms
+ ✓ src/modules/write/ai/improve-tone.test.ts (3 tests) 15ms
+ ✓ src/modules/write/create-project.test.ts (4 tests) 22ms
+ ✓ src/modules/present/speakers.test.ts (8 tests) 15ms
+ ✓ src/modules/evidence/evidence-reducer.test.ts (6 tests) 15ms
+ ✓ src/modules/write/ai/rewrite-section.test.ts (3 tests) 19ms
+ ✓ src/modules/format/generate-lof-lot.test.ts (3 tests) 8ms
+ ✓ src/modules/present/generate-script.test.ts (5 tests) 14ms
+ ✓ src/modules/evidence/validate.test.ts (7 tests) 17ms
+ ✓ src/modules/present/timeline.test.ts (4 tests) 11ms
+ ✓ src/modules/write/extract-mermaid.test.ts (3 tests) 12ms
  ✓ src/modules/format/generate-toc.test.ts (4 tests) 14ms
- ✓ src/modules/write/extract-mermaid.test.ts (3 tests) 14ms
- ✓ src/modules/write/templates/index.test.ts (5 tests) 13ms
- ✓ src/modules/present/timeline.test.ts (4 tests) 14ms
- ✓ src/modules/write/insert-snippet.test.ts (7 tests) 10ms
- ✓ src/modules/export/generate-readme.test.ts (5 tests) 9ms
- ✓ src/modules/format/generate-lof-lot.test.ts (3 tests) 15ms
- ✓ src/modules/evidence/kind-meta.test.ts (1 test) 11ms
- ✓ src/modules/check/readiness-score.test.ts (7 tests) 11ms
- ✓ src/modules/write/MetadataForm.test.ts (3 tests) 9ms
- ✓ src/lib/slugify.test.ts (6 tests) 13ms
- ✓ src/modules/export/print-css.test.ts (5 tests) 13ms
- ✓ src/modules/write/ProjectInitializer.test.tsx (1 test) 11ms
- ✓ src/smoke.test.ts (1 test) 6ms
+ ✓ src/modules/export/print-css.test.ts (5 tests) 11ms
+ ✓ src/modules/write/templates/index.test.ts (5 tests) 11ms
+ ✓ src/lib/slugify.test.ts (6 tests) 9ms
+ ✓ src/modules/write/ProjectInitializer.test.tsx (1 test) 13ms
+ ✓ src/modules/write/ai/ai-gateway.test.ts (4 tests) 21ms
+ ✓ src/modules/write/ai/SuggestionDiff.test.tsx (5 tests) 914ms
+ ✓ src/modules/evidence/kind-meta.test.ts (1 test) 12ms
+ ✓ src/modules/check/readiness-score.test.ts (7 tests) 10ms
+ ✓ src/modules/write/insert-snippet.test.ts (7 tests) 12ms
+ ✓ src/modules/export/generate-readme.test.ts (5 tests) 12ms
+ ✓ src/modules/write/MetadataForm.test.ts (3 tests) 10ms
+ ✓ src/modules/write/ai/ai-config.test.ts (8 tests) 29ms
+ ✓ src/smoke.test.ts (1 test) 10ms
+ ✓ src/modules/format/generate-lof-lot.test.ts (3 tests) 9ms
 
- Test Files  67 passed (67)
-      Tests  331 passed (331)
-   Start at  15:08:07
-   Duration  59.08s (transform 5.47s, setup 0ms, import 97.53s, tests 10.16s, environment 5.74s)
+ Test Files  70 passed (70)
+      Tests  348 passed (348)
+   Start at  15:31:41
+   Duration  58.66s (transform 5.31s, setup 0ms, import 86.99s, tests 9.13s, environment 18.40s)
 
-Vitest completed successfully. All 331 tests passed.
+Vitest completed successfully. All 348 tests passed.
 
 ---
 4. PRODUCTION BUILD

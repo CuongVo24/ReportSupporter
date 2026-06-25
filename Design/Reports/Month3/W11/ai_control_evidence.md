@@ -71,8 +71,8 @@ All rewrite and tone suggestions are reviewed before they are saved to the docum
 
 ### Visual Diff Presentation
 The [SuggestionDiff.tsx](file:///e:/ReportSupporter/src/modules/write/ai/SuggestionDiff.tsx) component uses CSS variables to present differences clearly:
-- **Original Content (Left Column)**: Highlighted with a subtle red border and background tint (`rgba(220, 38, 38, 0.05)`) signifying deprecated/removed content.
-- **AI Suggested Content (Right Column)**: Highlighted with a subtle green border and background tint (`rgba(22, 163, 74, 0.05)`) signifying proposed replacements.
+- **Original Content (Left Column)**: Highlighted with a subtle red border and background tint using the design system CSS token `var(--rs-color-error-bg)` (resolving to a HEX tint based on the error color) signifying deprecated/removed content.
+- **AI Suggested Content (Right Column)**: Highlighted with a subtle green border and background tint using the system CSS token `var(--rs-color-success-bg)` (resolving to a HEX tint based on the success color) signifying proposed replacements.
 - Parameterized by `AiAction` to display context-aware headers ("Cải thiện văn văn học thuật" vs. "So sánh đề xuất viết lại") dynamically without duplicating code structures.
 
 ### Persistent User Content Control Bar

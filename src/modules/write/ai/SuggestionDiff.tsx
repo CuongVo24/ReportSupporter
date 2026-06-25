@@ -21,6 +21,9 @@ export function SuggestionDiff({
   const displayTitle = action === "tone"
     ? "Cải thiện văn phong học thuật"
     : (action === "rewrite" ? "So sánh đề xuất viết lại" : title);
+
+  const canAccept = suggestion.trim().length > 0 && suggestion !== original;
+
   const containerStyle: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -60,7 +63,7 @@ export function SuggestionDiff({
     padding: "var(--rs-space-3)",
     borderRadius: "var(--rs-radius-sm)",
     border: `1px solid ${isSuggestion ? "var(--rs-color-success)" : "var(--rs-color-severity-error)"}`,
-    backgroundColor: isSuggestion ? "rgba(22, 163, 74, 0.05)" : "rgba(220, 38, 38, 0.05)",
+    backgroundColor: isSuggestion ? "var(--rs-color-success-bg)" : "var(--rs-color-error-bg)",
   });
 
   const columnTitleStyle = (isSuggestion: boolean): React.CSSProperties => ({
@@ -87,15 +90,16 @@ export function SuggestionDiff({
   };
 
   const acceptBtnStyle: React.CSSProperties = {
-    backgroundColor: "var(--rs-color-primary)",
-    color: "var(--rs-white)",
-    border: "none",
+    backgroundColor: canAccept ? "var(--rs-color-primary)" : "var(--rs-color-surface-muted)",
+    color: canAccept ? "var(--rs-white)" : "var(--rs-color-text-muted)",
+    border: canAccept ? "none" : "1px solid var(--rs-color-border)",
     borderRadius: "var(--rs-radius-sm)",
     padding: "var(--rs-space-2) var(--rs-space-4)",
     fontSize: "var(--rs-font-size-sm)",
     fontWeight: "var(--rs-font-weight-bold)",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
+    cursor: canAccept ? "pointer" : "not-allowed",
+    opacity: canAccept ? 1 : 0.6,
+    transition: "background-color 0.2s, opacity 0.2s",
   };
 
   const rejectBtnStyle: React.CSSProperties = {
@@ -131,7 +135,8 @@ export function SuggestionDiff({
         <button
           type="button"
           style={acceptBtnStyle}
-          onClick={() => onAccept(suggestion)}
+          disabled={!canAccept}
+          onClick={() => canAccept && onAccept(suggestion)}
           className="ws-suggestion-diff-accept-btn"
         >
           Áp dụng đề xuất

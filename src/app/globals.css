@@ -34,6 +34,10 @@
   --rs-color-severity-warning: var(--rs-amber-500);
   --rs-color-severity-info: var(--rs-sky-600);
 
+  /* Background tints for success/error states */
+  --rs-color-success-bg: #f0fdf4;
+  --rs-color-error-bg: #fef2f2;
+
   /* Spacing — 4px grid (DesignSystem §4.1) */
   --rs-space-1: 4px;
   --rs-space-2: 8px;

@@ -16,7 +16,7 @@
  */
 
 import type { AiAction, AiSuggestion, GatewayState } from "@/types/ai";
-import { loadAiConfig, isAiReady, isAiUnconfigured } from "./ai-config";
+import { loadAiConfig, isAiReady } from "./ai-config";
 
 // ---------------------------------------------------------------------------
 // Adapter interface (provider-agnostic contract)

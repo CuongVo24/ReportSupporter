@@ -14,6 +14,7 @@ import {
   useDraftAutosave,
   useImageInsert,
   buildInitialSections,
+  AiAssistBar,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
@@ -210,12 +211,20 @@ export function Workspace() {
   return (
     <WorkspaceLayout
       editor={
-        <EditorPanel
-          value={activeSection.markdown}
-          onChange={handleChange}
-          ariaLabel={`Editor: ${activeSection.title}`}
-          onImageInserted={handleImageInserted}
-        />
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "var(--rs-space-2)" }}>
+          <AiAssistBar
+            section={activeSection}
+            onChange={handleChange}
+          />
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <EditorPanel
+              value={activeSection.markdown}
+              onChange={handleChange}
+              ariaLabel={`Editor: ${activeSection.title}`}
+              onImageInserted={handleImageInserted}
+            />
+          </div>
+        </div>
       }
       preview={
         <PreviewPane
