@@ -157,9 +157,19 @@ export function generateSlideOutline(
 
   const globalNumbered = numberHeadings(allHeadings);
 
+  // Group numbered headings with depth <= 2 by sectionId
+  const headingsBySection: Record<string, NumberedHeading[]> = {};
+  for (const h of globalNumbered) {
+    if (h.depth <= 2 && h.sectionId) {
+      if (!headingsBySection[h.sectionId]) {
+        headingsBySection[h.sectionId] = [];
+      }
+      headingsBySection[h.sectionId].push(h);
+    }
+  }
+
   const outlines: SlideOutline[] = [];
   let globalSlideIdx = 0;
-  let globalHeadingIdx = 0;
 
   for (const s of sortedSections) {
     if (!s.markdown || s.markdown.trim() === "") {
@@ -167,6 +177,8 @@ export function generateSlideOutline(
     }
 
     const ast = parseMarkdown(s.markdown);
+    const secHeadings = headingsBySection[s.id] || [];
+    let sectionHeadingIdx = 0;
 
     // Segment the children of AST by H1/H2 headings
     const segments: { headingNode?: NumberedHeading; title: string; nodes: ASTNode[] }[] = [];
@@ -181,14 +193,9 @@ export function generateSlideOutline(
         const headingText = flattenNodeText(child).trim();
         let numberedHeading: NumberedHeading | undefined;
 
-        while (globalHeadingIdx < globalNumbered.length) {
-          const h = globalNumbered[globalHeadingIdx];
-          if (h.sectionId === s.id && h.depth === child.depth && h.text === headingText) {
-            numberedHeading = h;
-            globalHeadingIdx++;
-            break;
-          }
-          globalHeadingIdx++;
+        if (sectionHeadingIdx < secHeadings.length) {
+          numberedHeading = secHeadings[sectionHeadingIdx];
+          sectionHeadingIdx++;
         }
 
         currentSegment = {
