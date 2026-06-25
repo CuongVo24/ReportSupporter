@@ -1,4 +1,4 @@
-# Master Roadmap - ReportSupporter (12 Weeks)
+# Master Roadmap - ReportSupporter (12 Weeks + 2 UI)
 
 ## Project Overview
 
@@ -109,3 +109,21 @@
 - Validate exports on sample reports.
 - Polish UI states and accessibility.
 - Prepare public demo and README evidence.
+
+## Phase 4 - Frontend / UI Investment (Weeks 13-14)
+
+> Hai tuần extra biến giao diện thành first-class concern, dựng đẹp **theo mạch** thay vì sửa cuối kỳ. Bám discipline `Design/Frontend/` (Art Direction → Foundations → Components → Patterns → Layouts → Flows). **Không** thêm logic nghiệp vụ, **không** đổi `CanonicalTypes` — chỉ tầng trình bày.
+
+### Week 13: UI Foundation & Component Library
+
+- Cài + khoá UI stack: Radix UI (headless) + Lucide; bootstrap `src/components/ui/`.
+- Dựng bộ primitive theo spec: Button, Input, Select, Textarea, Badge, Dialog, Tabs, Toast — đủ trạng thái (`Design/Frontend/2.Components/*`).
+- Áp Art Direction: token, focus-visible, motion ≤200ms, a11y mỗi component.
+- Storybook-style demo nội bộ (route/page nháp) để duyệt component bằng mắt.
+
+### Week 14: UI Adoption & Polish
+
+- Refactor App Shell + panel Write/Format/Check/Export/Present dùng primitive W13 (không đổi behavior).
+- Áp Patterns: empty / loading-skeleton / error / form-validation / feedback nhất quán.
+- Áp microcopy (`Frontend/Other/VoiceAndContent.md`), responsive App Shell, dark mode polish.
+- Visual QA theo `0.ArtDirection.md` checklist §11; evidence screenshots before/after.
