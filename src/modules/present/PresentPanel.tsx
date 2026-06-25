@@ -1,91 +1,35 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import type { ReportProjectBundle } from "@/types";
-import { generateSlideOutline } from "./generate-outline";
-import { buildTimeline } from "./timeline";
-import { buildSpeakers, assignSlides } from "./speakers";
+import React, { useState } from "react";
+import type { ReportProjectBundle, CheckResult } from "@/types";
+import { usePresent } from "./use-present";
 import { SlideOutlineView } from "./SlideOutlineView";
+import { ScriptView } from "./ScriptView";
+import { DefenseQAView } from "./DefenseQAView";
 
 export interface PresentPanelProps {
   bundle: ReportProjectBundle;
+  checkResult?: CheckResult;
 }
 
-export function PresentPanel({ bundle }: PresentPanelProps) {
-  const [editedBullets, setEditedBullets] = useState<Record<string, string[]>>({});
-  const [editedSpeakers, setEditedSpeakers] = useState<Record<string, string | undefined>>({});
-  const [limitMinutes, setLimitMinutes] = useState<number>(10); // default limit 10 minutes
+export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
+  const [activeTab, setActiveTab] = useState<"outline" | "script" | "qa" | "hints">("outline");
 
-  // 1. Generate slides and speakers from bundle
-  const rawSlides = useMemo(() => {
-    return generateSlideOutline(bundle.project.sections, bundle.evidence);
-  }, [bundle.project.sections, bundle.evidence]);
-
-  const rawSpeakers = useMemo(() => {
-    return buildSpeakers(bundle.project);
-  }, [bundle.project]);
-
-  // 2. Compute base assignments (speakers & slides)
-  const baseAssignment = useMemo(() => {
-    return assignSlides(rawSpeakers, rawSlides);
-  }, [rawSpeakers, rawSlides]);
-
-  // 3. Apply user local state overrides (bullets, speakerId)
-  const slides = useMemo(() => {
-    return baseAssignment.outline.map((slide) => {
-      const userBullets = editedBullets[slide.id];
-      const userSpeaker = editedSpeakers[slide.id];
-      return {
-        ...slide,
-        bullets: userBullets !== undefined ? userBullets : slide.bullets,
-        speakerId: userSpeaker !== undefined ? userSpeaker : slide.speakerId,
-      };
-    });
-  }, [baseAssignment.outline, editedBullets, editedSpeakers]);
-
-  const speakers = useMemo(() => {
-    return baseAssignment.speakers.map((sp) => {
-      const assignedIds = slides
-        .filter((slide) => slide.speakerId === sp.id)
-        .map((slide) => slide.id);
-      return {
-        ...sp,
-        assignedSlideIds: assignedIds,
-      };
-    });
-  }, [baseAssignment.speakers, slides]);
-
-  // 4. Calculate timeline
-  const timeline = useMemo(() => {
-    return buildTimeline(slides, limitMinutes * 60);
-  }, [slides, limitMinutes]);
-
-  // Handlers
-  const handleBulletChange = (slideId: string, index: number, val: string) => {
-    const current = slides.find((s) => s.id === slideId);
-    if (!current) return;
-    const nextBullets = [...current.bullets];
-    nextBullets[index] = val;
-    setEditedBullets((prev) => ({ ...prev, [slideId]: nextBullets }));
-  };
-
-  const handleSpeakerChange = (slideId: string, speakerId: string | undefined) => {
-    setEditedSpeakers((prev) => ({ ...prev, [slideId]: speakerId }));
-  };
-
-  const handleAddBullet = (slideId: string) => {
-    const current = slides.find((s) => s.id === slideId);
-    if (!current || current.bullets.length >= 5) return;
-    const nextBullets = [...current.bullets, "Ý chính mới"];
-    setEditedBullets((prev) => ({ ...prev, [slideId]: nextBullets }));
-  };
-
-  const handleRemoveBullet = (slideId: string, index: number) => {
-    const current = slides.find((s) => s.id === slideId);
-    if (!current) return;
-    const nextBullets = current.bullets.filter((_, idx) => idx !== index);
-    setEditedBullets((prev) => ({ ...prev, [slideId]: nextBullets }));
-  };
+  const {
+    slides,
+    speakers,
+    timeline,
+    scripts,
+    qas,
+    hints,
+    limitMinutes,
+    setLimitMinutes,
+    handleBulletChange,
+    handleSpeakerChange,
+    handleAddBullet,
+    handleRemoveBullet,
+    handleScriptChange,
+  } = usePresent({ bundle, checkResult });
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -109,46 +53,137 @@ export function PresentPanel({ bundle }: PresentPanelProps) {
     <div className="ws-present" aria-label="Thuyết trình">
       <h3 className="ws-present-panel-title">Thuyết trình</h3>
 
-      <div className="ws-present-timeline-summary">
-        <div className="ws-present-duration">
-          <strong>Tổng thời lượng:</strong> {formatTime(timeline.totalSeconds)}
-        </div>
+      {/* Navigation Tabs */}
+      <div className="ws-present-tabs">
+        <button
+          className={`ws-present-tab-btn ${activeTab === "outline" ? "active" : ""}`}
+          onClick={() => setActiveTab("outline")}
+        >
+          🗂️ Slides Outline
+        </button>
+        <button
+          className={`ws-present-tab-btn ${activeTab === "script" ? "active" : ""}`}
+          onClick={() => setActiveTab("script")}
+        >
+          🗣️ Kịch bản nói
+        </button>
+        <button
+          className={`ws-present-tab-btn ${activeTab === "qa" ? "active" : ""}`}
+          onClick={() => setActiveTab("qa")}
+        >
+          ❓ Hỏi đáp phản biện
+        </button>
+        <button
+          className={`ws-present-tab-btn ${activeTab === "hints" ? "active" : ""}`}
+          onClick={() => setActiveTab("hints")}
+        >
+          ⚠️ Gợi ý sửa lỗi
+          {hints.length > 0 && (
+            <span className="ws-present-badge-count">{hints.length}</span>
+          )}
+        </button>
+      </div>
 
-        <div className="ws-present-limit-selector">
-          <label htmlFor="ws-timeline-limit-input" className="ws-present-limit-label">
-            Giới hạn (phút):
-          </label>
-          <input
-            id="ws-timeline-limit-input"
-            type="number"
-            min={1}
-            max={120}
-            value={limitMinutes}
-            onChange={(e) => setLimitMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-            className="ws-present-limit-input"
-          />
-        </div>
+      {/* Tab Contents */}
+      {activeTab === "outline" && (
+        <div className="ws-present-tab-content">
+          <div className="ws-present-timeline-summary">
+            <div className="ws-present-duration">
+              <strong>Tổng thời lượng:</strong> {formatTime(timeline.totalSeconds)}
+            </div>
 
-        {timeline.overLimit && (
-          <div className="ws-present-timeline-badge overlimit" role="alert">
-            ⚠️ Vượt giới hạn (Tối đa {limitMinutes} phút)
+            <div className="ws-present-limit-selector">
+              <label htmlFor="ws-timeline-limit-input" className="ws-present-limit-label">
+                Giới hạn (phút):
+              </label>
+              <input
+                id="ws-timeline-limit-input"
+                type="number"
+                min={1}
+                max={120}
+                value={limitMinutes}
+                onChange={(e) => setLimitMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                className="ws-present-limit-input"
+              />
+            </div>
+
+            {timeline.overLimit && (
+              <div className="ws-present-timeline-badge overlimit" role="alert">
+                ⚠️ Vượt giới hạn (Tối đa {limitMinutes} phút)
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="ws-present-slides-list">
-        {slides.map((slide) => (
-          <SlideOutlineView
-            key={slide.id}
-            slide={slide}
+          <div className="ws-present-slides-list">
+            {slides.map((slide) => (
+              <SlideOutlineView
+                key={slide.id}
+                slide={slide}
+                speakers={speakers}
+                onBulletChange={(idx, val) => handleBulletChange(slide.id, idx, val)}
+                onSpeakerChange={(spId) => handleSpeakerChange(slide.id, spId)}
+                onAddBullet={() => handleAddBullet(slide.id)}
+                onRemoveBullet={(idx) => handleRemoveBullet(slide.id, idx)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "script" && (
+        <div className="ws-present-tab-content">
+          <ScriptView
+            scripts={scripts}
+            slides={slides}
             speakers={speakers}
-            onBulletChange={(idx, val) => handleBulletChange(slide.id, idx, val)}
-            onSpeakerChange={(spId) => handleSpeakerChange(slide.id, spId)}
-            onAddBullet={() => handleAddBullet(slide.id)}
-            onRemoveBullet={(idx) => handleRemoveBullet(slide.id, idx)}
+            onScriptChange={handleScriptChange}
           />
-        ))}
-      </div>
+        </div>
+      )}
+
+      {activeTab === "qa" && (
+        <div className="ws-present-tab-content">
+          <DefenseQAView qas={qas} sections={bundle.project.sections} />
+        </div>
+      )}
+
+      {activeTab === "hints" && (
+        <div className="ws-present-tab-content">
+          <div className="ws-present-hints-view">
+            <h4 className="ws-present-view-title">Các phần cần hoàn thiện (Weak Sections)</h4>
+            {hints.length === 0 ? (
+              <p className="ws-present-hints-empty">
+                🎉 Tuyệt vời! Không tìm thấy vấn đề yếu kém nào cần khắc phục trong các slide/section hiện tại.
+              </p>
+            ) : (
+              <div className="ws-present-hints-list">
+                {hints.map((hint, idx) => (
+                  <div key={idx} className={`ws-present-hint-item severity-${hint.severity}`}>
+                    <div className="ws-present-hint-header">
+                      <span className={`ws-present-hint-badge severity-${hint.severity}`}>
+                        {hint.severity === "error" ? "❌ Lỗi nặng" : hint.severity === "warning" ? "⚠️ Cảnh báo" : "ℹ️ Thông tin"}
+                      </span>
+                      {hint.slideId && (
+                        <span className="ws-present-hint-slide-link">
+                          Trỏ tới slide: <strong>{slides.find((s) => s.id === hint.slideId)?.title ?? hint.slideId}</strong>
+                        </span>
+                      )}
+                    </div>
+                    <div className="ws-present-hint-body">
+                      <div className="ws-present-hint-reason">
+                        <strong>Lý do: </strong> {hint.reason}
+                      </div>
+                      <div className="ws-present-hint-suggestion">
+                        <strong>Đề xuất khắc phục: </strong> {hint.suggestion}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
