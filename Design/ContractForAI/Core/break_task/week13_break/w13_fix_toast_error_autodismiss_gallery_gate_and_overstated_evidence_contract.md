@@ -75,6 +75,6 @@ Sửa các điểm **sai/đáng tin** của W13 — không đổi shape/public s
 
 ## 7. Status
 
-`OPEN — chờ Approve (VibeCode Step 2: chưa chạm src/ tới khi duyệt).`
+`DONE`
 
 > Ưu tiên **S1 → S2 → S3 → S4** trước khi chốt W13. Đề xuất commit: `fix(ui): toast error stays (duration=Infinity)`; `fix(ui): gate dev gallery out of production`; `refactor(ui): tokenize control/overlay px`; `fix(ui): toast announce by variant`; `docs(reports): correct W13 QA claims`.
