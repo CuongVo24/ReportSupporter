@@ -66,6 +66,6 @@ Bootstrap **UI stack** (Radix headless + Lucide, exact pin) + convention `src/co
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. ⚠️ Approval bao gồm cài Radix×4 + `lucide-react` (exact pin, runtime). Đề xuất commit: `chore(ui): bootstrap ui/ + add radix+lucide (exact pin)`; `feat(ui): add Button primitive (variants/states/a11y)`; `feat(ui): add Badge primitive (severity/readiness/status)`; `docs(ui): commit w13a contract`.

@@ -217,6 +217,19 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-z-modal` | `400` | Dialog metadata, confirm export |
 | `--rs-z-toast` | `500` | Thông báo autosave / export done |
 
+### 4.5. Control heights & overlay dimensions
+
+| Token | Giá trị | Vai trò |
+| :--- | :--- | :--- |
+| `--rs-control-height-md` | `36px` | Chiều cao chuẩn của button, input, select |
+| `--rs-control-height-sm` | `28px` | Chiều cao nhỏ của button, select, segmented tabs |
+| `--rs-textarea-min-height` | `80px` | Chiều cao tối thiểu của textarea |
+| `--rs-overlay-width-lg` | `520px` | Chiều rộng tối đa của Dialog modal |
+| `--rs-overlay-width-md` | `460px` | Chiều rộng tối đa của Dialog drawer |
+| `--rs-overlay-width-sm` | `400px` | Chiều rộng tối đa của Dialog confirm |
+| `--rs-toast-width` | `380px` | Chiều rộng của Toast viewport |
+| `--rs-font-size-xxs` | `10px` | Cỡ chữ siêu nhỏ của Tab count badge |
+
 ---
 
 ## 5. 📄 A4 LAYOUT TOKENS (Report Output)
