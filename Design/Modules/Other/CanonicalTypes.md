@@ -367,7 +367,7 @@ export type SlideOutline = {
   bullets: string[];
   speakerId?: string;
   evidenceRefs: string[];
-  estimatedSeconds?: number;
+  brokenEvidenceNotes?: string[];
 };
 
 export type PresentationTimeline = {

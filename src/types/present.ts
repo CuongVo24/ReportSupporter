@@ -8,7 +8,7 @@ export const slideOutlineSchema = z.object({
   bullets: z.array(z.string()),
   speakerId: z.string().optional(),
   evidenceRefs: z.array(z.string()),
-  estimatedSeconds: z.number().int().positive().optional(),
+  brokenEvidenceNotes: z.array(z.string()).optional(),
 });
 
 export type SlideOutline = z.infer<typeof slideOutlineSchema>;
