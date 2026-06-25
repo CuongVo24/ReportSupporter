@@ -120,15 +120,18 @@ export function SubmissionPanel({
                 }`}
               >
                 {item.done ? (
-                  <svg className="ws-submission-checklist-icon" style={{ color: "var(--rs-color-success)" }} viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="ws-submission-checklist-icon" aria-hidden="true" style={{ color: "var(--rs-color-success)" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 ) : (
-                  <svg className="ws-submission-checklist-icon" style={{ color: item.severity === "error" ? "var(--rs-color-severity-error)" : "var(--rs-color-severity-warning)" }} viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="ws-submission-checklist-icon" aria-hidden="true" style={{ color: item.severity === "error" ? "var(--rs-color-severity-error)" : "var(--rs-color-severity-warning)" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 )}
                 <div className="ws-submission-checklist-content">
+                  <span className="ws-visually-hidden">
+                    {item.done ? "Đạt" : item.severity === "error" ? "Chưa đạt — lỗi" : "Chưa đạt — cảnh báo"}
+                  </span>
                   <span className="ws-submission-checklist-label">{item.label}</span>
                   <span className="ws-submission-checklist-detail">{item.detail}</span>
                 </div>

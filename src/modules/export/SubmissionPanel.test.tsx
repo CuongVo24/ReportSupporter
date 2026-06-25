@@ -82,6 +82,24 @@ describe("SubmissionPanel component structure", () => {
     expect(downloadButton.type).toBe("button");
     expect(downloadButton.props.className).toBe("ws-submission-btn");
     expect(downloadButton.props.children).toBe("Tải về evidence.zip");
+
+    // Verify accessibility (a11y) requirements
+    const checklistUl = checklistContainer.props.children[1];
+    expect(checklistUl.type).toBe("ul");
+    const items = checklistUl.props.children;
+    expect(items).toBeInstanceOf(Array);
+    
+    const firstItem = items[0];
+    expect(firstItem.type).toBe("li");
+    
+    const svgEl = firstItem.props.children[0];
+    expect(svgEl.props["aria-hidden"]).toBe("true");
+
+    const contentEl = firstItem.props.children[1];
+    expect(contentEl.props.className).toBe("ws-submission-checklist-content");
+    const hiddenLabel = contentEl.props.children[0];
+    expect(hiddenLabel.props.className).toBe("ws-visually-hidden");
+    expect(hiddenLabel.props.children).toBe("Đạt");
   });
 
   it("renders the checklist warning and packages warning when conditions require it", () => {
