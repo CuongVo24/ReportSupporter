@@ -1,6 +1,4 @@
 import type { CheckResult, ReportProjectBundle, ExportTarget, SubmissionChecklistItem } from "@/types";
-import { getTemplate } from "@/modules/write";
-import { kindMeta } from "@/modules/evidence";
 import type { DocxLayoutCheck } from "./docx-layout-checklist";
 
 /**
@@ -14,7 +12,7 @@ export function buildSubmissionChecklist(input: {
   bundle: ReportProjectBundle;
   readinessThreshold?: number;
 }): SubmissionChecklistItem[] {
-  const { check, docxLayout, exportedTargets, bundle, readinessThreshold } = input;
+  const { check, docxLayout, exportedTargets, readinessThreshold } = input;
   const threshold = readinessThreshold !== undefined ? readinessThreshold : 80;
   const checklist: SubmissionChecklistItem[] = [];
 
@@ -42,11 +40,8 @@ export function buildSubmissionChecklist(input: {
   });
 
   // 3. Đầy đủ minh chứng bắt buộc (required-evidence)
-  const template = getTemplate(bundle.project?.templateId || "");
-  const requiredKinds = template?.requiredEvidenceKinds || [];
-  const providedKinds = new Set((bundle.evidence || []).map((e) => e.kind));
-  const missingKinds = requiredKinds.filter((kind) => !providedKinds.has(kind));
-  const isEvidenceDone = missingKinds.length === 0;
+  const missingEvidence = check.issues.filter((i) => i.id === "missing-required-evidence");
+  const isEvidenceDone = missingEvidence.length === 0;
   
   checklist.push({
     id: "required-evidence",
@@ -54,7 +49,7 @@ export function buildSubmissionChecklist(input: {
     done: isEvidenceDone,
     detail: isEvidenceDone
       ? "Đầy đủ minh chứng bắt buộc theo yêu cầu của mẫu báo cáo."
-      : `Thiếu các minh chứng bắt buộc: ${missingKinds.map((k) => kindMeta[k]?.label || k).join(", ")}.`,
+      : missingEvidence.map((i) => i.message).join("; "),
     severity: isEvidenceDone ? undefined : "error",
   });
 

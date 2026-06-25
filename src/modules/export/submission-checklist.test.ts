@@ -126,26 +126,30 @@ describe("buildSubmissionChecklist", () => {
   });
 
   it("should fail required-evidence check if required evidence kinds are missing", () => {
-    const incompleteEvidenceBundle: ReportProjectBundle = {
-      ...mockBundle,
-      evidence: [
-        { id: "ev1", kind: "github", title: "Mã nguồn", url: "https://github.com", qrEnabled: true, createdAt: "2026" },
+    const incompleteCheck: CheckResult = {
+      ...mockCheck,
+      issues: [
+        {
+          id: "missing-required-evidence",
+          severity: "error",
+          module: "check",
+          message: "Thêm minh chứng bắt buộc trong Evidence Kit (GitHub/demo/deploy/video). Missing kind: video.",
+          suggestion: "Vui lòng thêm một minh chứng loại video trong danh sách Evidence Kit.",
+        },
       ],
     };
 
     const checklist = buildSubmissionChecklist({
-      check: mockCheck,
+      check: incompleteCheck,
       docxLayout: mockDocxLayout,
       exportedTargets: mockExportedTargets,
-      bundle: incompleteEvidenceBundle,
+      bundle: mockBundle,
     });
 
     const item = checklist.find((i) => i.id === "required-evidence");
     expect(item?.done).toBe(false);
     expect(item?.severity).toBe("error");
-    expect(item?.detail).toContain("Thiếu các minh chứng bắt buộc");
-    expect(item?.detail).toContain("Video demo");
-    expect(item?.detail).toContain("Bản triển khai (Deploy)");
+    expect(item?.detail).toContain("Missing kind: video");
   });
 
   it("should fail docx-layout check if any layout checks are not ok", () => {
