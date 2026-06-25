@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ALL_TEMPLATES, buildInitialSections } from "@/modules/write";
-import { generateSlideOutline, buildTimeline, buildSpeakers, assignSlides } from "./index";
+import { generateSlideOutline, buildTimeline, buildSpeakers, assignSlides, generateSpeakerScript, generateDefenseQA, buildWeakSectionHints } from "./index";
 import type { ReportProjectBundle } from "@/types";
 
 describe("Present Module Integration Tests (multi-template)", () => {
@@ -119,5 +119,76 @@ describe("Present Module Integration Tests (multi-template)", () => {
     expect(slides[0].evidenceRefs).toHaveLength(0); // Omitted from evidenceRefs
     expect(slides[0].bullets).not.toContain("[Cảnh báo: Minh chứng đã bị xóa]");
     expect(slides[0].brokenEvidenceNotes).toEqual(["[Cảnh báo: Minh chứng đã bị xóa]"]);
+  });
+
+  it("should integrate Speaker Script, Defense Q&A, and Weak-Section Hints cleanly in the pipeline", () => {
+    const sections = [
+      {
+        id: "sec-1",
+        order: 1,
+        title: "Introduction",
+        status: "draft" as const,
+        markdown: "# 1. Mở đầu\n\nMục tiêu của đề tài là xây dựng hệ thống báo cáo.\n\n## 1.1 Sơ đồ kiến trúc (Hình 1.1)\n\nXem quy trình tại sơ đồ.",
+      },
+      {
+        id: "sec-2",
+        order: 2,
+        title: "Deployment",
+        status: "draft" as const,
+        markdown: "# 2. Triển khai\n\nChúng tôi thực hiện deploy ứng dụng lên Vercel. Có một số hạn chế về dung lượng cơ sở dữ liệu. Hướng phát triển là tối ưu hóa truy vấn.",
+      },
+    ];
+
+    const evidence = [
+      {
+        id: "ev-1",
+        kind: "deploy" as const,
+        title: "Link Deploy",
+        url: "https://my-app.vercel.app",
+        qrEnabled: true,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    const checkResult = {
+      issues: [
+        {
+          id: "issue-1",
+          severity: "warning" as const,
+          module: "check" as const,
+          message: "Lỗi cảnh báo",
+          suggestion: "Sửa lỗi cảnh báo",
+          sectionId: "sec-2",
+        },
+      ],
+      grouped: { error: [], warning: [], info: [] },
+      readinessScore: 80,
+      ranAt: new Date().toISOString(),
+    };
+
+    // 1. Generate outlines
+    const outlines = generateSlideOutline(sections, evidence);
+    
+    // 2. Generate speaker scripts
+    const scripts = generateSpeakerScript(outlines, evidence);
+    expect(scripts).toHaveLength(outlines.length);
+    const slide1_1 = scripts.find((s) => s.slideId.includes("slide-1"));
+    if (slide1_1) {
+      expect(slide1_1.cues).toContain("chỉ vào Hình 1.1");
+    }
+
+    // 3. Generate Q&As
+    const qas = generateDefenseQA(sections, evidence);
+    expect(qas.length).toBeGreaterThan(0);
+    const techQA = qas.find((q) => q.topic === "tech" && q.relatedSectionId === "sec-2");
+    expect(techQA).toBeDefined();
+    expect(techQA!.question).toContain("Quy trình triển khai");
+    expect(techQA!.suggestedAnswer).toContain("Link Deploy");
+
+    // 4. Generate Weak-Section Hints
+    const hints = buildWeakSectionHints(checkResult, outlines);
+    expect(hints).toHaveLength(1);
+    expect(hints[0].sectionId).toBe("sec-2");
+    expect(hints[0].severity).toBe("warning");
   });
 });
