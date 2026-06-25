@@ -31,13 +31,13 @@ Tạo **Speaker[]** từ `project.metadata.members` và **gán slide cho speaker
 - ❌ Đổi shape `ReportProject`/metadata; dep mới.
 
 ## 3. Checklist
-- [ ] `Speaker` thêm CanonicalTypes §9 + `@/types`.
-- [ ] `buildSpeakers`: normalize `metadata.members` (string|string[]); rỗng → fallback an toàn.
-- [ ] `assignSlides`: chia đều, set `speakerId` + `assignedSlideIds`, immutable.
-- [ ] Thiếu members → không crash; slide không speaker để trống.
-- [ ] Deterministic.
-- [ ] `speakers.test.ts` phủ k-members/assign/empty/deterministic/immutable.
-- [ ] ≤200 dòng/file; 4 gates xanh.
+- [x] `Speaker` thêm CanonicalTypes §9 + `@/types`.
+- [x] `buildSpeakers`: normalize `metadata.members` (string|string[]); rỗng → fallback an toàn.
+- [x] `assignSlides`: chia đều, set `speakerId` + `assignedSlideIds`, immutable.
+- [x] Thiếu members → không crash; slide không speaker để trống.
+- [x] Deterministic.
+- [x] `speakers.test.ts` phủ k-members/assign/empty/deterministic/immutable.
+- [x] ≤200 dòng/file; 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -79,6 +79,6 @@ export function assignSlides(speakers: Speaker[], outline: SlideOutline[]): { sp
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(present): speaker assignment from project members`; +1 docs commit.
