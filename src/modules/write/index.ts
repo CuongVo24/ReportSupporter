@@ -22,4 +22,6 @@ export { buildInitialSections } from "./buildInitialSections";
 export { loadAiConfig, saveAiConfig, isAiReady, isAiUnconfigured, isAiDisabled, DEFAULT_AI_CONFIG } from "./ai/ai-config";
 export { requestSuggestion, getGatewayState, registerAdapter } from "./ai/ai-gateway";
 export type { AiAdapter } from "./ai/ai-gateway";
+export { rewriteSection } from "./ai/rewrite-section";
+export { SuggestionDiff } from "./ai/SuggestionDiff";
 
