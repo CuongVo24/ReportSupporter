@@ -1,4 +1,5 @@
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
+import { EmptyState } from "@/components/states";
 
 export function ExportPanel({
   bundle,
@@ -124,9 +125,16 @@ export function ExportPanel({
         </div>
       </div>
 
-      {jobs.length > 0 && (
-        <div className="ws-export-jobs-container">
-          <h4 className="ws-export-section-subtitle">Lịch sử xuất bản</h4>
+      <div className="ws-export-jobs-container">
+        <h4 className="ws-export-section-subtitle">Lịch sử xuất bản</h4>
+        {jobs.length === 0 ? (
+          <div style={{ marginTop: "var(--rs-space-2)" }}>
+            <EmptyState
+              title="Chưa có lịch sử xuất bản"
+              message="Lịch sử các tệp tin đã xuất bản (HTML, PDF, DOCX) trong phiên này sẽ hiển thị ở đây."
+            />
+          </div>
+        ) : (
           <ul className="ws-export-jobs-list">
             {jobs.map((job) => (
               <li key={job.id} className={`ws-export-job ws-export-job-${job.status}`}>
@@ -158,8 +166,8 @@ export function ExportPanel({
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

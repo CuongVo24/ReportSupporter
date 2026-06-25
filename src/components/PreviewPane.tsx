@@ -8,6 +8,7 @@ import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as E
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem, CaptionEntry } from "@/types";
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
+import { EmptyState } from "@/components/states";
 
 type PreviewPaneProps = {
   markdown: string;
@@ -311,7 +312,11 @@ export function PreviewPane({
   }, [evidence]);
 
   if (!hasContent) {
-    return <div className="ws-preview-empty">Chưa có nội dung xem trước.</div>;
+    return (
+      <div className="ws-preview-container-empty" style={{ padding: "var(--rs-space-4)" }}>
+        <EmptyState title="Chưa có nội dung xem trước" message="Viết nội dung trong editor để bắt đầu hiển thị bản in thử." />
+      </div>
+    );
   }
 
   // Render cursor to track heading index across parts

@@ -2,6 +2,7 @@
 // A11y: severity carries an icon + text label, not color alone; keyboard-reachable jump triggers.
 import type { CheckResult, ReportIssueSeverity } from "@/types";
 import { ReadinessBadge } from "./ReadinessBadge";
+import { EmptyState, SuccessState } from "@/components/states";
 
 type CheckerPanelProps = {
   result: CheckResult;
@@ -29,11 +30,27 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
         </button>
       </div>
 
+      {!hasRun && (
+        <div style={{ marginTop: "var(--rs-space-4)" }}>
+          <EmptyState
+            title="Chưa chạy kiểm tra"
+            message="Chạy kiểm tra để rà soát lỗi định dạng và tính nhất quán của báo cáo."
+            actionLabel="Bắt đầu kiểm tra"
+            onAction={onRun}
+          />
+        </div>
+      )}
+
       {hasRun && (
         <>
           <ReadinessBadge score={result.readinessScore} />
           {issues.length === 0 && (
-            <p className="ws-checker-empty">Không phát hiện vấn đề.</p>
+            <div style={{ marginTop: "var(--rs-space-4)" }}>
+              <SuccessState
+                title="Báo cáo hoàn hảo!"
+                message="Không phát hiện bất kỳ lỗi định dạng hay lỗi cấu trúc nào."
+              />
+            </div>
           )}
         </>
       )}
