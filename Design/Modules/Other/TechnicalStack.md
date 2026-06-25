@@ -156,6 +156,7 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | **W3 (Format/Check)** | *(không cài lib mới — pipeline đã đủ ở W2)* | Format (numbering/TOC/caption) & Checker engine đọc AST từ pipeline W2; không thêm dependency. |
 | **W4 (Export)** | `docx` | HTML + browser-print PDF first path; DOCX basic editable. Puppeteer chưa cài trong MVP nếu chưa có Contract hardening. |
 | **Phase 2 (W5)** | `qrcode` | Evidence Kit QR (deferred). |
+| **W8 (Submission)** | `jszip` | Đóng gói bộ nộp bài thành file zip chứa các file xuất bản và phụ lục minh chứng |
 | **Export hardening (later)** | `puppeteer` | Worker/service riêng cho PDF chính xác hơn khi browser print không đủ. |
 | **Phase 3** | `pptxgenjs`, `playwright` | Present export + E2E (deferred). |
 

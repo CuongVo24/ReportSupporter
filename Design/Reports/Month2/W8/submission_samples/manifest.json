@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-06-25T07:12:00.000Z",
+  "projectTitle": "Báo cáo thử nghiệm hệ thống ReportSupporter",
+  "files": [
+    {
+      "name": "README.md",
+      "target": "readme"
+    },
+    {
+      "name": "evidence/appendix.md",
+      "target": "evidence"
+    },
+    {
+      "name": "report.html",
+      "target": "html"
+    },
+    {
+      "name": "report.pdf",
+      "target": "pdf"
+    },
+    {
+      "name": "report.docx",
+      "target": "docx"
+    }
+  ],
+  "evidenceCount": 3
+}

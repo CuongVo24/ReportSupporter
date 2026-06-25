@@ -85,6 +85,6 @@ export function buildSubmissionChecklist(input: {
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(export): final submission checklist aggregating readiness/evidence/docx/export`; +1 docs commit.
