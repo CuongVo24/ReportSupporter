@@ -40,22 +40,10 @@ export async function putRawBundle(value: unknown): Promise<void> {
   await db.put(STORE, value, CURRENT_KEY);
 }
 
-/** Append a record to export history store. */
-export async function appendExportHistory(entry: unknown): Promise<void> {
-  const db = await getDb();
-  await db.put("export-history", entry);
-}
-
 /** Get all records from export history store. Returns raw array. Caller validates. */
 export async function getExportHistory(): Promise<unknown[]> {
   const db = await getDb();
   return db.getAll("export-history");
-}
-
-/** Delete a record from export history store by its ID. */
-export async function deleteExportHistory(id: string): Promise<void> {
-  const db = await getDb();
-  await db.delete("export-history", id);
 }
 
 /** Clear all records from export history. */
