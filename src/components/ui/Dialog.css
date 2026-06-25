@@ -1,0 +1,172 @@
+/* ===== Dialog / Modal / Drawer Styles ===== */
+
+/* Backdrop overlay */
+.ws-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  z-index: var(--rs-z-overlay);
+  animation: ws-dialog-fade-in 180ms ease-out;
+}
+
+/* Dialog content base */
+.ws-dialog-content {
+  position: fixed;
+  background-color: var(--rs-color-surface);
+  box-shadow: var(--rs-elevation-3);
+  z-index: var(--rs-z-modal);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+
+/* Modal Variant */
+.ws-dialog-content-modal {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 520px;
+  border-radius: var(--rs-radius-lg);
+  padding: var(--rs-space-6);
+  animation: ws-dialog-modal-show 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Confirm Variant */
+.ws-dialog-content-confirm {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 400px;
+  border-radius: var(--rs-radius-md);
+  padding: var(--rs-space-5);
+  animation: ws-dialog-modal-show 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Drawer Variant */
+.ws-dialog-content-drawer {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  max-width: 460px;
+  height: 100vh;
+  padding: var(--rs-space-6);
+  animation: ws-dialog-drawer-show 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Header & Title */
+.ws-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--rs-space-4);
+  margin-bottom: var(--rs-space-3);
+  width: 100%;
+}
+
+.ws-dialog-title {
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xl);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.ws-dialog-close-btn {
+  border: none;
+  background: transparent;
+  padding: var(--rs-space-1);
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+  flex-shrink: 0;
+}
+
+.ws-dialog-close-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text);
+}
+
+.ws-dialog-close-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 2px;
+}
+
+.ws-dialog-close-icon {
+  width: var(--rs-space-4);
+  height: var(--rs-space-4);
+}
+
+/* Description */
+.ws-dialog-description {
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  margin: 0 0 var(--rs-space-4) 0;
+  line-height: var(--rs-font-lh-ui);
+}
+
+/* Body & Footer */
+.ws-dialog-body {
+  flex: 1;
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  color: var(--rs-color-text);
+  line-height: var(--rs-font-lh-ui);
+  overflow-y: auto;
+}
+
+.ws-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--rs-space-3);
+  margin-top: var(--rs-space-6);
+  flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes ws-dialog-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ws-dialog-modal-show {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes ws-dialog-drawer-show {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .ws-dialog-overlay,
+  .ws-dialog-content {
+    animation: none !important;
+  }
+  
+  .ws-dialog-content-modal,
+  .ws-dialog-content-confirm {
+    transform: translate(-50%, -50%) !important;
+  }
+}
