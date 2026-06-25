@@ -1,0 +1,116 @@
+/* ===== Badge Primitive Styles ===== */
+
+.ws-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  line-height: 1;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid transparent;
+  gap: var(--rs-space-1);
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+/* Icon style */
+.ws-badge-icon {
+  width: var(--rs-space-3);
+  height: var(--rs-space-3);
+  flex-shrink: 0;
+}
+
+/* Text label style */
+.ws-badge-text {
+  display: inline-block;
+}
+
+/* Severity Group Variants */
+.ws-badge-severity-error {
+  background-color: var(--rs-color-severity-error-bg);
+  color: var(--rs-color-severity-error);
+  border-color: var(--rs-color-severity-error);
+}
+
+.ws-badge-severity-warning {
+  background-color: var(--rs-color-severity-warning-bg);
+  color: var(--rs-color-severity-warning);
+  border-color: var(--rs-color-severity-warning);
+}
+
+.ws-badge-severity-info {
+  background-color: var(--rs-color-severity-info-bg);
+  color: var(--rs-color-severity-info);
+  border-color: var(--rs-color-severity-info);
+}
+
+/* Readiness Group Variants */
+.ws-badge-readiness-good {
+  background-color: var(--rs-color-success-bg);
+  color: var(--rs-color-readiness-good);
+  border-color: var(--rs-color-readiness-good);
+}
+
+.ws-badge-readiness-medium {
+  background-color: var(--rs-color-severity-warning-bg);
+  color: var(--rs-color-readiness-medium);
+  border-color: var(--rs-color-readiness-medium);
+}
+
+.ws-badge-readiness-low {
+  background-color: var(--rs-color-severity-error-bg);
+  color: var(--rs-color-readiness-low);
+  border-color: var(--rs-color-readiness-low);
+}
+
+/* Status Group Variants */
+.ws-badge-status-draft {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  border-color: var(--rs-color-border);
+}
+
+.ws-badge-status-review {
+  background-color: var(--rs-color-severity-info-bg);
+  color: var(--rs-color-severity-info);
+  border-color: var(--rs-color-severity-info);
+}
+
+.ws-badge-status-done {
+  background-color: var(--rs-color-success-bg);
+  color: var(--rs-color-success);
+  border-color: var(--rs-color-success);
+}
+
+/* Clickable Badge Modifiers */
+.ws-badge-clickable {
+  cursor: pointer;
+  background-clip: padding-box;
+  transition: opacity 130ms ease-out, border-color 130ms ease-out, box-shadow 130ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-badge-clickable {
+    transition: none;
+  }
+}
+
+.ws-badge-clickable:hover {
+  opacity: 0.85;
+}
+
+.ws-badge-clickable:active,
+.ws-badge-clickable.ws-badge-active {
+  box-shadow: 0 0 0 1px var(--rs-color-primary);
+  border-color: var(--rs-color-primary);
+  opacity: 1;
+}
+
+.ws-badge-clickable:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 2px;
+}

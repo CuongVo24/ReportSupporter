@@ -34,9 +34,16 @@
   --rs-color-severity-warning: var(--rs-amber-500);
   --rs-color-severity-info: var(--rs-sky-600);
 
-  /* Background tints for success/error states */
+  /* Background tints for success/error/warning/info states */
   --rs-color-success-bg: #f0fdf4;
   --rs-color-error-bg: #fef2f2;
+  --rs-color-severity-warning-bg: #fffbeb;
+  --rs-color-severity-info-bg: #f0f9ff;
+
+  /* Readiness score tokens (DesignSystem §2.4) */
+  --rs-color-readiness-good: var(--rs-color-success);
+  --rs-color-readiness-medium: var(--rs-color-severity-warning);
+  --rs-color-readiness-low: var(--rs-color-severity-error);
 
   /* Spacing — 4px grid (DesignSystem §4.1) */
   --rs-space-1: 4px;
