@@ -11,20 +11,20 @@ import type { ReportProjectBundle, ExportTarget, SubmissionPackage, PackageManif
 export async function buildSubmissionZip(input: {
   bundle: ReportProjectBundle;
   exports: Partial<Record<ExportTarget, Blob>>;
-  readmeMarkdown?: string | null;
-  evidenceAppendixMarkdown?: string | null;
+  readmeMarkdown: string;
+  evidenceAppendixMarkdown: string;
 }): Promise<SubmissionPackage> {
   const zip = new JSZip();
   const files: { name: string; target: ExportTarget | "readme" | "evidence" }[] = [];
 
   // 1. Add README.md if provided
-  if (input.readmeMarkdown !== undefined && input.readmeMarkdown !== null) {
+  if (input.readmeMarkdown) {
     zip.file("README.md", input.readmeMarkdown);
     files.push({ name: "README.md", target: "readme" });
   }
 
   // 2. Add evidence/appendix.md if provided
-  if (input.evidenceAppendixMarkdown !== undefined && input.evidenceAppendixMarkdown !== null) {
+  if (input.evidenceAppendixMarkdown) {
     zip.file("evidence/appendix.md", input.evidenceAppendixMarkdown);
     files.push({ name: "evidence/appendix.md", target: "evidence" });
   }

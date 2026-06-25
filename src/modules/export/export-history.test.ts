@@ -24,6 +24,9 @@ vi.mock("@/lib/idb-client", () => {
     clearExportHistory: vi.fn(async () => {
       store = [];
     }),
+    replaceExportHistory: vi.fn(async (entries: unknown[]) => {
+      store = [...entries];
+    }),
     __setStore: (newStore: unknown[]) => {
       store = newStore;
     },
@@ -109,9 +112,17 @@ describe("export-history", () => {
     await recordExport(baseJob);
 
     const raw = await idbClient.getExportHistory();
-    expect(raw).toHaveLength(2);
+    expect(raw).toHaveLength(1);
     expect(raw.find((item) => (item as { id?: string }).id === "invalid-1")).toBeUndefined();
     expect(raw.find((item) => (item as { id?: string }).id === "job-1")).toBeDefined();
+  });
+
+  it("should perform only a single write operation during recordExport", async () => {
+    const replaceSpy = vi.spyOn(idbClient, "replaceExportHistory");
+    replaceSpy.mockClear();
+    await recordExport(baseJob);
+    expect(replaceSpy).toHaveBeenCalledTimes(1);
+    replaceSpy.mockRestore();
   });
 
   it("should clear all records from history", async () => {
