@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo đồ án phần mềm</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
+  <style>
+    @media print {
+  @page {
+    size: A4;
+    margin: 20mm 20mm 20mm 30mm;
+    
+    
+  }
+  @page :first {
+    @top-center { content: none !important; }
+    @bottom-center { content: none !important; }
+  }
+  body { font-family: "Times New Roman", Times, serif; font-size: 13pt; line-height: 1.5; color: #000; background: #fff; margin: 0; padding: 0; }
+  p, li { text-align: justify; orphans: 3; widows: 3; }
+  li { page-break-inside: avoid; break-inside: avoid; }
+  h1, h2, h3, h4, h5, h6 { font-family: "Times New Roman", Times, serif; color: #000; page-break-after: avoid; break-after: avoid; }
+  h1 { font-size: 18pt; text-align: center; margin-top: 0; margin-bottom: 20pt; page-break-before: always; break-before: page; }
+  .report-body > h1:first-of-type { page-break-before: avoid !important; break-before: avoid !important; }
+  h2 { font-size: 14pt; margin-top: 24pt; margin-bottom: 12pt; }
+  h3 { font-size: 13pt; margin-top: 18pt; margin-bottom: 6pt; }
+  .cover-page {
+    page-break-before: avoid; break-before: avoid; page-break-after: always; break-after: page;
+    height: 90vh; box-sizing: border-box; display: flex; flex-direction: column;
+    justify-content: space-between; align-items: center; text-align: center; padding: 20mm 0;
+  }
+  .page-break { page-break-before: always; break-before: page; }
+  figure, img, table, .ws-toc-container { page-break-inside: avoid; break-inside: avoid; }
+  .fig-caption, .tbl-caption { page-break-inside: avoid; break-inside: avoid; }
+  .fig-caption { page-break-before: avoid; break-before: avoid; }
+  .tbl-caption { page-break-after: avoid; break-after: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 15pt 0; }
+  table, th, td { border: 1px solid #000; }
+  th, td { padding: 6pt; text-align: left; }
+  img[alt^="QR:"] { width: 80pt; height: 80pt; vertical-align: middle; }
+}
+@media screen {
+  body { font-family: "Times New Roman", Times, serif; font-size: 14px; line-height: 1.5; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f4f4f4; color: #333; }
+  .cover-page, .ws-toc-container, .ws-preview-html-section, section { background: #fff; padding: 40px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .page-break { border-top: 1px dashed #ccc; margin: 40px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+  table, th, td { border: 1px solid #ddd; }
+  th, td { padding: 8px; text-align: left; }
+  th { background: #f9f9f9; }
+  img[alt^="QR:"] { width: 100px; height: 100px; vertical-align: middle; }
+}
+/* Common cover page styling */
+.cover-page { text-align: center; font-family: "Times New Roman", Times, serif; }
+.cover-school { font-size: 16pt; font-weight: bold; text-transform: uppercase; }
+.cover-divider { width: 150px; height: 2px; background: #000; margin: 10px auto 40px; }
+.cover-title-container { margin: 80px 0; }
+.cover-title { font-size: 24pt; font-weight: bold; text-transform: uppercase; line-height: 1.3; }
+.cover-course { font-size: 14pt; font-weight: bold; margin-bottom: 40px; }
+.cover-info { margin: 60px auto; max-width: 400px; text-align: left; font-size: 13pt; line-height: 1.6; }
+.cover-members-list { margin: 5px 0 0 20px; padding: 0; }
+.cover-date { margin-top: auto; font-size: 13pt; }
+/* Table of Contents styling */
+.ws-toc-container { font-family: "Times New Roman", Times, serif; }
+.ws-toc-title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 20px; }
+.ws-toc-list { list-style: none; padding: 0; margin: 0; }
+.ws-toc-item { margin-bottom: 8px; }
+.ws-toc-link { display: flex; justify-content: space-between; text-decoration: none; color: #000; }
+.ws-toc-link:hover { text-decoration: underline; }
+.ws-toc-level-2 { padding-left: 20px; }
+.ws-toc-level-3 { padding-left: 40px; }
+  </style>
+</head>
+<body>
+  <div class="cover-page">
+  
+  
+  <div class="cover-title-container">
+    <h1 class="cover-title">Báo cáo đồ án phần mềm</h1>
+  </div>
+  
+  <div class="cover-info">
+    
+    
+  </div>
+  <div class="cover-date">25 tháng 6, 2026</div>
+</div>
+<div class="page-break"></div>
+  
+        <div class="ws-toc-container">
+          <div class="ws-toc-title">Mục lục</div>
+          
+          <ul class="ws-toc-list">
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#1-mo-dau" class="ws-toc-link">
+                  <span class="ws-toc-number">1</span>
+                  <span class="ws-toc-text">Mở đầu</span>
+                </a>
+                
+              </li>
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#2-thanh-vien-phan-cong" class="ws-toc-link">
+                  <span class="ws-toc-number">2</span>
+                  <span class="ws-toc-text">Thành viên & Phân công</span>
+                </a>
+                
+              </li>
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#3-trien-khai" class="ws-toc-link">
+                  <span class="ws-toc-number">3</span>
+                  <span class="ws-toc-text">Triển khai</span>
+                </a>
+                
+              </li>
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#4-kiem-thu" class="ws-toc-link">
+                  <span class="ws-toc-number">4</span>
+                  <span class="ws-toc-text">Kiểm thử</span>
+                </a>
+                
+              </li>
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#5-ket-luan" class="ws-toc-link">
+                  <span class="ws-toc-number">5</span>
+                  <span class="ws-toc-text">Kết luận</span>
+                </a>
+                
+              </li>
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#6-tai-lieu-tham-khao" class="ws-toc-link">
+                  <span class="ws-toc-number">6</span>
+                  <span class="ws-toc-text">Tài liệu tham khảo</span>
+                </a>
+                
+              </li>
+            
+              <li class="ws-toc-item ws-toc-level-1">
+                <a href="#7-minh-chung" class="ws-toc-link">
+                  <span class="ws-toc-number">7</span>
+                  <span class="ws-toc-text">Minh chứng</span>
+                </a>
+                
+              </li>
+            
+          </ul>
+        
+        </div>
+        <div class="page-break"></div>
+      
+  <div class="report-body">
+    <h1 id="user-content-1-mo-dau">1 Mở đầu</h1>
+<p>Giới thiệu bối cảnh, mục tiêu và phạm vi đề tài.</p>
+<h1 id="user-content-2-thanh-vien-phan-cong">2 Thành viên &#x26; Phân công</h1>
+<table id="user-content-table-1">
+<thead>
+<tr>
+<th>Thành viên</th>
+<th>Vai trò</th>
+<th>Nhiệm vụ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<h1 id="user-content-3-trien-khai">3 Triển khai</h1>
+<p>Mô tả kiến trúc, công nghệ và cách hiện thực.</p>
+<h1 id="user-content-4-kiem-thu">4 Kiểm thử</h1>
+<p>Kịch bản kiểm thử và kết quả.</p>
+<h1 id="user-content-5-ket-luan">5 Kết luận</h1>
+<p>Tổng kết kết quả đạt được và hướng phát triển.</p>
+<h1 id="user-content-6-tai-lieu-tham-khao">6 Tài liệu tham khảo</h1>
+<ol>
+<li>...</li>
+</ol>
+<h1 id="user-content-7-minh-chung">7 Minh chứng</h1>
+<p>Liên kết GitHub, video demo, deploy.</p>
+  </div>
+
+  <!-- Mermaid Client-side Renderer -->
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
+</body>
+</html>

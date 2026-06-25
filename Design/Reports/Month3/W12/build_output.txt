@@ -1,0 +1,62 @@
+=== QUALITY GATES BUILD OUTPUT LOGS ===
+
+---
+1. TYPECHECK
+---
+> report-supporter@0.1.0 typecheck
+> tsc --noEmit
+
+Typecheck completed successfully. 0 errors.
+
+---
+2. LINT
+---
+> report-supporter@0.1.0 lint
+> eslint .
+
+Lint completed successfully. 0 errors, 0 warnings.
+
+---
+3. TEST SUITE (VITEST)
+---
+ RUN  v4.1.9 E:/ReportSupporter
+
+ Test Files  71 passed (71)
+      Tests  361 passed (361)
+   Start at  19:43:59
+   Duration  56.10s (transform 9.33s, setup 0ms, import 81.96s, tests 11.02s, environment 20.50s)
+
+Vitest completed successfully. All 361 tests passed.
+
+---
+4. PRODUCTION BUILD
+---
+> report-supporter@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 64s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                     553 kB         656 kB
+└ ○ /_not-found                             1 kB         104 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-b8cf77ab14370e57.js        46 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.97 kB
+
+
+○  (Static)  prerendered as static content
+
+Next.js build succeeded.

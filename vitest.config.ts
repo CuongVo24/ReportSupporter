@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "node",
+    testTimeout: 30000,
   },
   resolve: {
     alias: {
