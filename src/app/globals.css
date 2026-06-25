@@ -92,6 +92,16 @@
   --rs-z-overlay: 180;
   --rs-z-modal: 200;
   --rs-z-toast: 300;
+
+  /* Control heights & overlay dimensions (DesignSystem §4.5) */
+  --rs-control-height-md: 36px;
+  --rs-control-height-sm: 28px;
+  --rs-textarea-min-height: 80px;
+  --rs-overlay-width-lg: 520px;
+  --rs-overlay-width-md: 460px;
+  --rs-overlay-width-sm: 400px;
+  --rs-toast-width: 380px;
+  --rs-font-size-xxs: 10px;
 }
 
 * {

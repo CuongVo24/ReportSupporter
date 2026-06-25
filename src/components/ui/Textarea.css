@@ -54,7 +54,7 @@
   font-size: var(--rs-font-size-md);
   color: var(--rs-color-text);
   padding: var(--rs-space-2) var(--rs-space-3);
-  min-height: 80px;
+  min-height: var(--rs-textarea-min-height);
   width: 100%;
   outline: none;
   resize: vertical;

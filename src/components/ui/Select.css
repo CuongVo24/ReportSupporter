@@ -44,12 +44,12 @@
 
 /* Sizes */
 .ws-select-trigger-md {
-  height: 36px;
+  height: var(--rs-control-height-md);
   padding: var(--rs-space-2) var(--rs-space-3);
 }
 
 .ws-select-trigger-sm {
-  height: 28px;
+  height: var(--rs-control-height-sm);
   padding: var(--rs-space-1) var(--rs-space-2);
   font-size: var(--rs-font-size-sm);
 }

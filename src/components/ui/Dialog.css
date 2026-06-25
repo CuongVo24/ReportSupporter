@@ -27,7 +27,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90vw;
-  max-width: 520px;
+  max-width: var(--rs-overlay-width-lg);
   border-radius: var(--rs-radius-lg);
   padding: var(--rs-space-6);
   animation: ws-dialog-modal-show 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -39,7 +39,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90vw;
-  max-width: 400px;
+  max-width: var(--rs-overlay-width-sm);
   border-radius: var(--rs-radius-md);
   padding: var(--rs-space-5);
   animation: ws-dialog-modal-show 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -51,7 +51,7 @@
   right: 0;
   bottom: 0;
   width: 100vw;
-  max-width: 460px;
+  max-width: var(--rs-overlay-width-md);
   height: 100vh;
   padding: var(--rs-space-6);
   animation: ws-dialog-drawer-show 200ms cubic-bezier(0.16, 1, 0.3, 1);

@@ -29,7 +29,7 @@
   transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
   box-sizing: border-box;
   width: 100%;
-  height: 36px;
+  height: var(--rs-control-height-md);
 }
 
 .ws-field-container:hover:not(.ws-field-container-disabled):not(.ws-field-container-readonly) {

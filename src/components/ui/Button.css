@@ -81,14 +81,14 @@
 
 /* Modifiers: Sizes */
 .ws-btn-md {
-  height: 36px;
+  height: var(--rs-control-height-md);
   padding: var(--rs-space-2) var(--rs-space-4);
   font-size: var(--rs-font-size-md);
   gap: var(--rs-space-2);
 }
 
 .ws-btn-sm {
-  height: 28px;
+  height: var(--rs-control-height-sm);
   padding: var(--rs-space-1) var(--rs-space-3);
   font-size: var(--rs-font-size-sm);
   gap: var(--rs-space-2);
@@ -96,13 +96,13 @@
 
 /* Modifiers: Icon Only */
 .ws-btn-icon-only.ws-btn-md {
-  width: 36px;
+  width: var(--rs-control-height-md);
   padding: var(--rs-space-2);
   justify-content: center;
 }
 
 .ws-btn-icon-only.ws-btn-sm {
-  width: 28px;
+  width: var(--rs-control-height-sm);
   padding: var(--rs-space-1);
   justify-content: center;
 }
