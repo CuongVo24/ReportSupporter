@@ -1,9 +1,12 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import React from "react";
 import { ScriptView } from "./ScriptView";
 import { DefenseQAView } from "./DefenseQAView";
 import type { SlideOutline, SpeakerScript, DefenseQA, Speaker } from "@/types";
 
-describe("ScriptView Component", () => {
+describe("ScriptView Component (RTL)", () => {
   const mockSlides: SlideOutline[] = [
     {
       id: "slide-1",
@@ -32,37 +35,41 @@ describe("ScriptView Component", () => {
     },
   ];
 
-  it("should render script list with correct counts and textareas", () => {
+  it("renders script list, resolves speaker name, and handles text change", () => {
     const onScriptChange = vi.fn();
-    const element = ScriptView({
-      scripts: mockScripts,
-      slides: mockSlides,
-      speakers: mockSpeakers,
-      onScriptChange,
-    });
+    render(
+      <ScriptView
+        scripts={mockScripts}
+        slides={mockSlides}
+        speakers={mockSpeakers}
+        onScriptChange={onScriptChange}
+      />
+    );
 
-    expect(element).toBeDefined();
-    expect(element.props.className).toBe("ws-present-script-view");
+    // Verify slide title
+    expect(screen.getByText("1. Mở đầu")).toBeDefined();
 
-    const scriptList = element.props.children[1];
-    expect(scriptList.props.className).toBe("ws-present-script-list");
+    // Verify resolved speaker name
+    expect(screen.getByText(/Người nói: Nguyễn Văn A/)).toBeDefined();
 
-    const item = scriptList.props.children[0];
-    expect(item.key).toBe("slide-1");
-    expect(item.props.className).toBe("ws-present-script-item");
+    // Verify script content in textarea using label or value
+    const textarea = screen.getByLabelText("Lời thuyết trình:") as HTMLTextAreaElement;
+    expect(textarea.value).toBe("Sau đây xin phép trình bày phần mở đầu.");
 
-    const header = item.props.children[0];
-    expect(header.props.className).toBe("ws-present-script-header");
-    const speakerSpan = header.props.children[1];
-    expect(speakerSpan.props.className).toBe("ws-present-slide-speaker");
-    expect(speakerSpan.props.children[1]).toBe("Nguyễn Văn A");
+    // Fire change event
+    fireEvent.change(textarea, { target: { value: "Lời thuyết trình mới" } });
+    expect(onScriptChange).toHaveBeenCalledWith("slide-1", "Lời thuyết trình mới");
 
-    const textarea = item.props.children[1].props.children[1];
-    expect(textarea.props.value).toBe("Sau đây xin phép trình bày phần mở đầu.");
+    // Verify cues
+    expect(screen.getByText("💡 mở demo video")).toBeDefined();
+
+    // Verify AI button is disabled
+    const aiBtn = screen.getByRole("button", { name: /Tối ưu kịch bản bằng AI/i });
+    expect((aiBtn as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
-describe("DefenseQAView Component", () => {
+describe("DefenseQAView Component (RTL)", () => {
   const mockQAs: DefenseQA[] = [
     {
       id: "qa-1",
@@ -77,18 +84,21 @@ describe("DefenseQAView Component", () => {
     { id: "sec-1", order: 0, title: "Mở đầu", markdown: "", status: "draft" as const },
   ];
 
-  it("should render QAs grouped by topic", () => {
-    const element = DefenseQAView({ qas: mockQAs, sections: mockSections });
+  it("renders QAs grouped by topic and verify AI button is disabled", () => {
+    render(<DefenseQAView qas={mockQAs} sections={mockSections} />);
 
-    expect(element).toBeDefined();
-    expect(element.props.className).toBe("ws-present-qa-view");
+    // Verify topic header
+    expect(screen.getByText(/Phạm vi & Mục tiêu/)).toBeDefined();
 
-    const topicList = element.props.children[1];
-    const topicGroup = topicList.props.children[0]; // first topic group ("scope")
-    expect(topicGroup).toBeDefined();
+    // Verify question and suggested answer
+    expect(screen.getByText(/Mục tiêu là gì\?/)).toBeDefined();
+    expect(screen.getByText("Mục tiêu xây dựng workspace.")).toBeDefined();
 
-    const items = topicGroup.props.children[1].props.children;
-    expect(items).toHaveLength(1);
-    expect(items[0].props.children[0].props.children[2]).toBe("Mục tiêu là gì?");
+    // Verify section link
+    expect(screen.getByText("Mở đầu")).toBeDefined();
+
+    // Verify AI button is disabled
+    const aiBtn = screen.getByRole("button", { name: /Cải thiện câu trả lời bằng AI/i });
+    expect((aiBtn as HTMLButtonElement).disabled).toBe(true);
   });
 });
