@@ -27,3 +27,12 @@ export const presentationTimelineSchema = z.object({
 
 export type PresentationTimeline = z.infer<typeof presentationTimelineSchema>;
 
+export const speakerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  assignedSlideIds: z.array(z.string()),
+});
+
+export type Speaker = z.infer<typeof speakerSchema>;
+
+

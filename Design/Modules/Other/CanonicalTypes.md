@@ -375,5 +375,11 @@ export type PresentationTimeline = {
   slots: { slideId: string; speakerId?: string; seconds: number }[];
   overLimit: boolean;
 };
+
+export type Speaker = {
+  id: string;
+  name: string;
+  assignedSlideIds: string[];
+};
 ```
 
