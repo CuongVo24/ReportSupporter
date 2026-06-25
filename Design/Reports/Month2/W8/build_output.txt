@@ -1,7 +1,7 @@
 > report-supporter@0.1.0 lint
 > eslint .
 
-(Linter passes successfully with 0 errors)
+(Linter passes successfully with 0 errors/warnings)
 
 > report-supporter@0.1.0 typecheck
 > tsc --noEmit
@@ -12,11 +12,11 @@
 > vitest run
 
  Test Files  55 passed (55)
-      Tests  269 passed (269)
-   Start at  07:09:32
-   Duration  30.28s (transform 2.61s, setup 0ms, import 56.73s, tests 4.58s, environment 19ms)
+      Tests  270 passed (270)
+   Start at  07:24:19
+   Duration  33.36s (transform 3.86s, setup 0ms, import 58.13s, tests 5.58s, environment 19ms)
 
-(All 269 unit tests passed successfully)
+(All 270 unit tests passed successfully)
 
 > report-supporter@0.1.0 build
 > next build
@@ -24,7 +24,7 @@
    ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 25.3s
+ ✓ Compiled successfully in 30.7s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...
