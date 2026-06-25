@@ -3,6 +3,7 @@
 > **AI RULE:** File này là **single source of truth** cho mọi giá trị thị giác (màu, chữ, khoảng cách, layout A4) của ReportSupporter.
 > Token ở đây phải **khớp 1:1** với preset học thuật trong `Design/Modules/2.Format.md` và bộ severity `error | warning | info` của `ReportIssue` trong `Design/Modules/3.Check.md`.
 > Đụng giá trị → cập nhật file này trước, rồi mới đụng code (Golden Rule "Single Source of Truth" trong `Design/VibeCode.md`).
+> 📐 File này là **tầng Foundations** của discipline frontend `Design/Frontend/` (giữ tên & vị trí — được contract lịch sử tham chiếu bằng tên). *Vì sao* dùng các giá trị này: `Design/Frontend/0.ArtDirection.md`.
 
 ReportSupporter có **hai bề mặt thị giác tách biệt nhưng phải sống chung trong một file token**:
 
