@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { ReportProjectBundle, CheckResult } from "@/types";
+import type { ReportProjectBundle, CheckResult, SlideOutline } from "@/types";
 import { generateSlideOutline } from "./generate-outline";
 import { buildTimeline } from "./timeline";
 import { buildSpeakers, assignSlides } from "./speakers";
@@ -14,6 +14,7 @@ interface UsePresentProps {
 
 export function usePresent({ bundle, checkResult }: UsePresentProps) {
   const [editedBullets, setEditedBullets] = useState<Record<string, string[]>>({});
+  const [editedTitles, setEditedTitles] = useState<Record<string, string>>({});
   const [editedSpeakers, setEditedSpeakers] = useState<Record<string, string | undefined>>({});
   const [editedScripts, setEditedScripts] = useState<Record<string, string>>({});
   const [limitMinutes, setLimitMinutes] = useState<number>(10);
@@ -34,13 +35,15 @@ export function usePresent({ bundle, checkResult }: UsePresentProps) {
     return baseAssignment.outline.map((slide) => {
       const userBullets = editedBullets[slide.id];
       const userSpeaker = editedSpeakers[slide.id];
+      const userTitle = editedTitles[slide.id];
       return {
         ...slide,
+        title: userTitle !== undefined ? userTitle : slide.title,
         bullets: userBullets !== undefined ? userBullets : slide.bullets,
         speakerId: userSpeaker !== undefined ? userSpeaker : slide.speakerId,
       };
     });
-  }, [baseAssignment.outline, editedBullets, editedSpeakers]);
+  }, [baseAssignment.outline, editedBullets, editedSpeakers, editedTitles]);
 
   const speakers = useMemo(() => {
     return baseAssignment.speakers.map((sp) => {
@@ -108,6 +111,24 @@ export function usePresent({ bundle, checkResult }: UsePresentProps) {
     setEditedScripts((prev) => ({ ...prev, [slideId]: val }));
   };
 
+  const handleAcceptAiOutline = (newSlides: SlideOutline[]) => {
+    const nextBullets = { ...editedBullets };
+    const nextTitles = { ...editedTitles };
+    const nextSpeakers = { ...editedSpeakers };
+
+    newSlides.forEach((slide) => {
+      nextBullets[slide.id] = slide.bullets;
+      nextTitles[slide.id] = slide.title;
+      if (slide.speakerId !== undefined) {
+        nextSpeakers[slide.id] = slide.speakerId;
+      }
+    });
+
+    setEditedBullets(nextBullets);
+    setEditedTitles(nextTitles);
+    setEditedSpeakers(nextSpeakers);
+  };
+
   return {
     slides,
     speakers,
@@ -122,5 +143,6 @@ export function usePresent({ bundle, checkResult }: UsePresentProps) {
     handleAddBullet,
     handleRemoveBullet,
     handleScriptChange,
+    handleAcceptAiOutline,
   };
 }

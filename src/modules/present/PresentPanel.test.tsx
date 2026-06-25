@@ -14,11 +14,15 @@ vi.mock("react", async (importOriginal) => {
       // Dynamically check mockActiveTab for the activeTab state (which is the first useState call in PresentPanel)
       const activeTabVal = (globalThis as any).mockActiveTab || "outline";
       const stateValues = [
-        [activeTabVal, vi.fn()], // activeTab
-        [{}, vi.fn()], // editedBullets
-        [{}, vi.fn()], // editedSpeakers
-        [{}, vi.fn()], // editedScripts
-        [10, vi.fn()], // limitMinutes (10 mins)
+        [activeTabVal, vi.fn()], // 1. activeTab (in PresentPanel)
+        [{}, vi.fn()],           // 2. editedBullets (in usePresent)
+        [{}, vi.fn()],           // 3. editedTitles (in usePresent)
+        [{}, vi.fn()],           // 4. editedSpeakers (in usePresent)
+        [{}, vi.fn()],           // 5. editedScripts (in usePresent)
+        [10, vi.fn()],           // 6. limitMinutes (in usePresent)
+        [false, vi.fn()],        // 7. isAiLoading (in PresentPanel)
+        [null, vi.fn()],         // 8. aiSuggestion (in PresentPanel)
+        [null, vi.fn()],         // 9. aiError (in PresentPanel)
       ];
       const pair = stateValues[stateCallCount % stateValues.length];
       stateCallCount++;
@@ -71,7 +75,13 @@ describe("PresentPanel Component (pure JSX structure)", () => {
     const timelineSummary = children[2].props.children[0];
     expect(timelineSummary.props.className).toBe("ws-present-timeline-summary");
 
-    const slidesList = children[2].props.children[1];
+    // AI button container at index 1
+    const aiBtnContainer = children[2].props.children[1];
+    const aiBtn = aiBtnContainer.props.children[0];
+    expect(aiBtn.props.state).toBeDefined();
+
+    // slidesList is now at index 3
+    const slidesList = children[2].props.children[3];
     expect(slidesList.props.className).toBe("ws-present-slides-list");
     const slideViews = slidesList.props.children;
     expect(slideViews).toHaveLength(2); // H1 slide and H2 slide

@@ -7,6 +7,8 @@ export { buildWeakSectionHints } from "./weak-sections";
 export { ScriptView } from "./ScriptView";
 export { DefenseQAView } from "./DefenseQAView";
 export { PresentPanel } from "./PresentPanel";
+export { assistOutline } from "./ai/assist-outline";
+export { AiOutlineButton } from "./ai/AiOutlineButton";
 
 
 

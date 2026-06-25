@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import type { ReportProjectBundle, CheckResult } from "@/types";
+import type { ReportProjectBundle, CheckResult, SlideOutline } from "@/types";
 import { usePresent } from "./use-present";
 import { SlideOutlineView } from "./SlideOutlineView";
 import { ScriptView } from "./ScriptView";
 import { DefenseQAView } from "./DefenseQAView";
+import { getGatewayState, requestSuggestion } from "@/modules/write";
+import { assistOutline } from "./ai/assist-outline";
+import { AiOutlineButton } from "./ai/AiOutlineButton";
 
 export interface PresentPanelProps {
   bundle: ReportProjectBundle;
@@ -29,7 +32,44 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
     handleAddBullet,
     handleRemoveBullet,
     handleScriptChange,
+    handleAcceptAiOutline,
   } = usePresent({ bundle, checkResult });
+
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<SlideOutline[] | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const handleAiOutlineAssist = async () => {
+    setIsAiLoading(true);
+    setAiError(null);
+    try {
+      const gateway = {
+        requestSuggestion,
+        getGatewayState,
+      };
+      const suggestion = await assistOutline(slides, gateway);
+      if (suggestion.suggestion) {
+        try {
+          const parsed = JSON.parse(suggestion.suggestion) as SlideOutline[];
+          setAiSuggestion(parsed);
+        } catch {
+          setAiError("Không thể phân tích đề xuất từ AI.");
+        }
+      } else {
+        // If empty suggestion, verify if it was a no-op due to config state
+        const state = getGatewayState();
+        if (state === "disabled" || state === "unconfigured") {
+          setAiError("Cấu hình AI chưa kích hoạt.");
+        } else {
+          setAiError("AI không trả về đề xuất nào.");
+        }
+      }
+    } catch {
+      setAiError("Lỗi kết nối AI gateway.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -113,6 +153,128 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
               </div>
             )}
           </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-3)", flexWrap: "wrap" }}>
+            <AiOutlineButton
+              state={getGatewayState()}
+              isLoading={isAiLoading}
+              onClick={handleAiOutlineAssist}
+            />
+            {aiError && (
+              <span style={{ color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-xs)" }} className="ws-present-ai-error">
+                ⚠️ {aiError}
+              </span>
+            )}
+          </div>
+
+          {aiSuggestion && (
+            <div style={{
+              border: "1px solid var(--rs-color-primary)",
+              borderRadius: "var(--rs-radius-md)",
+              padding: "var(--rs-space-3)",
+              backgroundColor: "var(--rs-blue-100)",
+              marginBlock: "var(--rs-space-3)",
+            }} className="ws-present-ai-suggestion-box">
+              <h4 style={{ margin: 0, color: "var(--rs-color-primary)", fontSize: "var(--rs-font-size-md)" }}>
+                ✨ Đề xuất tối ưu Slide Outline từ AI
+              </h4>
+              <p style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)", marginBlock: "var(--rs-space-1)" }}>
+                AI đề xuất cập nhật các slide bên dưới. Vui lòng duyệt qua trước khi áp dụng.
+              </p>
+
+              <div style={{ display: "flex", gap: "var(--rs-space-2)", marginBlock: "var(--rs-space-2)" }}>
+                <button
+                  onClick={() => {
+                    handleAcceptAiOutline(aiSuggestion);
+                    setAiSuggestion(null);
+                  }}
+                  style={{
+                    backgroundColor: "var(--rs-color-primary)",
+                    color: "var(--rs-white)",
+                    border: "none",
+                    borderRadius: "var(--rs-radius-sm)",
+                    padding: "var(--rs-space-1) var(--rs-space-3)",
+                    fontSize: "var(--rs-font-size-xs)",
+                    fontWeight: "var(--rs-font-weight-bold)",
+                    cursor: "pointer",
+                  }}
+                  className="ws-present-ai-accept-btn"
+                >
+                  Áp dụng đề xuất
+                </button>
+                <button
+                  onClick={() => setAiSuggestion(null)}
+                  style={{
+                    backgroundColor: "var(--rs-color-surface)",
+                    color: "var(--rs-color-text)",
+                    border: "1px solid var(--rs-color-border)",
+                    borderRadius: "var(--rs-radius-sm)",
+                    padding: "var(--rs-space-1) var(--rs-space-3)",
+                    fontSize: "var(--rs-font-size-xs)",
+                    cursor: "pointer",
+                  }}
+                  className="ws-present-ai-reject-btn"
+                >
+                  Từ chối
+                </button>
+              </div>
+
+              <div style={{
+                maxHeight: "300px",
+                overflowY: "auto",
+                backgroundColor: "var(--rs-color-surface)",
+                padding: "var(--rs-space-2)",
+                borderRadius: "var(--rs-radius-sm)",
+                border: "1px solid var(--rs-color-border)",
+                fontSize: "var(--rs-font-size-sm)",
+              }} className="ws-present-ai-suggestion-preview-list">
+                {aiSuggestion.map((s, idx) => {
+                  const original = slides.find((orig) => orig.id === s.id);
+                  const isTitleChanged = original && original.title !== s.title;
+                  const isBulletsChanged = original && JSON.stringify(original.bullets) !== JSON.stringify(s.bullets);
+
+                  if (!original) return null;
+
+                  return (
+                    <div key={s.id} style={{
+                      paddingBottom: "var(--rs-space-2)",
+                      borderBottom: idx < aiSuggestion.length - 1 ? "1px solid var(--rs-color-surface-muted)" : "none",
+                      marginBottom: "var(--rs-space-2)",
+                    }} className="ws-present-ai-suggestion-preview-item">
+                      <div style={{ fontWeight: "var(--rs-font-weight-bold)" }}>
+                        Slide {idx + 1}: {isTitleChanged ? (
+                          <>
+                            <span style={{ textDecoration: "line-through", color: "var(--rs-color-text-muted)" }}>{original.title}</span>
+                            {" → "}
+                            <span style={{ color: "var(--rs-color-primary)" }}>{s.title}</span>
+                          </>
+                        ) : s.title}
+                      </div>
+
+                      <div style={{ paddingLeft: "var(--rs-space-3)", marginTop: "var(--rs-space-1)" }}>
+                        {isBulletsChanged ? (
+                          <div style={{ fontSize: "var(--rs-font-size-xs)" }}>
+                            <div style={{ color: "var(--rs-color-text-muted)" }}>Gốc:</div>
+                            <ul style={{ margin: 0, paddingLeft: "var(--rs-space-3)" }}>
+                              {original.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                            </ul>
+                            <div style={{ color: "var(--rs-color-primary)", marginTop: "var(--rs-space-1)" }}>AI đề xuất:</div>
+                            <ul style={{ margin: 0, paddingLeft: "var(--rs-space-3)" }}>
+                              {s.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                            </ul>
+                          </div>
+                        ) : (
+                          <ul style={{ margin: 0, paddingLeft: "var(--rs-space-3)", color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)" }}>
+                            {s.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="ws-present-slides-list">
             {slides.map((slide) => (
