@@ -17,7 +17,7 @@ export type { FormatPreset, FormatSettings, TocNode, CaptionEntry } from "./form
 export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./template";
 export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob, PackageManifest, SubmissionPackage, SubmissionChecklistItem } from "./export";
 export type { ParsedSection, PipelineResult, FormattedReport } from "./pipeline";
-export type { SlideOutline } from "./present";
+export type { SlideOutline, PresentationTimeline } from "./present";
 
 
 export {
@@ -33,7 +33,7 @@ export {
   storedBundleSchema,
 } from "./schemas";
 
-export { slideOutlineSchema } from "./present";
+export { slideOutlineSchema, presentationTimelineSchema } from "./present";
 
 export { SCHEMA_VERSION, DEFAULT_TEMPLATE_ID, DEFAULT_FORMAT_SETTINGS } from "./defaults";
 

@@ -369,5 +369,11 @@ export type SlideOutline = {
   evidenceRefs: string[];
   estimatedSeconds?: number;
 };
+
+export type PresentationTimeline = {
+  totalSeconds: number;
+  slots: { slideId: string; speakerId?: string; seconds: number }[];
+  overLimit: boolean;
+};
 ```
 

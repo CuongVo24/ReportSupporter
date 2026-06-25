@@ -12,3 +12,18 @@ export const slideOutlineSchema = z.object({
 });
 
 export type SlideOutline = z.infer<typeof slideOutlineSchema>;
+
+export const presentationTimelineSchema = z.object({
+  totalSeconds: z.number().int().nonnegative(),
+  slots: z.array(
+    z.object({
+      slideId: z.string(),
+      speakerId: z.string().optional(),
+      seconds: z.number().int().positive(),
+    })
+  ),
+  overLimit: z.boolean(),
+});
+
+export type PresentationTimeline = z.infer<typeof presentationTimelineSchema>;
+
