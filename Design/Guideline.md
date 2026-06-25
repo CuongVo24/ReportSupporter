@@ -59,6 +59,11 @@ Nếu bạn (hoặc AI Agent) lần đầu vào dự án, làm đúng 6 bước 
 | Biết sanitize HTML / privacy / threat model | `Modules/Other/Security.md` |
 | Biết cách build & host (deploy demo) | `Modules/Other/Deployment.md` |
 | Tạo / sửa một Contract cho AI | `ContractForAI/CONTRACT_STRUCTURE_RULE.md` |
+| **Dựng/sửa BẤT KỲ giao diện** (component, layout, màn) | `Frontend/README.md` → tầng tương ứng |
+| Biết "đẹp" với dự án là gì / gu thị giác | `Frontend/0.ArtDirection.md` |
+| Spec một component UI + đủ trạng thái | `Frontend/2.Components/<X>.md` (khuôn `_ComponentSpecRule.md`) |
+| Xử lý màn rỗng / loading / lỗi / validate | `Frontend/3.Patterns/` |
+| Giá trị token (màu/chữ/spacing/A4) | `Modules/Other/DesignSystem_Tokens.md` |
 | Code **editor / preview / template / autosave** | `Modules/1.Write.md` |
 | Code **numbering / TOC / layout A4** | `Modules/2.Format.md` |
 | Code **checker engine / rules** | `Modules/3.Check.md` |
@@ -109,6 +114,16 @@ Design/
       TechnicalStack.md                # Stack khoá cứng + rationale + version policy + data-flow
       Security.md                      # Threat model + sanitize HTML + privacy (IndexedDB)
       Deployment.md                    # Build / Next output mode / hosting demo (client-first)
+      DesignSystem_Tokens.md           # Token canonical (màu/chữ/spacing/A4/severity) — Foundations của Frontend/
+  Frontend/                            # ★ Discipline frontend (4 tầng) — đọc trước khi dựng UI
+    README.md                          # Bản đồ tầng giao diện + cách dùng
+    0.ArtDirection.md                  # La bàn thị giác: tính cách, gu, anti-patterns, frontend Non-goals
+    1.Foundations/                     # Trỏ token canonical + Typography (pairing font)
+    2.Components/                      # Spec component + ĐỦ trạng thái (_ComponentSpecRule.md là khuôn)
+    3.Patterns/                        # empty / loading / error / validation / feedback
+    4.Layouts/                         # AppShell · Responsive · InformationArchitecture
+    5.Flows/                           # Wireframe-level theo module (Write/Export/Present)
+    Other/                             # Motion · Accessibility · VoiceAndContent · Icons
   RoadMap/
     MasterRoadMap.md                   # Lộ trình 12 tuần; Phase 1 (W1–4) = MVP workspace
   TaskBrief/Core/

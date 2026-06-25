@@ -54,6 +54,20 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 
 ---
 
+## 2b. 🧩 UI COMPONENT LAYER (Frontend primitives — Phase 4 / W13)
+
+> Tầng UI primitive tái dùng, thuộc discipline `Design/Frontend/`. Khoá lựa chọn để mọi component dựng nhất quán, đẹp **theo mạch** thay vì sửa giao diện cuối kỳ. *Vì sao đẹp:* `Design/Frontend/0.ArtDirection.md`.
+
+* **Headless interactive primitives:** **Radix UI** — `@radix-ui/react-dialog`, `@radix-ui/react-tabs`, `@radix-ui/react-toast`, `@radix-ui/react-select`.
+    * *Lý do:* Radix lo sẵn **focus-trap, keyboard nav, ARIA role/label, scroll-lock, typeahead** — đúng những thứ a11y gate W12 yêu cầu (0 critical axe). Headless = **không** style mặc định → ta style 100% bằng token `--rs-*`, không xung đột.
+* **Component thường** (Button / Input / Textarea / Badge): **tự code** + token, không cần lib.
+* **Icon:** **Lucide** (`lucide-react`) — line, stroke đồng nhất, tree-shake theo từng icon, màu kế thừa `currentColor`. Xem `Design/Frontend/Other/Icons.md`.
+* **Styling:** CSS **co-located** mỗi component (`Button.tsx` + `Button.css`) + CSS custom properties `--rs-*`. **KHÔNG** Tailwind, **KHÔNG** CSS-in-JS (runtime), giữ token là single source thị giác (`DesignSystem_Tokens.md`).
+* **Vị trí:** primitive mới ở `src/components/ui/` (xem §9); panel cũ refactor dùng dần.
+* **CẤM:** UI kit nặng có sẵn style (MUI, Ant Design, Chakra, Mantine) — đè token, kéo runtime lớn, sai gu "công cụ vô hình" (`0.ArtDirection.md` §6 anti-patterns). Animation library (Framer Motion…) — micro-interaction bằng CSS thuần (`Frontend/Other/Motion.md`).
+
+---
+
 ## 3. 📄 MARKDOWN PIPELINE (dùng chung cho Format · Check · Export)
 
 > Đây là **xương sống deterministic**. Cùng một input Markdown + metadata → cùng một AST → preview, checker, và export đều ăn chung nguồn. Chi tiết các type và cơ chế cache/thread xem tại [PipelineContract.md](file:///e:/ReportSupporter/Design/Modules/Other/PipelineContract.md).
@@ -142,6 +156,10 @@ Vì sao chọn — và vì sao **loại** lựa chọn khác. Đây là lý do s
 | **Validation** | `zod` | yup, io-ts, ajv | API gọn, type-inference tốt, dùng ở mọi I/O boundary |
 | **Test** | `Vitest` | Jest | Tích hợp tốt với Vite/TS, nhanh; đủ cho Checker unit test |
 | **E2E** | Playwright (Phase 3) | Cypress | Hoãn tới Phase 3; không cài ở MVP |
+| **UI primitives (interactive)** | **Radix UI** (headless) | MUI / Ant Design / Chakra / Mantine | Headless → style 100% bằng token, không đè; lo sẵn a11y (focus-trap/keyboard/ARIA) đúng W12 gate; UI kit có style đè token + runtime nặng + sai gu "công cụ vô hình" |
+| **Icon** | **Lucide** (`lucide-react`) | react-icons / Heroicons / FontAwesome | Một bộ line nhất quán, tree-shake từng icon, `currentColor` hợp token |
+| **UI styling** | CSS co-located + `--rs-*` tokens | Tailwind / styled-components / Emotion | Token là single source thị giác (`DesignSystem_Tokens.md`); tránh runtime CSS-in-JS + utility-class drift |
+| **Motion** | CSS thuần (transition) | Framer Motion / GSAP | Micro-interaction ≤200ms đủ bằng CSS; tránh runtime animation lib (`Frontend/Other/Motion.md`) |
 
 ---
 
@@ -159,6 +177,8 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | **W8 (Submission)** | `jszip` | Đóng gói bộ nộp bài thành file zip chứa các file xuất bản và phụ lục minh chứng |
 | **Export hardening (later)** | `puppeteer` | Worker/service riêng cho PDF chính xác hơn khi browser print không đủ. |
 | **Phase 3** | `pptxgenjs`, `playwright` | Present export + E2E (deferred). |
+| **W13 (Phase 4 — UI Foundation)** | `@radix-ui/react-dialog`, `@radix-ui/react-tabs`, `@radix-ui/react-toast`, `@radix-ui/react-select`, `lucide-react` | Bộ UI primitive (`src/components/ui/`) + icon, theo `Design/Frontend/2.Components/*`. Exact pin; chạy `npm install --save-exact` để đồng bộ lockfile. |
+| **W14 (Phase 4 — UI Adoption)** | *(không cài lib mới)* | Refactor panel/flow dùng primitive W13 + patterns (empty/loading/error). Không thêm dependency. |
 
 > ⚠️ AI **không** được "cài trước cho tiện". Lib chỉ xuất hiện trong `package.json` đúng tuần dùng nó. Cài lệch lịch / lib ngoài bảng = vi phạm `Rule.md` §2.
 
@@ -180,6 +200,7 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 src/
   app/                  # Next.js App Router (route = workspace-first)
   components/           # UI components dùng chung
+    ui/                 # UI primitives (Phase 4): Button, Input, Select, Textarea, Badge, Dialog, Tabs, Toast — co-located .tsx + .css, style bằng token (Design/Frontend/2.Components/)
   modules/
     write/              # Module 1 — editor, preview, template, autosave
     format/             # Module 2 — numbering, TOC, A4 presets
