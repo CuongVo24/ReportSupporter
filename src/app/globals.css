@@ -2448,3 +2448,18 @@ span.ws-present-slide-speaker {
   }
 }
 
+/* ===== Custom Focus Rings for Keyboard Accessibility (W12 Day 4) ===== */
+
+.ws-form-input:focus-visible,
+.ws-template-picker-select:focus-visible,
+.ws-ai-rewrite-btn:focus-visible,
+.ws-ai-tone-btn:focus-visible,
+.ws-present-ai-outline-action:focus-visible,
+.ws-user-control-bar-undo-btn:focus-visible,
+.ws-user-control-bar-diff-btn:focus-visible,
+.ws-state-cta-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 2px;
+}
+
+
