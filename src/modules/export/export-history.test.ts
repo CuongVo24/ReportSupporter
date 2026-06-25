@@ -6,20 +6,8 @@ import * as idbClient from "@/lib/idb-client";
 vi.mock("@/lib/idb-client", () => {
   let store: unknown[] = [];
   return {
-    appendExportHistory: vi.fn(async (entry: unknown) => {
-      const ent = entry as { id: string };
-      const idx = store.findIndex(item => (item as { id: string }).id === ent.id);
-      if (idx !== -1) {
-        store[idx] = ent;
-      } else {
-        store.push(ent);
-      }
-    }),
     getExportHistory: vi.fn(async () => {
       return [...store];
-    }),
-    deleteExportHistory: vi.fn(async (id: string) => {
-      store = store.filter(item => (item as { id: string }).id !== id);
     }),
     clearExportHistory: vi.fn(async () => {
       store = [];

@@ -13,8 +13,8 @@
 
  Test Files  55 passed (55)
       Tests  271 passed (271)
-   Start at  07:30:12
-   Duration  31.07s (transform 3.42s, setup 0ms, import 54.73s, tests 5.30s, environment 18ms)
+   Start at  07:47:03
+   Duration  34.33s (transform 3.31s, setup 0ms, import 61.12s, tests 5.51s, environment 17ms)
 
 (All 271 unit tests passed successfully)
 
@@ -24,7 +24,7 @@
    ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 35.2s
+ ✓ Compiled successfully in 26.1s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...
