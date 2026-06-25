@@ -269,4 +269,55 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
     const result2 = generateSlideOutline(sections, mockEvidence);
     expect(result1).toEqual(result2);
   });
+
+  it("should number headings correctly even when there is inline markdown or text discrepancies across sections", () => {
+    const sections: ReportSection[] = [
+      {
+        id: "sec-1",
+        order: 1,
+        title: "Section 1",
+        status: "draft",
+        markdown: "# Chương **độc nhất**\n\nNội dung chương 1.\n",
+      },
+      {
+        id: "sec-2",
+        order: 2,
+        title: "Section 2",
+        status: "draft",
+        markdown: "# Chương trùng lặp\n\nNội dung chương 2.\n",
+      },
+    ];
+
+    const slides = generateSlideOutline(sections);
+    expect(slides).toHaveLength(2);
+    expect(slides[0].title).toBe("1. Chương độc nhất");
+    expect(slides[1].title).toBe("2. Chương trùng lặp");
+  });
+
+  it("should number multiple H2 headings across sections correctly in standard chapter flow", () => {
+    const sections: ReportSection[] = [
+      {
+        id: "sec-1",
+        order: 1,
+        title: "Section 1",
+        status: "draft",
+        markdown: "# Chương 1\n\n## Mục 1.1\n\n## Mục 1.2\n",
+      },
+      {
+        id: "sec-2",
+        order: 2,
+        title: "Section 2",
+        status: "draft",
+        markdown: "# Chương 2\n\n## Mục 2.1\n",
+      },
+    ];
+
+    const slides = generateSlideOutline(sections);
+    expect(slides).toHaveLength(5);
+    expect(slides[0].title).toBe("1. Chương 1");
+    expect(slides[1].title).toBe("1.1. Mục 1.1");
+    expect(slides[2].title).toBe("1.2. Mục 1.2");
+    expect(slides[3].title).toBe("2. Chương 2");
+    expect(slides[4].title).toBe("2.1. Mục 2.1");
+  });
 });

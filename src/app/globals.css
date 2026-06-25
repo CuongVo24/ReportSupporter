@@ -1259,5 +1259,273 @@ body {
   border: 0;
 }
 
+/* ==========================================================================
+   Module 5: Present Panel Styles
+   ========================================================================== */
+.ws-present {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-3) 0;
+}
 
+.ws-present-panel-title {
+  font-size: var(--rs-font-size-lg);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin: 0 0 var(--rs-space-2) 0;
+}
 
+.ws-present-empty {
+  color: var(--rs-color-text-muted);
+  font-style: italic;
+  font-size: var(--rs-font-size-sm);
+  padding: var(--rs-space-4);
+  text-align: center;
+  background-color: var(--rs-color-surface-muted);
+  border-radius: var(--rs-radius-md);
+  border: 1px dashed var(--rs-color-border);
+}
+
+.ws-present-timeline-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+}
+
+.ws-present-duration {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text);
+}
+
+.ws-present-limit-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+}
+
+.ws-present-limit-label {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
+}
+
+.ws-present-limit-input {
+  width: 70px;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-sm);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  transition: border-color 0.15s ease;
+}
+
+.ws-present-limit-input:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-timeline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  border-radius: var(--rs-radius-sm);
+  width: max-content;
+}
+
+.ws-present-timeline-badge.overlimit {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: var(--rs-color-severity-warning);
+  border: 1px dashed var(--rs-color-severity-warning);
+}
+
+.ws-present-slides-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  margin-top: var(--rs-space-2);
+}
+
+.ws-present-slide-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-1);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.ws-present-slide-card:hover {
+  box-shadow: var(--rs-elevation-2);
+}
+
+.ws-present-slide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-slide-title {
+  margin: 0;
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-present-slide-speaker {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-speaker-label {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
+}
+
+.ws-present-speaker-select {
+  padding: 2px var(--rs-space-1);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-xs);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  cursor: pointer;
+  max-width: 120px;
+}
+
+.ws-present-speaker-select:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-evidence-refs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--rs-space-1);
+  margin-top: calc(-1 * var(--rs-space-1));
+}
+
+.ws-present-evidence-label {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-evidence-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--rs-space-1);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  color: var(--rs-slate-700);
+  font-size: 10px;
+  font-weight: var(--rs-font-weight-semibold);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-present-bullets-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-bullet-row {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-bullet-dot {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-md);
+  user-select: none;
+}
+
+.ws-present-bullet-input {
+  flex: 1;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-xs);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  transition: border-color 0.15s ease;
+}
+
+.ws-present-bullet-input:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-bullet-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--rs-radius-sm);
+  background-color: transparent;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-present-bullet-remove-btn:hover {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: var(--rs-color-severity-error);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.ws-present-bullet-remove-btn:focus-visible {
+  outline: 2px solid var(--rs-color-severity-error);
+}
+
+.ws-present-add-bullet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rs-space-1);
+  align-self: flex-start;
+  margin-top: var(--rs-space-1);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border: 1px dashed var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-present-add-bullet-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  border-color: var(--rs-color-primary);
+}
+
+.ws-present-add-bullet-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 1px;
+}
