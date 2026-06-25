@@ -102,4 +102,40 @@ describe("generateDefenseQA", () => {
     const run2 = generateDefenseQA(sections, mockEvidence);
     expect(run1).toEqual(run2);
   });
+
+  it("should guard against false-positive keywords by enforcing word boundary checks", () => {
+    const sections: ReportSection[] = [
+      {
+        id: "sec-5",
+        order: 4,
+        title: "False Positive Test",
+        // 'digital' contains 'git', 'setupconfig' contains 'setup', 'dockerize' contains 'docker'
+        // none of these should match 'git', 'setup', or 'docker' respectively
+        markdown: "Chúng tôi đang số hóa các quy trình digital cho doanh nghiệp. Cấu hình setupconfig chưa tối ưu. Chúng tôi đang dockerize ứng dụng.",
+        status: "done",
+      },
+    ];
+
+    const result = generateDefenseQA(sections);
+    // Since 'digital', 'setupconfig', 'dockerize' do not match 'git', 'setup', 'docker' under word boundary checks,
+    // and no other keywords/signals are present, no Q&A should be generated.
+    expect(result).toHaveLength(0);
+  });
+
+  it("should match positive ASCII keywords under word boundary checks", () => {
+    const sections: ReportSection[] = [
+      {
+        id: "sec-6",
+        order: 5,
+        title: "Positive Match Test",
+        markdown: "Dự án sử dụng git để quản lý mã nguồn.",
+        status: "done",
+      },
+    ];
+
+    const result = generateDefenseQA(sections);
+    expect(result).toHaveLength(1);
+    expect(result[0].topic).toBe("tech");
+    expect(result[0].suggestedAnswer).toBe("Dự án sử dụng git để quản lý mã nguồn.");
+  });
 });

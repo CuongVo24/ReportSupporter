@@ -21,12 +21,29 @@ function splitSentences(text: string): string[] {
 }
 
 /**
+ * Checks if a sentence matches a keyword.
+ * Uses word-boundary regex for ASCII single-word keywords, and falls back to includes for others.
+ */
+function matchesKeyword(sentence: string, keyword: string): boolean {
+  const lowerSentence = sentence.toLowerCase();
+  const lowerKw = keyword.toLowerCase();
+
+  // If keyword is pure ASCII single word (alphanumeric/hyphen/underscore)
+  if (/^[a-z0-9_-]+$/i.test(lowerKw)) {
+    const escaped = lowerKw.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const regex = new RegExp("\\b" + escaped + "\\b", "i");
+    return regex.test(lowerSentence);
+  }
+
+  return lowerSentence.includes(lowerKw);
+}
+
+/**
  * Finds the first sentence containing any of the keywords.
  */
 function findSentenceWithKeywords(sentences: string[], keywords: string[]): string | undefined {
   return sentences.find((s) => {
-    const lower = s.toLowerCase();
-    return keywords.some((kw) => lower.includes(kw));
+    return keywords.some((kw) => matchesKeyword(s, kw));
   });
 }
 
@@ -83,8 +100,8 @@ export function generateDefenseQA(
     );
     const hasDeploySignal =
       deployEvidence &&
-      (cleanedContent.toLowerCase().includes("deploy") ||
-        cleanedContent.toLowerCase().includes("triển khai"));
+      (matchesKeyword(cleanedContent, "deploy") ||
+        matchesKeyword(cleanedContent, "triển khai"));
 
     if (techSentence || hasDeploySignal) {
       let question = "Hệ thống sử dụng các công nghệ, framework hay cơ sở dữ liệu nào làm nền tảng?";
