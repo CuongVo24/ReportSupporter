@@ -44,5 +44,16 @@ export const speakerScriptSchema = z.object({
 
 export type SpeakerScript = z.infer<typeof speakerScriptSchema>;
 
+export const defenseQASchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  suggestedAnswer: z.string(),
+  relatedSectionId: z.string().optional(),
+  topic: z.enum(["scope", "tech", "result", "limitation", "future"]),
+});
+
+export type DefenseQA = z.infer<typeof defenseQASchema>;
+
+
 
 
