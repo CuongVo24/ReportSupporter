@@ -18,6 +18,7 @@ import {
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
+import { PresentPanel } from "@/modules/present";
 import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem } from "@/types";
 
 const emptyCheckResult: CheckResult = {
@@ -202,6 +203,7 @@ export function Workspace() {
         evidence={bundle.evidence}
         onChange={handleEvidenceChange}
       />
+      <PresentPanel bundle={bundle} />
     </div>
   );
 

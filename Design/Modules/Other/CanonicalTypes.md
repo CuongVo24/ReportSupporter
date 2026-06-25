@@ -351,3 +351,35 @@ export type SubmissionChecklistItem = {
   severity?: ReportIssueSeverity;
 };
 ```
+
+---
+
+## 9. Present Model
+
+Used by the slide presentation and outline generation systems.
+
+```ts
+export type SlideOutline = {
+  id: string;
+  fromSectionId: string;
+  order: number;
+  title: string;
+  bullets: string[];
+  speakerId?: string;
+  evidenceRefs: string[];
+  estimatedSeconds?: number;
+};
+
+export type PresentationTimeline = {
+  totalSeconds: number;
+  slots: { slideId: string; speakerId?: string; seconds: number }[];
+  overLimit: boolean;
+};
+
+export type Speaker = {
+  id: string;
+  name: string;
+  assignedSlideIds: string[];
+};
+```
+

@@ -30,13 +30,13 @@ Sinh **presentation timeline** từ slide outline: phân bổ `estimatedSeconds`
 - ❌ Dep mới / fetch / AI.
 
 ## 3. Checklist
-- [ ] `PresentationTimeline` thêm CanonicalTypes §9 + `@/types`.
-- [ ] `buildTimeline`: phân bổ theo độ dài + min/slide; `totalSeconds` = tổng `slots.seconds`.
-- [ ] `overLimit` đúng khi vượt `limitSeconds`.
-- [ ] Outline rỗng → timeline rỗng (không throw).
-- [ ] Deterministic; immutable (không mutate outline gốc).
-- [ ] `timeline.test.ts` phủ sum/over-limit/empty/min-per-slide/deterministic.
-- [ ] ≤200 dòng/file; 4 gates xanh.
+- [x] `PresentationTimeline` thêm CanonicalTypes §9 + `@/types`.
+- [x] `buildTimeline`: phân bổ theo độ dài + min/slide; `totalSeconds` = tổng `slots.seconds`.
+- [x] `overLimit` đúng khi vượt `limitSeconds`.
+- [x] Outline rỗng → timeline rỗng (không throw).
+- [x] Deterministic; immutable (không mutate outline gốc).
+- [x] `timeline.test.ts` phủ sum/over-limit/empty/min-per-slide/deterministic.
+- [x] ≤200 dòng/file; 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -81,6 +81,6 @@ export function buildTimeline(outline: SlideOutline[], limitSeconds?: number): P
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(present): presentation timeline with over-limit warning`; +1 docs commit.

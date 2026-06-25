@@ -29,12 +29,12 @@
 - ❌ Dep mới / network / AI.
 
 ## 3. Checklist
-- [ ] Integration test đa template: outline giữ đúng dòng chương mục.
-- [ ] Timeline sum = total; over-limit đúng; speaker từ members.
-- [ ] `evidenceRefs` map đúng từ `bundle.evidence`; ref gãy → bỏ có ghi chú (không vỡ).
-- [ ] No-AI baseline khẳng định (no network).
-- [ ] `Design/Reports/Month3/W9/` có QA report + present samples + build output.
-- [ ] 4 gates xanh.
+- [x] Integration test đa template: outline giữ đúng dòng chương mục.
+- [x] Timeline sum = total; over-limit đúng; speaker từ members.
+- [x] `evidenceRefs` map đúng từ `bundle.evidence`; ref gãy → bỏ có ghi chú (không vỡ).
+- [x] No-AI baseline khẳng định (no network).
+- [x] `Design/Reports/Month3/W9/` có QA report + present samples + build output.
+- [x] 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -67,6 +67,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `test(present): integration coverage (outline/timeline/speaker, multi-template)`; (2) `docs(w9): W9 QA report + present samples`; +1 docs commit.
+> ⛔ VibeCode Step 2: đã approve và hoàn thành. Đề xuất commit: (1) `test(present): integration coverage (outline/timeline/speaker, multi-template)`; (2) `docs(w9): W9 QA report + present samples`; +1 docs commit.
