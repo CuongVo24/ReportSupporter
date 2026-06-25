@@ -58,8 +58,16 @@ describe("Present Module Integration Tests (multi-template)", () => {
         expect(slide.order).toBe(idx);
         expect(slide.id).toBeDefined();
         expect(slide.title).toBeDefined();
+        expect(slide.title.trim()).not.toBe("");
         expect(slide.bullets).toBeInstanceOf(Array);
+        // Assert no warnings are mixed in bullets
+        slide.bullets.forEach((b) => {
+          expect(b).not.toContain("[Cảnh báo:");
+        });
       });
+      // Assert at least one slide has numbered heading format (e.g. 1. Intro)
+      const numberedSlides = slides.filter((s) => /^\d+(\.\d+)*\.\s/.test(s.title));
+      expect(numberedSlides.length).toBeGreaterThan(0);
 
       // 4. Build Timeline
       const timeline = buildTimeline(slides, 600); // 10 minutes limit
@@ -94,7 +102,7 @@ describe("Present Module Integration Tests (multi-template)", () => {
     });
   });
 
-  it("should handle broken evidence references and generate warning bullets correctly", () => {
+  it("should handle broken evidence references and generate warning notes correctly", () => {
     // Setup a section with a markdown link pointing to a github URL that is NOT in the evidence list
     const sections = [
       {
@@ -109,6 +117,7 @@ describe("Present Module Integration Tests (multi-template)", () => {
     const slides = generateSlideOutline(sections, []); // Empty evidence list
     expect(slides).toHaveLength(1);
     expect(slides[0].evidenceRefs).toHaveLength(0); // Omitted from evidenceRefs
-    expect(slides[0].bullets).toContain("[Cảnh báo: Minh chứng đã bị xóa]");
+    expect(slides[0].bullets).not.toContain("[Cảnh báo: Minh chứng đã bị xóa]");
+    expect(slides[0].brokenEvidenceNotes).toEqual(["[Cảnh báo: Minh chứng đã bị xóa]"]);
   });
 });

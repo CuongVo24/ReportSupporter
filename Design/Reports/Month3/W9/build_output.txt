@@ -1,8 +1,8 @@
 =========================================
-REPORT SUPPORTER - WEEK 9 QA GATE VERIFICATION (WITH W9 BREAK STYLE & NUMBERING FIXES)
+REPORT SUPPORTER - WEEK 9 QA GATE VERIFICATION (WITH W9 BREAK WARNINGS & DEAD FIELD POLISH)
 =========================================
 Date: 2026-06-25
-Branch: fix/w9-present-styles-numbering
+Branch: polish/w9-present-cleanups
 
 ---
 GATE 1: Unit & Integration Tests (vitest)
@@ -11,8 +11,8 @@ Result: SUCCESS (301 / 301 tests passed)
 Output snippet:
  Test Files  60 passed (60)
       Tests  301 passed (301)
-   Start at  10:06:59
-   Duration  39.98s
+   Start at  10:18:24
+   Duration  53.18s
 
 ---
 GATE 2: Type Check (tsc)
@@ -41,7 +41,7 @@ Output:
    ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 38.0s
+ ✓ Compiled successfully in 49s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...
@@ -62,5 +62,5 @@ Route (app)                                 Size  First Load JS
 
 ○  (Static)  prerendered as static content
 =========================================
-ALL W9 FIXES INTEGRATION GATES: GREEN (PASS)
+ALL W9 POLISH INTEGRATION GATES: GREEN (PASS)
 =========================================

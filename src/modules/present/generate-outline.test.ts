@@ -251,7 +251,8 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
     const slides = generateSlideOutline(sections, [mockEvidence[0]]);
     expect(slides).toHaveLength(1);
     expect(slides[0].evidenceRefs).toEqual(["ev-github"]); // matches repo but vercel is omitted
-    expect(slides[0].bullets).toContain("[Cảnh báo: Minh chứng đã bị xóa]");
+    expect(slides[0].bullets).not.toContain("[Cảnh báo: Minh chứng đã bị xóa]");
+    expect(slides[0].brokenEvidenceNotes).toEqual(["[Cảnh báo: Minh chứng đã bị xóa]"]);
   });
 
   it("should be deterministic (same input yields same output)", () => {

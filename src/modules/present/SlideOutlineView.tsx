@@ -53,6 +53,16 @@ export function SlideOutlineView({
         </div>
       )}
 
+      {slide.brokenEvidenceNotes && slide.brokenEvidenceNotes.length > 0 && (
+        <div className="ws-present-slide-warnings" role="alert">
+          {slide.brokenEvidenceNotes.map((warning, index) => (
+            <div key={index} className="ws-present-slide-warning-item">
+              <span className="ws-present-slide-warning-icon">⚠️</span> {warning}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="ws-present-bullets-list">
         {slide.bullets.map((bullet, index) => (
           <div key={index} className="ws-present-bullet-row">

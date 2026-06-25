@@ -1529,3 +1529,27 @@ body {
   outline: 2px solid var(--rs-color-focus-ring);
   outline-offset: 1px;
 }
+
+.ws-present-slide-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  margin-top: var(--rs-space-1);
+  padding: var(--rs-space-2);
+  background-color: rgba(245, 158, 11, 0.05);
+  border: 1px dashed rgba(245, 158, 11, 0.2);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-present-slide-warning-item {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-severity-warning);
+}
+
+.ws-present-slide-warning-icon {
+  flex-shrink: 0;
+}
+

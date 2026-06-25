@@ -73,9 +73,10 @@ function collectUrls(node: ASTNode, urls: { url: string; text: string }[]) {
 function extractBulletsAndEvidence(
   nodes: ASTNode[],
   evidenceList: EvidenceItem[]
-): { bullets: string[]; evidenceRefs: string[] } {
+): { bullets: string[]; evidenceRefs: string[]; brokenEvidenceNotes: string[] } {
   const bullets: string[] = [];
   const evidenceRefs = new Set<string>();
+  const brokenEvidenceNotes: string[] = [];
 
   // Helper to extract first sentence from text
   function getFirstSentence(text: string): string {
@@ -123,7 +124,7 @@ function extractBulletsAndEvidence(
           (kw) => lowerUrl.includes(kw) || lowerText.includes(kw)
         );
         if (hasKeyword) {
-          bullets.push(`[Cảnh báo: Minh chứng đã bị xóa]`);
+          brokenEvidenceNotes.push(`[Cảnh báo: Minh chứng đã bị xóa]`);
         }
       }
     }
@@ -132,6 +133,7 @@ function extractBulletsAndEvidence(
   return {
     bullets: bullets.slice(0, 5),
     evidenceRefs: Array.from(evidenceRefs),
+    brokenEvidenceNotes,
   };
 }
 
@@ -144,14 +146,17 @@ export function generateSlideOutline(
 ): SlideOutline[] {
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
 
-  // Parse all headings to build a global numbered heading index
+  // Parse markdown once per section and build headings list
+  const parsedSections = sortedSections
+    .filter((s) => s.markdown && s.markdown.trim() !== "")
+    .map((s) => {
+      const ast = parseMarkdown(s.markdown);
+      return { section: s, ast };
+    });
+
   const allHeadings: HeadingNode[] = [];
-  for (const s of sortedSections) {
-    if (!s.markdown || s.markdown.trim() === "") {
-      continue;
-    }
-    const ast = parseMarkdown(s.markdown);
-    const secHeadings = parseHeadings(ast, s.id);
+  for (const item of parsedSections) {
+    const secHeadings = parseHeadings(item.ast, item.section.id);
     allHeadings.push(...secHeadings);
   }
 
@@ -171,12 +176,9 @@ export function generateSlideOutline(
   const outlines: SlideOutline[] = [];
   let globalSlideIdx = 0;
 
-  for (const s of sortedSections) {
-    if (!s.markdown || s.markdown.trim() === "") {
-      continue;
-    }
-
-    const ast = parseMarkdown(s.markdown);
+  for (const item of parsedSections) {
+    const s = item.section;
+    const ast = item.ast;
     const secHeadings = headingsBySection[s.id] || [];
     let sectionHeadingIdx = 0;
 
@@ -211,9 +213,9 @@ export function generateSlideOutline(
 
     let segmentIndex = 0;
     for (const segment of segments) {
-      const { bullets, evidenceRefs } = extractBulletsAndEvidence(segment.nodes, evidence);
+      const { bullets, evidenceRefs, brokenEvidenceNotes } = extractBulletsAndEvidence(segment.nodes, evidence);
       const isHeadingSlide = !!segment.headingNode;
-      const hasContent = bullets.length > 0 || evidenceRefs.length > 0;
+      const hasContent = bullets.length > 0 || evidenceRefs.length > 0 || brokenEvidenceNotes.length > 0;
 
       if (isHeadingSlide || hasContent) {
         outlines.push({
@@ -223,6 +225,7 @@ export function generateSlideOutline(
           title: segment.title,
           bullets,
           evidenceRefs,
+          brokenEvidenceNotes: brokenEvidenceNotes.length > 0 ? brokenEvidenceNotes : undefined,
         });
         segmentIndex++;
       }
