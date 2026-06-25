@@ -98,6 +98,7 @@ describe("buildSubmissionZip", () => {
       exports: {
         docx: docxBlob,
       },
+      readmeMarkdown: "",
       evidenceAppendixMarkdown: "# Appendix only",
     });
 
