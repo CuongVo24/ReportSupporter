@@ -59,7 +59,7 @@ describe("SubmissionPanel component structure", () => {
     const element = SubmissionPanel({
       bundle: mockBundle,
       check: mockCheck,
-      exportedBlobs: {},
+      exportedBlobs: { html: new Blob([""], { type: "text/html" }) },
       jobs: [],
     });
 
@@ -78,9 +78,52 @@ describe("SubmissionPanel component structure", () => {
     expect(checklistContainer.type).toBe("div");
     expect(checklistContainer.props.className).toBe("ws-submission-checklist-container");
 
-    const downloadButton = children[2];
+    const downloadButton = children[3];
     expect(downloadButton.type).toBe("button");
     expect(downloadButton.props.className).toBe("ws-submission-btn");
     expect(downloadButton.props.children).toBe("Tải về evidence.zip");
+  });
+
+  it("renders the checklist warning and packages warning when conditions require it", () => {
+    // 1. Test case: exportedBlobs is empty (should show blobs warning)
+    const elementEmptyBlobs = SubmissionPanel({
+      bundle: mockBundle,
+      check: mockCheck,
+      exportedBlobs: {},
+      jobs: [],
+    });
+    const children = elementEmptyBlobs.props.children;
+    
+    // index 2 is the warning when empty
+    const blobsWarning = children[2];
+    expect(blobsWarning.type).toBe("div");
+    expect(blobsWarning.props.className).toBe("ws-submission-blobs-warning");
+    expect(blobsWarning.props.children.join("")).toContain("chưa export trong phiên này");
+
+    const button = children[3];
+    expect(button.type).toBe("button");
+    expect(button.props.className).toBe("ws-submission-btn");
+
+    // 2. Test case: check is undefined (should show checker unrun warning)
+    const elementNoCheck = SubmissionPanel({
+      bundle: mockBundle,
+      check: undefined,
+      exportedBlobs: { html: new Blob([""], { type: "text/html" }) },
+      jobs: [],
+    });
+    const childrenNoCheck = elementNoCheck.props.children;
+    const checklistContainer = childrenNoCheck[1];
+    
+    const checklistWarning = checklistContainer.props.children[1];
+    expect(checklistWarning.type).toBe("div");
+    expect(checklistWarning.props.className).toBe("ws-submission-checklist-warning");
+    expect(checklistWarning.props.children).toContain("Hãy chạy Kiểm tra (Checker)");
+    
+    // blobs warning should not be rendered (since we passed html blob)
+    const noBlobsWarning = childrenNoCheck[2];
+    expect(noBlobsWarning).toBe(false);
+
+    const buttonNoCheck = childrenNoCheck[3];
+    expect(buttonNoCheck.type).toBe("button");
   });
 });
