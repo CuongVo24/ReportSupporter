@@ -1,4 +1,5 @@
 import React, { useId } from "react";
+import { AlertCircle } from "lucide-react";
 import "./Input.css";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -100,7 +101,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         {error ? (
           <p id={errorId} className="ws-field-error" role="alert">
-            <span className="ws-field-error-icon" aria-hidden="true">⚠</span>
+            <AlertCircle className="ws-field-error-icon" aria-hidden="true" />
             {error}
           </p>
         ) : helperText ? (

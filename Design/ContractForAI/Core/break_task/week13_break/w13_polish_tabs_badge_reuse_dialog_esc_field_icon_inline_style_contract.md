@@ -75,6 +75,6 @@ Dọn drift **không chặn merge** nhưng lệch contract/nhất quán: (a) Tab
 
 ## 7. Status
 
-`OPEN — chờ Approve (VibeCode Step 2: chưa chạm src/ tới khi duyệt).`
+`DONE`
 
 > Làm **sau** `w13_fix_*` (ưu tiên thấp hơn). Đề xuất commit: `fix(ui): tabs count via Badge (or declare split)`; `fix(ui): dialog confirm allow esc, block backdrop only`; `polish(ui): field error icon to lucide`; `polish(ui): gallery tokens over raw px`.

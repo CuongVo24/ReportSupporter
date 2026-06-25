@@ -38,9 +38,9 @@ This report summarizes the implementation, testing, and accessibility (a11y) val
 | **Input** | Default, With leading icon | Normal, Hover, Focus, Invalid (error state), Disabled | `aria-invalid`, associated `<label>` |
 | **Textarea** | Default, autoGrow, showCharCount | Normal, Focus, Invalid, Character Limit Exceeded | `aria-invalid`, character count readouts |
 | **Select** | Dropdown option list | Open, Closed, Focused Option, Disabled, Selected | Radix keyboard support (Space/Arrows/Enter) |
-| **Dialog** | `modal`, `drawer` (slide out), `confirm` | Open, Closed, Focus-trapped, Backdrop-close block | Radix focus trap, `Esc` exit, outside click blocker |
+| **Dialog** | `modal`, `drawer` (slide out), `confirm` | Open, Closed, Focus-trapped, Backdrop-close block | Radix focus trap, `Esc` exit (always allowed, incl. confirm), outside click blocker (confirm) |
 | **Toast** | `success`, `info`, `error` | Auto-dismissing (4s for success/info), Non-dismissing (error) | `role="status"`, `role="alert"` (error), viewport focus |
-| **Tabs** | `underline`, `segmented` | Active, Inactive, Badge Counts (error/warning/neutral) | Keyboard Arrow Left/Right, Home/End, `aria-selected` |
+| **Tabs** | `underline`, `segmented` | Active, Inactive, Badge Counts (error/warning/neutral) | Keyboard Arrow Left/Right, Home/End, `aria-selected`. Count badge is a **dedicated inline `<span>`** (not `Badge` primitive — `Badge` uses group/value semantic model). |
 
 ---
 

@@ -52,7 +52,7 @@ export default function UiGalleryPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--rs-space-8)", borderBottom: "1px solid var(--rs-color-border)", paddingBottom: "var(--rs-space-4)" }}>
           <div>
             <h1 style={{ fontSize: "var(--rs-font-size-xl)", fontWeight: "var(--rs-font-weight-bold)", margin: 0 }}>UI Component Gallery</h1>
-            <p style={{ fontSize: "var(--rs-font-size-sm)", color: "var(--rs-color-text-muted)", margin: "4px 0 0 0" }}>Dev-only gate for visually validating ReportSupporter components</p>
+            <p style={{ fontSize: "var(--rs-font-size-sm)", color: "var(--rs-color-text-muted)", margin: "var(--rs-space-1) 0 0 0" }}>Dev-only gate for visually validating ReportSupporter components</p>
           </div>
           <Button onClick={toggleTheme} variant="secondary">
             Switch to {theme === "light" ? "Dark" : "Light"} Mode

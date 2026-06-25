@@ -1,4 +1,5 @@
 import React, { useId, useRef, useEffect, useState, useCallback } from "react";
+import { AlertCircle } from "lucide-react";
 import "./Textarea.css";
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -137,7 +138,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <div className="ws-field-footer-info">
           {error ? (
             <p id={errorId} className="ws-field-error" role="alert">
-              <span className="ws-field-error-icon" aria-hidden="true">⚠</span>
+              <AlertCircle className="ws-field-error-icon" aria-hidden="true" />
               {error}
             </p>
           ) : helperText ? (

@@ -1,6 +1,6 @@
 import React, { useId } from "react";
 import * as RadixSelect from "@radix-ui/react-select";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, AlertCircle } from "lucide-react";
 import "./Select.css";
 
 export interface SelectOption {
@@ -132,7 +132,7 @@ export const Select: React.FC<SelectProps> = ({
 
       {error ? (
         <p id={errorId} className="ws-field-error" role="alert">
-          <span className="ws-field-error-icon" aria-hidden="true">⚠</span>
+          <AlertCircle className="ws-field-error-icon" aria-hidden="true" />
           {error}
         </p>
       ) : helperText ? (

@@ -24,17 +24,11 @@ export const Dialog: React.FC<DialogProps> = ({
   children,
   footer,
 }) => {
-  // Prevent closing when clicking outside or pressing Esc for confirm variant unless override is false
-  const shouldBlockDismiss = preventDismissOnOutsideClick ?? (variant === "confirm");
+  // Block backdrop click for confirm variant (Esc always allowed per a11y standard)
+  const shouldBlockBackdrop = preventDismissOnOutsideClick ?? (variant === "confirm");
 
   const handlePointerDownOutside = (e: CustomEvent) => {
-    if (shouldBlockDismiss) {
-      e.preventDefault();
-    }
-  };
-
-  const handleEscapeKeyDown = (e: KeyboardEvent) => {
-    if (shouldBlockDismiss) {
+    if (shouldBlockBackdrop) {
       e.preventDefault();
     }
   };
@@ -57,7 +51,7 @@ export const Dialog: React.FC<DialogProps> = ({
         <RadixDialog.Content
           className={contentClassNames}
           onPointerDownOutside={handlePointerDownOutside}
-          onEscapeKeyDown={handleEscapeKeyDown}
+          {...(!description && { "aria-describedby": undefined })}
         >
           <div className="ws-dialog-header">
             <RadixDialog.Title className="ws-dialog-title">
