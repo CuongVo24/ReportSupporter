@@ -35,4 +35,14 @@ export const speakerSchema = z.object({
 
 export type Speaker = z.infer<typeof speakerSchema>;
 
+export const speakerScriptSchema = z.object({
+  slideId: z.string(),
+  speakerId: z.string().optional(),
+  script: z.string(),
+  cues: z.array(z.string()),
+});
+
+export type SpeakerScript = z.infer<typeof speakerScriptSchema>;
+
+
 

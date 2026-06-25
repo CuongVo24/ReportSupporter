@@ -381,5 +381,12 @@ export type Speaker = {
   name: string;
   assignedSlideIds: string[];
 };
+
+export type SpeakerScript = {
+  slideId: string;
+  speakerId?: string;
+  script: string;
+  cues: string[];
+};
 ```
 
