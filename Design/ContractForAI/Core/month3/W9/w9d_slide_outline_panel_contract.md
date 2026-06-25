@@ -32,12 +32,12 @@ Dựng **Present panel** hiển thị slide outline theo dòng chương mục (t
 - ❌ Dep mới / network.
 
 ## 3. Checklist
-- [ ] `PresentPanel`: outline (title+bullets, sửa được) + timeline (+ badge over-limit) + gán speaker.
-- [ ] Gọi Groups A–C; không nhúng lại logic.
-- [ ] Wiring `Workspace.tsx`; CSS chỉ `var(--rs-*)`.
-- [ ] ≤200 dòng/file (tách `SlideOutlineView` nếu cần).
-- [ ] Component test: số slide / over-limit badge / chọn speaker.
-- [ ] 4 gates xanh.
+- [x] `PresentPanel`: outline (title+bullets, sửa được) + timeline (+ badge over-limit) + gán speaker.
+- [x] Gọi Groups A–C; không nhúng lại logic.
+- [x] Wiring `Workspace.tsx`; CSS chỉ `var(--rs-*)`.
+- [x] ≤200 dòng/file (tách `SlideOutlineView` nếu cần).
+- [x] Component test: số slide / over-limit badge / chọn speaker.
+- [x] 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -56,7 +56,7 @@ Dựng **Present panel** hiển thị slide outline theo dòng chương mục (t
 ## 5. Risks & Mitigations
 
 | Risk | Level | Mitigation |
-|---|---:|---|
+|---|---|---|
 | Nhúng lại thuật toán outline trong UI | Medium | Panel chỉ gọi A–C; logic ở module (Locked #1). |
 | File > 200 dòng | Low | Tách `SlideOutlineView`; panel mỏng. |
 | CSS lệch token | Low | Chỉ `var(--rs-*)` (`DesignSystem_Tokens.md`). |
@@ -71,6 +71,6 @@ Dựng **Present panel** hiển thị slide outline theo dòng chương mục (t
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(present): slide outline + timeline + speaker panel`; +1 docs commit.
