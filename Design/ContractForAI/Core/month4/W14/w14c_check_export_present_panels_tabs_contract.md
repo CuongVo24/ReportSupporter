@@ -1,4 +1,4 @@
-# Contract For AI - W14 Group C: Check/Export/Present Panels + Tabs
+# Contract For AI - W14 Group C: Check/Export/Submission/Evidence/Present Panels + Tabs
 
 > **Lane / Week:** Core / Month 4 / W14 - Day 3 (`Design/TaskBrief/Core/month4/w14.md` `[C150]`-`[C151]`).
 > **Branch:** `feature/W14-ui-adoption`.
@@ -10,7 +10,7 @@
 
 ## 1. Micro-task Target
 
-Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Present + count badge số issue; Checker dùng `Badge` severity (icon+chữ) + clickable jump-to-issue + readiness badge; Export/Present dùng `Button` loading, `Dialog` confirm, `Toast` done, error+retry. Nút PPTX giữ disabled + ghi chú (deferred).
+Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Submission/Evidence/Present + count badge số issue; Checker dùng `Badge` severity (icon+chữ) + clickable jump-to-issue + readiness badge; Export/Present dùng `Button` loading, `Dialog` confirm, `Toast` done, error+retry. Submission/Evidence cũng phải dùng primitive/state chung để không lệch UI. Nút PPTX giữ disabled + ghi chú (deferred).
 
 > **🔒 Adoption only (Locked #1).** Không đổi logic checker/export; không đổi shape.
 > **🔒 Tabs+Badge vào panel phải (Locked #4).** Severity icon+chữ; jump-to-issue clickable (B7/B11).
@@ -18,20 +18,23 @@ Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Present + 
 ## 2. Scope
 
 ### In scope (`[C150]`/`[C151]`)
-- Panel phải (MODIFY): `Tabs` underline Check/Export/Present + count badge (số issue, `aria-label`).
+- Panel phải (MODIFY): `Tabs` underline Check/Export/Submission/Evidence/Present + count badge (số issue, `aria-label`).
 - Checker panel (MODIFY): `Badge` severity (icon+chữ, không-chỉ-màu) + clickable jump-to-issue (Enter/Space); readiness badge theo ngưỡng `3.Check.md §5.3`.
 - Export/Present (MODIFY): `Button` loading (job chạy); `Dialog` confirm "Vẫn xuất dù còn lỗi?" (`VoiceAndContent §7`); `Toast` "Đã xuất {định dạng}" + action "Mở file"; error+retry (`ErrorStates.md`/`5.Flows/Export.md`). PPTX nút disabled + ghi chú "cần bật Phase 3".
+- Submission/Evidence (MODIFY): adopt `Button`/`Badge`/form primitives + `EmptyState`/`ErrorState` khi thiếu package/check/evidence; giữ nguyên reducer/export/evidence logic.
 
 ### Out of scope
 - ❌ Logic checker/export/present; đổi `ReportIssue`/job shape/CanonicalTypes.
 - ❌ Bật PPTX (`pptxgenjs` vẫn deferred).
 - ❌ Write/metadata (Group B).
+- ❌ Format logic-only (`src/modules/format/**`) nếu không có panel/view `.tsx`.
 
 ## 3. Checklist
-- [ ] Tabs underline Check/Export/Present + count badge số issue (nhãn đọc được).
+- [ ] Tabs underline Check/Export/Submission/Evidence/Present + count badge số issue (nhãn đọc được).
 - [ ] Severity badge icon+chữ; jump-to-issue clickable keyboard.
 - [ ] Readiness badge đúng ngưỡng (`3.Check.md §5.3`).
 - [ ] Export Button loading; confirm Dialog khi còn lỗi; Toast done + "Mở file"; error+retry.
+- [ ] SubmissionPanel + EvidencePanel adopt primitive/state chung; empty/error state rõ, keyboard/focus không tụt.
 - [ ] PPTX disabled + ghi chú (deferred parity).
 - [ ] Không đổi logic/shape; 4 gates xanh; a11y checklist thủ công (axe tự động ở **W15**).
 
@@ -39,10 +42,12 @@ Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Present + 
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| panel phải shell/container | MODIFY | Tabs Check/Export/Present |
-| `src/modules/check/**` panel/view | MODIFY | Badge severity + jump-to-issue |
-| `src/modules/export/**` panel/view | MODIFY | Button loading + Dialog + Toast + retry |
-| `src/modules/present/**` panel/view | MODIFY | states; PPTX disabled note |
+| `src/components/Workspace.tsx` / panel phải shell | MODIFY | Tabs Check/Export/Submission/Evidence/Present |
+| `src/modules/check/CheckerPanel.tsx` | MODIFY | Badge severity + jump-to-issue |
+| `src/modules/export/ExportPanel.tsx` | MODIFY | Button loading + Dialog + Toast + retry |
+| `src/modules/export/SubmissionPanel.tsx` | MODIFY | primitive/state adoption; no package/check empty state |
+| `src/modules/evidence/EvidencePanel.tsx` / `EvidenceForm.tsx` | MODIFY | primitive/form/state adoption |
+| `src/modules/present/PresentPanel.tsx` | MODIFY | states; PPTX disabled note |
 
 ## 5. Risks & Mitigations
 
@@ -53,11 +58,13 @@ Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Present + 
 | Toast error tự tắt khi export fail | Medium | error không auto-dismiss (Toast.md). |
 | Bật nhầm PPTX | Low | Giữ disabled + ghi chú (deferred). |
 | Count badge sai số realtime | Low | Bind từ ReportIssue[]; test. |
+| Bỏ sót panel live | Medium | Scope pin đủ `SubmissionPanel` + `EvidencePanel`; W15 QA/evidence phải quét cùng nhóm màn chính. |
 
 ## 6. Verification Plan
-- Chuyển tab Check/Export/Present bằng ←/→; count badge khớp số issue.
+- Chuyển tab Check/Export/Submission/Evidence/Present bằng ←/→; count badge khớp số issue.
 - Click badge issue → jump tới (Enter/Space); readiness đúng màu/ngưỡng.
 - Export còn lỗi → confirm Dialog; thành công → Toast "Mở file"; fail → error+retry.
+- Submission/Evidence có empty/error state, focus ring, keyboard path; không đổi reducer/export/evidence shape.
 - PPTX disabled + ghi chú; 4 gates xanh; a11y checklist thủ công (axe tự động ở W15).
 
 ## 7. Status

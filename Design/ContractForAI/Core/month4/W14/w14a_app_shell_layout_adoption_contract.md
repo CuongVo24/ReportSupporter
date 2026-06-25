@@ -24,7 +24,7 @@ Adopt primitive vào **App Shell**: toolbar sticky + hệ pane editor↔preview 
 - Responsive (`Responsive.md`): breakpoint editor↔preview (split→toggle/tab), panel phụ → `Drawer` khi hẹp, A4 scale-to-fit không méo.
 
 ### Out of scope
-- ❌ Panel Write/Format/Check/Export/Present nội dung (Group B–C).
+- ❌ Panel Write/Check/Export/Submission/Evidence/Present nội dung (Group B–C); Format logic-only nếu không có panel/view.
 - ❌ Đổi pipeline/preview logic; `--rs-report-*` (bất biến — Locked #3 tuần).
 - ❌ Cài lib mới.
 

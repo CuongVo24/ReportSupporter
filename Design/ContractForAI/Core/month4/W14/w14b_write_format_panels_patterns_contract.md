@@ -1,4 +1,4 @@
-# Contract For AI - W14 Group B: Write/Format Panels + Core Patterns
+# Contract For AI - W14 Group B: Write Panels + Core Patterns (Format logic-only)
 
 > **Lane / Week:** Core / Month 4 / W14 - Day 2 (`Design/TaskBrief/Core/month4/w14.md` `[C148]`-`[C149]`).
 > **Branch:** `feature/W14-ui-adoption`.
@@ -10,7 +10,7 @@
 
 ## 1. Micro-task Target
 
-Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nền: `EmptyState`/`LoadingSkeleton`/`ErrorState` shared, `FormValidation` (blur/submit), `Feedback` (autosave quiet). Không đổi behavior.
+Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nền: `EmptyState`/`LoadingSkeleton`/`ErrorState` shared, `FormValidation` (blur/submit), `Feedback` (autosave quiet). **Format hiện là logic-only** (`src/modules/format/**`, không có panel/view `.tsx`), nên không có surface UI để adopt trong Group B. Không đổi behavior.
 
 > **🔒 Adoption only (Locked #1).** Không logic mới; metadata schema/CanonicalTypes giữ nguyên.
 > **🔒 Tái dùng `src/components/states/` (W12) — nâng cấp, không lặp.**
@@ -21,9 +21,10 @@ Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nề
 - Write/metadata/template surfaces (MODIFY): dùng `Input`/`Textarea`/`Select`/`Button`; áp `FormValidation` (aria, blur/submit); `Feedback` autosave quiet ("Đã lưu").
 - `src/components/states/` (NEW/MODIFY): `EmptyState`/`LoadingSkeleton`/`ErrorState` shared (≤200 dòng/file), token-only; copy từ `VoiceAndContent.md §5`.
 - Áp empty/loading: chưa có report, report trống, preview đang render (`3.Patterns/EmptyStates.md`/`LoadingSkeleton.md`).
+- Format: ghi nhận **out-of-scope có chủ đích** vì `src/modules/format/**` chỉ có logic/test (`number-headings`, `generate-toc`, `captions`, ...), không có panel/view `.tsx`.
 
 ### Out of scope
-- ❌ Panel Check/Export/Present (Group C).
+- ❌ Panel Check/Export/Submission/Evidence/Present (Group C).
 - ❌ Editor CodeMirror internals (giữ nguyên); pipeline/preview logic.
 - ❌ Đổi schema metadata/template.
 
@@ -41,6 +42,7 @@ Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nề
 |---|---|---|
 | `src/modules/write/**` surfaces | MODIFY | dùng form primitives |
 | `src/components/states/*` | NEW/MODIFY | empty/loading/error shared |
+| `src/modules/format/**` | NO CHANGE | logic-only; không có panel/view để adopt |
 
 ## 5. Risks & Mitigations
 
@@ -50,6 +52,7 @@ Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nề
 | Spam toast autosave | Medium | Autosave = quiet inline (`Feedback.md`). |
 | Lặp lại states W12 | Medium | Nâng cấp shared, reconcile W12 (note). |
 | Empty-state để trắng | Low | Có copy + CTA (`EmptyStates.md`). |
+| Hiểu nhầm có Format panel | Low | Ghi rõ Format logic-only, no UI surface trong scope/files. |
 | File > 200 dòng | Low | Tách subcomponent. |
 
 ## 6. Verification Plan

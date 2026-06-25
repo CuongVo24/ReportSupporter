@@ -10,7 +10,7 @@
 
 ## 1. Micro-task Target
 
-**Visual QA toàn màn** (Write/Check/Export/Present/Shell) theo `0.ArtDirection.md §11` (6 câu) + anti-patterns §6; fix **tối thiểu** điểm trượt — không thêm feature/redesign. Đây là gate visual dời từ W14 Day 5 sang W15.
+**Visual QA toàn màn** (Write/Check/Export/Submission/Evidence/Present/Shell) theo `0.ArtDirection.md §11` (6 câu) + anti-patterns §6; fix **tối thiểu** điểm trượt — không thêm feature/redesign. Đây là gate visual dời từ W14 Day 5 sang W15.
 
 > **🔒 Verify + fix tối thiểu (Locked #1).** Không redesign; không đổi behavior/shape.
 > **🔒 W15 gánh QA của W14 (Locked #3).**
@@ -18,7 +18,7 @@
 ## 2. Scope
 
 ### In scope (`[C158]`/`[C159]`)
-- Visual QA mọi màn chính theo §11: một primary/màn, màu "kiếm được chỗ", đủ trạng thái, lấy từ component chung; không anti-pattern §6.
+- Visual QA mọi màn chính (Write/Check/Export/Submission/Evidence/Present/Shell) theo §11: một primary/màn, màu "kiếm được chỗ", đủ trạng thái, lấy từ component chung; không anti-pattern §6.
 - Fix tối thiểu các điểm trượt (token/spacing/primary/state) — `src/**` MODIFY khi cần, không thêm feature.
 - Ghi pass/fix theo từng màn (vào QA report Group E).
 
@@ -45,7 +45,7 @@
 |---|---:|---|
 | "Polish" lén đổi behavior | Medium | Fix tối thiểu visual; diff review (Locked #1). |
 | Redesign ngoài scope | Medium | Chỉ theo §11/§6; không thêm feature. |
-| Bỏ sót màn | Low | Checklist theo Flows/Layouts. |
+| Bỏ sót màn | Medium | Checklist pin đủ live panels trong `Workspace.tsx`: Check/Export/Submission/Evidence/Present + Write/Shell. |
 
 ## 6. Verification Plan
 - Duyệt từng màn theo §11; ghi pass/fix.

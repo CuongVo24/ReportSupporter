@@ -1,4 +1,4 @@
-# Contract For AI - W13 Group C: Overlays (Dialog + Drawer · Toast)
+# Contract For AI - W13 Group C: Overlays (Dialog variants · Toast)
 
 > **Lane / Week:** Core / Month 4 / W13 - Day 3 (`Design/TaskBrief/Core/month4/w13.md` `[C140]`-`[C141]`).
 > **Branch:** `feature/W13-ui-foundation`.
@@ -10,7 +10,7 @@
 
 ## 1. Micro-task Target
 
-Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **drawer** trượt phải · confirm; backdrop-close có điều kiện) và **Toast** (Radix Toast — Viewport dưới-phải, success/info/error, auto-dismiss 4s trừ error, action + stacking).
+Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **drawer** trượt phải · confirm; backdrop-close có điều kiện) và **Toast** (Radix Toast — Viewport dưới-phải, success/info/error, auto-dismiss 4s trừ error, action + stacking). **Drawer là variant của Dialog**, không phải overlay primitive tách rời.
 
 > **🔒 Giữ a11y Radix.** focus-trap/Esc/return-focus (Dialog), role/aria-live (Toast) — chỉ style token.
 > **🔒 Motion tiết chế (≤200ms) + reduced-motion (`Motion.md`).**
@@ -19,7 +19,7 @@ Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **dr
 ## 2. Scope
 
 ### In scope (`[C140]`/`[C141]`)
-- `src/components/ui/Dialog.{tsx,css}` (**NEW**): export `Dialog` + `Drawer`; overlay `--rs-z-overlay`, content `--rs-z-modal`/radius lg/`--rs-elevation-3`; footer 1 primary; close icon `X` (`aria-label`); confirm chặn backdrop-close.
+- `src/components/ui/Dialog.{tsx,css}` (**NEW**): export `Dialog` với variant `drawer` (có thể có alias `Drawer` nếu API thuận tiện); overlay `--rs-z-overlay`, content `--rs-z-modal`/radius lg/`--rs-elevation-3`; footer 1 primary; close icon `X` (`aria-label`); confirm chặn backdrop-close.
 - `src/components/ui/Toast.{tsx,css}` (**NEW**): `ToastProvider` + `Viewport` (dưới-phải, `--rs-z-toast`); variants success(`CheckCircle2`)/info(`Info`)/error(`XCircle`); 4s auto-dismiss (error không tự tắt); hover-pause; action button; stack ≤3.
 - Export qua `ui/index.ts`. (Provider mount ở root là **W14** — tuần này chỉ primitive + gallery render.)
 
@@ -41,7 +41,7 @@ Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **dr
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `src/components/ui/Dialog.{tsx,css}` | NEW | Dialog + Drawer + confirm |
+| `src/components/ui/Dialog.{tsx,css}` | NEW | Dialog variants: modal/drawer/confirm |
 | `src/components/ui/Toast.{tsx,css}` | NEW | Provider/Viewport + variants |
 | `src/components/ui/index.ts` | MODIFY | export overlays |
 
@@ -53,7 +53,7 @@ Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **dr
 | Confirm phá huỷ đóng do click ngoài | Medium | Chặn backdrop-close ở confirm (B9). |
 | Error toast tự tắt mất thông tin | Medium | error = không auto-dismiss (Toast.md §3). |
 | Motion phô trương | Low | ≤200ms + reduced-motion (`Motion.md`). |
-| File > 200 dòng | Low | Tách Dialog/Drawer + `.css`. |
+| File > 200 dòng | Low | Tách subcomponent/variant + `.css`. |
 
 ## 6. Verification Plan
 - Dialog: Tab bị trap trong dialog; Esc đóng; focus trả về trigger; drawer trượt phải.
@@ -65,4 +65,4 @@ Build hai overlay primitive: **Dialog** (Radix Dialog — variants modal · **dr
 
 `WAITING_FOR_APPROVAL`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): add Dialog + Drawer on radix (focus-trap/token)`; `feat(ui): add Toast on radix (bottom-right/stack/a11y)`; `docs(ui): commit w13c contract`.
+> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): add Dialog variants on radix (focus-trap/token)`; `feat(ui): add Toast on radix (bottom-right/stack/a11y)`; `docs(ui): commit w13c contract`.
