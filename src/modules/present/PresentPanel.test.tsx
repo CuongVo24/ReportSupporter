@@ -8,8 +8,10 @@ vi.mock("react", async (importOriginal) => {
   let stateCallCount = 0;
   // Custom mock values we can control in tests
   const stateValues = [
+    ["outline", vi.fn()], // activeTab
     [{}, vi.fn()], // editedBullets
     [{}, vi.fn()], // editedSpeakers
+    [{}, vi.fn()], // editedScripts
     [10, vi.fn()], // limitMinutes (10 mins)
   ];
 
@@ -64,10 +66,10 @@ describe("PresentPanel Component (pure JSX structure)", () => {
     const children = element.props.children;
     expect(children[0].props.children).toBe("Thuyết trình"); // Title
 
-    const timelineSummary = children[1];
+    const timelineSummary = children[2].props.children[0];
     expect(timelineSummary.props.className).toBe("ws-present-timeline-summary");
 
-    const slidesList = children[2];
+    const slidesList = children[2].props.children[1];
     expect(slidesList.props.className).toBe("ws-present-slides-list");
     const slideViews = slidesList.props.children;
     expect(slideViews).toHaveLength(2); // H1 slide and H2 slide
