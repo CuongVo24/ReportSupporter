@@ -77,6 +77,6 @@ export function generateSpeakerScript(outline: SlideOutline[], evidence?: Eviden
 
 ## 7. Status
 
-`READY_TO_IMPLEMENT`
+APPROVED
 
 > ✅ Approved in review pass. Implement exactly this contract. Đề xuất commit: (1) `feat(present): deterministic speaker script with evidence cues`; +1 docs commit.

@@ -203,7 +203,7 @@ export function Workspace() {
         evidence={bundle.evidence}
         onChange={handleEvidenceChange}
       />
-      <PresentPanel bundle={bundle} />
+      <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
     </div>
   );
 

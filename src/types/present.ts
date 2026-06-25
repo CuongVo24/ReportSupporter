@@ -35,4 +35,36 @@ export const speakerSchema = z.object({
 
 export type Speaker = z.infer<typeof speakerSchema>;
 
+export const speakerScriptSchema = z.object({
+  slideId: z.string(),
+  speakerId: z.string().optional(),
+  script: z.string(),
+  cues: z.array(z.string()),
+});
+
+export type SpeakerScript = z.infer<typeof speakerScriptSchema>;
+
+export const defenseQASchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  suggestedAnswer: z.string(),
+  relatedSectionId: z.string().optional(),
+  topic: z.enum(["scope", "tech", "result", "limitation", "future"]),
+});
+
+export type DefenseQA = z.infer<typeof defenseQASchema>;
+
+export const weakSectionHintSchema = z.object({
+  sectionId: z.string(),
+  slideId: z.string().optional(),
+  severity: z.enum(["error", "warning", "info"]),
+  reason: z.string(),
+  suggestion: z.string(),
+});
+
+export type WeakSectionHint = z.infer<typeof weakSectionHintSchema>;
+
+
+
+
 

@@ -381,5 +381,28 @@ export type Speaker = {
   name: string;
   assignedSlideIds: string[];
 };
+
+export type SpeakerScript = {
+  slideId: string;
+  speakerId?: string;
+  script: string;
+  cues: string[];
+};
+
+export type DefenseQA = {
+  id: string;
+  question: string;
+  suggestedAnswer: string;
+  relatedSectionId?: string;
+  topic: "scope" | "tech" | "result" | "limitation" | "future";
+};
+
+export type WeakSectionHint = {
+  sectionId: string;
+  slideId?: string;
+  severity: "error" | "warning" | "info";
+  reason: string;
+  suggestion: string;
+};
 ```
 
