@@ -74,4 +74,19 @@ describe("ai-gateway unit tests", () => {
     expect(result.original).toBe("Original Input");
     expect(result.id).toBeDefined();
   });
+
+  it("should return no-op when enabled without provider even if adapter is registered", async () => {
+    saveAiConfig({ enabled: true }); // no provider field
+    const mockAdapter: AiAdapter = {
+      request: vi.fn().mockResolvedValue("Should not be called"),
+    };
+    registerAdapter(mockAdapter);
+
+    const result = await requestSuggestion("rewrite", "Input text");
+
+    expect(mockAdapter.request).not.toHaveBeenCalled();
+    expect(result.suggestion).toBe("");
+    expect(result.action).toBe("rewrite");
+    expect(result.original).toBe("Input text");
+  });
 });

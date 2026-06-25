@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { z } from "zod";
 import type { ReportProjectBundle, CheckResult, SlideOutline } from "@/types";
+import { slideOutlineSchema } from "@/types";
 import { usePresent } from "./use-present";
 import { SlideOutlineView } from "./SlideOutlineView";
 import { ScriptView } from "./ScriptView";
@@ -50,8 +52,13 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
       const suggestion = await assistOutline(slides, gateway);
       if (suggestion.suggestion) {
         try {
-          const parsed = JSON.parse(suggestion.suggestion) as SlideOutline[];
-          setAiSuggestion(parsed);
+          const json = JSON.parse(suggestion.suggestion);
+          const result = z.array(slideOutlineSchema).safeParse(json);
+          if (result.success) {
+            setAiSuggestion(result.data);
+          } else {
+            setAiError("Không thể phân tích đề xuất từ AI.");
+          }
         } catch {
           setAiError("Không thể phân tích đề xuất từ AI.");
         }

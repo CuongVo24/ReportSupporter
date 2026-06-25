@@ -82,13 +82,8 @@ export async function requestSuggestion(
 ): Promise<AiSuggestion> {
   const config = loadAiConfig();
 
-  // Guard: disabled (flag OFF) — no network
-  if (!config.enabled) {
-    return buildNoopSuggestion(action, input);
-  }
-
-  // Guard: unconfigured — no network
-  if (_adapter === null) {
+  // Guard: not ready (disabled, no provider, or no adapter) — no network
+  if (!isAiReady(config) || _adapter === null) {
     return buildNoopSuggestion(action, input);
   }
 

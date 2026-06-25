@@ -2317,4 +2317,53 @@ span.ws-present-slide-speaker {
   font-size: var(--rs-font-size-xs);
 }
 
+/* ===== AiAssistBar (Write module AI toolbar) ===== */
 
+.ws-ai-assist-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-ai-assist-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  flex-wrap: wrap;
+}
+
+.ws-ai-rewrite-btn,
+.ws-ai-tone-btn {
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+.ws-ai-rewrite-btn:disabled,
+.ws-ai-tone-btn:disabled {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  cursor: not-allowed;
+}
+
+.ws-ai-assist-note {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-severity-warning);
+}
+
+.ws-ai-assist-error {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-severity-error);
+}

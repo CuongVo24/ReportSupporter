@@ -22,11 +22,11 @@ Lint completed successfully. 0 errors, 0 warnings.
  RUN  v4.1.9 E:/ReportSupporter
 
  Test Files  70 passed (70)
-      Tests  351 passed (351)
-   Start at  15:46:59
-   Duration  37.58s (transform 5.97s, setup 0ms, import 59.92s, tests 7.27s, environment 13.46s)
+      Tests  352 passed (352)
+   Start at  16:08:31
+   Duration  92.42s (transform 15.12s, setup 0ms, import 150.01s, tests 24.51s, environment 21.21s)
 
-Vitest completed successfully. All 351 tests passed.
+Vitest completed successfully. All 352 tests passed.
 
 ---
 4. PRODUCTION BUILD
@@ -37,7 +37,7 @@ Vitest completed successfully. All 351 tests passed.
    ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 30.3s
+ ✓ Compiled successfully in 64s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/4) ...
@@ -49,7 +49,7 @@ Vitest completed successfully. All 351 tests passed.
    Collecting build traces ...
 
 Route (app)                                 Size  First Load JS
-┌ ○ /                                     553 kB         656 kB
+┌ ○ /                                     552 kB         656 kB
 └ ○ /_not-found                             1 kB         104 kB
 + First Load JS shared by all             103 kB
   ├ chunks/1255-b8cf77ab14370e57.js        46 kB

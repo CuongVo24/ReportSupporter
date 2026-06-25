@@ -151,7 +151,14 @@ describe("PresentPanel Component", () => {
       action: "outline",
       original: "",
       suggestion: JSON.stringify([
-        { id: "sec-1-slide-0", title: "1. Mở đầu (Tối ưu)", bullets: ["Bullet 1", "Bullet 2"] }
+        {
+          id: "sec-1-slide-0",
+          fromSectionId: "sec-1",
+          order: 0,
+          title: "1. Mở đầu (Tối ưu)",
+          bullets: ["Bullet 1", "Bullet 2"],
+          evidenceRefs: [],
+        }
       ]),
     });
 

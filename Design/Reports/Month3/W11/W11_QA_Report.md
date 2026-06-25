@@ -27,7 +27,7 @@ During Week 11, the Core team completed all AI Layer and Assistant features (Gro
 - [x] **Code merged cleanly**: All changes are committed and pushed to the clean `feature/W11-ai-assistant` branch.
 - [x] **Lint pass**: `npm run lint` yields 0 errors and 0 warnings.
 - [x] **Typecheck pass**: `npm run typecheck` succeeds without compilation issues.
-- [x] **Test suite success**: `npx vitest run` passes 100% of 348 tests (including new AI config, gateway, assist-outline, rewrite, tone, and SuggestionDiff component tests).
+- [x] **Test suite success**: `npx vitest run` passes 100% of 352 tests (including new AI config, gateway, assist-outline, rewrite, tone, and SuggestionDiff component tests).
 - [x] **Production build**: `npm run build` generates Next.js production artifact cleanly.
 - [x] **Premium Visuals**: Implemented premium inline layouts for `SuggestionDiff` (side-by-side columns highlighted red/green using design tokens), `UserControlBar` (compact gray bar with interactive controls), and `AiOutlineButton` using design tokens (`var(--rs-*)`).
 - [x] **Explicit Triggering**: No AI generation runs automatically. Suggestion changes are kept in local states and applied only upon explicit user acceptance.

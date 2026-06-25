@@ -19,17 +19,17 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
   const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [showDiff, setShowDiff] = useState(false);
-  const [originalText, setOriginalText] = useState(section.markdown);
+  // originalText is only set right before an AI request, not on section open.
+  const [originalText, setOriginalText] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState<"rewrite" | "tone" | null>(null);
 
-  // Reset states and set new original text when the user switches sections
+  // Reset AI states when the user switches sections
   useEffect(() => {
-    setOriginalText(section.markdown);
+    setOriginalText(null);
     setAiSuggestion(null);
     setAiError(null);
     setShowDiff(false);
     setLoadingAction(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section.id]);
 
   const state = getGatewayState();
@@ -41,6 +41,7 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
   };
 
   const handleRewrite = async () => {
+    setOriginalText(section.markdown); // snapshot right before request
     setIsAiLoading(true);
     setLoadingAction("rewrite");
     setAiError(null);
@@ -61,6 +62,7 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
   };
 
   const handleTone = async () => {
+    setOriginalText(section.markdown); // snapshot right before request
     setIsAiLoading(true);
     setLoadingAction("tone");
     setAiError(null);
@@ -80,44 +82,15 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
     }
   };
 
-  const containerStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "var(--rs-space-2)",
-    padding: "var(--rs-space-3)",
-    backgroundColor: "var(--rs-color-surface)",
-    border: "1px solid var(--rs-color-border)",
-    borderRadius: "var(--rs-radius-md)",
-    marginBottom: "var(--rs-space-2)",
-  };
-
-  const buttonsRowStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "var(--rs-space-2)",
-    flexWrap: "wrap",
-  };
-
-  const btnStyle = (disabled: boolean): React.CSSProperties => ({
-    backgroundColor: disabled ? "var(--rs-color-surface-muted)" : "var(--rs-color-primary)",
-    color: disabled ? "var(--rs-color-text-muted)" : "var(--rs-white)",
-    border: "1px solid var(--rs-color-border)",
-    borderRadius: "var(--rs-radius-sm)",
-    padding: "var(--rs-space-1) var(--rs-space-3)",
-    fontSize: "var(--rs-font-size-xs)",
-    fontWeight: "var(--rs-font-weight-medium)",
-    cursor: disabled ? "not-allowed" : "pointer",
-    outline: "none",
-    transition: "background-color 0.2s",
-  });
+  // UserControlBar only shown when an AI interaction has occurred (originalText set)
+  const showControlBar = originalText !== null;
 
   return (
-    <div style={containerStyle} className="ws-ai-assist-bar-container">
-      <div style={buttonsRowStyle} className="ws-ai-assist-buttons-row">
+    <div className="ws-ai-assist-bar-container">
+      <div className="ws-ai-assist-buttons-row">
         <button
           type="button"
           disabled={isDisabled || isAiLoading}
-          style={btnStyle(isDisabled || isAiLoading)}
           onClick={handleRewrite}
           className="ws-ai-rewrite-btn"
         >
@@ -127,7 +100,6 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
         <button
           type="button"
           disabled={isDisabled || isAiLoading}
-          style={btnStyle(isDisabled || isAiLoading)}
           onClick={handleTone}
           className="ws-ai-tone-btn"
         >
@@ -135,25 +107,27 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
         </button>
 
         {isDisabled && (
-          <span style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-severity-warning)" }} className="ws-ai-assist-note">
+          <span className="ws-ai-assist-note">
             ⚠️ Bật AI trong cấu hình
           </span>
         )}
 
         {aiError && (
-          <span style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-severity-error)" }} className="ws-ai-assist-error">
+          <span className="ws-ai-assist-error">
             ⚠️ {aiError}
           </span>
         )}
       </div>
 
-      <UserControlBar
-        originalText={originalText}
-        currentText={section.markdown}
-        onUndo={() => onChange(originalText)}
-        onViewDiff={aiSuggestion ? () => setShowDiff(true) : undefined}
-        hasSuggestion={!!(aiSuggestion && aiSuggestion.suggestion)}
-      />
+      {showControlBar && (
+        <UserControlBar
+          originalText={originalText}
+          currentText={section.markdown}
+          onUndo={() => onChange(originalText)}
+          onViewDiff={aiSuggestion ? () => setShowDiff(true) : undefined}
+          hasSuggestion={!!(aiSuggestion && aiSuggestion.suggestion)}
+        />
+      )}
 
       {showDiff && aiSuggestion && (
         <SuggestionDiff
@@ -173,3 +147,4 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
     </div>
   );
 }
+
