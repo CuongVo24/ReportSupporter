@@ -23,6 +23,10 @@ Each delivery lane should follow this structure:
     W10/
     W11/
     W12/
+  month4/          # Phase 4 — Frontend / UI Investment
+    W13/
+    W14/
+    W15/
   break_task/
     week{N}_break/
     project_structure_break/

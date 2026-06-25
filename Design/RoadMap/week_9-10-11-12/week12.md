@@ -8,7 +8,7 @@
 
 **Theme:** *Prove the whole product works end-to-end, then ship a public demo.*
 
-Tuần cuối khoá toàn dự án: chạy **kịch bản end-to-end** một báo cáo dự án thật (template → metadata → write → check → format → evidence → export → present), **validate exports** trên nhiều sample, **polish UI states + accessibility**, và chuẩn bị **public demo + README evidence**. Không thêm tính năng lớn — tuần này là ổn định, đánh bóng, và chứng minh.
+Tuần đóng **phần lõi Phase 1–3**: chạy **kịch bản end-to-end** một báo cáo dự án thật (template → metadata → write → check → format → evidence → export → present), **validate exports** trên nhiều sample, **polish UI states + accessibility (checklist thủ công)**, và chuẩn bị **public demo + README evidence**. Không thêm tính năng lớn — tuần này là ổn định, đánh bóng, và chứng minh. **Không phải hết dự án:** Phase 4 (W13–W15) đầu tư frontend nối tiếp (`MasterRoadMap §Phase 4`).
 
 Mục tiêu chốt từ MasterRoadMap:
 - Run end-to-end project report scenario.
@@ -22,7 +22,7 @@ Mục tiêu chốt từ MasterRoadMap:
 
 - **Builds:** không module mới — tích hợp + ổn định toàn bộ Module 1-5.
 - **Depends on:** tất cả W1-W11.
-- **Depended on by:** không (tuần kết thúc roadmap 12 tuần).
+- **Depended on by:** Phase 4 (W13–W15 — UI investment trên app beta-ready).
 - **Đo theo:** `ProductPRD.md` §7 Success Criteria (skeleton <2 phút, export 3 format, checker concrete, first screen là workspace).
 
 ---

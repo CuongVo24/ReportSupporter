@@ -110,9 +110,9 @@
 - Polish UI states and accessibility.
 - Prepare public demo and README evidence.
 
-## Phase 4 - Frontend / UI Investment (Weeks 13-14)
+## Phase 4 - Frontend / UI Investment (Weeks 13-15)
 
-> Hai tuần extra biến giao diện thành first-class concern, dựng đẹp **theo mạch** thay vì sửa cuối kỳ. Bám discipline `Design/Frontend/` (Art Direction → Foundations → Components → Patterns → Layouts → Flows). **Không** thêm logic nghiệp vụ, **không** đổi `CanonicalTypes` — chỉ tầng trình bày.
+> Ba tuần extra biến giao diện thành first-class concern, dựng đẹp **theo mạch** thay vì sửa cuối kỳ. Bám discipline `Design/Frontend/` (Art Direction → Foundations → Components → Patterns → Layouts → Flows). **Không** thêm logic nghiệp vụ, **không** đổi `CanonicalTypes` — chỉ tầng trình bày. W13 **build** primitive, W14 **adopt** vào panel, W15 **hardening + QA** (axe automation + visual QA + evidence) để W13/W14 không phải đánh đổi chất lượng.
 
 ### Week 13: UI Foundation & Component Library
 
@@ -126,4 +126,11 @@
 - Refactor App Shell + panel Write/Format/Check/Export/Present dùng primitive W13 (không đổi behavior).
 - Áp Patterns: empty / loading-skeleton / error / form-validation / feedback nhất quán.
 - Áp microcopy (`Frontend/Other/VoiceAndContent.md`), responsive App Shell, dark mode polish.
-- Visual QA theo `0.ArtDirection.md` checklist §11; evidence screenshots before/after.
+- Self Visual QA + adoption coverage report (gate toàn diện + before/after evidence dời sang W15).
+
+### Week 15: UI Hardening, A11y Automation & Visual QA
+
+- Dựng **axe automation** (devDependency `axe-core`, Vitest+jsdom) → đẩy Phase 4 về **0 critical** (lần đầu tự động hoá a11y; W12–W14 là checklist thủ công).
+- Visual QA toàn màn theo `0.ArtDirection.md §11` + anti-patterns §6; hardening dark/motion/responsive ≥3 viewport.
+- Buffer hấp thụ spillover edge-state Day 3 của W13/W14 (Dialog/Toast/Tabs + panel Check/Export/Present đủ trạng thái).
+- **Before/after evidence** (light/dark × ≥3 viewport) + cập nhật `Frontend/` "implemented"; **đóng Phase 4**.

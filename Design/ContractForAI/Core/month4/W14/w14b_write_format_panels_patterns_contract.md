@@ -33,7 +33,7 @@ Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nề
 - [ ] Shared states EmptyState/LoadingSkeleton/ErrorState token-only.
 - [ ] Empty: chưa có report / report trống (copy `VoiceAndContent §5`, có CTA).
 - [ ] Loading: preview render skeleton (<300ms không nháy).
-- [ ] Behavior không đổi; 4 gates + axe 0 critical.
+- [ ] Behavior không đổi; 4 gates xanh; a11y checklist thủ công (axe tự động ở **W15**).
 
 ## 4. Expected Interfaces / Files
 
@@ -56,7 +56,7 @@ Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nề
 - Nhập metadata sai → error inline + aria; blur mới validate.
 - Autosave → "Đã lưu" quiet, không toast spam.
 - Xoá hết report → empty-state có CTA; preview render → skeleton.
-- Export mẫu parity; 4 gates + axe 0 critical.
+- Export mẫu parity; 4 gates xanh; a11y checklist thủ công (axe tự động ở W15).
 
 ## 7. Status
 
