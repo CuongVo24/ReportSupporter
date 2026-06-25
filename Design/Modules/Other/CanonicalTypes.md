@@ -406,3 +406,52 @@ export type WeakSectionHint = {
 };
 ```
 
+---
+
+## 10. AI Model
+
+Used by the optional AI assistant layer (Module Write — W11). **Feature flag defaults to OFF**; W1–W10 features do not depend on this.
+
+Design constraints:
+- Flag `enabled` is `false` by default (Locked #2).
+- `provider` is user-supplied; no SDK is bundled here (Locked #3).
+- No key/secret in code; adapter injection pattern (see `ai-gateway.ts`).
+
+```ts
+/** The AI operations the assistant can perform. */
+export type AiAction = "outline" | "rewrite" | "tone";
+
+/** A single AI suggestion, before or after user acceptance. */
+export type AiSuggestion = {
+  id: string;
+  action: AiAction;
+  /** Original text sent to AI. */
+  original: string;
+  /** AI-generated text. Empty string when gateway is disabled/unconfigured. */
+  suggestion: string;
+  /** Undefined until user explicitly accepts or rejects. */
+  accepted?: boolean;
+};
+
+/** Feature flag + optional provider identifier. */
+export type AiConfig = {
+  /** Master switch — default false. */
+  enabled: boolean;
+  /**
+   * Provider identifier (e.g. "openai" | "gemini").
+   * Meaningful only when enabled === true.
+   * No SDK is bundled; adapters are approved separately.
+   */
+  provider?: string;
+};
+
+/**
+ * Operational state of the AI gateway at call time.
+ * - "ready"        → flag ON + adapter registered → may send request.
+ * - "unconfigured" → flag ON but no adapter → no fetch.
+ * - "disabled"     → flag OFF → no fetch (default).
+ */
+export type GatewayState = "ready" | "unconfigured" | "disabled";
+```
+
+
