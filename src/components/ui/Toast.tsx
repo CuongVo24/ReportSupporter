@@ -50,8 +50,8 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
       <RadixToast.Root
         ref={ref}
         className={rootClassNames}
-        duration={toastDuration === Infinity ? undefined : toastDuration}
-        type="foreground"
+        duration={toastDuration}
+        type={variant === "error" ? "foreground" : "background"}
         role={variant === "error" ? "alert" : "status"}
         {...props}
       >
