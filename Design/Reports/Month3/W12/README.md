@@ -52,3 +52,13 @@ Các tệp tin mẫu đã được xuất bản thành công từ 3 mẫu tài l
 - **DOCX**: `Design/Reports/Month3/W12/samples/internship-report.docx`
 
 *(Các tệp tin mẫu trên đều chứa định dạng tiêu chuẩn, đánh số phân cấp tiêu đề tự động, và phụ lục minh chứng đính kèm mã QR. Để đảm bảo tính trung thực về công nghệ của dự án, các bản mẫu PDF được lưu dưới dạng file HTML in được `.print.html` do hệ thống hỗ trợ xuất bản PDF qua tính năng Browser Print và không sinh tệp tin PDF nhị phân trên máy chủ).*
+
+---
+
+## 🎨 Kiến trúc Trạng thái Giao diện (UI States Baseline)
+
+Trong Tuần 12, bộ component trạng thái dùng chung (`EmptyState`, `SuccessState`, `LoadingState`, `ErrorState`) đã được xây dựng tại `src/components/states/`:
+- `EmptyState` và `SuccessState` đã được tích hợp (wire) trực tiếp vào các panel chính (`CheckerPanel`, `ExportPanel`, `PresentPanel`, `PreviewPane`).
+- `ErrorState` được tích hợp vào khối hiển thị lỗi của lịch sử xuất bản (`ExportPanel`).
+- `LoadingState` được định nghĩa làm nền tảng (baseline) kiến trúc và được lên lịch tích hợp đồng bộ vào các luồng xử lý bất tuần tự trong giai đoạn nâng cấp UI/UX tiếp theo ở **Phase 4 (Week 14)**.
+

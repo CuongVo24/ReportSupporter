@@ -5,12 +5,9 @@ import {
   exportHtml,
   exportDocx,
   exportPdfViaBrowserPrint,
-  packDocx,
   prepareExport,
   buildPrintableHtml,
 } from "./index";
-import fs from "fs";
-import path from "path";
 
 describe("Multi-Template Export Validation Tests", () => {
   afterEach(() => {
@@ -22,11 +19,6 @@ describe("Multi-Template Export Validation Tests", () => {
   const targetTemplates = ALL_TEMPLATES.filter((t) =>
     ["software-project", "lab-report", "internship-report"].includes(t.id)
   );
-
-  const samplesDir = path.resolve(process.cwd(), "Design/Reports/Month3/W12/samples");
-  if (!fs.existsSync(samplesDir)) {
-    fs.mkdirSync(samplesDir, { recursive: true });
-  }
 
   for (const template of targetTemplates) {
     describe(`Template: ${template.name} (${template.id})`, () => {
@@ -68,9 +60,6 @@ describe("Multi-Template Export Validation Tests", () => {
           expect(htmlText).toContain("Hình 1: Mô tả hình minh họa");
           expect(htmlText).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
 
-          // Write actual HTML file for demo evidence
-          fs.writeFileSync(path.join(samplesDir, `${template.id}.html`), htmlText);
-
           // Verify that sections are exported in correct order
           const sortedSections = [...bundle.project.sections].sort((a, b) => a.order - b.order);
           if (sortedSections.length > 0) {
@@ -80,7 +69,6 @@ describe("Multi-Template Export Validation Tests", () => {
       });
 
       it("should export to PDF (via browser print) successfully when popup is mocked", async () => {
-        // Save printable HTML representation to PDF sample file for testing verification
         const input = prepareExport(bundle);
         const printableHtml = buildPrintableHtml(input);
 
@@ -95,12 +83,6 @@ describe("Multi-Template Export Validation Tests", () => {
         // Assert Caption Numbering Parity in printable HTML
         expect(printableHtml).toContain("Hình 1: Mô tả hình minh họa");
         expect(printableHtml).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
-
-        try {
-          fs.writeFileSync(path.join(samplesDir, `${template.id}.print.html`), printableHtml);
-        } catch (err) {
-          console.error("Failed to write PDF HTML preview:", err);
-        }
 
         const mockDocument = {
           open: vi.fn(),
@@ -132,11 +114,6 @@ describe("Multi-Template Export Validation Tests", () => {
         expect(result.ok).toBe(true);
         if (result.ok) {
           expect(result.doc).toBeDefined();
-
-          // Pack and write DOCX file for demo evidence
-          const docxBlob = await packDocx(result.doc);
-          const arrayBuffer = await docxBlob.arrayBuffer();
-          fs.writeFileSync(path.join(samplesDir, `${template.id}.docx`), Buffer.from(arrayBuffer));
 
           const docJson = JSON.stringify(result.doc);
           

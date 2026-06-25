@@ -31,7 +31,7 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
       </div>
 
       {!hasRun && (
-        <div style={{ marginTop: "var(--rs-space-4)" }}>
+        <div className="ws-state-block">
           <EmptyState
             title="Chưa chạy kiểm tra"
             message="Chạy kiểm tra để rà soát lỗi định dạng và tính nhất quán của báo cáo."
@@ -45,7 +45,7 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
         <>
           <ReadinessBadge score={result.readinessScore} />
           {issues.length === 0 && (
-            <div style={{ marginTop: "var(--rs-space-4)" }}>
+            <div className="ws-state-block">
               <SuccessState
                 title="Báo cáo hoàn hảo!"
                 message="Không phát hiện bất kỳ lỗi định dạng hay lỗi cấu trúc nào."

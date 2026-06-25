@@ -313,7 +313,7 @@ export function PreviewPane({
 
   if (!hasContent) {
     return (
-      <div className="ws-preview-container-empty" style={{ padding: "var(--rs-space-4)" }}>
+      <div className="ws-preview-container-empty">
         <EmptyState title="Chưa có nội dung xem trước" message="Viết nội dung trong editor để bắt đầu hiển thị bản in thử." />
       </div>
     );

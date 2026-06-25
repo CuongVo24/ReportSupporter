@@ -90,7 +90,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
     return (
       <div className="ws-present" aria-label="Thuyết trình">
         <h3 className="ws-present-panel-title">Thuyết trình</h3>
-        <div style={{ marginTop: "var(--rs-space-4)" }}>
+        <div className="ws-state-block">
           <EmptyState
             title="Chưa thể sinh slide"
             message="Báo cáo chưa có nội dung hoặc chỉ có các chương rỗng. Vui lòng thêm nội dung vào báo cáo để sinh slide thuyết trình tự động."
@@ -288,7 +288,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
           <div className="ws-present-hints-view">
             <h4 className="ws-present-view-title">Các phần cần hoàn thiện (Weak Sections)</h4>
             {hints.length === 0 ? (
-              <div style={{ marginTop: "var(--rs-space-4)" }}>
+              <div className="ws-state-block">
                 <SuccessState
                   title="Không có phần yếu kém"
                   message="Tuyệt vời! Không tìm thấy vấn đề yếu kém nào cần khắc phục trong các slide/section hiện tại."

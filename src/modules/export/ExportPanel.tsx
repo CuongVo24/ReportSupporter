@@ -1,5 +1,5 @@
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
-import { EmptyState } from "@/components/states";
+import { EmptyState, ErrorState } from "@/components/states";
 
 export function ExportPanel({
   bundle,
@@ -128,7 +128,7 @@ export function ExportPanel({
       <div className="ws-export-jobs-container">
         <h4 className="ws-export-section-subtitle">Lịch sử xuất bản</h4>
         {jobs.length === 0 ? (
-          <div style={{ marginTop: "var(--rs-space-2)" }}>
+          <div className="ws-state-block-sm">
             <EmptyState
               title="Chưa có lịch sử xuất bản"
               message="Lịch sử các tệp tin đã xuất bản (HTML, PDF, DOCX) trong phiên này sẽ hiển thị ở đây."
@@ -149,18 +149,12 @@ export function ExportPanel({
                 </div>
                 {job.status === "error" && job.error && (
                   <div className="ws-export-job-error-block">
-                    <p className="ws-export-job-error-msg">
-                      Lỗi ({job.error.stage}): {job.error.message}
-                    </p>
-                    {job.error.recoverable && (
-                      <button
-                        onClick={() => retry(job.id)}
-                        className="ws-export-retry-btn"
-                        aria-label={`Thử lại xuất bản ${getTargetLabel(job.target)}`}
-                      >
-                        Thử lại
-                      </button>
-                    )}
+                    <ErrorState
+                      title={`Lỗi xuất bản (${job.error.stage})`}
+                      message={job.error.message}
+                      actionLabel={job.error.recoverable ? "Thử lại" : undefined}
+                      onAction={job.error.recoverable ? () => retry(job.id) : undefined}
+                    />
                   </div>
                 )}
               </li>

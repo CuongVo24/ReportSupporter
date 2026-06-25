@@ -2462,4 +2462,18 @@ span.ws-present-slide-speaker {
   outline-offset: 2px;
 }
 
+/* State wrappers spacing & padding utilities */
+.ws-state-block {
+  margin-top: var(--rs-space-4);
+}
+
+.ws-state-block-sm {
+  margin-top: var(--rs-space-2);
+}
+
+.ws-preview-container-empty {
+  padding: var(--rs-space-4);
+}
+
+
 
