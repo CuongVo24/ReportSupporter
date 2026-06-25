@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { ScriptView } from "./ScriptView";
 import { DefenseQAView } from "./DefenseQAView";
-import type { SlideOutline, SpeakerScript, DefenseQA } from "@/types";
+import type { SlideOutline, SpeakerScript, DefenseQA, Speaker } from "@/types";
 
 describe("ScriptView Component", () => {
   const mockSlides: SlideOutline[] = [
@@ -15,9 +15,18 @@ describe("ScriptView Component", () => {
     },
   ];
 
+  const mockSpeakers: Speaker[] = [
+    {
+      id: "spk-1",
+      name: "Nguyễn Văn A",
+      assignedSlideIds: ["slide-1"],
+    },
+  ];
+
   const mockScripts: SpeakerScript[] = [
     {
       slideId: "slide-1",
+      speakerId: "spk-1",
       script: "Sau đây xin phép trình bày phần mở đầu.",
       cues: ["mở demo video"],
     },
@@ -28,6 +37,7 @@ describe("ScriptView Component", () => {
     const element = ScriptView({
       scripts: mockScripts,
       slides: mockSlides,
+      speakers: mockSpeakers,
       onScriptChange,
     });
 
@@ -40,6 +50,12 @@ describe("ScriptView Component", () => {
     const item = scriptList.props.children[0];
     expect(item.key).toBe("slide-1");
     expect(item.props.className).toBe("ws-present-script-item");
+
+    const header = item.props.children[0];
+    expect(header.props.className).toBe("ws-present-script-header");
+    const speakerSpan = header.props.children[1];
+    expect(speakerSpan.props.className).toBe("ws-present-slide-speaker");
+    expect(speakerSpan.props.children[1]).toBe("Nguyễn Văn A");
 
     const textarea = item.props.children[1].props.children[1];
     expect(textarea.props.value).toBe("Sau đây xin phép trình bày phần mở đầu.");

@@ -1,13 +1,14 @@
 import React from "react";
-import type { SpeakerScript, SlideOutline } from "@/types";
+import type { SpeakerScript, SlideOutline, Speaker } from "@/types";
 
 interface ScriptViewProps {
   scripts: SpeakerScript[];
   slides: SlideOutline[];
+  speakers: Speaker[];
   onScriptChange: (slideId: string, val: string) => void;
 }
 
-export function ScriptView({ scripts, slides, onScriptChange }: ScriptViewProps) {
+export function ScriptView({ scripts, slides, speakers, onScriptChange }: ScriptViewProps) {
   return (
     <div className="ws-present-script-view" aria-label="Kịch bản nói">
       <h4 className="ws-present-view-title">Kịch bản nói (Speaker Script)</h4>
@@ -22,7 +23,7 @@ export function ScriptView({ scripts, slides, onScriptChange }: ScriptViewProps)
                 <span className="ws-present-slide-title">{slide.title}</span>
                 {item.speakerId && (
                   <span className="ws-present-slide-speaker">
-                    🗣️ Người nói: {item.speakerId}
+                    🗣️ Người nói: {speakers.find((s) => s.id === item.speakerId)?.name ?? item.speakerId}
                   </span>
                 )}
               </div>

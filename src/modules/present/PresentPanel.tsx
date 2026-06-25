@@ -135,6 +135,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
           <ScriptView
             scripts={scripts}
             slides={slides}
+            speakers={speakers}
             onScriptChange={handleScriptChange}
           />
         </div>
@@ -164,7 +165,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
                       </span>
                       {hint.slideId && (
                         <span className="ws-present-hint-slide-link">
-                          Trỏ tới slide: <strong>{hint.slideId}</strong>
+                          Trỏ tới slide: <strong>{slides.find((s) => s.id === hint.slideId)?.title ?? hint.slideId}</strong>
                         </span>
                       )}
                     </div>
