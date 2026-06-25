@@ -1,0 +1,161 @@
+/* ===== Button Primitive Styles ===== */
+
+.ws-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--rs-font-family-ui);
+  font-weight: var(--rs-font-weight-medium);
+  text-decoration: none;
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: background-color 130ms ease-out, border-color 130ms ease-out, opacity 130ms ease-out;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-btn {
+    transition: none;
+  }
+}
+
+/* Variants */
+.ws-btn-primary {
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border-color: transparent;
+}
+
+.ws-btn-primary:hover:not(:disabled) {
+  background-color: var(--rs-color-primary-hover);
+}
+
+.ws-btn-primary:active:not(:disabled) {
+  opacity: 0.85;
+}
+
+.ws-btn-secondary {
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  border-color: var(--rs-color-border);
+}
+
+.ws-btn-secondary:hover:not(:disabled) {
+  background-color: var(--rs-color-surface-muted);
+}
+
+.ws-btn-secondary:active:not(:disabled) {
+  background-color: var(--rs-color-border);
+}
+
+.ws-btn-ghost {
+  background-color: transparent;
+  color: var(--rs-color-text);
+  border-color: transparent;
+}
+
+.ws-btn-ghost:hover:not(:disabled) {
+  background-color: var(--rs-color-surface-muted);
+}
+
+.ws-btn-ghost:active:not(:disabled) {
+  background-color: var(--rs-color-border);
+}
+
+.ws-btn-danger {
+  background-color: var(--rs-color-severity-error);
+  color: var(--rs-white);
+  border-color: transparent;
+}
+
+.ws-btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.ws-btn-danger:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+/* Modifiers: Sizes */
+.ws-btn-md {
+  height: 36px;
+  padding: var(--rs-space-2) var(--rs-space-4);
+  font-size: var(--rs-font-size-md);
+  gap: var(--rs-space-2);
+}
+
+.ws-btn-sm {
+  height: 28px;
+  padding: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-sm);
+  gap: var(--rs-space-2);
+}
+
+/* Modifiers: Icon Only */
+.ws-btn-icon-only.ws-btn-md {
+  width: 36px;
+  padding: var(--rs-space-2);
+  justify-content: center;
+}
+
+.ws-btn-icon-only.ws-btn-sm {
+  width: 28px;
+  padding: var(--rs-space-1);
+  justify-content: center;
+}
+
+/* Modifiers: Full Width */
+.ws-btn-full-width {
+  display: flex;
+  width: 100%;
+}
+
+/* States */
+.ws-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ws-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 2px;
+}
+
+/* Loading & Spinner */
+.ws-btn-loading {
+  cursor: wait;
+}
+
+.ws-btn-spinner {
+  animation: ws-btn-spinner-spin 1s linear infinite;
+  width: var(--rs-space-4);
+  height: var(--rs-space-4);
+  flex-shrink: 0;
+}
+
+@keyframes ws-btn-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-btn-spinner {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+.ws-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ws-btn-label {
+  display: inline-block;
+}
