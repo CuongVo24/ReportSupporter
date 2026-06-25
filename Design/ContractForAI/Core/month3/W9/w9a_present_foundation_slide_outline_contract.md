@@ -32,13 +32,13 @@ Tạo **module Present mới** (`src/modules/present/`) và sinh **slide outline
 - ❌ Đổi shape Write/Format; dep mới.
 
 ## 3. Checklist
-- [ ] `present.ts` + CanonicalTypes §9: `SlideOutline` + zod; re-export `@/types`.
-- [ ] `generateSlideOutline`: giữ đúng dòng chương mục; bullets cap; section rỗng bỏ.
-- [ ] `evidenceRefs` map từ image/evidence; không đổi Evidence shape.
-- [ ] Deterministic; offline (no fetch/AI).
-- [ ] Public surface qua `@/modules/present`.
-- [ ] `generate-outline.test.ts` phủ order/empty/bullets-cap/deterministic/no-network.
-- [ ] ≤200 dòng/file; 4 gates xanh.
+- [x] `present.ts` + CanonicalTypes §9: `SlideOutline` + zod; re-export `@/types`.
+- [x] `generateSlideOutline`: giữ đúng dòng chương mục; bullets cap; section rỗng bỏ.
+- [x] `evidenceRefs` map từ image/evidence; không đổi Evidence shape.
+- [x] Deterministic; offline (no fetch/AI).
+- [x] Public surface qua `@/modules/present`.
+- [x] `generate-outline.test.ts` phủ order/empty/bullets-cap/deterministic/no-network.
+- [x] ≤200 dòng/file; 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -85,6 +85,6 @@ export function generateSlideOutline(sections: ReportSection[], evidence?: Evide
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(types): present model (SlideOutline) in CanonicalTypes §9`; (2) `feat(present): deterministic slide outline from report sections`; +1 docs commit. Mở module Present (Phase 3).
