@@ -1,4 +1,5 @@
 import React from "react";
+import type { AiAction } from "@/types";
 
 export interface SuggestionDiffProps {
   original: string;
@@ -6,6 +7,7 @@ export interface SuggestionDiffProps {
   onAccept: (suggestion: string) => void;
   onReject: () => void;
   title?: string;
+  action?: AiAction;
 }
 
 export function SuggestionDiff({
@@ -14,7 +16,11 @@ export function SuggestionDiff({
   onAccept,
   onReject,
   title = "So sánh đề xuất thay đổi",
+  action,
 }: SuggestionDiffProps) {
+  const displayTitle = action === "tone"
+    ? "Cải thiện văn phong học thuật"
+    : (action === "rewrite" ? "So sánh đề xuất viết lại" : title);
   const containerStyle: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -106,7 +112,7 @@ export function SuggestionDiff({
   return (
     <div style={containerStyle} className="ws-suggestion-diff-container">
       <div style={headerStyle} className="ws-suggestion-diff-header">
-        <h4 style={titleStyle}>{title}</h4>
+        <h4 style={titleStyle}>{displayTitle}</h4>
       </div>
 
       <div style={diffContainerStyle} className="ws-suggestion-diff-grid">

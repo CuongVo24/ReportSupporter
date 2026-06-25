@@ -24,4 +24,6 @@ export { requestSuggestion, getGatewayState, registerAdapter } from "./ai/ai-gat
 export type { AiAdapter } from "./ai/ai-gateway";
 export { rewriteSection } from "./ai/rewrite-section";
 export { SuggestionDiff } from "./ai/SuggestionDiff";
+export { improveTone } from "./ai/improve-tone";
+export { UserControlBar } from "./ai/UserControlBar";
 
