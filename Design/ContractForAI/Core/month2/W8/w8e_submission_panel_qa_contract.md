@@ -74,6 +74,6 @@ Ghép các mảnh W8 thành **một luồng nộp bài** trong UI: nút "Tải e
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(export): submission panel (evidence.zip + checklist + history)`; (2) `docs(w8): W8 QA report + submission samples`; +1 docs commit. Đóng Submission MVP (Phase 2).

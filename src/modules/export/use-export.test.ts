@@ -21,8 +21,11 @@ const mockSetJobs = vi.fn((updater: unknown) => {
 
 vi.mock("react", () => ({
   useState: <T>(initial: T) => {
-    jobsArray = [...(initial as unknown as ExportJob[])];
-    return [jobsArray, mockSetJobs];
+    if (Array.isArray(initial)) {
+      jobsArray = [...(initial as unknown as ExportJob[])];
+      return [jobsArray, mockSetJobs];
+    }
+    return [initial, vi.fn()];
   },
   useCallback: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
 }));

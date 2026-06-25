@@ -82,6 +82,6 @@ export function loadExportHistory(): Promise<ExportJob[]>;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(storage): export-history IndexedDB store + schema`; (2) `feat(export): record export jobs to local history`; +1 docs commit.

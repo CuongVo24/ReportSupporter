@@ -72,6 +72,6 @@ export function generateReadme(bundle: ReportProjectBundle): string;
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(export): generate README.md from report metadata + evidence`; +1 docs commit.
