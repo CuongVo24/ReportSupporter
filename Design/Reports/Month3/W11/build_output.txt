@@ -1,0 +1,100 @@
+=== QUALITY GATES BUILD OUTPUT LOGS ===
+
+---
+1. TYPECHECK
+---
+> report-supporter@0.1.0 typecheck
+> tsc --noEmit
+
+Typecheck completed successfully. 0 errors.
+
+---
+2. LINT
+---
+> report-supporter@0.1.0 lint
+> eslint .
+
+Lint completed successfully. 0 errors, 0 warnings.
+
+---
+3. TEST SUITE (VITEST)
+---
+ RUN  v4.1.9 E:/ReportSupporter
+
+ ✓ src/modules/export/use-export.test.ts (7 tests) 129ms
+ ✓ src/modules/check/rules/table-width.test.ts (3 tests) 41ms
+ ✓ src/modules/format/number-headings.test.ts (7 tests) 42ms
+ ✓ src/modules/write/buildInitialSections.test.ts (5 tests) 70ms
+ ✓ src/modules/check/rules/code-language.test.ts (4 tests) 34ms
+ ✓ src/modules/check/rules/heading-levels.test.ts (4 tests) 40ms
+ ✓ src/modules/write/use-image-insert.test.ts (3 tests) 36ms
+ ✓ src/modules/export/mdast-to-docx.test.ts (6 tests) 126ms
+ ✓ src/modules/write/autosave.test.ts (3 tests) 44ms
+ ✓ src/modules/write/templates/internship-report.test.ts (3 tests) 20ms
+ ✓ src/modules/write/ai/rewrite-section.test.ts (3 tests) 18ms
+ ✓ src/modules/present/generate-qa.test.ts (7 tests) 32ms
+ ✓ src/modules/write/ai/improve-tone.test.ts (3 tests) 29ms
+ ✓ src/modules/write/create-project.test.ts (4 tests) 21ms
+ ✓ src/modules/present/ai/assist-outline.test.ts (3 tests) 31ms
+ ✓ src/modules/write/templates/lab-report.test.ts (3 tests) 22ms
+ ✓ src/modules/write/generate-skeleton.test.ts (4 tests) 22ms
+ ✓ src/modules/present/generate-script.test.ts (5 tests) 15ms
+ ✓ src/modules/present/weak-sections.test.ts (5 tests) 15ms
+ ✓ src/modules/evidence/validate.test.ts (7 tests) 14ms
+ ✓ src/modules/evidence/evidence-reducer.test.ts (6 tests) 16ms
+ ✓ src/modules/export/submission-checklist.test.ts (8 tests) 17ms
+ ✓ src/modules/write/templates/readme-report.test.ts (2 tests) 17ms
+ ✓ src/modules/present/speakers.test.ts (8 tests) 16ms
+ ✓ src/modules/format/generate-toc.test.ts (4 tests) 14ms
+ ✓ src/modules/write/extract-mermaid.test.ts (3 tests) 14ms
+ ✓ src/modules/write/templates/index.test.ts (5 tests) 13ms
+ ✓ src/modules/present/timeline.test.ts (4 tests) 14ms
+ ✓ src/modules/write/insert-snippet.test.ts (7 tests) 10ms
+ ✓ src/modules/export/generate-readme.test.ts (5 tests) 9ms
+ ✓ src/modules/format/generate-lof-lot.test.ts (3 tests) 15ms
+ ✓ src/modules/evidence/kind-meta.test.ts (1 test) 11ms
+ ✓ src/modules/check/readiness-score.test.ts (7 tests) 11ms
+ ✓ src/modules/write/MetadataForm.test.ts (3 tests) 9ms
+ ✓ src/lib/slugify.test.ts (6 tests) 13ms
+ ✓ src/modules/export/print-css.test.ts (5 tests) 13ms
+ ✓ src/modules/write/ProjectInitializer.test.tsx (1 test) 11ms
+ ✓ src/smoke.test.ts (1 test) 6ms
+
+ Test Files  67 passed (67)
+      Tests  331 passed (331)
+   Start at  15:08:07
+   Duration  59.08s (transform 5.47s, setup 0ms, import 97.53s, tests 10.16s, environment 5.74s)
+
+Vitest completed successfully. All 331 tests passed.
+
+---
+4. PRODUCTION BUILD
+---
+> report-supporter@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 43s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                     552 kB         655 kB
+└ ○ /_not-found                             1 kB         104 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-b8cf77ab14370e57.js        46 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.97 kB
+
+○  (Static)  prerendered as static content
+
+Next.js build succeeded.

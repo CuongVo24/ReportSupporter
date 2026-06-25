@@ -59,9 +59,9 @@ export function registerAdapter(adapter: AiAdapter | null): void {
  */
 export function getGatewayState(): GatewayState {
   const config = loadAiConfig();
+  if (!config.enabled) return "disabled";
   if (isAiReady(config) && _adapter !== null) return "ready";
-  if (isAiUnconfigured(config)) return "unconfigured";
-  return "disabled";
+  return "unconfigured";
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,77 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  registerAdapter,
+  getGatewayState,
+  requestSuggestion,
+  AiAdapter,
+} from "./ai-gateway";
+import { saveAiConfig } from "./ai-config";
+
+describe("ai-gateway unit tests", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    registerAdapter(null); // Reset adapter
+  });
+
+  it("should return correct gateway states", () => {
+    // 1. Default (disabled)
+    expect(getGatewayState()).toBe("disabled");
+
+    // 2. Enabled but no adapter (unconfigured)
+    saveAiConfig({ enabled: true, provider: "openai" });
+    expect(getGatewayState()).toBe("unconfigured");
+
+    // 3. Ready (enabled + provider + adapter registered)
+    const mockAdapter: AiAdapter = {
+      request: vi.fn(),
+    };
+    registerAdapter(mockAdapter);
+    expect(getGatewayState()).toBe("ready");
+  });
+
+  it("should return no-op suggestion and not delegate when AI is disabled", async () => {
+    saveAiConfig({ enabled: false });
+    const mockAdapter = {
+      request: vi.fn(),
+    };
+    registerAdapter(mockAdapter);
+
+    const result = await requestSuggestion("rewrite", "Original Input");
+
+    expect(mockAdapter.request).not.toHaveBeenCalled();
+    expect(result.suggestion).toBe("");
+    expect(result.action).toBe("rewrite");
+    expect(result.original).toBe("Original Input");
+    expect(result.id).toBeDefined();
+  });
+
+  it("should return no-op suggestion and not delegate when AI is enabled but unconfigured (no adapter)", async () => {
+    saveAiConfig({ enabled: true, provider: "openai" });
+    // No registerAdapter called, so adapter is null
+
+    const result = await requestSuggestion("rewrite", "Original Input");
+
+    expect(result.suggestion).toBe("");
+    expect(result.action).toBe("rewrite");
+    expect(result.original).toBe("Original Input");
+    expect(result.id).toBeDefined();
+  });
+
+  it("should delegate to adapter and return suggestion when ready", async () => {
+    saveAiConfig({ enabled: true, provider: "openai" });
+    
+    const mockAdapter: AiAdapter = {
+      request: vi.fn().mockResolvedValue("Rewritten AI suggestion"),
+    };
+    registerAdapter(mockAdapter);
+
+    const result = await requestSuggestion("rewrite", "Original Input");
+
+    expect(mockAdapter.request).toHaveBeenCalledWith("rewrite", "Original Input");
+    expect(result.suggestion).toBe("Rewritten AI suggestion");
+    expect(result.action).toBe("rewrite");
+    expect(result.original).toBe("Original Input");
+    expect(result.id).toBeDefined();
+  });
+});
