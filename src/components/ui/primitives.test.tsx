@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { Button, Badge, Input, Textarea, Select } from "./index";
+import { Button, Badge, Input, Textarea, Select, Dialog, Toast, ToastProvider, ToastViewport, Tabs, TabsList, TabsTrigger, TabsContent } from "./index";
 
 afterEach(cleanup);
 
@@ -16,14 +16,7 @@ beforeEach(() => {
         disconnect() {}
       };
     }
-    if (!window.PointerEvent) {
-      class MockPointerEvent extends Event {
-        constructor(type: string, props: Record<string, unknown> = {}) {
-          super(type, props);
-        }
-      }
-      window.PointerEvent = MockPointerEvent as unknown as typeof PointerEvent;
-    }
+
     // Mock HTMLElement.prototype.scrollIntoView if needed by Radix
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
   }
@@ -120,6 +113,68 @@ describe("UI Primitives", () => {
     it("renders trigger and options list", () => {
       render(<Select label="Kích thước" options={options} defaultValue="a4" />);
       expect(screen.getByText("Khổ giấy A4")).toBeDefined();
+    });
+  });
+
+  describe("Dialog component", () => {
+    it("renders title and children when open", () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Dialog isOpen={true} onOpenChange={onOpenChange} title="Cấu hình xuất PDF">
+          <div>Nội dung Dialog</div>
+        </Dialog>
+      );
+      expect(screen.getByText("Cấu hình xuất PDF")).toBeDefined();
+      expect(screen.getByText("Nội dung Dialog")).toBeDefined();
+    });
+
+    it("triggers onOpenChange when close button is clicked", () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Dialog isOpen={true} onOpenChange={onOpenChange} title="Tiêu đề">
+          <div>Body</div>
+        </Dialog>
+      );
+      const closeBtn = screen.getByRole("button", { name: "Đóng" });
+      fireEvent.click(closeBtn);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe("Toast component", () => {
+    it("renders toast title and description", () => {
+      render(
+        <ToastProvider>
+          <ToastViewport />
+          <Toast open={true} variant="success" title="Thành công" description="Đã lưu báo cáo" />
+        </ToastProvider>
+      );
+      expect(screen.getByText("Thành công")).toBeDefined();
+      expect(screen.getByText("Đã lưu báo cáo")).toBeDefined();
+    });
+  });
+
+  describe("Tabs component", () => {
+    it("renders tabs and toggles content active state", () => {
+      render(
+        <Tabs defaultValue="tab1">
+          <TabsList>
+            <TabsTrigger value="tab1" count={5}>Tab 1</TabsTrigger>
+            <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+          </TabsList>
+          <TabsContent value="tab1">Nội dung 1</TabsContent>
+          <TabsContent value="tab2">Nội dung 2</TabsContent>
+        </Tabs>
+      );
+      expect(screen.getByText("Nội dung 1")).toBeDefined();
+      expect(screen.queryByText("Nội dung 2")).toBeNull();
+      expect(screen.getByText("5")).toBeDefined();
+
+      const tab2Trigger = screen.getByRole("tab", { name: "Tab 2" });
+      fireEvent.mouseDown(tab2Trigger);
+      fireEvent.mouseUp(tab2Trigger);
+      fireEvent.click(tab2Trigger);
+      expect(screen.getByText("Nội dung 2")).toBeDefined();
     });
   });
 });
