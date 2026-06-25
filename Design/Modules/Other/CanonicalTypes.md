@@ -396,5 +396,13 @@ export type DefenseQA = {
   relatedSectionId?: string;
   topic: "scope" | "tech" | "result" | "limitation" | "future";
 };
+
+export type WeakSectionHint = {
+  sectionId: string;
+  slideId?: string;
+  severity: "error" | "warning" | "info";
+  reason: string;
+  suggestion: string;
+};
 ```
 

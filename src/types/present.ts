@@ -54,6 +54,17 @@ export const defenseQASchema = z.object({
 
 export type DefenseQA = z.infer<typeof defenseQASchema>;
 
+export const weakSectionHintSchema = z.object({
+  sectionId: z.string(),
+  slideId: z.string().optional(),
+  severity: z.enum(["error", "warning", "info"]),
+  reason: z.string(),
+  suggestion: z.string(),
+});
+
+export type WeakSectionHint = z.infer<typeof weakSectionHintSchema>;
+
+
 
 
 
