@@ -63,3 +63,15 @@ export async function clearExportHistory(): Promise<void> {
   const db = await getDb();
   await db.clear("export-history");
 }
+
+/** Replace all history records in the export-history store inside a single transaction. */
+export async function replaceExportHistory(entries: unknown[]): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction("export-history", "readwrite");
+  const store = tx.objectStore("export-history");
+  await store.clear();
+  for (const entry of entries) {
+    await store.put(entry);
+  }
+  await tx.done;
+}
