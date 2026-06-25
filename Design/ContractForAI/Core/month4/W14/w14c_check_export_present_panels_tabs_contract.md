@@ -33,7 +33,7 @@ Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Present + 
 - [ ] Readiness badge đúng ngưỡng (`3.Check.md §5.3`).
 - [ ] Export Button loading; confirm Dialog khi còn lỗi; Toast done + "Mở file"; error+retry.
 - [ ] PPTX disabled + ghi chú (deferred parity).
-- [ ] Không đổi logic/shape; 4 gates + axe 0 critical.
+- [ ] Không đổi logic/shape; 4 gates xanh; a11y checklist thủ công (axe tự động ở **W15**).
 
 ## 4. Expected Interfaces / Files
 
@@ -58,7 +58,7 @@ Adopt vào **panel phải**: `Tabs` (underline) chuyển Check/Export/Present + 
 - Chuyển tab Check/Export/Present bằng ←/→; count badge khớp số issue.
 - Click badge issue → jump tới (Enter/Space); readiness đúng màu/ngưỡng.
 - Export còn lỗi → confirm Dialog; thành công → Toast "Mở file"; fail → error+retry.
-- PPTX disabled + ghi chú; 4 gates + axe 0 critical.
+- PPTX disabled + ghi chú; 4 gates xanh; a11y checklist thủ công (axe tự động ở W15).
 
 ## 7. Status
 

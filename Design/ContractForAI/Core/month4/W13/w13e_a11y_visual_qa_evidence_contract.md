@@ -24,7 +24,7 @@ A11y pass toàn bộ primitive + Visual QA theo Art Direction, chạy 4 gates, v
 ### Out of scope
 - ❌ Thêm component mới / feature; refactor panel (W14).
 - ❌ Đổi behavior/shape/CanonicalTypes.
-- ❌ Full axe E2E (đã có ở W12; adoption-level a11y ở W14).
+- ❌ Full axe automation (→ **W15** `w15a`); tuần này a11y **checklist thủ công** trên primitive + Visual QA gallery.
 
 ## 3. Checklist
 - [ ] Mọi primitive keyboard reachable + focus-visible token.

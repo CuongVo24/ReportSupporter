@@ -18,7 +18,7 @@ File đó được tham chiếu **bằng tên** trong toàn bộ contract lịch
 | File | Vai trò | Trạng thái |
 | :--- | :--- | :--- |
 | (canonical) `Modules/Other/DesignSystem_Tokens.md` | Màu · spacing · radius · elevation · z · A4 · severity · two-scale type | ✅ có sẵn |
-| `Typography.md` | Cặp font, thang chữ, quy tắc pairing UI ↔ Report | 🟡 skeleton |
+| `Typography.md` | Cặp font, thang chữ, quy tắc pairing UI ↔ Report | ✅ |
 
 ## 📎 Liên quan
 * Định hướng *vì sao* dùng các giá trị này: `Design/Frontend/0.ArtDirection.md` §7–§8.

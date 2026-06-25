@@ -59,7 +59,7 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 > Tầng UI primitive tái dùng, thuộc discipline `Design/Frontend/`. Khoá lựa chọn để mọi component dựng nhất quán, đẹp **theo mạch** thay vì sửa giao diện cuối kỳ. *Vì sao đẹp:* `Design/Frontend/0.ArtDirection.md`.
 
 * **Headless interactive primitives:** **Radix UI** — `@radix-ui/react-dialog`, `@radix-ui/react-tabs`, `@radix-ui/react-toast`, `@radix-ui/react-select`.
-    * *Lý do:* Radix lo sẵn **focus-trap, keyboard nav, ARIA role/label, scroll-lock, typeahead** — đúng những thứ a11y gate W12 yêu cầu (0 critical axe). Headless = **không** style mặc định → ta style 100% bằng token `--rs-*`, không xung đột.
+    * *Lý do:* Radix lo sẵn **focus-trap, keyboard nav, ARIA role/label, scroll-lock, typeahead** — đúng những thứ a11y gate yêu cầu (axe tự động hoá ở **W15** → 0 critical; W12–W14 là checklist thủ công). Headless = **không** style mặc định → ta style 100% bằng token `--rs-*`, không xung đột.
 * **Component thường** (Button / Input / Textarea / Badge): **tự code** + token, không cần lib.
 * **Icon:** **Lucide** (`lucide-react`) — line, stroke đồng nhất, tree-shake theo từng icon, màu kế thừa `currentColor`. Xem `Design/Frontend/Other/Icons.md`.
 * **Styling:** CSS **co-located** mỗi component (`Button.tsx` + `Button.css`) + CSS custom properties `--rs-*`. **KHÔNG** Tailwind, **KHÔNG** CSS-in-JS (runtime), giữ token là single source thị giác (`DesignSystem_Tokens.md`).
@@ -179,6 +179,7 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | **Phase 3** | `pptxgenjs`, `playwright` | Present export + E2E (deferred). |
 | **W13 (Phase 4 — UI Foundation)** | `@radix-ui/react-dialog`, `@radix-ui/react-tabs`, `@radix-ui/react-toast`, `@radix-ui/react-select`, `lucide-react` | Bộ UI primitive (`src/components/ui/`) + icon, theo `Design/Frontend/2.Components/*`. Exact pin; chạy `npm install --save-exact` để đồng bộ lockfile. |
 | **W14 (Phase 4 — UI Adoption)** | *(không cài lib mới)* | Refactor panel/flow dùng primitive W13 + patterns (empty/loading/error). Không thêm dependency. |
+| **W15 (Phase 4 — UI Hardening)** | `axe-core` (+ `vitest-axe`) — **devDependency** | A11y automation chạy trong **Vitest + jsdom** (không Playwright — vẫn deferred). Exact pin; `npm install --save-exact`. **Không** runtime dep; axe không vào bundle. |
 
 > ⚠️ AI **không** được "cài trước cho tiện". Lib chỉ xuất hiện trong `package.json` đúng tuần dùng nó. Cài lệch lịch / lib ngoài bảng = vi phạm `Rule.md` §2.
 

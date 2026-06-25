@@ -79,4 +79,4 @@ export function generateSpeakerScript(outline: SlideOutline[], evidence?: Eviden
 
 APPROVED
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(present): deterministic speaker script with evidence cues`; +1 docs commit.
+> ✅ Approved in review pass. Implement exactly this contract. Đề xuất commit: (1) `feat(present): deterministic speaker script with evidence cues`; +1 docs commit.

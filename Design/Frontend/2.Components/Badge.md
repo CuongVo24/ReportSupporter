@@ -25,7 +25,7 @@
 | State | Thị giác |
 | :--- | :--- |
 | **static** (mặc định) | theo variant |
-| **clickable — jump-to-issue (BẮT BUỘC ở Checker panel, B7)** | render `<button>`; hover nền đậm nhẹ; **focus-visible ring**; con trỏ pointer |
+| **clickable — jump-to-issue (BẮT BUỘC ở panel Người soát / Checker, B7)** | render `<button>`; hover nền đậm nhẹ; **focus-visible ring**; con trỏ pointer |
 | **active/selected** (issue đang được nhảy tới) | viền/nền nhấn để biết đang chọn |
 
 ## 4. Accessibility ★

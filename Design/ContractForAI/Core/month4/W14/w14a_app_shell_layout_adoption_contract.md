@@ -33,7 +33,7 @@ Adopt primitive vào **App Shell**: toolbar sticky + hệ pane editor↔preview 
 - [ ] Shell: toolbar sticky, pane editor↔preview, border mảnh, một primary.
 - [ ] Responsive: split→toggle khi hẹp; panel phụ → drawer; A4 scale-to-fit không méo (≥3 viewport).
 - [ ] Behavior layout không đổi; token-only.
-- [ ] 4 gates xanh; axe giữ 0 critical (W12).
+- [ ] 4 gates xanh; a11y checklist thủ công (axe tự động ở **W15**).
 
 ## 4. Expected Interfaces / Files
 
@@ -58,7 +58,7 @@ Adopt primitive vào **App Shell**: toolbar sticky + hệ pane editor↔preview 
 - `/` vẫn workspace; toast bắn ra dưới-phải.
 - Thu hẹp viewport: pane chuyển toggle, panel phụ thành drawer, A4 không méo.
 - Export mẫu vẫn parity (không đổi preview).
-- 4 gates + axe 0 critical.
+- 4 gates xanh; a11y checklist thủ công (axe tự động ở W15).
 
 ## 7. Status
 

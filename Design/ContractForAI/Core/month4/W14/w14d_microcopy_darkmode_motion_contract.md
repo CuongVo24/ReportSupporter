@@ -33,7 +33,7 @@ Pass cuối **microcopy** toàn UI (`VoiceAndContent.md`), **dark mode** polish 
 - [ ] Dark: token UI override; severity-bg override (không chói); focus ring rõ.
 - [ ] `--rs-report-*` không đổi khi dark (báo cáo trắng-đen).
 - [ ] Motion ≤200ms; reduced-motion honored; token motion nếu thêm.
-- [ ] 4 gates + axe 0 critical (cả dark).
+- [ ] 4 gates xanh; a11y checklist thủ công cả dark (axe tự động ở **W15**).
 
 ## 4. Expected Interfaces / Files
 
@@ -57,7 +57,7 @@ Pass cuối **microcopy** toàn UI (`VoiceAndContent.md`), **dark mode** polish 
 - Toggle dark: UI đổi, severity-bg dịu, focus ring rõ; tờ A4 preview vẫn trắng-đen.
 - Đọc soát nhãn nút/message: động từ, giúp-đỡ, Việt 100%.
 - reduced-motion: tắt slide/shimmer.
-- 4 gates + axe 0 critical (light+dark).
+- 4 gates xanh; a11y checklist thủ công (light+dark); axe tự động ở W15.
 
 ## 7. Status
 

@@ -66,6 +66,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`READY_TO_IMPLEMENT`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `test(present): integration coverage (script/Q&A/hints, multi-template)`; (2) `docs(w10): W10 QA report + script samples`; +1 docs commit. Đóng Present deterministic baseline (W9/W10, Phase 3).
+> ✅ Approved in review pass. Implement exactly this contract. Đề xuất commit: (1) `test(present): integration coverage (script/Q&A/hints, multi-template)`; (2) `docs(w10): W10 QA report + script samples`; +1 docs commit. Đóng Present deterministic baseline (W9/W10, Phase 3).

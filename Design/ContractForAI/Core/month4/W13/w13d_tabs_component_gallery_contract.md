@@ -19,7 +19,7 @@ Build **Tabs** (Radix Tabs — underline + segmented, count badge) và một **t
 
 ### In scope (`[C142]`/`[C143]`)
 - `src/components/ui/Tabs.{tsx,css}` (**NEW**): variants underline + segmented; count badge (dùng `Badge`, nhãn đọc được); active = primary + medium; export `ui/index.ts`.
-- `src/app/(dev)/ui-gallery/page.tsx` (**NEW**): render Button/Input/Textarea/Select/Badge/Dialog/Drawer/Toast/Tabs × variant/state; toggle light/dark (`data-theme`). Dev-only, gated.
+- `src/app/(dev)/ui-gallery/page.tsx` (**NEW**): render 8 component (Button/Input/Textarea/Select/Badge/Dialog[modal+drawer]/Toast/Tabs) × variant/state; toggle light/dark (`data-theme`). Dev-only, gated.
 
 ### Out of scope
 - ❌ Refactor panel/module (W14).
@@ -29,7 +29,7 @@ Build **Tabs** (Radix Tabs — underline + segmented, count badge) và một **t
 ## 3. Checklist
 - [ ] Tabs underline + segmented; count badge nhãn đọc được; active primary+medium.
 - [ ] Keyboard ←/→/Home/End (Radix); `aria-selected`.
-- [ ] Gallery render đủ 9 primitive × variant/state; toggle light/dark.
+- [ ] Gallery render đủ 8 component (Dialog gồm modal+drawer) × variant/state; toggle light/dark.
 - [ ] Gallery trong `(dev)`, không lộ `/` / nav production.
 - [ ] Token-only; 4 gates xanh.
 

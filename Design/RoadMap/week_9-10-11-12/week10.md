@@ -46,21 +46,21 @@ Mục tiêu chốt từ MasterRoadMap:
 > Branch: `feature/W10-script-qa`.
 
 ### Day 1 — Script Types & Generator
-- `[NEW]` `src/types/present.ts` → thêm `SpeakerScript`, `QaItem`
+- `[MODIFY]` `src/types/present.ts` (+ `CanonicalTypes.md §9`) → thêm `SpeakerScript`, `DefenseQA`, `WeakSectionHint`
 - `[NEW]` `src/modules/present/generate-script.ts` (outline + section content → script per slide)
 - `[NEW]` `src/modules/present/generate-script.test.ts`
 
 ### Day 2 — Script References (screenshots/evidence)
 - `[MODIFY]` `src/modules/present/generate-script.ts` (chèn tham chiếu figure/evidence vào script)
-- `[NEW]` `src/modules/present/ScriptPanel.tsx`
+- `[NEW]` `src/modules/present/ScriptView.tsx`
 
 ### Day 3 — Defense Q&A Generator
 - `[NEW]` `src/modules/present/generate-qa.ts` (section/evidence → câu hỏi bảo vệ khả dĩ)
 - `[NEW]` `src/modules/present/generate-qa.test.ts`
-- `[NEW]` `src/modules/present/QaPanel.tsx`
+- `[NEW]` `src/modules/present/DefenseQAView.tsx`
 
 ### Day 4 — Weak-section Review Hints
-- `[NEW]` `src/modules/present/weak-section-hints.ts` (checker issues + readiness score → hints)
+- `[NEW]` `src/modules/present/weak-sections.ts` (checker issues + readiness score → hints)
 - `[MODIFY]` `src/modules/present/PresentPanel.tsx` (gắn hints)
 - *Lý do:* tái dùng output Module 3 (W3) thay vì logic mới.
 

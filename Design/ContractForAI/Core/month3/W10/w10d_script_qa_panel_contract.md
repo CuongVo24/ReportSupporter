@@ -74,6 +74,6 @@ Mở rộng **Present panel** (W9) thêm: **Script view** (kịch bản nói + c
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`READY_TO_IMPLEMENT`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: (1) `feat(present): script + defense Q&A + weak-section hints panel`; +1 docs commit.
+> ✅ Approved in review pass. Implement exactly this contract. Đề xuất commit: (1) `feat(present): script + defense Q&A + weak-section hints panel`; +1 docs commit.
