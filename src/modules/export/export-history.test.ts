@@ -113,4 +113,15 @@ describe("export-history", () => {
     expect(raw.find((item) => (item as { id?: string }).id === "invalid-1")).toBeUndefined();
     expect(raw.find((item) => (item as { id?: string }).id === "job-1")).toBeDefined();
   });
+
+  it("should clear all records from history", async () => {
+    const { clearExportHistory } = await import("./export-history");
+    await recordExport(baseJob);
+    let history = await loadExportHistory();
+    expect(history).toHaveLength(1);
+
+    await clearExportHistory();
+    history = await loadExportHistory();
+    expect(history).toHaveLength(0);
+  });
 });

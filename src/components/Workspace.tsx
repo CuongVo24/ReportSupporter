@@ -16,7 +16,7 @@ import {
   buildInitialSections,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
-import { ExportPanel } from "@/modules/export";
+import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem } from "@/types";
 
@@ -36,6 +36,7 @@ export function Workspace() {
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
+  const { jobs, runExport, retry, exportedBlobs } = useExport(bundle ?? undefined);
 
   useEffect(() => {
     let active = true;
@@ -187,6 +188,15 @@ export function Workspace() {
       <ExportPanel
         bundle={bundle}
         check={checkResult ?? undefined}
+        jobs={jobs}
+        runExport={runExport}
+        retry={retry}
+      />
+      <SubmissionPanel
+        bundle={bundle}
+        check={checkResult ?? undefined}
+        exportedBlobs={exportedBlobs}
+        jobs={jobs}
       />
       <EvidencePanel
         evidence={bundle.evidence}

@@ -924,6 +924,137 @@ body {
 }
  
  
+/* Submission Panel (W8 Group E) */
+.ws-submission-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-4);
+  margin-top: var(--rs-space-3);
+  border-top: 1px solid var(--rs-color-border);
+  padding-top: var(--rs-space-3);
+}
+
+.ws-submission-title {
+  margin: 0;
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+}
+
+.ws-submission-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border-radius: var(--rs-radius-md);
+  border: none;
+  background-color: var(--rs-color-success);
+  color: var(--rs-white);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  width: 100%;
+}
+
+.ws-submission-btn:hover:not(:disabled) {
+  background-color: #15803d; /* darker green */
+}
+
+.ws-submission-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ws-submission-checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-submission-checklist-title {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin: 0;
+}
+
+.ws-submission-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-submission-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+}
+
+.ws-submission-checklist-item-done {
+  border-left: 3px solid var(--rs-color-success);
+}
+
+.ws-submission-checklist-item-fail {
+  border-left: 3px solid var(--rs-color-severity-error);
+}
+
+.ws-submission-checklist-item-warn {
+  border-left: 3px solid var(--rs-color-severity-warning);
+}
+
+.ws-submission-checklist-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.ws-submission-checklist-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ws-submission-checklist-label {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+}
+
+.ws-submission-checklist-detail {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-submission-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-submission-clear-btn {
+  background: none;
+  border: none;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.ws-submission-clear-btn:hover {
+  color: var(--rs-color-text);
+}
 /* Evidence Kit panel — Module 5 (Present/Evidence), W5 Group B */
 .ws-evidence {
   display: flex;

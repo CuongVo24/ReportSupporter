@@ -69,6 +69,7 @@ async function executeExport(
 
 export function useExport(currentBundle?: ReportProjectBundle) {
   const [jobs, setJobs] = useState<ExportJob[]>([]);
+  const [exportedBlobs, setExportedBlobs] = useState<Partial<Record<ExportTarget, Blob>>>({});
 
   const runExport = useCallback(async (target: ExportTarget, bundle: ReportProjectBundle) => {
     const id = Math.random().toString(36).substring(2, 11);
@@ -102,6 +103,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
       }
 
       const finishedJob: ExportJob = { ...newJob, status: "done", finishedAt: new Date().toISOString() };
+      setExportedBlobs((prev) => ({ ...prev, [target]: blob }));
       setJobs((prev) =>
         prev.map((job) =>
           job.id === id
@@ -169,6 +171,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         }
 
         let finishedJob: ExportJob | undefined;
+        setExportedBlobs((prev) => ({ ...prev, [job.target]: blob }));
         setJobs((prev) =>
           prev.map((j) => {
             if (j.id === jobId) {
@@ -213,5 +216,6 @@ export function useExport(currentBundle?: ReportProjectBundle) {
     jobs,
     runExport,
     retry,
+    exportedBlobs,
   };
 }

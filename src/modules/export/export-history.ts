@@ -1,6 +1,17 @@
 import type { ExportJob } from "@/types";
-import { appendExportHistory, getExportHistory, deleteExportHistory } from "@/lib/idb-client";
+import { appendExportHistory, getExportHistory, deleteExportHistory, clearExportHistory as clearDbHistory } from "@/lib/idb-client";
 import { exportJobSchema } from "./schemas";
+
+/**
+ * Clears all local export history records from IndexedDB.
+ */
+export async function clearExportHistory(): Promise<void> {
+  try {
+    await clearDbHistory();
+  } catch (err) {
+    console.error("Failed to clear export history:", err);
+  }
+}
 
 /**
  * Records an export job to local history store (IndexedDB).

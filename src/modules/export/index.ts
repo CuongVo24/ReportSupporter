@@ -14,4 +14,5 @@ export { ExportPanel } from "./ExportPanel";
 export { buildSubmissionZip } from "./build-submission-zip";
 export { generateReadme } from "./generate-readme";
 export { buildSubmissionChecklist } from "./submission-checklist";
-export { recordExport, loadExportHistory } from "./export-history";
+export { recordExport, loadExportHistory, clearExportHistory } from "./export-history";
+export { SubmissionPanel } from "./SubmissionPanel";

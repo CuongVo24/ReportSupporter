@@ -1,8 +1,18 @@
-import type { CheckResult, ReportProjectBundle } from "@/types";
-import { useExport } from "./use-export";
+import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 
-export function ExportPanel({ bundle, check }: { bundle: ReportProjectBundle; check?: CheckResult }) {
-  const { jobs, runExport, retry } = useExport(bundle);
+export function ExportPanel({
+  bundle,
+  check,
+  jobs,
+  runExport,
+  retry,
+}: {
+  bundle: ReportProjectBundle;
+  check?: CheckResult;
+  jobs: ExportJob[];
+  runExport: (target: ExportTarget, bundle: ReportProjectBundle) => Promise<void>;
+  retry: (jobId: string, overrideBundle?: ReportProjectBundle) => Promise<void>;
+}) {
 
   const errorsCount = check?.grouped?.error?.length ?? 0;
 
