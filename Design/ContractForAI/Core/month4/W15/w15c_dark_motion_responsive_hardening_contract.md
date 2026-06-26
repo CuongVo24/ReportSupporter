@@ -61,6 +61,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(ui): dark/motion/responsive hardening (token, minimal)`; `docs(ui): commit w15c contract`.
