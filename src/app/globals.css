@@ -546,13 +546,19 @@ body {
   padding: var(--rs-space-1) var(--rs-space-2);
   font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
-  color: var(--rs-slate-700);
+  color: var(--rs-color-text);
   background: var(--rs-color-surface);
   border: 1px solid var(--rs-color-border);
   border-radius: var(--rs-radius-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+}
+
+.ws-editor-toolbar-btn:hover {
+  background: var(--rs-color-surface-muted);
+  color: var(--rs-color-text);
+  border-color: var(--rs-color-text-muted);
 }
 
 .ws-editor-cm-parent {
