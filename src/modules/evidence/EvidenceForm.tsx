@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import type { EvidenceItem, EvidenceKind } from "@/types";
 import { validateEvidence } from "./validate";
 import { kindMeta } from "./kind-meta";
+import { Select, Input, Textarea, Button } from "@/components/ui";
 
 export interface EvidenceFormProps {
   initial?: EvidenceItem;
@@ -41,67 +42,52 @@ export function EvidenceForm({ initial, onSubmit, onCancel }: EvidenceFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="ws-meta-form" aria-label={initial ? "Sửa minh chứng" : "Thêm minh chứng"}>
-      <div className="ws-form-group">
-        <label htmlFor="ev-kind" className="ws-form-label">
-          Loại minh chứng <span className="ws-form-label-required">*</span>
-        </label>
-        <select
-          id="ev-kind"
-          value={kind}
-          onChange={(e) => setKind(e.target.value as EvidenceKind)}
-          className="ws-form-input"
-        >
-          {(Object.keys(kindMeta) as EvidenceKind[]).map((k) => (
-            <option key={k} value={k}>
-              {kindMeta[k].icon} {kindMeta[k].label}
-            </option>
-          ))}
-        </select>
-        {errors.kind && <span className="ws-form-error" aria-live="assertive">{errors.kind}</span>}
-      </div>
+      <Select
+        id="ev-kind"
+        label="Loại minh chứng *"
+        value={kind}
+        onValueChange={(value) => setKind(value as EvidenceKind)}
+        options={(Object.keys(kindMeta) as EvidenceKind[]).map((k) => ({
+          value: k,
+          label: `${kindMeta[k].icon} ${kindMeta[k].label}`,
+        }))}
+        error={errors.kind}
+        required
+      />
 
-      <div className="ws-form-group">
-        <label htmlFor="ev-title" className="ws-form-label">
-          Tiêu đề minh chứng <span className="ws-form-label-required">*</span>
-        </label>
-        <input
-          id="ev-title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="ws-form-input"
-          placeholder="Nhập tiêu đề minh chứng..."
-        />
-        {errors.title && <span className="ws-form-error" aria-live="assertive">{errors.title}</span>}
-      </div>
+      <Input
+        id="ev-title"
+        label="Tiêu đề minh chứng *"
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Nhập tiêu đề minh chứng..."
+        error={errors.title}
+        required
+      />
 
-      <div className="ws-form-group">
-        <label htmlFor="ev-url" className="ws-form-label">Liên kết (URL)</label>
-        <input
-          id="ev-url"
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="ws-form-input"
-          placeholder="https://..."
-        />
-        {errors.url && <span className="ws-form-error" aria-live="assertive">{errors.url}</span>}
-      </div>
+      <Input
+        id="ev-url"
+        label="Liên kết (URL)"
+        type="text"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder="https://..."
+        error={errors.url}
+      />
 
-      <div className="ws-form-group">
-        <label htmlFor="ev-note" className="ws-form-label">Ghi chú</label>
-        <textarea
-          id="ev-note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="ws-form-input"
-          style={{ minHeight: "60px", fontFamily: "inherit" }}
-          placeholder="Tài khoản dùng thử, mô tả ngắn..."
-        />
-        {errors.note && <span className="ws-form-error" aria-live="assertive">{errors.note}</span>}
-      </div>
+      <Textarea
+        id="ev-note"
+        label="Ghi chú"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        style={{ minHeight: "60px", fontFamily: "inherit" }}
+        placeholder="Tài khoản dùng thử, mô tả ngắn..."
+        error={errors.note}
+        autoGrow
+      />
 
-      <div className="ws-form-group" style={{ flexDirection: "row", alignItems: "center", gap: "var(--rs-space-2)" }}>
+      <div className="ws-form-group" style={{ flexDirection: "row", alignItems: "center", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-2)" }}>
         <input
           id="ev-qr"
           type="checkbox"
@@ -109,24 +95,24 @@ export function EvidenceForm({ initial, onSubmit, onCancel }: EvidenceFormProps)
           onChange={(e) => setQrEnabled(e.target.checked)}
           style={{ width: "16px", height: "16px", cursor: "pointer" }}
         />
-        <label htmlFor="ev-qr" className="ws-form-label" style={{ cursor: "pointer" }}>
+        <label htmlFor="ev-qr" className="ws-field-label" style={{ cursor: "pointer", marginBottom: 0 }}>
           Hiển thị mã QR trong phụ lục
         </label>
       </div>
 
-      <div style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-2)" }}>
-        <button type="submit" className="ws-checker-run" style={{ flex: 1 }}>
-          {initial ? "Lưu" : "Thêm"}
-        </button>
+      <div style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-4)" }}>
+        <Button type="submit" variant="primary" style={{ flex: 1 }}>
+          {initial ? "Lưu" : "Thêm minh chứng"}
+        </Button>
         {onCancel && (
-          <button
+          <Button
             type="button"
             onClick={onCancel}
-            className="ws-reset-btn"
-            style={{ flex: 1, margin: 0, padding: "var(--rs-space-2) var(--rs-space-4)" }}
+            variant="ghost"
+            style={{ flex: 1 }}
           >
             Hủy
-          </button>
+          </Button>
         )}
       </div>
     </form>

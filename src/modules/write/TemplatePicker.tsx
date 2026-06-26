@@ -1,6 +1,8 @@
 "use client";
 
+import React from "react";
 import type { TemplateSchema } from "@/types";
+import { Select } from "@/components/ui";
 
 type TemplatePickerProps = {
   templates: TemplateSchema[];
@@ -9,33 +11,23 @@ type TemplatePickerProps = {
 };
 
 export function TemplatePicker({ templates, value, onSelect }: TemplatePickerProps) {
+  const selectOptions = templates.map((tpl) => ({
+    value: tpl.id,
+    label: tpl.name,
+  }));
+
+  const activeTemplate = templates.find((t) => t.id === value);
+
   return (
     <div className="ws-template-picker-container">
-      <label 
-        htmlFor="template-select" 
-        className="ws-form-label"
-      >
-        Mẫu tài liệu (Template)
-      </label>
-      
-      <select
+      <Select
         id="template-select"
+        label="Mẫu tài liệu (Template)"
+        options={selectOptions}
         value={value}
-        onChange={(e) => onSelect(e.target.value)}
-        className="ws-template-picker-select"
-      >
-        {templates.map((tpl) => (
-          <option key={tpl.id} value={tpl.id}>
-            {tpl.name}
-          </option>
-        ))}
-      </select>
-      
-      {templates.find(t => t.id === value) && (
-        <small className="ws-template-picker-desc">
-          {templates.find(t => t.id === value)?.description}
-        </small>
-      )}
+        onValueChange={onSelect}
+        helperText={activeTemplate?.description}
+      />
     </div>
   );
 }

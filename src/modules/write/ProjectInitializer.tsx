@@ -5,6 +5,7 @@ import type { TemplateSchema } from "@/types";
 import { TemplatePicker } from "./TemplatePicker";
 import { MetadataForm } from "./MetadataForm";
 import { validateMetadata } from "./generate-skeleton";
+import { Button } from "@/components/ui";
 
 type ProjectInitializerProps = {
   templates: TemplateSchema[];
@@ -40,11 +41,23 @@ export function ProjectInitializer({
         ...prev,
         title: nextTemplate.name,
       }));
+      setErrors({});
     }
   };
 
   const handleFormChange = (newValues: Record<string, string | string[]>) => {
     setValues(newValues);
+  };
+
+  const handleBlur = (key: string) => {
+    if (!activeTemplate) return;
+    const titleVal = typeof values.title === "string" ? values.title : "";
+    const validationErrors = validateMetadata(activeTemplate, titleVal, values);
+    
+    setErrors((prev) => ({
+      ...prev,
+      [key]: validationErrors[key] || "",
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -85,6 +98,7 @@ export function ProjectInitializer({
               fields={activeTemplate?.metadataFields || []}
               values={values}
               onChange={handleFormChange}
+              onBlur={handleBlur}
               errors={errors}
             />
           </div>
@@ -93,9 +107,9 @@ export function ProjectInitializer({
             <p style={helperStyle}>
               💡 Bấm Khởi tạo để mở trình soạn thảo — nút Xuất bản (HTML/PDF/Word) nằm trong trình soạn thảo.
             </p>
-            <button type="submit" style={buttonStyle}>
+            <Button type="submit" variant="primary" fullWidth>
               Khởi tạo báo cáo
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -108,7 +122,7 @@ const containerStyle = {
   justifyContent: "center",
   alignItems: "center",
   minHeight: "calc(100vh - 50px)",
-  backgroundColor: "var(--rs-slate-50)",
+  backgroundColor: "var(--rs-color-bg)",
   padding: "var(--rs-space-6)",
 };
 
@@ -183,17 +197,4 @@ const helperStyle = {
   color: "var(--rs-color-text-muted)",
   margin: 0,
   lineHeight: 1.4,
-};
-
-const buttonStyle = {
-  padding: "var(--rs-space-2) var(--rs-space-4)",
-  backgroundColor: "var(--rs-slate-800)",
-  color: "#ffffff",
-  border: "none",
-  borderRadius: "var(--rs-radius-md)",
-  fontSize: "var(--rs-font-size-sm)",
-  fontWeight: "var(--rs-font-weight-semibold)",
-  cursor: "pointer",
-  transition: "background-color 0.2s ease",
-  outline: "none",
 };

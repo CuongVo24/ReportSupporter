@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
+import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
+import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
   loadBundle,
@@ -35,6 +37,9 @@ export function Workspace() {
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
   const [hasRun, setHasRun] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -79,8 +84,11 @@ export function Workspace() {
 
   const handleCheck = useCallback(() => {
     if (!bundle) return;
-    setCheckResult(runChecker(bundle));
+    const result = runChecker(bundle);
+    setCheckResult(result);
     setHasRun(true);
+    setToastMessage(`Đã soát — ${result.issues.length} vấn đề`);
+    setToastOpen(true);
   }, [bundle]);
 
   const handleJump = useCallback((sectionId?: string) => {
@@ -116,7 +124,6 @@ export function Workspace() {
   }, [bundle]);
 
   const handleReset = useCallback(() => {
-    if (!confirm("Tạo mới báo cáo? Toàn bộ nội dung hiện tại sẽ bị xóa.")) return;
     const fresh = createProjectFromTemplate(softwareProjectTemplate);
     setBundle(fresh);
     setActiveId(fresh.project.sections[0]?.id ?? null);
@@ -124,6 +131,7 @@ export function Workspace() {
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(fresh);
+    setIsResetConfirmOpen(false);
   }, []);
 
   const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
@@ -141,7 +149,18 @@ export function Workspace() {
   }, []);
 
   if (!bundle) {
-    return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
+    return (
+      <WorkspaceLayout
+        editor={<LoadingSkeleton variant="panel" />}
+        preview={<LoadingSkeleton variant="preview" />}
+        sidePanel={<LoadingSkeleton variant="panel" />}
+        sections={[]}
+        activeSectionId=""
+        onSectionSelect={() => {}}
+        reportTitle="Đang tải..."
+        saveStatus={<span className="ws-status-loading-text">Đang tải...</span>}
+      />
+    );
   }
 
   if (isInitializing) {
@@ -156,67 +175,125 @@ export function Workspace() {
   }
 
   if (!activeSection) {
-    return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
+    return (
+      <WorkspaceLayout
+        editor={<EmptyState title="Báo cáo trống" message="Thêm mục đầu tiên để bắt đầu." />}
+        preview={<EmptyState title="Chưa có nội dung" message="Viết nội dung trong editor để hiển thị bản in thử." />}
+        sidePanel={null}
+        sections={[]}
+        activeSectionId=""
+        onSectionSelect={() => {}}
+        reportTitle="Báo cáo trống"
+      />
+    );
   }
+
+  const saveStatus = (
+    <p className="ws-save-status" aria-live="polite">
+      {quotaFull ? (
+        <span className="ws-save-status-error">Bộ nhớ đầy</span>
+      ) : status === "saving" ? (
+        <span className="ws-save-status-saving">Đang lưu…</span>
+      ) : status === "saved" ? (
+        <span className="ws-save-status-saved">Đã lưu</span>
+      ) : (
+        ""
+      )}
+    </p>
+  );
+
+  const primaryAction = (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={() => runExport("pdf", bundle)}
+    >
+      Xuất bản nộp
+    </Button>
+  );
 
   const sidePanel = (
     <div className="ws-side-inner">
-      <label className="ws-side-label" htmlFor="ws-section-select">Sections</label>
-      <select
-        id="ws-section-select"
-        className="ws-section-select"
-        value={activeSection.id}
-        onChange={(e) => setActiveId(e.target.value)}
-      >
-        {bundle.project.sections.map((sec) => (
-          <option key={sec.id} value={sec.id}>{sec.title}</option>
-        ))}
-      </select>
-      <p className="ws-save-status" aria-live="polite">
-        {quotaFull ? "Bộ nhớ trình duyệt đầy — nội dung vẫn giữ trong phiên." : status === "saving" ? "Saving…" : status === "saved" ? "Saved" : ""}
-      </p>
-      <button
-        onClick={handleReset}
-        className="ws-reset-btn"
-      >
-        Tạo mới báo cáo
-      </button>
-      <CheckerPanel
-        result={checkResult ?? emptyCheckResult}
-        onRun={handleCheck}
-        onJump={handleJump}
-        hasRun={hasRun}
-      />
-      <ExportPanel
-        bundle={bundle}
-        check={checkResult ?? undefined}
-        jobs={jobs}
-        runExport={runExport}
-        retry={retry}
-      />
-      <SubmissionPanel
-        bundle={bundle}
-        check={checkResult ?? undefined}
-        exportedBlobs={exportedBlobs}
-        jobs={jobs}
-      />
-      <EvidencePanel
-        evidence={bundle.evidence}
-        onChange={handleEvidenceChange}
-      />
-      <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
+      <div className="ws-side-panel-header">
+        <span className="ws-side-panel-title">Trợ lý báo cáo</span>
+        <button
+          onClick={() => setIsResetConfirmOpen(true)}
+          className="ws-reset-btn"
+        >
+          Tạo report
+        </button>
+      </div>
+      <Tabs defaultValue="check" className="ws-side-tabs">
+        <TabsList className="ws-side-tabs-list">
+          <TabsTrigger
+            value="check"
+            count={checkResult?.issues?.length}
+            countVariant={
+              checkResult && checkResult.issues.some((i) => i.severity === "error")
+                ? "error"
+                : checkResult && checkResult.issues.some((i) => i.severity === "warning")
+                ? "warning"
+                : "neutral"
+            }
+          >
+            Người soát
+          </TabsTrigger>
+          <TabsTrigger value="export">Xuất bản</TabsTrigger>
+          <TabsTrigger value="submission">Nộp bài</TabsTrigger>
+          <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
+          <TabsTrigger value="present">Slide</TabsTrigger>
+        </TabsList>
+        <div className="ws-side-tabs-content-scroll">
+          <TabsContent value="check" className="ws-side-tabs-content">
+            <CheckerPanel
+              result={checkResult ?? emptyCheckResult}
+              onRun={handleCheck}
+              onJump={handleJump}
+              hasRun={hasRun}
+            />
+          </TabsContent>
+          <TabsContent value="export" className="ws-side-tabs-content">
+            <ExportPanel
+              bundle={bundle}
+              check={checkResult ?? undefined}
+              jobs={jobs}
+              runExport={runExport}
+              retry={retry}
+              exportedBlobs={exportedBlobs}
+            />
+          </TabsContent>
+          <TabsContent value="submission" className="ws-side-tabs-content">
+            <SubmissionPanel
+              bundle={bundle}
+              check={checkResult ?? undefined}
+              exportedBlobs={exportedBlobs}
+              jobs={jobs}
+            />
+          </TabsContent>
+          <TabsContent value="evidence" className="ws-side-tabs-content">
+            <EvidencePanel
+              evidence={bundle.evidence}
+              onChange={handleEvidenceChange}
+            />
+          </TabsContent>
+          <TabsContent value="present" className="ws-side-tabs-content">
+            <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 
   return (
-    <WorkspaceLayout
+    <>
+      <WorkspaceLayout
       editor={
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "var(--rs-space-2)" }}>
+        <div className="ws-editor-container">
           <AiAssistBar
             section={activeSection}
             onChange={handleChange}
           />
-          <div style={{ flex: 1, minHeight: 0 }}>
+          <div className="ws-editor-wrapper">
             <EditorPanel
               value={activeSection.markdown}
               onChange={handleChange}
@@ -237,7 +314,32 @@ export function Workspace() {
         />
       }
       sidePanel={sidePanel}
+      sections={bundle.project.sections}
+      activeSectionId={activeSection.id}
+      onSectionSelect={(id) => setActiveId(id)}
+      reportTitle={bundle.project.title}
+      saveStatus={saveStatus}
+      primaryAction={primaryAction}
     />
+      <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
+      <Dialog
+        isOpen={isResetConfirmOpen}
+        onOpenChange={setIsResetConfirmOpen}
+        title="Tạo report mới?"
+        description="Toàn bộ nội dung hiện tại sẽ bị xóa. Hành động không thể hoàn tác."
+        variant="confirm"
+        footer={
+          <div className="ws-dialog-footer-actions">
+            <Button variant="ghost" onClick={() => setIsResetConfirmOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={handleReset}>
+              Tạo report
+            </Button>
+          </div>
+        }
+      />
+    </>
   );
 }
 

@@ -1,0 +1,43 @@
+=== VITEST RUN ===
+Test Files  72 passed (72)
+     Tests  377 passed (377)
+   Start at  12:41:41
+   Duration  71.41s
+
+=== TYPECHECK RUN ===
+> npx tsc --noEmit
+(Clean run - no output)
+
+=== LINT RUN ===
+> report-supporter@0.1.0 lint
+> eslint .
+(Clean run - no output)
+
+=== BUILD RUN ===
+> report-supporter@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 33.3s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ✓ Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                     557 kB         697 kB
+├ ○ /_not-found                             1 kB         104 kB
+└ ○ /ui-gallery                          3.03 kB         143 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-b8cf77ab14370e57.js        46 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.99 kB
+
+○  (Static)  prerendered as static content

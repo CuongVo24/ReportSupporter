@@ -62,6 +62,6 @@ Adopt primitive vào **App Shell**: toolbar sticky + hệ pane editor↔preview 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `refactor(shell): adopt ui primitives + sticky toolbar/panes`; `feat(shell): responsive panes + drawer + A4 fit`; `docs(ui): commit w14a contract`.

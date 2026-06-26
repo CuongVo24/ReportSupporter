@@ -98,25 +98,49 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-readiness-medium` | `var(--rs-amber-500)` | `60–84` — còn cảnh báo |
 | `--rs-color-readiness-low` | `var(--rs-red-600)` | `< 60` — còn lỗi chặn |
 
-### 2.5. Semantic UI tokens — DARK (`[data-theme="dark"]`)
+### 2.5. Dark mode palette & tokens (DARK)
 
 > Chỉ override nhánh UI. Severity giữ độ tương phản tối thiểu AA trên nền tối. `--rs-report-*` **không** đổi.
 
-| Token | Dark |
-| :--- | :--- |
-| `--rs-color-bg` | `#0B1120` |
-| `--rs-color-surface` | `#111827` |
-| `--rs-color-surface-muted` | `#1E293B` |
-| `--rs-color-border` | `#334155` |
-| `--rs-color-text` | `#E2E8F0` |
-| `--rs-color-text-muted` | `#94A3B8` |
-| `--rs-color-primary` | `#3B82F6` |
-| `--rs-color-severity-error` | `#F87171` |
-| `--rs-color-severity-warning` | `#FBBF24` |
-| `--rs-color-severity-info` | `#38BDF8` |
-| `--rs-color-severity-error-bg` | `rgba(248,113,113,.12)` |
-| `--rs-color-severity-warning-bg` | `rgba(251,191,36,.12)` |
-| `--rs-color-severity-info-bg` | `rgba(56,189,248,.12)` |
+#### Primitive palette — dark
+| Token | Hex/RGBA | Vai trò |
+| :--- | :--- | :--- |
+| `--rs-dark-bg` | `#0B1120` | Nền workspace tối |
+| `--rs-dark-surface` | `#111827` | Nền surface tối |
+| `--rs-dark-surface-muted` | `#1E293B` | Nền surface phụ tối |
+| `--rs-dark-border` | `#334155` | Viền tối |
+| `--rs-dark-text` | `#E2E8F0` | Chữ chính tối |
+| `--rs-dark-text-muted` | `#94A3B8` | Chữ phụ tối |
+| `--rs-dark-primary` | `#3B82F6` | Màu accent primary tối |
+| `--rs-dark-red` | `#F87171` | Severity error tối |
+| `--rs-dark-amber` | `#FBBF24` | Severity warning tối |
+| `--rs-dark-sky` | `#38BDF8` | Severity info tối |
+| `--rs-dark-red-bg` | `rgba(248,113,113,.12)` | Nền badge/row error tối |
+| `--rs-dark-amber-bg` | `rgba(251,191,36,.12)` | Nền badge/row warning tối |
+| `--rs-dark-sky-bg` | `rgba(56,189,248,.12)` | Nền badge/row info tối |
+| `--rs-dark-green` | `#4ADE80` | Success tối |
+| `--rs-dark-green-bg` | `rgba(74, 222, 128,.12)` | Nền success tối |
+
+#### Semantic UI tokens — dark (mapped to dark primitives)
+| Token | Dark Value | Vai trò |
+| :--- | :--- | :--- |
+| `--rs-color-bg` | `var(--rs-dark-bg)` | Nền tổng app |
+| `--rs-color-surface` | `var(--rs-dark-surface)` | Nền pane/card |
+| `--rs-color-surface-muted` | `var(--rs-dark-surface-muted)` | Nền phụ |
+| `--rs-color-border` | `var(--rs-dark-border)` | Đường viền |
+| `--rs-color-text` | `var(--rs-dark-text)` | Chữ chính |
+| `--rs-color-text-muted` | `var(--rs-dark-text-muted)` | Chữ phụ |
+| `--rs-color-primary` | `var(--rs-dark-primary)` | Nút/active primary |
+| `--rs-color-severity-error` | `var(--rs-dark-red)` | Lỗi badge |
+| `--rs-color-severity-warning` | `var(--rs-dark-amber)` | Cảnh báo badge |
+| `--rs-color-severity-info` | `var(--rs-dark-sky)` | Gợi ý badge |
+| `--rs-color-severity-error-bg` | `var(--rs-dark-red-bg)` | Nền error row |
+| `--rs-color-severity-warning-bg` | `var(--rs-dark-amber-bg)` | Nền warning row |
+| `--rs-color-severity-info-bg` | `var(--rs-dark-sky-bg)` | Nền info row |
+| `--rs-color-success` | `var(--rs-dark-green)` | Success |
+| `--rs-color-success-bg` | `var(--rs-dark-green-bg)` | Nền success row |
+| `--rs-color-error-bg` | `var(--rs-dark-red-bg)` | Nền error block |
+| `--rs-color-focus-ring` | `var(--rs-dark-primary)` | Viền focus |
 
 > 🔒 Severity background **bắt buộc** override ở dark mode: nếu giữ nguyên nền sáng `#FEF2F2`/`#FFFBEB`/`#F0F9FF`, row issue sẽ chói lóa giữa UI tối. Báo cáo (`--rs-report-*`) thì ngược lại — **không** override, luôn nền trắng chữ đen kể cả khi app đang dark.
 
@@ -229,6 +253,26 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-overlay-width-sm` | `400px` | Chiều rộng tối đa của Dialog confirm |
 | `--rs-toast-width` | `380px` | Chiều rộng của Toast viewport |
 | `--rs-font-size-xxs` | `10px` | Cỡ chữ siêu nhỏ của Tab count badge |
+| `--rs-rail-left-width` | `240px` | Chiều rộng rail mục lục khi mở rộng |
+| `--rs-rail-right-width` | `320px` | Chiều rộng rail bảng điều khiển khi mở rộng |
+| `--rs-rail-collapsed-width` | `48px` | Chiều rộng rail khi thu gọn |
+| `--rs-preview-page-width-px` | `794px` | Bề rộng A4 preview tính bằng px |
+| `--rs-divider-width` | `5px` | Bề rộng đường chia split pane |
+| `--rs-size-control-xs` | `24px` | Chiều cao của nút toggle thu nhỏ |
+| `--rs-size-control-sm` | `32px` | Chiều cao của nút toggle vừa |
+| `--rs-rail-mobile-width` | `280px` | Chiều rộng của mobile drawer rail |
+| `--rs-report-title-max-width` | `180px` | Bề rộng tối đa của report title |
+| `--rs-badge-dot-size` | `8px` | Kích thước của chấm status badge |
+| `--rs-letter-spacing-sm` | `0.5px` | Khoảng cách chữ nhỏ cho tiêu đề rail |
+
+### 4.6. Motion Tokens
+
+| Token | Giá trị | Vai trò |
+| :--- | :--- | :--- |
+| `--rs-motion-duration-micro` | `150ms` | Thời lượng hover, focus, tab active underline |
+| `--rs-motion-duration-transition` | `200ms` | Thời lượng trượt/fade của toast/dialog |
+| `--rs-motion-easing-default` | `ease-out` | Easing mặc định (phản hồi nhanh) |
+| `--rs-motion-easing-in` | `ease-in` | Easing đi ra |
 
 ---
 

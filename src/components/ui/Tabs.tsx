@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext } from "react";
 import * as RadixTabs from "@radix-ui/react-tabs";
 import "./Tabs.css";

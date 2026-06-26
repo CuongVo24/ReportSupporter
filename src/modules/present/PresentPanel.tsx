@@ -12,6 +12,7 @@ import { getGatewayState, requestSuggestion } from "@/modules/write";
 import { assistOutline } from "./ai/assist-outline";
 import { AiOutlineButton } from "./ai/AiOutlineButton";
 import { EmptyState, SuccessState } from "@/components/states";
+import { Button } from "@/components/ui";
 
 export interface PresentPanelProps {
   bundle: ReportProjectBundle;
@@ -102,7 +103,22 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
 
   return (
     <div className="ws-present" aria-label="Thuyết trình">
-      <h3 className="ws-present-panel-title">Thuyết trình</h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--rs-space-4)", gap: "var(--rs-space-2)" }}>
+        <h3 className="ws-present-panel-title" style={{ margin: 0 }}>Thuyết trình</h3>
+        <Button
+          disabled
+          variant="secondary"
+          size="sm"
+          leadingIcon={
+            <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "14px", height: "14px" }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          }
+          title="Tính năng xuất PowerPoint (PPTX) hiện tại đang tạm hoãn (cần bật Phase 3)"
+        >
+          Xuất PPTX (Phase 3)
+        </Button>
+      </div>
 
       {/* Navigation Tabs */}
       <div className="ws-present-tabs">
@@ -187,22 +203,26 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
                 AI đề xuất cập nhật các slide bên dưới. Vui lòng duyệt qua trước khi áp dụng.
               </p>
 
-              <div className="ws-present-ai-suggestion-actions">
-                <button
+              <div className="ws-present-ai-suggestion-actions" style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-2)" }}>
+                <Button
                   onClick={() => {
                     handleAcceptAiOutline(aiSuggestion);
                     setAiSuggestion(null);
                   }}
+                  variant="primary"
+                  size="sm"
                   className="ws-present-ai-accept-btn"
                 >
                   Áp dụng đề xuất
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setAiSuggestion(null)}
+                  variant="ghost"
+                  size="sm"
                   className="ws-present-ai-reject-btn"
                 >
                   Từ chối
-                </button>
+                </Button>
               </div>
 
               <div className="ws-present-ai-suggestion-preview-list">

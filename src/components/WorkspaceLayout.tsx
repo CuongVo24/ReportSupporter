@@ -1,33 +1,253 @@
-import type { ReactNode } from "react";
+"use client";
+
+import React, { useState, useEffect, useRef, ReactNode } from "react";
+import {
+  Menu,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  FileText,
+  ChevronDown,
+} from "lucide-react";
+import { SectionNav } from "./SectionNav";
+import { MobileDrawer } from "./MobileDrawer";
+import "./WorkspaceLayout.css";
 
 type WorkspaceLayoutProps = {
   editor: ReactNode;
   preview: ReactNode;
   sidePanel: ReactNode;
+  sections: { id: string; title: string; status: "draft" | "review" | "done" }[];
+  activeSectionId: string;
+  onSectionSelect: (id: string) => void;
+  reportTitle: string;
+  saveStatus?: ReactNode;
+  primaryAction?: ReactNode;
 };
 
-/**
- * Workspace-first 3-zone shell (editor | preview | side panel).
- * Presentational only — Groups D/E inject real panels through the slot props,
- * so this layout never imports from `src/modules/*`.
- */
-export function WorkspaceLayout({ editor, preview, sidePanel }: WorkspaceLayoutProps) {
+export function WorkspaceLayout({
+  editor,
+  preview,
+  sidePanel,
+  sections,
+  activeSectionId,
+  onSectionSelect,
+  reportTitle,
+  saveStatus,
+  primaryAction,
+}: WorkspaceLayoutProps) {
+  const [isDesktop, setIsDesktop] = useState(true);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [isRightCollapsed, setIsRightCollapsed] = useState(false);
+  const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
+  const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor");
+
+  const [splitWidth, setSplitWidth] = useState(50); // percentage
+  const [isDragging, setIsDragging] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(media.matches);
+    const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const offset = e.clientX - rect.left;
+      const percentage = (offset / rect.width) * 100;
+      const minPercentage = (320 / rect.width) * 100;
+      const maxPercentage = 100 - minPercentage;
+      setSplitWidth(Math.max(minPercentage, Math.min(maxPercentage, percentage)));
+    };
+    const handleMouseUp = () => setIsDragging(false);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const inner = innerRef.current;
+    if (!viewport || !inner) return;
+    const updateScale = () => {
+      const availableWidth = viewport.clientWidth - 48; // padding
+      const a4Width = 794;
+      let nextScale = 1;
+      if (availableWidth < a4Width) {
+        nextScale = Math.max(0.1, availableWidth / a4Width);
+      }
+      setScale(nextScale);
+      setHeight(inner.clientHeight * nextScale);
+    };
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(viewport);
+    observer.observe(inner);
+    return () => observer.disconnect();
+  }, [activeTab, splitWidth, isDesktop]);
+
+  const handleSectionClick = (id: string) => {
+    onSectionSelect(id);
+    setIsLeftDrawerOpen(false);
+  };
+
+  const navContent = (
+    <SectionNav
+      sections={sections}
+      activeSectionId={activeSectionId}
+      onSectionSelect={handleSectionClick}
+      isDesktop={isDesktop}
+      onCollapse={() => setIsLeftCollapsed(true)}
+    />
+  );
+
   return (
     <div className="ws-shell">
       <header className="ws-topbar">
-        <span className="ws-brand">ReportSupporter</span>
+        <div className="ws-topbar-left">
+          {!isDesktop && (
+            <button type="button" className="ws-column-toggle-btn" onClick={() => setIsLeftDrawerOpen(true)} aria-label="Mở mục lục">
+              <Menu size={16} />
+            </button>
+          )}
+          <span className="ws-brand">ReportSupporter</span>
+          <div className="ws-report-switcher">
+            <span className="ws-report-title" title={reportTitle}>{reportTitle}</span>
+            <ChevronDown className="ws-report-switcher-chevron" size={16} aria-hidden="true" />
+          </div>
+        </div>
+        <div className="ws-topbar-center">{saveStatus}</div>
+        <div className="ws-topbar-right">
+          {primaryAction}
+          {!isDesktop && (
+            <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightDrawerOpen(true)} aria-label="Mở bảng điều khiển">
+              <Menu size={16} />
+            </button>
+          )}
+        </div>
       </header>
-      <main className="ws-main">
-        <section className="ws-zone ws-editor" aria-label="Editor">
-          {editor}
+
+      <main className="ws-main-layout">
+        {isDesktop && (
+          <aside className={`ws-side-column ws-side-column-left ${isLeftCollapsed ? "ws-side-column-left--collapsed" : "ws-side-column-left--expanded"}`} aria-label="Mục lục">
+            {isLeftCollapsed ? (
+              <div className="ws-collapsed-rail-list">
+                <button type="button" className="ws-column-toggle-btn" onClick={() => setIsLeftCollapsed(false)} aria-label="Mở rộng mục lục">
+                  <PanelLeftOpen size={16} />
+                </button>
+                <div className="ws-collapsed-rail-list ws-collapsed-rail-list-spaced">
+                  {sections.map((sec, idx) => (
+                    <button
+                      key={sec.id}
+                      className={`ws-collapsed-rail-item ${sec.id === activeSectionId ? "ws-collapsed-rail-item-active" : ""}`}
+                      onClick={() => onSectionSelect(sec.id)}
+                      title={sec.title}
+                    >
+                      <span className="ws-collapsed-rail-index">{idx + 1}</span>
+                      <span className={`ws-collapsed-rail-badge ws-badge-status-${sec.status}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : navContent}
+          </aside>
+        )}
+
+        <section className="ws-workspace-core" aria-label="Khu vực làm việc">
+          {!isDesktop && (
+            <div className="ws-responsive-tabs">
+              <button type="button" className={`ws-responsive-tab-btn ${activeTab === "editor" ? "ws-responsive-tab-btn-active" : ""}`} onClick={() => setActiveTab("editor")}>
+                Bàn viết
+              </button>
+              <button type="button" className={`ws-responsive-tab-btn ${activeTab === "preview" ? "ws-responsive-tab-btn-active" : ""}`} onClick={() => setActiveTab("preview")}>
+                Tờ nộp
+              </button>
+            </div>
+          )}
+
+          {isDesktop ? (
+            <div className="ws-split-pane-container" ref={containerRef}>
+              <div className="ws-split-pane-editor" style={{ width: `${splitWidth}%` }}>{editor}</div>
+              <div className="ws-split-divider" onMouseDown={handleMouseDown} />
+              <div className="ws-split-pane-preview ws-preview" ref={viewportRef} style={{ width: `${100 - splitWidth}%` }}>
+                <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
+                  <div ref={innerRef} className="ws-preview-page">{preview}</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="ws-responsive-container">
+              {activeTab === "editor" ? (
+                <div className="ws-responsive-editor-scroll">{editor}</div>
+              ) : (
+                <div className="ws-preview-viewport" ref={viewportRef}>
+                  <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
+                    <div ref={innerRef} className="ws-preview-page">{preview}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </section>
-        <section className="ws-zone ws-preview" aria-label="Preview">
-          {preview}
-        </section>
-        <aside className="ws-zone ws-side" aria-label="Side panel">
-          {sidePanel}
-        </aside>
+
+        {isDesktop && (
+          <aside className={`ws-side-column ws-side-column-right ${isRightCollapsed ? "ws-side-column-right--collapsed" : "ws-side-column-right--expanded"}`} aria-label="Bảng điều khiển">
+            {isRightCollapsed ? (
+              <div className="ws-collapsed-rail-list">
+                <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightCollapsed(false)} aria-label="Mở rộng bảng điều khiển">
+                  <PanelRightOpen size={16} />
+                </button>
+                <div className="ws-collapsed-rail-list ws-collapsed-rail-list-spaced">
+                  <button type="button" className="ws-collapsed-rail-item" onClick={() => setIsRightCollapsed(false)} title="Mở bảng điều khiển">
+                    <FileText size={16} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="ws-side-inner-right">
+                <div className="ws-side-column-right-toggle-wrapper">
+                  <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightCollapsed(true)} aria-label="Thu gọn bảng điều khiển">
+                    <PanelRightClose size={16} />
+                  </button>
+                </div>
+                <div className="ws-side-panel-content-scroll">{sidePanel}</div>
+              </div>
+            )}
+          </aside>
+        )}
       </main>
+
+      {!isDesktop && (
+        <MobileDrawer isOpen={isLeftDrawerOpen} onClose={() => setIsLeftDrawerOpen(false)} side="left" title="Mục lục">
+          {navContent}
+        </MobileDrawer>
+      )}
+      {!isDesktop && (
+        <MobileDrawer isOpen={isRightDrawerOpen} onClose={() => setIsRightDrawerOpen(false)} side="right" title="Bảng điều khiển">
+          {sidePanel}
+        </MobileDrawer>
+      )}
     </div>
   );
 }

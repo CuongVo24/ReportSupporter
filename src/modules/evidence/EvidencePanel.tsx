@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import type { EvidenceItem } from "@/types";
 import { EvidenceForm } from "./EvidenceForm";
 import { kindMeta } from "./kind-meta";
+import { Button } from "@/components/ui";
+import { EmptyState } from "@/components/states";
 
 export interface EvidencePanelProps {
   evidence: EvidenceItem[];
@@ -64,22 +66,34 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
 
   return (
     <div className="ws-evidence" aria-label="Danh sách minh chứng">
-      <div className="ws-evidence-header">
-        <h3 className="ws-evidence-title">Minh chứng (Evidence Kit)</h3>
-        <button
+      <div className="ws-evidence-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3 className="ws-evidence-title" style={{ margin: 0 }}>Minh chứng (Evidence Kit)</h3>
+        <Button
           onClick={() => {
             setIsAdding(true);
             setConfirmingDeleteId(null);
           }}
+          variant="primary"
+          size="sm"
           className="ws-evidence-add-btn"
           aria-label="Thêm minh chứng mới"
         >
-          Thêm
-        </button>
+          Thêm minh chứng
+        </Button>
       </div>
 
       {evidence.length === 0 ? (
-        <p className="ws-evidence-empty">Chưa có minh chứng nào.</p>
+        <div style={{ marginTop: "var(--rs-space-4)" }}>
+          <EmptyState
+            title="Chưa có minh chứng"
+            message="Thêm liên kết minh chứng cho báo cáo."
+            actionLabel="Thêm minh chứng"
+            onAction={() => {
+              setIsAdding(true);
+              setConfirmingDeleteId(null);
+            }}
+          />
+        </div>
       ) : (
         <div className="ws-evidence-list">
           {evidence.map((item) => {
@@ -115,43 +129,51 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
                   <p className="ws-evidence-item-note">{item.note}</p>
                 )}
 
-                <div className="ws-evidence-actions">
+                <div className="ws-evidence-actions" style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-3)" }}>
                   {confirmingDeleteId === item.id ? (
                     <>
-                      <button
+                      <Button
                         onClick={() => handleConfirmDelete(item.id)}
+                        variant="danger"
+                        size="sm"
                         className="ws-evidence-action-btn ws-evidence-action-btn-delete"
                         aria-label={`Xác nhận xóa minh chứng: ${item.title}`}
                       >
-                        Xác nhận xóa?
-                      </button>
-                      <button
+                        Xoá
+                      </Button>
+                      <Button
                         onClick={handleCancelDelete}
+                        variant="ghost"
+                        size="sm"
                         className="ws-evidence-action-btn"
                         aria-label={`Hủy xóa minh chứng: ${item.title}`}
                       >
                         Hủy
-                      </button>
+                      </Button>
                     </>
                   ) : (
                     <>
-                      <button
+                      <Button
                         onClick={() => {
                           setEditingItemId(item.id);
                           setConfirmingDeleteId(null);
                         }}
+                        variant="secondary"
+                        size="sm"
                         className="ws-evidence-action-btn"
                         aria-label={`Sửa minh chứng: ${item.title}`}
                       >
                         Sửa
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => handleDeleteClick(item.id)}
+                        variant="ghost"
+                        size="sm"
                         className="ws-evidence-action-btn ws-evidence-action-btn-delete"
                         aria-label={`Xóa minh chứng: ${item.title}`}
                       >
                         Xóa
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>

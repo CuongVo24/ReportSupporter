@@ -63,6 +63,6 @@ Thay form primitive vào **Write/metadata/template** surfaces + áp pattern nề
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`DONE`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `refactor(write): adopt form primitives + validation`; `feat(ui): shared empty/loading/error states`; `docs(ui): commit w14b contract`.

@@ -1,5 +1,7 @@
+import { useState, useEffect, useRef } from "react";
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 import { EmptyState, ErrorState } from "@/components/states";
+import { Button, Dialog, Toast } from "@/components/ui";
 
 export function ExportPanel({
   bundle,
@@ -7,15 +9,78 @@ export function ExportPanel({
   jobs,
   runExport,
   retry,
+  exportedBlobs,
 }: {
   bundle: ReportProjectBundle;
   check?: CheckResult;
   jobs: ExportJob[];
   runExport: (target: ExportTarget, bundle: ReportProjectBundle) => Promise<void>;
   retry: (jobId: string, overrideBundle?: ReportProjectBundle) => Promise<void>;
+  exportedBlobs?: Partial<Record<ExportTarget, Blob>>;
 }) {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingTarget, setPendingTarget] = useState<ExportTarget | null>(null);
+
+  // Toast states
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastTitle, setToastTitle] = useState("");
+  const [toastVariant, setToastVariant] = useState<"success" | "error" | "info">("success");
+  const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
 
   const errorsCount = check?.grouped?.error?.length ?? 0;
+
+  const prevJobsRef = useRef<ExportJob[]>([]);
+
+  useEffect(() => {
+    const prevJobs = prevJobsRef.current;
+    for (const job of jobs) {
+      const prevJob = prevJobs.find((j) => j.id === job.id);
+      const wasRunning = prevJob ? prevJob.status === "running" : false;
+      const isNewAndDone = !prevJob && job.status === "done";
+      if ((wasRunning || isNewAndDone) && job.status === "done") {
+        // Trigger success toast
+        const labelMap: Record<ExportTarget, string> = {
+          html: "HTML",
+          pdf: "PDF",
+          docx: "Word (DOCX)",
+        };
+        const target = job.target;
+        setToastVariant("success");
+        setToastTitle(`Đã xuất ${labelMap[target]}`);
+        setToastAction({
+          label: "Mở file",
+          onClick: () => {
+            const blob = exportedBlobs?.[target];
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              window.open(url, "_blank");
+            } else {
+              console.warn("Blob not found for target", target);
+            }
+          },
+        });
+        setToastOpen(true);
+      }
+    }
+    prevJobsRef.current = jobs;
+  }, [jobs, exportedBlobs]);
+
+  const handleExportClick = (target: ExportTarget) => {
+    if (errorsCount > 0) {
+      setPendingTarget(target);
+      setIsConfirmOpen(true);
+    } else {
+      void runExport(target, bundle);
+    }
+  };
+
+  const handleConfirmExport = () => {
+    if (pendingTarget) {
+      void runExport(pendingTarget, bundle);
+      setPendingTarget(null);
+    }
+    setIsConfirmOpen(false);
+  };
 
   const getTargetLabel = (target: string) => {
     switch (target) {
@@ -65,6 +130,17 @@ export function ExportPanel({
     }
   };
 
+  const dialogFooter = (
+    <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
+      <Button variant="ghost" onClick={() => { setIsConfirmOpen(false); setPendingTarget(null); }}>
+        Hủy
+      </Button>
+      <Button variant="primary" onClick={handleConfirmExport}>
+        Vẫn xuất
+      </Button>
+    </div>
+  );
+
   return (
     <div className="ws-export-panel">
       <h3 className="ws-export-title">Xuất bản báo cáo</h3>
@@ -86,43 +162,69 @@ export function ExportPanel({
       )}
 
       <div className="ws-export-targets">
-        <div className="ws-export-targets-grid">
-          <button
-            onClick={() => runExport("html", bundle)}
-            disabled={jobs.some((j) => j.target === "html" && j.status === "running")}
-            className="ws-export-btn ws-export-btn-html"
+        <div className="ws-export-targets-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "var(--rs-space-3)" }}>
+          <Button
+            variant="secondary"
+            loading={jobs.some((j) => j.target === "html" && j.status === "running")}
+            onClick={() => handleExportClick("html")}
+            leadingIcon={
+              <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "16px", height: "16px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            }
             aria-label="Xuất bản định dạng HTML"
+            fullWidth
           >
-            <svg className="ws-export-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-            <span className="ws-export-btn-text">HTML (Web)</span>
-          </button>
+            Xuất HTML
+          </Button>
 
-          <button
-            onClick={() => runExport("pdf", bundle)}
-            disabled={jobs.some((j) => j.target === "pdf" && j.status === "running")}
-            className="ws-export-btn ws-export-btn-pdf"
+          <Button
+            variant="secondary"
+            loading={jobs.some((j) => j.target === "pdf" && j.status === "running")}
+            onClick={() => handleExportClick("pdf")}
+            leadingIcon={
+              <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "16px", height: "16px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+            }
             aria-label="Xuất bản định dạng PDF"
+            fullWidth
           >
-            <svg className="ws-export-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            <span className="ws-export-btn-text">PDF (Bản in)</span>
-          </button>
+            Xuất PDF
+          </Button>
 
-          <button
-            onClick={() => runExport("docx", bundle)}
-            disabled={jobs.some((j) => j.target === "docx" && j.status === "running")}
-            className="ws-export-btn ws-export-btn-docx"
+          <Button
+            variant="secondary"
+            loading={jobs.some((j) => j.target === "docx" && j.status === "running")}
+            onClick={() => handleExportClick("docx")}
+            leadingIcon={
+              <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "16px", height: "16px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            }
             aria-label="Xuất bản định dạng Word"
+            fullWidth
           >
-            <svg className="ws-export-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="ws-export-btn-text">Word (DOCX)</span>
-          </button>
+            Xuất DOCX
+          </Button>
+
+          <Button
+            disabled
+            variant="secondary"
+            leadingIcon={
+              <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "16px", height: "16px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            }
+            aria-label="Xuất PowerPoint (PPTX) - Tạm hoãn"
+            fullWidth
+          >
+            Xuất PPTX (Phase 3)
+          </Button>
         </div>
+        <p style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)", marginTop: "var(--rs-space-2)", fontStyle: "italic" }}>
+          * Tính năng xuất PowerPoint (PPTX) hiện tại đang tạm hoãn (cần bật Phase 3).
+        </p>
       </div>
 
       <div className="ws-export-jobs-container">
@@ -162,6 +264,28 @@ export function ExportPanel({
           </ul>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        isOpen={isConfirmOpen}
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
+          if (!open) setPendingTarget(null);
+        }}
+        title="Vẫn xuất dù còn lỗi?"
+        description={`Báo cáo còn ${errorsCount} lỗi chặn. Nên sửa trước khi nộp.`}
+        variant="confirm"
+        footer={dialogFooter}
+      />
+
+      {/* Export Toast Notification */}
+      <Toast
+        open={toastOpen}
+        onOpenChange={setToastOpen}
+        variant={toastVariant}
+        title={toastTitle}
+        action={toastAction}
+      />
     </div>
   );
 }

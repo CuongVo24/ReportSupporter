@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useId } from "react";
 import { AlertCircle } from "lucide-react";
 import "./Input.css";

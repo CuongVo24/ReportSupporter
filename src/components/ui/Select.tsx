@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useId } from "react";
 import * as RadixSelect from "@radix-ui/react-select";
 import { ChevronDown, Check, AlertCircle } from "lucide-react";

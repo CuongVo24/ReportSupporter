@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ToastProvider, ToastViewport } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "ReportSupporter",
@@ -11,7 +12,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        <ToastProvider>
+          {children}
+          <ToastViewport />
+        </ToastProvider>
+      </body>
     </html>
   );
 }

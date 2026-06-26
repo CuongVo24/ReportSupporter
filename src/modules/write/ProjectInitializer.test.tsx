@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { ProjectInitializer } from "./ProjectInitializer";
 import type { TemplateSchema } from "@/types";
+import { Button } from "@/components/ui";
 
 // Mock React hooks to allow direct invocation of the component function in pure Node
 vi.mock("react", async (importOriginal) => {
@@ -58,7 +59,7 @@ describe("ProjectInitializer UX Structure", () => {
     expect(helperP.type).toBe("p");
     expect(helperP.props.children).toContain("💡 Bấm Khởi tạo để mở trình soạn thảo");
 
-    expect(submitButton.type).toBe("button");
+    expect(submitButton.type).toBe(Button);
     expect(submitButton.props.type).toBe("submit");
     expect(submitButton.props.children).toBe("Khởi tạo báo cáo");
   });
