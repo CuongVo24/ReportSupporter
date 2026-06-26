@@ -107,6 +107,7 @@
 | :--- | :--- | :--- | :--- |
 | Xoá section | "Xoá section này?" | "Hành động không thể hoàn tác." | **Huỷ** · **Xoá section** (danger) |
 | Xuất khi còn lỗi | "Vẫn xuất dù còn lỗi?" | "Báo cáo còn {n} lỗi chặn. Nên sửa trước khi nộp." | **Huỷ** · **Vẫn xuất** |
+| Tạo báo cáo mới | "Tạo báo cáo mới?" | "Toàn bộ nội dung hiện tại sẽ bị xóa. Hành động không thể hoàn tác." | **Huỷ** · **Tạo báo cáo** (danger) |
 
 ---
 

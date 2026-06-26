@@ -38,8 +38,8 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
       {!hasRun && (
         <div className="ws-state-block">
           <EmptyState
-            title="Chưa soát"
-            message="Soát báo cáo để rà lỗi trước khi nộp."
+            title="Báo cáo chưa được soát lỗi"
+            message="Thực hiện kiểm tra báo cáo để phát hiện và rà soát các lỗi trước khi nộp bài."
             actionLabel="Soát báo cáo"
             onAction={onRun}
           />

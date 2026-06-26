@@ -67,6 +67,6 @@ Chuẩn hóa microcopy về tiếng Việt tự nhiên, nhất quán giọng `Vo
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `polish(copy): native Vietnamese labels (publish/reset/reviewer/settings)`.

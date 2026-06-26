@@ -218,7 +218,7 @@ export function Workspace() {
       size="sm"
       onClick={() => runExport("pdf", bundle)}
     >
-      Xuất bản nộp
+      Xuất bản để nộp
     </Button>
   );
 
@@ -230,7 +230,7 @@ export function Workspace() {
           onClick={() => setIsResetConfirmOpen(true)}
           className="ws-reset-btn"
         >
-          Tạo report
+          Tạo báo cáo
         </button>
       </div>
       <Tabs defaultValue="check" className="ws-side-tabs">
@@ -246,7 +246,7 @@ export function Workspace() {
                 : "neutral"
             }
           >
-            Người soát
+            Soát lỗi
           </TabsTrigger>
           <TabsTrigger value="export">Xuất bản</TabsTrigger>
           <TabsTrigger value="submission">Nộp bài</TabsTrigger>
@@ -298,7 +298,7 @@ export function Workspace() {
     <>
       <WorkspaceLayout
       editor={
-        <div className="ws-editor-container">
+        <div className="ws-editor-stack">
           <AiAssistBar
             section={activeSection}
             onChange={handleChange}
@@ -335,7 +335,7 @@ export function Workspace() {
       <Dialog
         isOpen={isResetConfirmOpen}
         onOpenChange={setIsResetConfirmOpen}
-        title="Tạo report mới?"
+        title="Tạo báo cáo mới?"
         description="Toàn bộ nội dung hiện tại sẽ bị xóa. Hành động không thể hoàn tác."
         variant="confirm"
         footer={
@@ -344,7 +344,7 @@ export function Workspace() {
               Hủy
             </Button>
             <Button variant="danger" onClick={handleReset}>
-              Tạo report
+              Tạo báo cáo
             </Button>
           </div>
         }
