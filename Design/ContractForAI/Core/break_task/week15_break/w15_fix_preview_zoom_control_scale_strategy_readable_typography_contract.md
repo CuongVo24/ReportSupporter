@@ -59,6 +59,6 @@ Cho người dùng kiểm soát zoom preview + đặt mặc định ưu tiên đ
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `fix(preview): fit-width scaling with readable floor`; `feat(preview): add zoom control (fit/75/100/125/actual)`.

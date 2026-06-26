@@ -626,3 +626,34 @@
     transition: none !important;
   }
 }
+
+/* Preview Zoom Control Widget */
+.ws-preview-zoom-control {
+  position: absolute;
+  top: var(--rs-space-3);
+  right: var(--rs-space-4);
+  z-index: var(--rs-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  box-shadow: var(--rs-elevation-1);
+}
+
+.ws-preview-zoom-label {
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
+}
+
+/* Hide zoom widget on mobile/tablet viewports */
+@media (max-width: 1023px) {
+  .ws-preview-zoom-control {
+    display: none;
+  }
+}

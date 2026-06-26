@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { SectionNav } from "./SectionNav";
 import { MobileDrawer } from "./MobileDrawer";
+import { Select } from "@/components/ui";
 import "./WorkspaceLayout.css";
 
 type WorkspaceLayoutProps = {
@@ -47,6 +48,7 @@ export function WorkspaceLayout({
   const [isDragging, setIsDragging] = useState(false);
   const [scale, setScale] = useState(1);
   const [height, setHeight] = useState<number | undefined>(undefined);
+  const [zoomMode, setZoomMode] = useState<string>("fit");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -91,11 +93,19 @@ export function WorkspaceLayout({
     const inner = innerRef.current;
     if (!viewport || !inner) return;
     const updateScale = () => {
-      const availableWidth = viewport.clientWidth - 48; // padding
-      const a4Width = 794;
       let nextScale = 1;
-      if (availableWidth < a4Width) {
-        nextScale = Math.max(0.1, availableWidth / a4Width);
+      if (zoomMode === "fit") {
+        const availableWidth = viewport.clientWidth - 48; // padding
+        const a4Width = 794;
+        if (availableWidth < a4Width) {
+          nextScale = Math.max(0.6, availableWidth / a4Width); // Ngưỡng đọc tối thiểu là 0.6
+        }
+      } else if (zoomMode === "75") {
+        nextScale = 0.75;
+      } else if (zoomMode === "100" || zoomMode === "actual") {
+        nextScale = 1.0;
+      } else if (zoomMode === "125") {
+        nextScale = 1.25;
       }
       setScale(nextScale);
       setHeight(inner.clientHeight * nextScale);
@@ -105,7 +115,7 @@ export function WorkspaceLayout({
     observer.observe(viewport);
     observer.observe(inner);
     return () => observer.disconnect();
-  }, [activeTab, splitWidth, isDesktop]);
+  }, [activeTab, splitWidth, isDesktop, zoomMode]);
 
   const handleSectionClick = (id: string) => {
     onSectionSelect(id);
@@ -191,6 +201,23 @@ export function WorkspaceLayout({
               <div className="ws-split-pane-editor" style={{ width: `${splitWidth}%` }}>{editor}</div>
               <div className="ws-split-divider" onMouseDown={handleMouseDown} />
               <div className="ws-split-pane-preview ws-preview" ref={viewportRef} style={{ width: `${100 - splitWidth}%` }}>
+                <div className="ws-preview-zoom-control">
+                  <span className="ws-preview-zoom-label">Zoom: {Math.round(scale * 100)}%</span>
+                  <Select
+                    value={zoomMode}
+                    onValueChange={setZoomMode}
+                    ariaLabel="Chọn tỷ lệ zoom"
+                    options={[
+                      { value: "fit", label: "Tự động" },
+                      { value: "75", label: "75%" },
+                      { value: "100", label: "100%" },
+                      { value: "125", label: "125%" },
+                      { value: "actual", label: "Kích thước thực" },
+                    ]}
+                    size="sm"
+                    fullWidth={false}
+                  />
+                </div>
                 <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
                   <div ref={innerRef} className="ws-preview-page">{preview}</div>
                 </div>
