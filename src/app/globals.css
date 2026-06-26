@@ -124,8 +124,8 @@
   --rs-motion-easing-in: ease-in;
 
   /* Primitive palette — dark (DesignSystem §2.5) */
-  --rs-dark-bg: #0b1120;
-  --rs-dark-surface: #111827;
+  --rs-dark-bg: #020617;
+  --rs-dark-surface: #0f172a;
   --rs-dark-surface-muted: #1e293b;
   --rs-dark-border: #334155;
   --rs-dark-text: #e2e8f0;

@@ -106,8 +106,8 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 #### Primitive palette — dark
 | Token | Hex/RGBA | Vai trò |
 | :--- | :--- | :--- |
-| `--rs-dark-bg` | `#0B1120` | Nền workspace tối |
-| `--rs-dark-surface` | `#111827` | Nền surface tối |
+| `--rs-dark-bg` | `#020617` | Nền workspace tối |
+| `--rs-dark-surface` | `#0F172A` | Nền surface tối |
 | `--rs-dark-surface-muted` | `#1E293B` | Nền surface phụ tối |
 | `--rs-dark-border` | `#334155` | Viền tối |
 | `--rs-dark-text` | `#E2E8F0` | Chữ chính tối |
