@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { Info } from "lucide-react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
 import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode } from "@/modules/format";
@@ -325,6 +326,15 @@ export function PreviewPane({
 
   return (
     <div className="ws-preview-container">
+      <div className="ws-preview-header-info">
+        <span className="ws-preview-scope-label">
+          <Info size={14} aria-hidden="true" />
+          {sections && sections.length > 0 ? "Xem trước: chương hiện tại" : "Xem trước: toàn báo cáo"}
+        </span>
+        <span className="ws-preview-heading-hint">
+          Tiêu đề được tự động đánh số khi xuất bản — bạn không cần tự gõ số.
+        </span>
+      </div>
       {formatSettings?.includeToc && <TocBlock toc={tocData} />}
       {formatSettings?.includeListOfFigures && <LofBlock lof={lofData} />}
       {formatSettings?.includeListOfTables && <LotBlock lot={lotData} />}

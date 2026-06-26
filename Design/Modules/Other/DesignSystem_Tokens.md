@@ -89,6 +89,17 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-severity-warning-bg` | `#FFFBEB` | nền badge/row warning | |
 | `--rs-color-severity-info-bg` | `#F0F9FF` | nền badge/row info | |
 
+### 2.3b. UI state convention
+
+| State | Token convention | Required affordance |
+| :--- | :--- | :--- |
+| Active | `--rs-color-primary` + `--rs-color-primary-bg` | Primary text, stronger font weight, and a visible surface/border indicator. Do not rely on a single line only. |
+| Enabled | `--rs-color-text` on `--rs-color-surface` | Pointer cursor and hover/focus feedback using semantic tokens. |
+| Disabled | `--rs-color-text-muted` + reduced opacity | Native `disabled` where possible, `cursor: not-allowed`, and a title/tooltip when the disabled reason is not obvious. |
+| Warning | `--rs-color-severity-warning` + `--rs-color-severity-warning-bg` | Warning icon plus colored text/surface. Do not communicate warning by color alone. |
+
+Shared helpers in `src/app/globals.css` (`.rs-state-active`, `.rs-state-disabled`, `.rs-state-warning`) encode the workspace convention. Component-specific CSS may use the same token recipe when a generic helper would be too broad.
+
 ### 2.4. Readiness score tokens (Module 3 — badge 0–100)
 
 > Check module tính **readiness score 0–100** (`Design/Modules/3.Check.md` §5.3 — công thức trừ điểm theo severity −15/−5/−1). Ngưỡng badge dưới đây phải **khớp 1:1** với §5.3; KHÔNG tính màu runtime.
@@ -106,8 +117,8 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 #### Primitive palette — dark
 | Token | Hex/RGBA | Vai trò |
 | :--- | :--- | :--- |
-| `--rs-dark-bg` | `#0B1120` | Nền workspace tối |
-| `--rs-dark-surface` | `#111827` | Nền surface tối |
+| `--rs-dark-bg` | `#020617` | Nền workspace tối |
+| `--rs-dark-surface` | `#0F172A` | Nền surface tối |
 | `--rs-dark-surface-muted` | `#1E293B` | Nền surface phụ tối |
 | `--rs-dark-border` | `#334155` | Viền tối |
 | `--rs-dark-text` | `#E2E8F0` | Chữ chính tối |

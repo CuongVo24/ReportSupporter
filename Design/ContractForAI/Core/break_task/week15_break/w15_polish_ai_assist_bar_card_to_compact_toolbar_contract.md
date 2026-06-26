@@ -58,6 +58,6 @@ Hạ "trọng lượng" cụm AI từ card xuống thanh công cụ gọn, và l
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `polish(write): AI assist becomes compact toolbar, clearer disabled state`.

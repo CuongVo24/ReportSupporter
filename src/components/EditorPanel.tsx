@@ -143,12 +143,12 @@ export function EditorPanel({
     >
       {/* Minimal Formatting Toolbar */}
       <div className="ws-editor-toolbar">
-        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn">Bảng</button>
-        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn">Code</button>
-        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn">Công thức</button>
-        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn">Mermaid</button>
-        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn">Chú thích</button>
-        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn">Ảnh</button>
+        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Bảng</button>
+        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Code</button>
+        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Công thức</button>
+        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Mermaid</button>
+        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Chú thích</button>
+        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Ảnh</button>
       </div>
 
       {/* CodeMirror DOM Parent */}

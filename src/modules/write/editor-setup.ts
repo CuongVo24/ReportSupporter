@@ -46,6 +46,20 @@ export function createEditorState(opts: { doc: string; onChange: (v: string) => 
           borderRight: "none",
           color: "var(--rs-color-text-muted)",
         },
+        ".cm-gutters": {
+          backgroundColor: "transparent",
+          borderRight: "none",
+        },
+        ".cm-activeLine": {
+          backgroundColor: "var(--rs-color-surface-muted)",
+        },
+        ".cm-activeLineGutter": {
+          backgroundColor: "var(--rs-color-surface-muted)",
+          color: "var(--rs-color-text)",
+        },
+        ".cm-gutterElement": {
+          padding: "0 var(--rs-space-3)",
+        },
       }),
     ],
   });

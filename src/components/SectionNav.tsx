@@ -35,7 +35,7 @@ export function SectionNav({
         )}
       </div>
       <ul className="ws-section-nav-list">
-        {sections.map((sec) => {
+        {sections.map((sec, idx) => {
           const isActive = sec.id === activeSectionId;
           return (
             <li key={sec.id}>
@@ -43,9 +43,12 @@ export function SectionNav({
                 className={`ws-section-nav-item ${isActive ? "ws-section-nav-item-active" : ""}`}
                 onClick={() => onSectionSelect(sec.id)}
                 aria-current={isActive ? "page" : undefined}
+                aria-label={`${idx + 1}. ${sec.title}`}
+                title={`${idx + 1}. ${sec.title}`}
               >
-                <span className="ws-section-nav-item-title" title={sec.title}>
-                  {sec.title}
+                <span className="ws-section-nav-item-text">
+                  <span className="ws-section-nav-item-index" aria-hidden="true">{idx + 1}.</span>
+                  <span className="ws-section-nav-item-title">{sec.title}</span>
                 </span>
                 <Badge group="status" value={sec.status} />
               </button>

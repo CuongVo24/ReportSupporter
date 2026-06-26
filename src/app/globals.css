@@ -67,8 +67,8 @@
   /* Typography — UI scale (DesignSystem §3.1) */
   --rs-font-family-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --rs-font-family-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
-  --rs-font-size-xs: 12px;
-  --rs-font-size-sm: 13px;
+  --rs-font-size-xs: 13px;
+  --rs-font-size-sm: 14px;
   --rs-font-size-md: 14px;
   --rs-font-size-lg: 16px;
   --rs-font-size-xl: 20px;
@@ -97,13 +97,13 @@
 
   /* Control heights & overlay dimensions (DesignSystem §4.5) */
   --rs-control-height-md: 36px;
-  --rs-control-height-sm: 28px;
+  --rs-control-height-sm: 32px;
   --rs-textarea-min-height: 80px;
   --rs-overlay-width-lg: 520px;
   --rs-overlay-width-md: 460px;
   --rs-overlay-width-sm: 400px;
   --rs-toast-width: 380px;
-  --rs-font-size-xxs: 10px;
+  --rs-font-size-xxs: 11px;
 
   --rs-rail-left-width: 240px;
   --rs-rail-right-width: 320px;
@@ -124,8 +124,8 @@
   --rs-motion-easing-in: ease-in;
 
   /* Primitive palette — dark (DesignSystem §2.5) */
-  --rs-dark-bg: #0b1120;
-  --rs-dark-surface: #111827;
+  --rs-dark-bg: #020617;
+  --rs-dark-surface: #0f172a;
   --rs-dark-surface-muted: #1e293b;
   --rs-dark-border: #334155;
   --rs-dark-text: #e2e8f0;
@@ -160,62 +160,28 @@ body {
   line-height: var(--rs-font-lh-ui);
 }
 
-/* Workspace shell — Module 1 (Write), W1 Group B */
-.ws-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.ws-topbar {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 var(--rs-space-4);
-  background: var(--rs-color-surface);
-  border-bottom: 1px solid var(--rs-color-border);
-  box-shadow: var(--rs-elevation-1);
-  z-index: var(--rs-z-sticky);
-}
-
-.ws-brand {
+.rs-state-active {
+  background-color: var(--rs-color-primary-bg);
+  color: var(--rs-color-primary);
   font-weight: var(--rs-font-weight-bold);
-  font-size: var(--rs-font-size-lg);
 }
 
-.ws-main {
-  display: grid;
-  grid-template-columns: 1fr 1fr 320px;
-  gap: 1px;
-  flex: 1;
-  min-height: 0;
-  background: var(--rs-color-border);
-}
-
-.ws-zone {
-  background: var(--rs-color-surface);
-  padding: var(--rs-space-4);
-  overflow: auto;
-}
-
-.ws-editor {
-  font-family: var(--rs-font-family-mono);
-}
-
-.ws-side {
-  background: var(--rs-color-surface-muted);
-}
-
-.ws-zone-title {
-  margin: 0 0 var(--rs-space-2);
-  font-size: var(--rs-font-size-lg);
-  font-weight: var(--rs-font-weight-medium);
-}
-
-.ws-zone-hint {
-  margin: 0;
+.rs-state-disabled {
   color: var(--rs-color-text-muted);
-  font-size: var(--rs-font-size-sm);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.rs-state-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  color: var(--rs-color-severity-warning);
+  background-color: var(--rs-color-severity-warning-bg);
+  border: 1px solid var(--rs-color-severity-warning);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-weight: var(--rs-font-weight-medium);
 }
 
 /* Editor + preview + side panel — W1 Group D */
@@ -387,17 +353,17 @@ body {
   display: block;
   color: var(--rs-color-text);
   font-weight: var(--rs-font-weight-medium);
-  font-size: var(--rs-font-size-xs);
+  font-size: var(--rs-font-size-sm);
 }
 
 .ws-checker-hint {
   display: block;
   color: var(--rs-color-text-muted);
-  font-size: var(--rs-font-size-xs);
+  font-size: var(--rs-font-size-sm);
 }
 
 .ws-checker-line {
-  font-size: 10px;
+  font-size: var(--rs-font-size-xxs);
   font-weight: var(--rs-font-weight-medium);
   color: var(--rs-color-text-muted);
   background: var(--rs-color-surface-muted);
@@ -474,7 +440,7 @@ body {
 }
 
 .ws-readiness-badge-title {
-  font-size: 11px;
+  font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
   color: var(--rs-color-text-muted);
   text-transform: uppercase;
@@ -482,7 +448,7 @@ body {
 }
 
 .ws-readiness-badge-draft {
-  font-size: 9px;
+  font-size: var(--rs-font-size-xxs);
   font-weight: var(--rs-font-weight-bold);
   color: var(--rs-color-text-muted);
   background: var(--rs-color-surface-muted);
@@ -508,12 +474,6 @@ body {
   font-weight: var(--rs-font-weight-semibold);
 }
 
-@media (max-width: 900px) {
-  .ws-main {
-    grid-template-columns: 1fr;
-    grid-auto-rows: minmax(180px, auto);
-  }
-}
 
 /* visible error style */
 .ws-preview-error {
@@ -546,13 +506,19 @@ body {
   padding: var(--rs-space-1) var(--rs-space-2);
   font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
-  color: var(--rs-slate-700);
+  color: var(--rs-color-text);
   background: var(--rs-color-surface);
   border: 1px solid var(--rs-color-border);
   border-radius: var(--rs-radius-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+}
+
+.ws-editor-toolbar-btn:hover {
+  background: var(--rs-color-surface-muted);
+  color: var(--rs-color-text);
+  border-color: var(--rs-color-text-muted);
 }
 
 .ws-editor-cm-parent {
@@ -562,6 +528,36 @@ body {
 }
 
 /* PreviewPane extracted styles */
+.ws-preview-header-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  margin-bottom: var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ws-preview-scope-label {
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-preview-heading-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
 .ws-preview-empty {
   color: var(--rs-color-text-muted);
   font-style: italic;
@@ -575,8 +571,8 @@ body {
   font-family: var(--rs-font-family-ui);
   font-size: var(--rs-font-size-md);
   line-height: 1.6;
-  color: var(--rs-color-text);
-  background-color: var(--rs-color-surface);
+  color: var(--rs-report-color-text, #000000);
+  background-color: transparent;
 }
 
 .ws-preview-html-section {
@@ -675,8 +671,8 @@ body {
 /* TOC (Table of Contents) block styles - Module 2, W3 Group B */
 .ws-toc-container {
   padding: var(--rs-space-3);
-  background-color: var(--rs-color-surface-muted);
-  border: 1px solid var(--rs-color-border);
+  background-color: var(--rs-slate-100);
+  border: 1px solid var(--rs-slate-300);
   border-radius: var(--rs-radius-sm);
   margin-bottom: var(--rs-space-4);
 }
@@ -684,9 +680,9 @@ body {
 .ws-toc-title {
   font-size: var(--rs-font-size-md);
   font-weight: var(--rs-font-weight-bold);
-  color: var(--rs-color-text);
+  color: var(--rs-report-color-text, #000000);
   margin-bottom: var(--rs-space-2);
-  border-bottom: 1px solid var(--rs-color-border);
+  border-bottom: 1px solid var(--rs-slate-300);
   padding-bottom: var(--rs-space-1);
 }
 
@@ -705,24 +701,24 @@ body {
 
 .ws-toc-link {
   text-decoration: none;
-  color: var(--rs-color-primary);
+  color: var(--rs-blue-600);
   display: inline-flex;
   gap: var(--rs-space-1);
   transition: color 0.15s ease;
 }
 
 .ws-toc-link:hover {
-  color: var(--rs-color-primary-hover);
+  color: var(--rs-blue-700);
   text-decoration: underline;
 }
 
 .ws-toc-number {
   font-weight: var(--rs-font-weight-medium);
-  color: var(--rs-color-text-muted);
+  color: var(--rs-slate-500);
 }
 
 .ws-toc-text {
-  color: var(--rs-color-text);
+  color: var(--rs-report-color-text, #000000);
 }
 
 /* Indentation levels for hierarchical TOC */
@@ -840,7 +836,7 @@ body {
 }
 
 .ws-export-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
 }
 
@@ -1035,7 +1031,7 @@ body {
 }
 
 .ws-submission-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
 }
 
@@ -1787,7 +1783,7 @@ span.ws-present-slide-speaker {
   border-radius: var(--rs-radius-sm);
   background-color: var(--rs-color-surface-muted);
   color: var(--rs-color-text-muted);
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
   transition: all 0.15s ease;
 }
@@ -2061,10 +2057,6 @@ span.ws-present-slide-speaker {
 
 .ws-present-ai-note {
   font-size: var(--rs-font-size-xs);
-  color: var(--rs-color-severity-warning);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--rs-space-1);
 }
 
 /* UserControlBar */
@@ -2229,7 +2221,7 @@ span.ws-present-slide-speaker {
   color: var(--rs-color-text-muted);
   border: 1px solid var(--rs-color-border);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 .ws-suggestion-diff-reject-btn {
@@ -2391,11 +2383,12 @@ span.ws-present-slide-speaker {
   display: flex;
   flex-direction: column;
   gap: var(--rs-space-2);
-  padding: var(--rs-space-3);
-  background-color: var(--rs-color-surface);
-  border: 1px solid var(--rs-color-border);
-  border-radius: var(--rs-radius-md);
-  margin-bottom: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  background-color: var(--rs-color-surface-muted);
+  border: none;
+  border-bottom: 1px solid var(--rs-color-border);
+  border-radius: 0;
+  margin-bottom: 0;
 }
 
 .ws-ai-assist-buttons-row {
@@ -2409,7 +2402,7 @@ span.ws-present-slide-speaker {
 .ws-ai-tone-btn {
   background-color: var(--rs-color-primary);
   color: var(--rs-white);
-  border: 1px solid var(--rs-color-border);
+  border: 1px solid transparent;
   border-radius: var(--rs-radius-sm);
   padding: var(--rs-space-1) var(--rs-space-3);
   font-size: var(--rs-font-size-xs);
@@ -2417,23 +2410,30 @@ span.ws-present-slide-speaker {
   cursor: pointer;
   outline: none;
   transition: background-color 0.2s;
+  height: var(--rs-control-height-sm);
+  display: inline-flex;
+  align-items: center;
 }
 
 .ws-ai-rewrite-btn:disabled,
 .ws-ai-tone-btn:disabled {
-  background-color: var(--rs-color-surface-muted);
+  background-color: var(--rs-color-surface);
   color: var(--rs-color-text-muted);
+  border-color: var(--rs-color-border);
+  opacity: 0.75;
   cursor: not-allowed;
 }
 
 .ws-ai-assist-note {
   font-size: var(--rs-font-size-xs);
-  color: var(--rs-color-severity-warning);
 }
 
 .ws-ai-assist-error {
   font-size: var(--rs-font-size-xs);
   color: var(--rs-color-severity-error);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
 }
 
 /* ===== Shared UI States (Loading, Empty, Error, Success) ===== */
@@ -2604,6 +2604,13 @@ span.ws-present-slide-speaker {
     animation: none !important;
     opacity: 0.7;
   }
+}
+
+/* Custom Table Overflow strategy to prevent A4 preview page horizontal breakout */
+.ws-preview-page table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
 }
 
 

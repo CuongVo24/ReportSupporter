@@ -13,6 +13,7 @@ export interface SelectOption {
 
 export interface SelectProps {
   label?: string;
+  ariaLabel?: string;
   error?: string;
   helperText?: string;
   placeholder?: string;
@@ -31,6 +32,7 @@ export interface SelectProps {
 
 export const Select: React.FC<SelectProps> = ({
   label,
+  ariaLabel,
   error,
   helperText,
   placeholder = "Chọn một tùy chọn...",
@@ -101,6 +103,7 @@ export const Select: React.FC<SelectProps> = ({
             id={selectId}
             className={triggerClassNames}
             aria-labelledby={label ? `${selectId}-label` : undefined}
+            aria-label={ariaLabel}
             aria-describedby={ariaDescribedBy}
             aria-invalid={error ? "true" : undefined}
           >

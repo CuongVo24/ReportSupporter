@@ -57,6 +57,6 @@ Làm người dùng hiểu vì sao có số "2" và đang preview phạm vi gì.
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `fix(preview): explain auto-numbered headings + label preview scope`.

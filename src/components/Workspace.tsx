@@ -5,6 +5,7 @@ import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -191,11 +192,20 @@ export function Workspace() {
   const saveStatus = (
     <p className="ws-save-status" aria-live="polite">
       {quotaFull ? (
-        <span className="ws-save-status-error">Bộ nhớ đầy</span>
+        <span className="ws-save-status-error">
+          <AlertTriangle size={14} aria-hidden="true" />
+          Bộ nhớ đầy
+        </span>
       ) : status === "saving" ? (
-        <span className="ws-save-status-saving">Đang lưu…</span>
+        <span className="ws-save-status-saving">
+          <Loader2 size={14} aria-hidden="true" />
+          Đang lưu…
+        </span>
       ) : status === "saved" ? (
-        <span className="ws-save-status-saved">Đã lưu</span>
+        <span className="ws-save-status-saved">
+          <CheckCircle2 size={14} aria-hidden="true" />
+          Đã lưu
+        </span>
       ) : (
         ""
       )}
@@ -208,7 +218,7 @@ export function Workspace() {
       size="sm"
       onClick={() => runExport("pdf", bundle)}
     >
-      Xuất bản nộp
+      Xuất bản để nộp
     </Button>
   );
 
@@ -220,28 +230,43 @@ export function Workspace() {
           onClick={() => setIsResetConfirmOpen(true)}
           className="ws-reset-btn"
         >
-          Tạo report
+          Tạo báo cáo
         </button>
       </div>
       <Tabs defaultValue="check" className="ws-side-tabs">
         <TabsList className="ws-side-tabs-list">
-          <TabsTrigger
-            value="check"
-            count={checkResult?.issues?.length}
-            countVariant={
-              checkResult && checkResult.issues.some((i) => i.severity === "error")
-                ? "error"
-                : checkResult && checkResult.issues.some((i) => i.severity === "warning")
-                ? "warning"
-                : "neutral"
-            }
-          >
-            Người soát
-          </TabsTrigger>
-          <TabsTrigger value="export">Xuất bản</TabsTrigger>
-          <TabsTrigger value="submission">Nộp bài</TabsTrigger>
-          <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
-          <TabsTrigger value="present">Slide</TabsTrigger>
+          <div className="ws-side-tab-group" role="presentation">
+            <span className="ws-side-tab-group-label">Kiểm tra</span>
+            <div className="ws-side-tab-group-triggers" role="presentation">
+              <TabsTrigger
+                value="check"
+                count={checkResult?.issues?.length}
+                countVariant={
+                  checkResult && checkResult.issues.some((i) => i.severity === "error")
+                    ? "error"
+                    : checkResult && checkResult.issues.some((i) => i.severity === "warning")
+                    ? "warning"
+                    : "neutral"
+                }
+              >
+                Soát lỗi
+              </TabsTrigger>
+              <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
+            </div>
+          </div>
+          <div className="ws-side-tab-group" role="presentation">
+            <span className="ws-side-tab-group-label">Xuất bản</span>
+            <div className="ws-side-tab-group-triggers" role="presentation">
+              <TabsTrigger value="export">Xuất bản</TabsTrigger>
+              <TabsTrigger value="submission">Nộp bài</TabsTrigger>
+            </div>
+          </div>
+          <div className="ws-side-tab-group" role="presentation">
+            <span className="ws-side-tab-group-label">Trình bày</span>
+            <div className="ws-side-tab-group-triggers" role="presentation">
+              <TabsTrigger value="present">Slide</TabsTrigger>
+            </div>
+          </div>
         </TabsList>
         <div className="ws-side-tabs-content-scroll">
           <TabsContent value="check" className="ws-side-tabs-content">
@@ -288,7 +313,7 @@ export function Workspace() {
     <>
       <WorkspaceLayout
       editor={
-        <div className="ws-editor-container">
+        <div className="ws-editor-stack">
           <AiAssistBar
             section={activeSection}
             onChange={handleChange}
@@ -325,7 +350,7 @@ export function Workspace() {
       <Dialog
         isOpen={isResetConfirmOpen}
         onOpenChange={setIsResetConfirmOpen}
-        title="Tạo report mới?"
+        title="Tạo báo cáo mới?"
         description="Toàn bộ nội dung hiện tại sẽ bị xóa. Hành động không thể hoàn tác."
         variant="confirm"
         footer={
@@ -334,7 +359,7 @@ export function Workspace() {
               Hủy
             </Button>
             <Button variant="danger" onClick={handleReset}>
-              Tạo report
+              Tạo báo cáo
             </Button>
           </div>
         }
