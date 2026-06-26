@@ -59,6 +59,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(ui): complete primitive edge-states (dialog/toast/tabs)`; `fix(panels): complete empty/loading/error edge-states`; `docs(ui): commit w15d contract`.
