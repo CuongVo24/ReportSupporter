@@ -185,3 +185,46 @@ Giao diện đã được kiểm thử ổn định trên 3 khoảng viewport ch
 ## 🔒 Cam kết thiết kế
 *   Tất cả các thay đổi được thực hiện tối thiểu, không gây xáo trộn hành vi hoặc cấu trúc của các module.
 *   Tuân thủ nghiêm ngặt bảng biến thiết kế trong `DesignSystem_Tokens.md`.
+
+---
+
+## 🎬 Tuần 15 Day 5: Before/After Evidence & Phase 4 Close
+
+### 1. Minh chứng Before/After Visual (Screenshots)
+Các ảnh chụp màn hình minh chứng giao diện được lưu trữ tại thư mục [Design/Reports/Month4/W15/screenshots/](file:///e:/ReportSupporter/Design/Reports/Month4/W15/screenshots/) bao gồm:
+*   **Workspace (Màn hình chính):**
+    *   [workspace_light.png](file:///e:/ReportSupporter/Design/Reports/Month4/W15/screenshots/workspace_light.png): Giao diện Workspace ở chế độ Sáng (Light mode) với chế độ chia cột song song (split-pane) trên desktop, hiển thị đầy đủ Write/Check/Export/Submission/Evidence/Present/Shell.
+    *   [workspace_dark.png](file:///e:/ReportSupporter/Design/Reports/Month4/W15/screenshots/workspace_dark.png): Giao diện Workspace ở chế độ Tối (Dark mode), hiển thị sự tối giản và hài hòa tương phản đạt chuẩn WCAG.
+*   **UI Gallery (Thư viện Primitive & Pattern):**
+    *   [gallery_light.png](file:///e:/ReportSupporter/Design/Reports/Month4/W15/screenshots/gallery_light.png): Thư viện các Primitive (Button, Input, Select, Textarea, Badge, Dialog, Tabs, Toast) và các Pattern (Empty, Error, Feedback, FormValidation, Loading) ở chế độ Sáng.
+    *   [gallery_dark.png](file:///e:/ReportSupporter/Design/Reports/Month4/W15/screenshots/gallery_dark.png): Thư viện các thành phần UI ở chế độ Tối.
+
+### 2. Kết quả kiểm tra tự động (Automated Gates)
+Toàn bộ mã nguồn và kiểm thử của dự án đã vượt qua 4 chốt kiểm soát tự động sạch lỗi, được ghi nhận chi tiết tại [build_output.txt](file:///e:/ReportSupporter/Design/Reports/Month4/W15/build_output.txt):
+*   **TypeScript Check:** `npx tsc --noEmit` hoàn thành sạch sẽ không lỗi.
+*   **Linter Check:** `npm run lint` (`eslint .`) không phát hiện lỗi coding convention hay code smell nào.
+*   **Unit & Accessibility Tests:** `vitest` chạy thành công toàn bộ **398 tests** (bao gồm 76 test files). Tất cả các test case tự động sử dụng `axe-core` để quét khả năng truy cập (a11y) của các Primitive (Dialog, Tabs, Toast, Badge...), các trạng thái rỗng/lỗi và toàn bộ Workspace Layout đều báo cáo **0 critical violations** ở cả hai chế độ Sáng và Tối.
+*   **Production Build:** `npm run build` (`next build`) tối ưu hóa và xuất bản static pages thành công không gặp bất kỳ cảnh báo hay lỗi biên dịch nào.
+
+### 3. Đánh giá Khả năng truy cập (Accessibility Summary)
+*   **Axe-core Automated Audit:** Hoàn thành quét tự động, đạt **0 critical/serious violations**.
+*   **Color Contrast (Độ tương phản màu sắc):**
+    *   *Lưu ý kỹ thuật:* Do công cụ `axe-core` chạy dưới môi trường JSDOM (vitest) không thể tự động tính toán CSS màu sắc thực tế và render Layout để đo lường tương phản, độ tương phản màu sắc đã được kiểm thử và xác nhận thủ công (Manual Verification).
+    *   *Kết quả tương phản:* Toàn bộ các trạng thái chữ chính (12.2:1), chữ phụ (5.3:1), nút primary (4.6:1), focus ring (4.6:1), và màu nền thông báo/badge severity (Error, Warning, Info, Success đều từ 6.1:1 trở lên) đều vượt mức WCAG 2.2 AA (tối thiểu 4.5:1).
+    *   *Báo cáo in ấn bất biến:* Các trang in ấn và xem trước tài liệu in (A4 preview) được cấu hình bất biến là chữ đen trên nền trắng tuyệt đối để đảm bảo độ tương phản tối đa khi in ấn vật lý.
+
+### 4. Trạng thái Bản đồ Giao diện (Frontend Map Status)
+Bản đồ giao diện tại [Design/Frontend/README.md](file:///e:/ReportSupporter/Design/Frontend/README.md) đã được cập nhật trạng thái mới nhất:
+*   Mọi Spec của **Flows**, **Layouts**, **Patterns**, **Components**, và **Art Direction** đã được chuyển sang trạng thái **`implemented`** và đánh dấu **`axe automated (W15)`**.
+*   Cấu trúc code tương thích hoàn toàn với tài liệu đặc tả primitive và panel, không phát sinh code thừa hay phá vỡ module.
+
+---
+
+## 🔒 Đóng Phase 4 (Tuần 13 - Tuần 15)
+Với việc hoàn thành chốt tuần 15, toàn bộ các mục tiêu cải tiến và làm mịn UI/UX trong Phase 4 đã được thực thi và đóng gói đầy đủ:
+- [x] Đưa Radix UI headless primitives vào vận hành an toàn (Dialog, Tabs, Toast, Select).
+- [x] Loại bỏ toàn bộ các visual anti-patterns và emoji thô trong giao diện vận hành chuyên nghiệp.
+- [x] Hỗ trợ hoàn hảo Dark mode với màu sắc ngữ nghĩa và WCAG AA contrast.
+- [x] Hỗ trợ Reduced motion cho toàn bộ loader/spinner và chuyển động của drawer/toast.
+- [x] Tối ưu hóa đa viewport trên Desktop, Tablet, Mobile.
+- [x] Đạt độ bao phủ 100% test a11y tự động với 0 critical violations.
