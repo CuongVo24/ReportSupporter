@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
+import { Button } from "@/components/ui";
 import {
   createProjectFromTemplate,
   loadBundle,
@@ -141,7 +142,17 @@ export function Workspace() {
   }, []);
 
   if (!bundle) {
-    return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
+    return (
+      <WorkspaceLayout
+        editor={<p className="ws-zone-hint">Đang tải…</p>}
+        preview={null}
+        sidePanel={null}
+        sections={[]}
+        activeSectionId=""
+        onSectionSelect={() => {}}
+        reportTitle="ReportSupporter"
+      />
+    );
   }
 
   if (isInitializing) {
@@ -156,25 +167,45 @@ export function Workspace() {
   }
 
   if (!activeSection) {
-    return <WorkspaceLayout editor={<p className="ws-zone-hint">Đang tải…</p>} preview={null} sidePanel={null} />;
+    return (
+      <WorkspaceLayout
+        editor={<p className="ws-zone-hint">Đang tải…</p>}
+        preview={null}
+        sidePanel={null}
+        sections={[]}
+        activeSectionId=""
+        onSectionSelect={() => {}}
+        reportTitle="ReportSupporter"
+      />
+    );
   }
+
+  const saveStatus = (
+    <p className="ws-save-status" aria-live="polite">
+      {quotaFull ? (
+        <span className="ws-save-status-error">Bộ nhớ đầy</span>
+      ) : status === "saving" ? (
+        <span className="ws-save-status-saving">Đang lưu…</span>
+      ) : status === "saved" ? (
+        <span className="ws-save-status-saved">Đã lưu thầm</span>
+      ) : (
+        ""
+      )}
+    </p>
+  );
+
+  const primaryAction = (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={() => runExport("pdf", bundle)}
+    >
+      Xuất bản nộp
+    </Button>
+  );
 
   const sidePanel = (
     <div className="ws-side-inner">
-      <label className="ws-side-label" htmlFor="ws-section-select">Sections</label>
-      <select
-        id="ws-section-select"
-        className="ws-section-select"
-        value={activeSection.id}
-        onChange={(e) => setActiveId(e.target.value)}
-      >
-        {bundle.project.sections.map((sec) => (
-          <option key={sec.id} value={sec.id}>{sec.title}</option>
-        ))}
-      </select>
-      <p className="ws-save-status" aria-live="polite">
-        {quotaFull ? "Bộ nhớ trình duyệt đầy — nội dung vẫn giữ trong phiên." : status === "saving" ? "Saving…" : status === "saved" ? "Saved" : ""}
-      </p>
       <button
         onClick={handleReset}
         className="ws-reset-btn"
@@ -237,6 +268,12 @@ export function Workspace() {
         />
       }
       sidePanel={sidePanel}
+      sections={bundle.project.sections}
+      activeSectionId={activeSection.id}
+      onSectionSelect={(id) => setActiveId(id)}
+      reportTitle={bundle.project.title}
+      saveStatus={saveStatus}
+      primaryAction={primaryAction}
     />
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useId, useRef, useEffect, useState, useCallback } from "react";
 import { AlertCircle } from "lucide-react";
 import "./Textarea.css";

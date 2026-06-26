@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import * as RadixToast from "@radix-ui/react-toast";
 import { X, CheckCircle2, Info, XCircle } from "lucide-react";
