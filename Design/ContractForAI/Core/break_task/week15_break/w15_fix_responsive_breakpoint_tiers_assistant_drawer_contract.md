@@ -60,6 +60,6 @@ Thêm nấc breakpoint trung gian để màn laptop phổ thông (1366) không p
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Làm **sau** `w15_fix_side_column_flexshrink_*`. Commit: `fix(shell): add 1440 tier; assistant becomes drawer on laptop widths`.

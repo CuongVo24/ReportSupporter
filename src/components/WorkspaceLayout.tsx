@@ -38,6 +38,7 @@ export function WorkspaceLayout({
   primaryAction,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
+  const [isWide, setIsWide] = useState(true);
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
   const [isRightCollapsed, setIsRightCollapsed] = useState(false);
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
@@ -55,11 +56,21 @@ export function WorkspaceLayout({
   const innerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 1024px)");
-    setIsDesktop(media.matches);
-    const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    media.addEventListener("change", listener);
-    return () => media.removeEventListener("change", listener);
+    const desktopMedia = window.matchMedia("(min-width: 1024px)");
+    const wideMedia = window.matchMedia("(min-width: 1440px)");
+    setIsDesktop(desktopMedia.matches);
+    setIsWide(wideMedia.matches);
+
+    const desktopListener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    const wideListener = (e: MediaQueryListEvent) => setIsWide(e.matches);
+
+    desktopMedia.addEventListener("change", desktopListener);
+    wideMedia.addEventListener("change", wideListener);
+
+    return () => {
+      desktopMedia.removeEventListener("change", desktopListener);
+      wideMedia.removeEventListener("change", wideListener);
+    };
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -150,7 +161,7 @@ export function WorkspaceLayout({
         <div className="ws-topbar-center">{saveStatus}</div>
         <div className="ws-topbar-right">
           {primaryAction}
-          {!isDesktop && (
+          {(!isDesktop || (isDesktop && !isWide)) && (
             <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightDrawerOpen(true)} aria-label="Mở bảng điều khiển">
               <Menu size={16} />
             </button>
@@ -238,7 +249,7 @@ export function WorkspaceLayout({
           )}
         </section>
 
-        {isDesktop && (
+        {isDesktop && isWide && (
           <aside className={`ws-side-column ws-side-column-right ${isRightCollapsed ? "ws-side-column-right--collapsed" : "ws-side-column-right--expanded"}`} aria-label="Bảng điều khiển">
             {isRightCollapsed ? (
               <div className="ws-collapsed-rail-list">
@@ -270,7 +281,7 @@ export function WorkspaceLayout({
           {navContent}
         </MobileDrawer>
       )}
-      {!isDesktop && (
+      {(!isDesktop || (isDesktop && !isWide)) && (
         <MobileDrawer isOpen={isRightDrawerOpen} onClose={() => setIsRightDrawerOpen(false)} side="right" title="Bảng điều khiển">
           {sidePanel}
         </MobileDrawer>
