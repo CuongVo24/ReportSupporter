@@ -58,6 +58,6 @@ Trả nút toolbar về theo theme (rõ chữ, rõ border) và đồng bộ tôn
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `fix(editor): toolbar buttons follow theme color (not hardcoded slate)`; `fix(editor): theme CodeMirror gutter/active-line to match surface`.
