@@ -62,6 +62,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(ui): final gate fixes (minimal)`; `docs(reports): W15 QA report + before/after evidence`; `docs(ui): commit w15e contract`. **Đóng Phase 4 (W13–W15).**
