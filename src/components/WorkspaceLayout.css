@@ -90,11 +90,21 @@
   font-size: var(--rs-font-size-xs);
   color: var(--rs-color-text-muted);
   transition: color 150ms ease-out;
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
 }
 
-.ws-save-status-saving {
-  color: var(--rs-color-primary);
-  font-weight: var(--rs-font-weight-medium);
+.ws-save-status-saving,
+.ws-save-status-saved,
+.ws-save-status-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ws-save-status-saving svg {
+  animation: ws-spin 1s linear infinite;
 }
 
 .ws-save-status-saved {

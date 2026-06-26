@@ -5,6 +5,7 @@ import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -191,11 +192,20 @@ export function Workspace() {
   const saveStatus = (
     <p className="ws-save-status" aria-live="polite">
       {quotaFull ? (
-        <span className="ws-save-status-error">Bộ nhớ đầy</span>
+        <span className="ws-save-status-error">
+          <AlertTriangle size={14} aria-hidden="true" />
+          Bộ nhớ đầy
+        </span>
       ) : status === "saving" ? (
-        <span className="ws-save-status-saving">Đang lưu…</span>
+        <span className="ws-save-status-saving">
+          <Loader2 size={14} aria-hidden="true" />
+          Đang lưu…
+        </span>
       ) : status === "saved" ? (
-        <span className="ws-save-status-saved">Đã lưu</span>
+        <span className="ws-save-status-saved">
+          <CheckCircle2 size={14} aria-hidden="true" />
+          Đã lưu
+        </span>
       ) : (
         ""
       )}

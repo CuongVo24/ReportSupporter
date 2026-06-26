@@ -94,6 +94,7 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
           disabled={isDisabled || isAiLoading}
           onClick={handleRewrite}
           className="ws-ai-rewrite-btn"
+          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Viết lại đoạn văn bằng AI"}
         >
           {isAiLoading && loadingAction === "rewrite" ? "Đang viết lại..." : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -107,6 +108,7 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
           disabled={isDisabled || isAiLoading}
           onClick={handleTone}
           className="ws-ai-tone-btn"
+          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Cải thiện văn phong bằng AI"}
         >
           {isAiLoading && loadingAction === "tone" ? "Đang cải thiện..." : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -116,8 +118,8 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
         </button>
 
         {isDisabled && (
-          <span className="ws-ai-assist-note" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-warning)" }} /> Bật AI trong cấu hình
+          <span className="ws-ai-assist-note" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="Vui lòng bật AI trong Cài đặt để sử dụng">
+            <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-warning)" }} /> Bật AI trong Cài đặt
           </span>
         )}
 

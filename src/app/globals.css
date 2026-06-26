@@ -67,8 +67,8 @@
   /* Typography — UI scale (DesignSystem §3.1) */
   --rs-font-family-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --rs-font-family-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
-  --rs-font-size-xs: 12px;
-  --rs-font-size-sm: 13px;
+  --rs-font-size-xs: 13px;
+  --rs-font-size-sm: 14px;
   --rs-font-size-md: 14px;
   --rs-font-size-lg: 16px;
   --rs-font-size-xl: 20px;
@@ -97,13 +97,13 @@
 
   /* Control heights & overlay dimensions (DesignSystem §4.5) */
   --rs-control-height-md: 36px;
-  --rs-control-height-sm: 28px;
+  --rs-control-height-sm: 32px;
   --rs-textarea-min-height: 80px;
   --rs-overlay-width-lg: 520px;
   --rs-overlay-width-md: 460px;
   --rs-overlay-width-sm: 400px;
   --rs-toast-width: 380px;
-  --rs-font-size-xxs: 10px;
+  --rs-font-size-xxs: 11px;
 
   --rs-rail-left-width: 240px;
   --rs-rail-right-width: 320px;
@@ -387,17 +387,17 @@ body {
   display: block;
   color: var(--rs-color-text);
   font-weight: var(--rs-font-weight-medium);
-  font-size: var(--rs-font-size-xs);
+  font-size: var(--rs-font-size-sm);
 }
 
 .ws-checker-hint {
   display: block;
   color: var(--rs-color-text-muted);
-  font-size: var(--rs-font-size-xs);
+  font-size: var(--rs-font-size-sm);
 }
 
 .ws-checker-line {
-  font-size: 10px;
+  font-size: var(--rs-font-size-xxs);
   font-weight: var(--rs-font-weight-medium);
   color: var(--rs-color-text-muted);
   background: var(--rs-color-surface-muted);
@@ -474,7 +474,7 @@ body {
 }
 
 .ws-readiness-badge-title {
-  font-size: 11px;
+  font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
   color: var(--rs-color-text-muted);
   text-transform: uppercase;
@@ -482,7 +482,7 @@ body {
 }
 
 .ws-readiness-badge-draft {
-  font-size: 9px;
+  font-size: var(--rs-font-size-xxs);
   font-weight: var(--rs-font-weight-bold);
   color: var(--rs-color-text-muted);
   background: var(--rs-color-surface-muted);
@@ -876,7 +876,7 @@ body {
 }
 
 .ws-export-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
 }
 
@@ -1071,7 +1071,7 @@ body {
 }
 
 .ws-submission-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
 }
 
@@ -1823,7 +1823,7 @@ span.ws-present-slide-speaker {
   border-radius: var(--rs-radius-sm);
   background-color: var(--rs-color-surface-muted);
   color: var(--rs-color-text-muted);
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
   transition: all 0.15s ease;
 }
@@ -2265,7 +2265,7 @@ span.ws-present-slide-speaker {
   color: var(--rs-color-text-muted);
   border: 1px solid var(--rs-color-border);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 .ws-suggestion-diff-reject-btn {
@@ -2427,11 +2427,12 @@ span.ws-present-slide-speaker {
   display: flex;
   flex-direction: column;
   gap: var(--rs-space-2);
-  padding: var(--rs-space-3);
-  background-color: var(--rs-color-surface);
-  border: 1px solid var(--rs-color-border);
-  border-radius: var(--rs-radius-md);
-  margin-bottom: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  background-color: var(--rs-color-surface-muted);
+  border: none;
+  border-bottom: 1px solid var(--rs-color-border);
+  border-radius: 0;
+  margin-bottom: 0;
 }
 
 .ws-ai-assist-buttons-row {
@@ -2445,7 +2446,7 @@ span.ws-present-slide-speaker {
 .ws-ai-tone-btn {
   background-color: var(--rs-color-primary);
   color: var(--rs-white);
-  border: 1px solid var(--rs-color-border);
+  border: 1px solid transparent;
   border-radius: var(--rs-radius-sm);
   padding: var(--rs-space-1) var(--rs-space-3);
   font-size: var(--rs-font-size-xs);
@@ -2453,12 +2454,17 @@ span.ws-present-slide-speaker {
   cursor: pointer;
   outline: none;
   transition: background-color 0.2s;
+  height: var(--rs-control-height-sm);
+  display: inline-flex;
+  align-items: center;
 }
 
 .ws-ai-rewrite-btn:disabled,
 .ws-ai-tone-btn:disabled {
-  background-color: var(--rs-color-surface-muted);
+  background-color: var(--rs-color-surface);
   color: var(--rs-color-text-muted);
+  border-color: var(--rs-color-border);
+  opacity: 0.75;
   cursor: not-allowed;
 }
 
