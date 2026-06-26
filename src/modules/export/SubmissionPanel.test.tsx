@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { SubmissionPanel } from "./SubmissionPanel";
 import type { ReportProjectBundle, CheckResult } from "@/types";
+import { Button } from "@/components/ui";
 
 // Mock React hooks to allow direct invocation of the component function in pure Node
 vi.mock("react", async (importOriginal) => {
@@ -79,7 +80,7 @@ describe("SubmissionPanel component structure", () => {
     expect(checklistContainer.props.className).toBe("ws-submission-checklist-container");
 
     const downloadButton = children[3];
-    expect(downloadButton.type).toBe("button");
+    expect(downloadButton.type).toBe(Button);
     expect(downloadButton.props.className).toBe("ws-submission-btn");
     expect(downloadButton.props.children).toBe("Tải về evidence.zip");
 
@@ -119,7 +120,7 @@ describe("SubmissionPanel component structure", () => {
     expect(blobsWarning.props.children.join("")).toContain("chưa export trong phiên này");
 
     const button = children[3];
-    expect(button.type).toBe("button");
+    expect(button.type).toBe(Button);
     expect(button.props.className).toBe("ws-submission-btn");
 
     // 2. Test case: check is undefined (should show checker unrun warning)
@@ -142,6 +143,6 @@ describe("SubmissionPanel component structure", () => {
     expect(noBlobsWarning).toBe(false);
 
     const buttonNoCheck = childrenNoCheck[3];
-    expect(buttonNoCheck.type).toBe("button");
+    expect(buttonNoCheck.type).toBe(Button);
   });
 });

@@ -1,5 +1,6 @@
 import React from "react";
 import type { GatewayState } from "@/types";
+import { Button } from "@/components/ui";
 
 export interface AiOutlineButtonProps {
   onClick: () => void;
@@ -11,19 +12,21 @@ export function AiOutlineButton({ onClick, isLoading, state }: AiOutlineButtonPr
   const isDisabled = state === "disabled" || state === "unconfigured";
 
   return (
-    <div className="ws-present-ai-outline-btn-container">
-      <button
+    <div className="ws-present-ai-outline-btn-container" style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)" }}>
+      <Button
         type="button"
         onClick={onClick}
-        disabled={isDisabled || isLoading}
-        aria-busy={isLoading}
+        disabled={isDisabled}
+        loading={isLoading}
         className="ws-present-ai-outline-action"
         title={isDisabled ? "Vui lòng cấu hình AI để sử dụng tính năng này" : "Tối ưu hóa Outline bằng AI"}
+        variant="primary"
+        size="sm"
       >
-        <span>{isLoading ? "⏳ Đang tối ưu..." : "✨ Tối ưu Outline bằng AI"}</span>
-      </button>
+        ✨ Tối ưu Outline bằng AI
+      </Button>
       {isDisabled && (
-        <span className="ws-present-ai-note">
+        <span className="ws-present-ai-note" style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)" }}>
           ⚠️ Bật AI trong cấu hình
         </span>
       )}

@@ -6,6 +6,8 @@ import { generateReadme } from "./generate-readme";
 import { buildEvidenceAppendix } from "@/modules/evidence";
 import { verifyDocxLayout } from "./docx-layout-checklist";
 import { clearExportHistory, loadExportHistory } from "./export-history";
+import { Button } from "@/components/ui";
+import { EmptyState } from "@/components/states";
 
 /**
  * Panel to manage final submission packaging, checklist validation, and local export history.
@@ -142,31 +144,36 @@ export function SubmissionPanel({
       </div>
 
       {!hasSessionBlobs && (
-        <div className="ws-submission-blobs-warning">
+        <div className="ws-submission-blobs-warning" style={{ marginTop: "var(--rs-space-3)", marginBottom: "var(--rs-space-2)" }}>
           Bộ nộp sẽ <strong>không</strong> kèm file báo cáo (report.html/pdf/docx) vì bạn chưa export trong phiên này — hãy export lại trước khi đóng gói.
         </div>
       )}
 
-      <button
+      <Button
         onClick={handleDownloadPackage}
-        disabled={packaging}
+        loading={packaging}
+        variant="primary"
+        fullWidth
         className="ws-submission-btn"
         aria-label="Tải về bộ nộp bài"
+        style={{ marginTop: "var(--rs-space-4)", marginBottom: "var(--rs-space-4)" }}
       >
-        {packaging ? "Đang đóng gói..." : "Tải về evidence.zip"}
-      </button>
+        Tải về evidence.zip
+      </Button>
 
       {history.length > 0 && (
         <div className="ws-submission-history-container">
           <div className="ws-submission-history-header">
             <h4 className="ws-submission-checklist-title">Lịch sử xuất bản cục bộ</h4>
-            <button
+            <Button
               onClick={handleClearHistory}
+              variant="ghost"
+              size="sm"
               className="ws-submission-clear-btn"
               aria-label="Xóa lịch sử xuất bản"
             >
               Xóa lịch sử
-            </button>
+            </Button>
           </div>
           <ul className="ws-export-jobs-list">
             {history.slice(0, 5).map((job) => (

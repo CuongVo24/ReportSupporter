@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
-import { Button } from "@/components/ui";
+import { Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -207,37 +207,75 @@ export function Workspace() {
   );
 
   const sidePanel = (
-    <div className="ws-side-inner">
-      <button
-        onClick={handleReset}
-        className="ws-reset-btn"
-      >
-        Tạo mới báo cáo
-      </button>
-      <CheckerPanel
-        result={checkResult ?? emptyCheckResult}
-        onRun={handleCheck}
-        onJump={handleJump}
-        hasRun={hasRun}
-      />
-      <ExportPanel
-        bundle={bundle}
-        check={checkResult ?? undefined}
-        jobs={jobs}
-        runExport={runExport}
-        retry={retry}
-      />
-      <SubmissionPanel
-        bundle={bundle}
-        check={checkResult ?? undefined}
-        exportedBlobs={exportedBlobs}
-        jobs={jobs}
-      />
-      <EvidencePanel
-        evidence={bundle.evidence}
-        onChange={handleEvidenceChange}
-      />
-      <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
+    <div className="ws-side-inner" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "var(--rs-space-3) var(--rs-space-4)", borderBottom: "1px solid var(--rs-color-border)" }}>
+        <span style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-semibold)" }}>Trợ lý báo cáo</span>
+        <button
+          onClick={handleReset}
+          className="ws-reset-btn"
+          style={{ margin: 0, padding: "var(--rs-space-1) var(--rs-space-2)", fontSize: "var(--rs-font-size-xs)" }}
+        >
+          Tạo mới
+        </button>
+      </div>
+      <Tabs defaultValue="check" className="ws-side-tabs" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+        <TabsList style={{ borderBottom: "1px solid var(--rs-color-border)", padding: "0 var(--rs-space-2)" }}>
+          <TabsTrigger
+            value="check"
+            count={checkResult?.issues?.length}
+            countVariant={
+              checkResult && checkResult.issues.some((i) => i.severity === "error")
+                ? "error"
+                : checkResult && checkResult.issues.some((i) => i.severity === "warning")
+                ? "warning"
+                : "neutral"
+            }
+          >
+            Kiểm tra
+          </TabsTrigger>
+          <TabsTrigger value="export">Xuất bản</TabsTrigger>
+          <TabsTrigger value="submission">Nộp bài</TabsTrigger>
+          <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
+          <TabsTrigger value="present">Slide</TabsTrigger>
+        </TabsList>
+        <div style={{ flex: 1, overflowY: "auto", padding: "var(--rs-space-4)" }}>
+          <TabsContent value="check" style={{ margin: 0 }}>
+            <CheckerPanel
+              result={checkResult ?? emptyCheckResult}
+              onRun={handleCheck}
+              onJump={handleJump}
+              hasRun={hasRun}
+            />
+          </TabsContent>
+          <TabsContent value="export" style={{ margin: 0 }}>
+            <ExportPanel
+              bundle={bundle}
+              check={checkResult ?? undefined}
+              jobs={jobs}
+              runExport={runExport}
+              retry={retry}
+              exportedBlobs={exportedBlobs}
+            />
+          </TabsContent>
+          <TabsContent value="submission" style={{ margin: 0 }}>
+            <SubmissionPanel
+              bundle={bundle}
+              check={checkResult ?? undefined}
+              exportedBlobs={exportedBlobs}
+              jobs={jobs}
+            />
+          </TabsContent>
+          <TabsContent value="evidence" style={{ margin: 0 }}>
+            <EvidencePanel
+              evidence={bundle.evidence}
+              onChange={handleEvidenceChange}
+            />
+          </TabsContent>
+          <TabsContent value="present" style={{ margin: 0 }}>
+            <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 

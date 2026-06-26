@@ -19,16 +19,20 @@ const mockSetJobs = vi.fn((updater: unknown) => {
   jobsArray.push(...next);
 });
 
-vi.mock("react", () => ({
-  useState: <T>(initial: T) => {
-    if (Array.isArray(initial)) {
-      jobsArray = [...(initial as unknown as ExportJob[])];
-      return [jobsArray, mockSetJobs];
-    }
-    return [initial, vi.fn()];
-  },
-  useCallback: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
-}));
+vi.mock("react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react")>();
+  return {
+    ...actual,
+    useState: <T>(initial: T) => {
+      if (Array.isArray(initial)) {
+        jobsArray = [...(initial as unknown as ExportJob[])];
+        return [jobsArray, mockSetJobs];
+      }
+      return [initial, vi.fn()];
+    },
+    useCallback: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
+  };
+});
 
 vi.mock("./export-html", () => ({
   exportHtml: vi.fn(),

@@ -3,6 +3,7 @@
 import type { CheckResult, ReportIssueSeverity } from "@/types";
 import { ReadinessBadge } from "./ReadinessBadge";
 import { EmptyState, SuccessState } from "@/components/states";
+import { Button, Badge } from "@/components/ui";
 
 type CheckerPanelProps = {
   result: CheckResult;
@@ -17,7 +18,6 @@ const LABEL: Record<ReportIssueSeverity, string> = {
   warning: "Cảnh báo",
   info: "Thông tin",
 };
-const ICON: Record<ReportIssueSeverity, string> = { error: "✕", warning: "!", info: "i" };
 
 export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProps) {
   const issues = result.issues || [];
@@ -25,9 +25,14 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
   return (
     <div className="ws-checker">
       <div className="ws-checker-header">
-        <button type="button" className="ws-checker-run" onClick={onRun}>
+        <Button
+          variant="primary"
+          onClick={onRun}
+          className="ws-checker-run"
+          style={{ width: "100%" }}
+        >
           {hasRun ? "Kiểm tra lại" : "Kiểm tra"}
-        </button>
+        </Button>
       </div>
 
       {!hasRun && (
@@ -60,11 +65,8 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
         if (group.length === 0) return null;
         return (
           <section key={severity} className="ws-checker-group" aria-label={LABEL[severity]}>
-            <h3 className="ws-checker-group-title">
-              <span className={`ws-sev ws-sev-${severity}`} aria-hidden="true">
-                {ICON[severity]}
-              </span>
-              {LABEL[severity]} ({group.length})
+            <h3 className="ws-checker-group-title" style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", margin: "var(--rs-space-3) 0" }}>
+              <Badge group="severity" value={severity} label={`${LABEL[severity]} (${group.length})`} />
             </h3>
             <ul className="ws-checker-list">
               {group.map((issue, index) => (
@@ -77,8 +79,9 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
                     )}
                   </div>
                   {issue.sectionId && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="ws-checker-jump"
                       onClick={() => onJump(issue.sectionId, issue.line)}
                       onKeyDown={(e) => {
@@ -90,7 +93,7 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
                       aria-label={`Đi tới phần ${issue.sectionId}${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
                     >
                       Xem
-                    </button>
+                    </Button>
                   )}
                 </li>
               ))}
