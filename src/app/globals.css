@@ -611,8 +611,8 @@ body {
   font-family: var(--rs-font-family-ui);
   font-size: var(--rs-font-size-md);
   line-height: 1.6;
-  color: var(--rs-color-text);
-  background-color: var(--rs-color-surface);
+  color: var(--rs-report-color-text, #000000);
+  background-color: transparent;
 }
 
 .ws-preview-html-section {
@@ -711,8 +711,8 @@ body {
 /* TOC (Table of Contents) block styles - Module 2, W3 Group B */
 .ws-toc-container {
   padding: var(--rs-space-3);
-  background-color: var(--rs-color-surface-muted);
-  border: 1px solid var(--rs-color-border);
+  background-color: var(--rs-slate-100);
+  border: 1px solid var(--rs-slate-300);
   border-radius: var(--rs-radius-sm);
   margin-bottom: var(--rs-space-4);
 }
@@ -720,9 +720,9 @@ body {
 .ws-toc-title {
   font-size: var(--rs-font-size-md);
   font-weight: var(--rs-font-weight-bold);
-  color: var(--rs-color-text);
+  color: var(--rs-report-color-text, #000000);
   margin-bottom: var(--rs-space-2);
-  border-bottom: 1px solid var(--rs-color-border);
+  border-bottom: 1px solid var(--rs-slate-300);
   padding-bottom: var(--rs-space-1);
 }
 
@@ -741,24 +741,24 @@ body {
 
 .ws-toc-link {
   text-decoration: none;
-  color: var(--rs-color-primary);
+  color: var(--rs-blue-600);
   display: inline-flex;
   gap: var(--rs-space-1);
   transition: color 0.15s ease;
 }
 
 .ws-toc-link:hover {
-  color: var(--rs-color-primary-hover);
+  color: var(--rs-blue-700);
   text-decoration: underline;
 }
 
 .ws-toc-number {
   font-weight: var(--rs-font-weight-medium);
-  color: var(--rs-color-text-muted);
+  color: var(--rs-slate-500);
 }
 
 .ws-toc-text {
-  color: var(--rs-color-text);
+  color: var(--rs-report-color-text, #000000);
 }
 
 /* Indentation levels for hierarchical TOC */
