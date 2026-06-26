@@ -55,6 +55,6 @@ Khóa chiều rộng hai cột phụ để chúng **không bị flexbox co** khi
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. **Ưu tiên #1 toàn batch (đòn bẩy cao nhất, rủi ro thấp).** Commit: `fix(shell): lock side-column flex-shrink so panels keep width`.
