@@ -6,7 +6,7 @@ import { markdown } from "@codemirror/lang-markdown";
  * Creates an EditorState configured for Markdown editing.
  * Binds an update listener to sync editor content changes with the React state.
  */
-export function createEditorState(opts: { doc: string; onChange: (v: string) => void }): EditorState {
+export function createEditorState(opts: { doc: string; onChange: (v: string) => void; ariaLabel?: string }): EditorState {
   const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) {
       opts.onChange(update.state.doc.toString());
@@ -22,6 +22,7 @@ export function createEditorState(opts: { doc: string; onChange: (v: string) => 
       drawSelection(),
       dropCursor(),
       updateListener,
+      EditorView.contentAttributes.of({ "aria-label": opts.ariaLabel || "Editor" }),
       EditorView.theme({
         "&": {
           height: "100%",

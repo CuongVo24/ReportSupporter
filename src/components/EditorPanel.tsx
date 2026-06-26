@@ -41,6 +41,7 @@ export function EditorPanel({
     const state = createEditorState({
       doc: value,
       onChange,
+      ariaLabel,
     });
 
     const view = new EditorView({

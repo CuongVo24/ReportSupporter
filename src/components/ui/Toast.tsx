@@ -20,18 +20,20 @@ export interface ToastProps extends React.ComponentPropsWithoutRef<typeof RadixT
 export const ToastProvider = RadixToast.Provider;
 
 export const ToastViewport = React.forwardRef<
-  HTMLOListElement,
+  HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof RadixToast.Viewport>
 >(({ className = "", ...props }, ref) => (
   <RadixToast.Viewport
-    ref={ref}
+    asChild
     className={`ws-toast-viewport ${className}`}
     {...props}
-  />
+  >
+    <div ref={ref} />
+  </RadixToast.Viewport>
 ));
 ToastViewport.displayName = "ToastViewport";
 
-export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
+export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
   ({ variant = "info", title, description, action, duration, ...props }, ref) => {
     // success/info auto-dismiss after 4s (4000ms). error does not auto-dismiss.
     const defaultDuration = variant === "error" ? Infinity : 4000;
@@ -50,43 +52,43 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
 
     return (
       <RadixToast.Root
-        ref={ref}
-        className={rootClassNames}
+        asChild
         duration={toastDuration}
         type={variant === "error" ? "foreground" : "background"}
-        role={variant === "error" ? "alert" : "status"}
         {...props}
       >
-        <div className="ws-toast-icon-container" aria-hidden="true">
-          <Icon className={`ws-toast-icon ws-toast-icon-${variant}`} />
-        </div>
+        <div ref={ref} className={rootClassNames}>
+          <div className="ws-toast-icon-container" aria-hidden="true">
+            <Icon className={`ws-toast-icon ws-toast-icon-${variant}`} />
+          </div>
 
-        <div className="ws-toast-content">
-          {title && (
-            <RadixToast.Title className="ws-toast-title">
-              {title}
-            </RadixToast.Title>
+          <div className="ws-toast-content">
+            {title && (
+              <RadixToast.Title className="ws-toast-title">
+                {title}
+              </RadixToast.Title>
+            )}
+            {description && (
+              <RadixToast.Description className="ws-toast-description">
+                {description}
+              </RadixToast.Description>
+            )}
+          </div>
+
+          {action && (
+            <RadixToast.Action
+              className="ws-toast-action-btn"
+              altText={action.label}
+              onClick={action.onClick}
+            >
+              {action.label}
+            </RadixToast.Action>
           )}
-          {description && (
-            <RadixToast.Description className="ws-toast-description">
-              {description}
-            </RadixToast.Description>
-          )}
+
+          <RadixToast.Close className="ws-toast-close-btn" aria-label="Đóng">
+            <X className="ws-toast-close-icon" aria-hidden="true" />
+          </RadixToast.Close>
         </div>
-
-        {action && (
-          <RadixToast.Action
-            className="ws-toast-action-btn"
-            altText={action.label}
-            onClick={action.onClick}
-          >
-            {action.label}
-          </RadixToast.Action>
-        )}
-
-        <RadixToast.Close className="ws-toast-close-btn" aria-label="Đóng">
-          <X className="ws-toast-close-icon" aria-hidden="true" />
-        </RadixToast.Close>
       </RadixToast.Root>
     );
   }

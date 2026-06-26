@@ -34,25 +34,25 @@ export function SectionNav({
           </button>
         )}
       </div>
-      <div className="ws-section-nav-list" role="list">
+      <ul className="ws-section-nav-list">
         {sections.map((sec) => {
           const isActive = sec.id === activeSectionId;
           return (
-            <button
-              key={sec.id}
-              className={`ws-section-nav-item ${isActive ? "ws-section-nav-item-active" : ""}`}
-              onClick={() => onSectionSelect(sec.id)}
-              role="listitem"
-              aria-current={isActive ? "page" : undefined}
-            >
-              <span className="ws-section-nav-item-title" title={sec.title}>
-                {sec.title}
-              </span>
-              <Badge group="status" value={sec.status} />
-            </button>
+            <li key={sec.id}>
+              <button
+                className={`ws-section-nav-item ${isActive ? "ws-section-nav-item-active" : ""}`}
+                onClick={() => onSectionSelect(sec.id)}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <span className="ws-section-nav-item-title" title={sec.title}>
+                  {sec.title}
+                </span>
+                <Badge group="status" value={sec.status} />
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 }
