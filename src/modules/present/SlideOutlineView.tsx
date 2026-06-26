@@ -1,5 +1,6 @@
 import React from "react";
 import type { SlideOutline, Speaker } from "@/types";
+import { AlertTriangle } from "lucide-react";
 
 export interface SlideOutlineViewProps {
   slide: SlideOutline;
@@ -56,8 +57,8 @@ export function SlideOutlineView({
       {slide.brokenEvidenceNotes && slide.brokenEvidenceNotes.length > 0 && (
         <div className="ws-present-slide-warnings" role="alert">
           {slide.brokenEvidenceNotes.map((warning, index) => (
-            <div key={index} className="ws-present-slide-warning-item">
-              <span className="ws-present-slide-warning-icon">⚠️</span> {warning}
+            <div key={index} className="ws-present-slide-warning-item" style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}>
+              <AlertTriangle size={12} className="ws-present-slide-warning-icon" style={{ color: "var(--rs-color-readiness-medium)", flexShrink: 0 }} /> {warning}
             </div>
           ))}
         </div>

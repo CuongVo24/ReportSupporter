@@ -61,7 +61,7 @@ describe("ScriptView Component (RTL)", () => {
     expect(onScriptChange).toHaveBeenCalledWith("slide-1", "Lời thuyết trình mới");
 
     // Verify cues
-    expect(screen.getByText("💡 mở demo video")).toBeDefined();
+    expect(screen.getByText("mở demo video")).toBeDefined();
 
     // Verify AI button is disabled
     const aiBtn = screen.getByRole("button", { name: /Tối ưu kịch bản bằng AI/i });

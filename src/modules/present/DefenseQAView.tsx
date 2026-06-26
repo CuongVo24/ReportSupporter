@@ -1,5 +1,6 @@
 import React from "react";
 import type { DefenseQA, ReportSection } from "@/types";
+import { Target, Laptop, BarChart3, AlertTriangle, Rocket, MapPin, Sparkles } from "lucide-react";
 
 interface DefenseQAViewProps {
   qas: DefenseQA[];
@@ -7,13 +8,13 @@ interface DefenseQAViewProps {
 }
 
 export function DefenseQAView({ qas, sections }: DefenseQAViewProps) {
-  const topics: { key: DefenseQA["topic"]; label: string }[] = [
-    { key: "scope", label: "🎯 Phạm vi & Mục tiêu (Scope)" },
-    { key: "tech", label: "💻 Công nghệ & Kiến trúc (Tech)" },
-    { key: "result", label: "📊 Kết quả thực nghiệm (Result)" },
-    { key: "limitation", label: "⚠️ Hạn chế & Khó khăn (Limitation)" },
-    { key: "future", label: "🚀 Hướng đi tương lai (Future)" },
-  ];
+  const topics = [
+    { key: "scope", label: "Phạm vi & Mục tiêu (Scope)", icon: Target },
+    { key: "tech", label: "Công nghệ & Kiến trúc (Tech)", icon: Laptop },
+    { key: "result", label: "Kết quả thực nghiệm (Result)", icon: BarChart3 },
+    { key: "limitation", label: "Hạn chế & Khó khăn (Limitation)", icon: AlertTriangle },
+    { key: "future", label: "Hướng đi tương lai (Future)", icon: Rocket },
+  ] as const;
 
   if (qas.length === 0) {
     return (
@@ -36,7 +37,9 @@ export function DefenseQAView({ qas, sections }: DefenseQAViewProps) {
 
           return (
             <div key={t.key} className="ws-present-qa-topic-group">
-              <h5 className="ws-present-qa-topic-header">{t.label}</h5>
+              <h5 className="ws-present-qa-topic-header" style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}>
+                <t.icon size={14} /> {t.label}
+              </h5>
               <div className="ws-present-qa-items">
                 {topicQAs.map((item) => {
                   const section = sections.find((s) => s.id === item.relatedSectionId);
@@ -54,8 +57,8 @@ export function DefenseQAView({ qas, sections }: DefenseQAViewProps) {
 
                       <div className="ws-present-qa-footer">
                         {section && (
-                          <span className="ws-present-qa-section-link">
-                            📍 Tham chiếu mục: <strong>{section.title}</strong>
+                          <span className="ws-present-qa-section-link" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            <MapPin size={12} /> Tham chiếu mục: <strong>{section.title}</strong>
                           </span>
                         )}
                         <button
@@ -63,7 +66,9 @@ export function DefenseQAView({ qas, sections }: DefenseQAViewProps) {
                           className="ws-present-qa-ai-btn"
                           title="Tính năng tối ưu bằng AI sẽ khả dụng ở tuần 11"
                         >
-                          ✨ Cải thiện câu trả lời bằng AI (W11)
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            <Sparkles size={12} /> Cải thiện câu trả lời bằng AI (W11)
+                          </span>
                         </button>
                       </div>
                     </div>

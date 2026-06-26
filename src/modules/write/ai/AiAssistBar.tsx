@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Sparkles, AlertTriangle } from "lucide-react";
 import type { ReportSection, AiSuggestion } from "@/types";
 import {
   getGatewayState,
@@ -94,7 +95,11 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
           onClick={handleRewrite}
           className="ws-ai-rewrite-btn"
         >
-          {isAiLoading && loadingAction === "rewrite" ? "⏳ Đang viết lại..." : "✨ Viết lại đoạn (AI)"}
+          {isAiLoading && loadingAction === "rewrite" ? "Đang viết lại..." : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <Sparkles size={12} /> Viết lại đoạn (AI)
+            </span>
+          )}
         </button>
 
         <button
@@ -103,18 +108,22 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
           onClick={handleTone}
           className="ws-ai-tone-btn"
         >
-          {isAiLoading && loadingAction === "tone" ? "⏳ Đang cải thiện..." : "✨ Cải thiện văn phong (AI)"}
+          {isAiLoading && loadingAction === "tone" ? "Đang cải thiện..." : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <Sparkles size={12} /> Cải thiện văn phong (AI)
+            </span>
+          )}
         </button>
 
         {isDisabled && (
-          <span className="ws-ai-assist-note">
-            ⚠️ Bật AI trong cấu hình
+          <span className="ws-ai-assist-note" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-warning)" }} /> Bật AI trong cấu hình
           </span>
         )}
 
         {aiError && (
-          <span className="ws-ai-assist-error">
-            ⚠️ {aiError}
+          <span className="ws-ai-assist-error" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-error)" }} /> {aiError}
           </span>
         )}
       </div>

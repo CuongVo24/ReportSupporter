@@ -74,6 +74,7 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-primary-hover` | `var(--rs-blue-700)` | Hover nút chính |
 | `--rs-color-focus-ring` | `var(--rs-blue-600)` | Outline focus (a11y) |
 | `--rs-color-success` | `var(--rs-green-600)` | Check passed, autosave thành công |
+| `--rs-color-primary-bg` | `var(--rs-blue-100)` | Nền primary nhạt (AI suggestions box, highlight) |
 
 ### 2.3. Severity tokens — map thẳng vào `ReportIssue.severity`
 
@@ -120,6 +121,7 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-dark-sky-bg` | `rgba(56,189,248,.12)` | Nền badge/row info tối |
 | `--rs-dark-green` | `#4ADE80` | Success tối |
 | `--rs-dark-green-bg` | `rgba(74, 222, 128,.12)` | Nền success tối |
+| `--rs-dark-primary-bg` | `rgba(59, 130, 246, .12)` | Nền primary nhạt tối |
 
 #### Semantic UI tokens — dark (mapped to dark primitives)
 | Token | Dark Value | Vai trò |
@@ -141,6 +143,7 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-success-bg` | `var(--rs-dark-green-bg)` | Nền success row |
 | `--rs-color-error-bg` | `var(--rs-dark-red-bg)` | Nền error block |
 | `--rs-color-focus-ring` | `var(--rs-dark-primary)` | Viền focus |
+| `--rs-color-primary-bg` | `var(--rs-dark-primary-bg)` | Nền primary nhạt tối |
 
 > 🔒 Severity background **bắt buộc** override ở dark mode: nếu giữ nguyên nền sáng `#FEF2F2`/`#FFFBEB`/`#F0F9FF`, row issue sẽ chói lóa giữa UI tối. Báo cáo (`--rs-report-*`) thì ngược lại — **không** override, luôn nền trắng chữ đen kể cả khi app đang dark.
 

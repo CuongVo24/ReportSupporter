@@ -1,4 +1,5 @@
 import React from "react";
+import { CheckCircle2 } from "lucide-react";
 
 type SuccessStateProps = {
   title?: string;
@@ -15,8 +16,8 @@ export function SuccessState({
 }: SuccessStateProps) {
   return (
     <div className="ws-state-container ws-state-success">
-      <div className="ws-state-icon" aria-hidden="true">
-        ✅
+      <div className="ws-state-icon" aria-hidden="true" style={{ display: "inline-flex", color: "var(--rs-color-success)" }}>
+        <CheckCircle2 size={40} strokeWidth={1.5} />
       </div>
       <h4 className="ws-state-title">{title}</h4>
       <p className="ws-state-message">{message}</p>

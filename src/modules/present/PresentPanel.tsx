@@ -12,7 +12,8 @@ import { getGatewayState, requestSuggestion } from "@/modules/write";
 import { assistOutline } from "./ai/assist-outline";
 import { AiOutlineButton } from "./ai/AiOutlineButton";
 import { EmptyState, SuccessState } from "@/components/states";
-import { Button } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { List, Mic, HelpCircle, AlertTriangle, Sparkles } from "lucide-react";
 
 export interface PresentPanelProps {
   bundle: ReportProjectBundle;
@@ -126,25 +127,25 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
           className={`ws-present-tab-btn ${activeTab === "outline" ? "active" : ""}`}
           onClick={() => setActiveTab("outline")}
         >
-          🗂️ Slides Outline
+          <List size={14} style={{ marginRight: "var(--rs-space-1)" }} /> Slides Outline
         </button>
         <button
           className={`ws-present-tab-btn ${activeTab === "script" ? "active" : ""}`}
           onClick={() => setActiveTab("script")}
         >
-          🗣️ Kịch bản nói
+          <Mic size={14} style={{ marginRight: "var(--rs-space-1)" }} /> Kịch bản nói
         </button>
         <button
           className={`ws-present-tab-btn ${activeTab === "qa" ? "active" : ""}`}
           onClick={() => setActiveTab("qa")}
         >
-          ❓ Hỏi đáp phản biện
+          <HelpCircle size={14} style={{ marginRight: "var(--rs-space-1)" }} /> Hỏi đáp phản biện
         </button>
         <button
           className={`ws-present-tab-btn ${activeTab === "hints" ? "active" : ""}`}
           onClick={() => setActiveTab("hints")}
         >
-          ⚠️ Gợi ý sửa lỗi
+          <AlertTriangle size={14} style={{ marginRight: "var(--rs-space-1)" }} /> Gợi ý sửa lỗi
           {hints.length > 0 && (
             <span className="ws-present-badge-count">{hints.length}</span>
           )}
@@ -176,7 +177,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
 
             {timeline.overLimit && (
               <div className="ws-present-timeline-badge overlimit" role="alert">
-                ⚠️ Vượt giới hạn (Tối đa {limitMinutes} phút)
+                <AlertTriangle size={12} /> Vượt giới hạn (Tối đa {limitMinutes} phút)
               </div>
             )}
           </div>
@@ -189,7 +190,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
             />
             {aiError && (
               <span className="ws-present-ai-error">
-                ⚠️ {aiError}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}><AlertTriangle size={12} /> {aiError}</span>
               </span>
             )}
           </div>
@@ -197,7 +198,7 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
           {aiSuggestion && (
             <div className="ws-present-ai-suggestion-box">
               <h4 className="ws-present-ai-suggestion-title">
-                ✨ Đề xuất tối ưu Slide Outline từ AI
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}><Sparkles size={16} /> Đề xuất tối ưu Slide Outline từ AI</span>
               </h4>
               <p className="ws-present-ai-suggestion-desc">
                 AI đề xuất cập nhật các slide bên dưới. Vui lòng duyệt qua trước khi áp dụng.
@@ -319,9 +320,11 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
                 {hints.map((hint, idx) => (
                   <div key={idx} className={`ws-present-hint-item severity-${hint.severity}`}>
                     <div className="ws-present-hint-header">
-                      <span className={`ws-present-hint-badge severity-${hint.severity}`}>
-                        {hint.severity === "error" ? "❌ Lỗi nặng" : hint.severity === "warning" ? "⚠️ Cảnh báo" : "ℹ️ Thông tin"}
-                      </span>
+                      <Badge
+                        group="severity"
+                        value={hint.severity}
+                        label={hint.severity === "error" ? "Lỗi nặng" : undefined}
+                      />
                       {hint.slideId && (
                         <span className="ws-present-hint-slide-link">
                           Trỏ tới slide: <strong>{slides.find((s) => s.id === hint.slideId)?.title ?? hint.slideId}</strong>

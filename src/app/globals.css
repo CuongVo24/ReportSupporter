@@ -28,6 +28,7 @@
   --rs-color-primary-hover: var(--rs-blue-700);
   --rs-color-focus-ring: var(--rs-blue-600);
   --rs-color-success: var(--rs-green-600);
+  --rs-color-primary-bg: var(--rs-blue-100);
 
   /* Severity — map 1:1 to ReportIssue.severity (DesignSystem §2.3) */
   --rs-color-severity-error: var(--rs-red-600);
@@ -138,6 +139,7 @@
   --rs-dark-sky-bg: rgba(56, 189, 248, 0.12);
   --rs-dark-green: #4ade80;
   --rs-dark-green-bg: rgba(74, 222, 128, 0.12);
+  --rs-dark-primary-bg: rgba(59, 130, 246, 0.12);
 }
 
 * {
@@ -2273,7 +2275,7 @@ span.ws-present-slide-speaker {
   border: 1px solid var(--rs-color-primary);
   border-radius: var(--rs-radius-md);
   padding: var(--rs-space-3);
-  background-color: var(--rs-blue-100);
+  background-color: var(--rs-color-primary-bg);
   margin-block: var(--rs-space-3);
 }
 
@@ -2559,6 +2561,7 @@ span.ws-present-slide-speaker {
   --rs-color-success-bg: var(--rs-dark-green-bg);
   --rs-color-error-bg: var(--rs-dark-red-bg);
   --rs-color-focus-ring: var(--rs-dark-primary);
+  --rs-color-primary-bg: var(--rs-dark-primary-bg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -2580,6 +2583,7 @@ span.ws-present-slide-speaker {
     --rs-color-success-bg: var(--rs-dark-green-bg);
     --rs-color-error-bg: var(--rs-dark-red-bg);
     --rs-color-focus-ring: var(--rs-dark-primary);
+    --rs-color-primary-bg: var(--rs-dark-primary-bg);
   }
 }
 

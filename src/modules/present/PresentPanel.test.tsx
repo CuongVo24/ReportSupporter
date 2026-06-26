@@ -125,7 +125,7 @@ describe("PresentPanel Component", () => {
 
     const aiBtn = screen.getByRole("button", { name: /Tối ưu Outline bằng AI/i });
     expect((aiBtn as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByText("⚠️ Bật AI trong cấu hình")).toBeDefined();
+    expect(screen.getByText("Bật AI trong cấu hình")).toBeDefined();
   });
 
   it("switches tabs on button click", () => {

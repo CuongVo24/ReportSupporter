@@ -1,5 +1,6 @@
 import React from "react";
 import type { SpeakerScript, SlideOutline, Speaker } from "@/types";
+import { User, Sparkles, Lightbulb } from "lucide-react";
 
 interface ScriptViewProps {
   scripts: SpeakerScript[];
@@ -23,7 +24,7 @@ export function ScriptView({ scripts, slides, speakers, onScriptChange }: Script
                 <span className="ws-present-slide-title">{slide.title}</span>
                 {item.speakerId && (
                   <span className="ws-present-slide-speaker">
-                    🗣️ Người nói: {speakers.find((s) => s.id === item.speakerId)?.name ?? item.speakerId}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><User size={12} /> Người nói: {speakers.find((s) => s.id === item.speakerId)?.name ?? item.speakerId}</span>
                   </span>
                 )}
               </div>
@@ -49,7 +50,9 @@ export function ScriptView({ scripts, slides, speakers, onScriptChange }: Script
                     className="ws-present-ai-btn"
                     title="Tính năng tự động tối ưu bằng AI sẽ khả dụng ở tuần 11"
                   >
-                    ✨ Tối ưu kịch bản bằng AI (W11)
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <Sparkles size={12} /> Tối ưu kịch bản bằng AI (W11)
+                    </span>
                   </button>
                 </div>
               </div>
@@ -59,8 +62,8 @@ export function ScriptView({ scripts, slides, speakers, onScriptChange }: Script
                   <div className="ws-present-cues-title">Cues hành động:</div>
                   <div className="ws-present-cues-list">
                     {item.cues.map((cue, idx) => (
-                      <span key={idx} className="ws-present-cue-badge">
-                        💡 {cue}
+                      <span key={idx} className="ws-present-cue-badge" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <Lightbulb size={12} /> {cue}
                       </span>
                     ))}
                   </div>
