@@ -1,4 +1,6 @@
 import React from "react";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui";
 
 type ErrorStateProps = {
   title?: string;
@@ -15,15 +17,15 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className="ws-state-container ws-state-error" role="alert">
-      <div className="ws-state-icon" aria-hidden="true">
-        ⚠️
+      <div className="ws-state-icon" aria-hidden="true" style={{ display: "inline-flex", color: "var(--rs-color-severity-error)" }}>
+        <AlertCircle size={40} strokeWidth={1.5} />
       </div>
       <h4 className="ws-state-title">{title}</h4>
       <p className="ws-state-message">{message}</p>
       {actionLabel && onAction && (
-        <button type="button" onClick={onAction} className="ws-state-cta-btn ws-state-error-btn">
+        <Button onClick={onAction} variant="danger" size="sm">
           {actionLabel}
-        </button>
+        </Button>
       )}
     </div>
   );

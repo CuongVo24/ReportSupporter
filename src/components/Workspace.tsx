@@ -5,6 +5,7 @@ import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
 import { Button } from "@/components/ui";
+import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
   loadBundle,
@@ -144,13 +145,14 @@ export function Workspace() {
   if (!bundle) {
     return (
       <WorkspaceLayout
-        editor={<p className="ws-zone-hint">Đang tải…</p>}
-        preview={null}
-        sidePanel={null}
+        editor={<LoadingSkeleton variant="panel" />}
+        preview={<LoadingSkeleton variant="preview" />}
+        sidePanel={<LoadingSkeleton variant="panel" />}
         sections={[]}
         activeSectionId=""
         onSectionSelect={() => {}}
-        reportTitle="ReportSupporter"
+        reportTitle="Đang tải..."
+        saveStatus={<span style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)" }}>Đang tải...</span>}
       />
     );
   }
@@ -169,13 +171,13 @@ export function Workspace() {
   if (!activeSection) {
     return (
       <WorkspaceLayout
-        editor={<p className="ws-zone-hint">Đang tải…</p>}
-        preview={null}
+        editor={<EmptyState title="Báo cáo trống" message="Thêm mục đầu tiên để bắt đầu." />}
+        preview={<EmptyState title="Chưa có nội dung" message="Viết nội dung trong editor để hiển thị bản in thử." />}
         sidePanel={null}
         sections={[]}
         activeSectionId=""
         onSectionSelect={() => {}}
-        reportTitle="ReportSupporter"
+        reportTitle="Báo cáo trống"
       />
     );
   }
@@ -187,7 +189,7 @@ export function Workspace() {
       ) : status === "saving" ? (
         <span className="ws-save-status-saving">Đang lưu…</span>
       ) : status === "saved" ? (
-        <span className="ws-save-status-saved">Đã lưu thầm</span>
+        <span className="ws-save-status-saved">Đã lưu</span>
       ) : (
         ""
       )}

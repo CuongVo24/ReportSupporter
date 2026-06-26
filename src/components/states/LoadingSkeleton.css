@@ -1,0 +1,139 @@
+/* ===== Loading Skeleton CSS ===== */
+
+.ws-skeleton-line,
+.ws-skeleton-box {
+  background: linear-gradient(
+    90deg,
+    var(--rs-color-surface-muted) 25%,
+    var(--rs-color-border) 37%,
+    var(--rs-color-surface-muted) 63%
+  );
+  background-size: 200% 100%;
+  animation: ws-shimmer 1.4s ease infinite;
+  border-radius: var(--rs-radius-sm);
+}
+
+@keyframes ws-shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+
+/* reduced-motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .ws-skeleton-line,
+  .ws-skeleton-box {
+    animation: none !important;
+    background: var(--rs-color-surface-muted) !important;
+  }
+}
+
+/* Preview variant (A4 sheet placeholder) */
+.ws-skeleton-preview-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: var(--rs-space-6) var(--rs-space-4);
+  box-sizing: border-box;
+}
+
+.ws-skeleton-page {
+  width: 100%;
+  max-width: 794px;
+  min-height: 500px;
+  background-color: var(--rs-white);
+  padding: var(--rs-space-8);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  border-radius: var(--rs-radius-sm);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-4);
+}
+
+.ws-skeleton-header {
+  height: 12px;
+  width: 100px;
+  align-self: flex-end;
+  margin-bottom: var(--rs-space-6);
+}
+
+.ws-skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-skeleton-h1 {
+  height: 24px;
+  width: 60%;
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-skeleton-h2 {
+  height: 18px;
+  width: 40%;
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-skeleton-body-1 {
+  height: 10px;
+  width: 90%;
+}
+
+.ws-skeleton-body-2 {
+  height: 10px;
+  width: 95%;
+}
+
+.ws-skeleton-body-3 {
+  height: 10px;
+  width: 80%;
+}
+
+.ws-skeleton-body-4 {
+  height: 10px;
+  width: 85%;
+}
+
+.ws-skeleton-box {
+  height: 180px;
+  width: 100%;
+  margin: var(--rs-space-2) 0;
+}
+
+.ws-skeleton-caption {
+  height: 8px;
+  width: 30%;
+  align-self: center;
+}
+
+/* Panel variant */
+.ws-skeleton-panel-wrapper {
+  padding: var(--rs-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-4);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ws-skeleton-panel-header {
+  height: 16px;
+  width: 120px;
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-skeleton-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-skeleton-panel-row {
+  height: 36px;
+  width: 100%;
+}

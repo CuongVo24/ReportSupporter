@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { MetadataFieldSpec } from "@/types";
+import { Input, Textarea } from "@/components/ui";
 
 export function parseTextList(raw: string): string[] {
   return raw
@@ -15,12 +16,18 @@ type MetadataFormProps = {
   values: Record<string, string | string[]>;
   onChange: (values: Record<string, string | string[]>) => void;
   errors?: Record<string, string>;
+  onBlur?: (key: string) => void;
 };
 
-export function MetadataForm({ fields, values, onChange, errors = {} }: MetadataFormProps) {
+export function MetadataForm({
+  fields,
+  values,
+  onChange,
+  errors = {},
+  onBlur,
+}: MetadataFormProps) {
   const [listInputs, setListInputs] = useState<Record<string, string>>({});
 
-  // Sync textList inputs representation with parent state
   useEffect(() => {
     setListInputs((prev) => {
       const nextInputs = { ...prev };
@@ -30,7 +37,6 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
         if (field.type === "textList") {
           const val = values[field.key];
           const incomingStr = Array.isArray(val) ? val.join(", ") : "";
-          
           const localVal = prev[field.key] ?? "";
           const localParsedStr = parseTextList(localVal).join(", ");
           
@@ -62,22 +68,16 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
   };
 
   return (
-    <div className="ws-meta-form">
-      {/* Document Title (always present and implicitly required) */}
-      <div className="ws-form-group">
-        <label htmlFor="meta-title" className="ws-form-label">
-          Tiêu đề báo cáo <span className="ws-form-label-required">*</span>
-        </label>
-        <input
-          id="meta-title"
-          type="text"
-          className="ws-form-input"
-          placeholder="Nhập tiêu đề đồ án/báo cáo..."
-          value={typeof values.title === "string" ? values.title : ""}
-          onChange={(e) => handleTextChange("title", e.target.value)}
-        />
-        {errors.title && <span className="ws-form-error">{errors.title}</span>}
-      </div>
+    <div className="ws-meta-form" style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)" }}>
+      <Input
+        id="meta-title"
+        label="Tiêu đề báo cáo *"
+        placeholder="Nhập tiêu đề đồ án/báo cáo..."
+        value={typeof values.title === "string" ? values.title : ""}
+        onChange={(e) => handleTextChange("title", e.target.value)}
+        onBlur={() => onBlur?.("title")}
+        error={errors.title}
+      />
 
       {fields.map((field) => {
         const isList = field.type === "textList";
@@ -85,48 +85,44 @@ export function MetadataForm({ fields, values, onChange, errors = {} }: Metadata
           ? (listInputs[field.key] ?? "")
           : (values[field.key] as string ?? "");
 
+        const labelText = field.label + (field.required ? " *" : "");
+
+        if (field.key === "readmeContent") {
+          return (
+            <Textarea
+              key={field.key}
+              id={`meta-${field.key}`}
+              label={labelText}
+              placeholder={field.placeholder ?? "Dán nội dung README.md ở đây..."}
+              value={val}
+              onChange={(e) => handleTextChange(field.key, e.target.value)}
+              onBlur={() => onBlur?.(field.key)}
+              error={errors[field.key]}
+            />
+          );
+        }
+
         return (
-          <div key={field.key} className="ws-form-group">
-            <label htmlFor={`meta-${field.key}`} className="ws-form-label">
-              {field.label} {field.required && <span className="ws-form-label-required">*</span>}
-            </label>
-            
-            {field.key === "readmeContent" ? (
-              <textarea
-                id={`meta-${field.key}`}
-                className="ws-form-input ws-form-textarea"
-                placeholder={field.placeholder ?? "Dán nội dung README.md ở đây..."}
-                value={val}
-                onChange={(e) => handleTextChange(field.key, e.target.value)}
-              />
-            ) : (
-              <input
-                id={`meta-${field.key}`}
-                type="text"
-                className="ws-form-input"
-                placeholder={field.placeholder ?? `Nhập ${field.label.toLowerCase()}...`}
-                value={val}
-                onChange={(e) => {
-                  if (isList) {
-                    handleListChange(field.key, e.target.value);
-                  } else {
-                    handleTextChange(field.key, e.target.value);
-                  }
-                }}
-              />
-            )}
-            
-            {isList && (
-              <small className="ws-form-input-list-hint">
-                Nhập các thành viên phân tách bằng dấu phẩy
-              </small>
-            )}
-            
-            {errors[field.key] && <span className="ws-form-error">{errors[field.key]}</span>}
-          </div>
+          <Input
+            key={field.key}
+            id={`meta-${field.key}`}
+            type="text"
+            label={labelText}
+            placeholder={field.placeholder ?? `Nhập ${field.label.toLowerCase()}...`}
+            value={val}
+            onChange={(e) => {
+              if (isList) {
+                handleListChange(field.key, e.target.value);
+              } else {
+                handleTextChange(field.key, e.target.value);
+              }
+            }}
+            onBlur={() => onBlur?.(field.key)}
+            error={errors[field.key]}
+            helperText={isList ? "Nhập các thành viên phân tách bằng dấu phẩy" : undefined}
+          />
         );
       })}
     </div>
   );
 }
-
