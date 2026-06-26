@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { ProjectInitializer } from "./ProjectInitializer";
 import type { TemplateSchema } from "@/types";
 import { Button } from "@/components/ui";
+import { Lightbulb } from "lucide-react";
 
 // Mock React hooks to allow direct invocation of the component function in pure Node
 vi.mock("react", async (importOriginal) => {
@@ -57,7 +58,9 @@ describe("ProjectInitializer UX Structure", () => {
     // Children of footerStyle div: [helperText p, button]
     const [helperP, submitButton] = footerDiv.props.children;
     expect(helperP.type).toBe("p");
-    expect(helperP.props.children).toContain("💡 Bấm Khởi tạo để mở trình soạn thảo");
+    const [lightbulbIcon, textSpan] = helperP.props.children;
+    expect(lightbulbIcon.type).toBe(Lightbulb);
+    expect(textSpan.props.children).toContain("Bấm Khởi tạo để mở trình soạn thảo");
 
     expect(submitButton.type).toBe(Button);
     expect(submitButton.props.type).toBe("submit");

@@ -6,6 +6,30 @@ import { EvidenceForm } from "./EvidenceForm";
 import { kindMeta } from "./kind-meta";
 import { Button } from "@/components/ui";
 import { EmptyState } from "@/components/states";
+import {
+  Video,
+  Github,
+  Rocket,
+  FolderOpen,
+  Palette,
+  KeyRound,
+  FileText,
+  Presentation,
+  Paperclip,
+  Check
+} from "lucide-react";
+
+const iconMap: Record<string, React.ComponentType<{ className?: string; size?: number; style?: React.CSSProperties }>> = {
+  Video,
+  Github,
+  Rocket,
+  FolderOpen,
+  Palette,
+  KeyRound,
+  FileText,
+  Presentation,
+  Paperclip,
+};
 
 export interface EvidencePanelProps {
   evidence: EvidenceItem[];
@@ -97,16 +121,18 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
       ) : (
         <div className="ws-evidence-list">
           {evidence.map((item) => {
-            const meta = kindMeta[item.kind] || { label: item.kind, icon: "📎" };
+            const meta = kindMeta[item.kind] || { label: item.kind, icon: "Paperclip" };
+            const Icon = iconMap[meta.icon] || Paperclip;
             return (
               <div key={item.id} className="ws-evidence-item" aria-label={`Minh chứng: ${item.title}`}>
                 <div className="ws-evidence-item-header">
-                  <span className="ws-evidence-meta" aria-label={`Loại minh chứng: ${meta.label}`}>
-                    {meta.icon} {meta.label}
+                  <span className="ws-evidence-meta" aria-label={`Loại minh chứng: ${meta.label}`} style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}>
+                    <Icon size={14} />
+                    <span>{meta.label}</span>
                   </span>
                   {item.qrEnabled && (
                     <span className="ws-evidence-item-qr" title="Hiển thị QR trong phụ lục" aria-label="Hiển thị QR">
-                      QR ✓
+                      QR <Check size={12} strokeWidth={2.5} />
                     </span>
                   )}
                 </div>

@@ -6,6 +6,7 @@ import { TemplatePicker } from "./TemplatePicker";
 import { MetadataForm } from "./MetadataForm";
 import { validateMetadata } from "./generate-skeleton";
 import { Button } from "@/components/ui";
+import { Lightbulb } from "lucide-react";
 
 type ProjectInitializerProps = {
   templates: TemplateSchema[];
@@ -105,7 +106,8 @@ export function ProjectInitializer({
           
           <div style={footerStyle}>
             <p style={helperStyle}>
-              💡 Bấm Khởi tạo để mở trình soạn thảo — nút Xuất bản (HTML/PDF/Word) nằm trong trình soạn thảo.
+              <Lightbulb size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px", color: "var(--rs-color-warning)" }} />
+              <span style={{ verticalAlign: "middle" }}>Bấm Khởi tạo để mở trình soạn thảo — nút Xuất bản (HTML/PDF/Word) nằm trong trình soạn thảo.</span>
             </p>
             <Button type="submit" variant="primary" fullWidth>
               Khởi tạo báo cáo

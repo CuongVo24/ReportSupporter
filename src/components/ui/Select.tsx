@@ -7,7 +7,7 @@ import "./Select.css";
 
 export interface SelectOption {
   value: string;
-  label: string;
+  label: React.ReactNode;
   disabled?: boolean;
 }
 

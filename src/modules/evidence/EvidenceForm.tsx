@@ -5,6 +5,29 @@ import type { EvidenceItem, EvidenceKind } from "@/types";
 import { validateEvidence } from "./validate";
 import { kindMeta } from "./kind-meta";
 import { Select, Input, Textarea, Button } from "@/components/ui";
+import {
+  Video,
+  Github,
+  Rocket,
+  FolderOpen,
+  Palette,
+  KeyRound,
+  FileText,
+  Presentation,
+  Paperclip
+} from "lucide-react";
+
+const iconMap: Record<string, React.ComponentType<{ className?: string; size?: number; style?: React.CSSProperties }>> = {
+  Video,
+  Github,
+  Rocket,
+  FolderOpen,
+  Palette,
+  KeyRound,
+  FileText,
+  Presentation,
+  Paperclip,
+};
 
 export interface EvidenceFormProps {
   initial?: EvidenceItem;
@@ -47,10 +70,18 @@ export function EvidenceForm({ initial, onSubmit, onCancel }: EvidenceFormProps)
         label="Loại minh chứng *"
         value={kind}
         onValueChange={(value) => setKind(value as EvidenceKind)}
-        options={(Object.keys(kindMeta) as EvidenceKind[]).map((k) => ({
-          value: k,
-          label: `${kindMeta[k].icon} ${kindMeta[k].label}`,
-        }))}
+        options={(Object.keys(kindMeta) as EvidenceKind[]).map((k) => {
+          const Icon = iconMap[kindMeta[k].icon] || Paperclip;
+          return {
+            value: k,
+            label: (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-2)" }}>
+                <Icon size={14} />
+                <span>{kindMeta[k].label}</span>
+              </span>
+            ),
+          };
+        })}
         error={errors.kind}
         required
       />
