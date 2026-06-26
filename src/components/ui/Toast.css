@@ -187,6 +187,11 @@
   }
 }
 
+/* Stack ≤3 + queue remaining */
+.ws-toast-viewport > .ws-toast-root:nth-child(n+4) {
+  display: none !important;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .ws-toast-root {

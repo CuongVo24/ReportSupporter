@@ -142,6 +142,46 @@ Giao diện đã được kiểm thử ổn định trên 3 khoảng viewport ch
 
 ---
 
+## 🛡️ Tuần 15 Day 4: Primitive / Panel Edge-state Hardening (buffer)
+
+### 1. Hardening Edge-states cho các Primitive
+*   **Dialog (Hộp thoại):**
+    *   **Focus-return & Esc:** Bàn phím bấm `Escape` đóng hộp thoại nhanh chóng. Khi đóng, tiêu điểm (focus) được tự động trả về phần tử kích hoạt trước đó (nút bấm mở modal), đảm bảo luồng điều hướng tuần tự bằng bàn phím.
+    *   **Confirm chặn click bên ngoài:** Các hộp thoại dạng xác nhận (confirm) chặn hoàn toàn việc đóng khi click vào backdrop nền mờ xung quanh (PointerDownOutside bị chặn). Người dùng chỉ có thể đóng qua các nút hành động rõ ràng ("Hủy", "Xác nhận") hoặc phím `Escape`.
+    *   **Drawer trượt phải:** Dialog dạng ngăn kéo (drawer) trượt mượt mà từ biên phải (`translateX(100%)` → `translateX(0)`).
+*   **Toast (Thông báo nhanh):**
+    *   **Thời gian hiển thị:** Success và Info tự động ẩn sau 4 giây. Thông báo Lỗi (Error) giữ nguyên trạng thái (`duration={Infinity}`) cho đến khi người dùng chủ động click nút đóng `X`.
+    *   **Hover-pause:** Rà chuột vào vùng ToastViewport sẽ tạm dừng thời gian tự đóng của toàn bộ các toast đang hiển thị.
+    *   **Giới hạn stack & Xếp hàng:** Áp dụng kỹ thuật CSS ẩn chọn lọc `:nth-child(n+4) { display: none !important; }` trên `ToastViewport`. Khi có >3 thông báo cùng xuất hiện, chỉ 3 thông báo đầu tiên hiển thị trên màn hình. Các thông báo tiếp theo được nạp vào DOM và ẩn đi. Khi người dùng tắt các thông báo cũ, thông báo mới trong hàng đợi sẽ tự động trượt lên thế chỗ mà không cần bất kỳ xử lý JS phức tạp nào.
+*   **Tabs (Thanh tab):**
+    *   **Đồng bộ số lượng (realtime count badge):** Các badge đếm số lượng lỗi của tab "Người soát" cập nhật thời gian thực khi chạy soát, hiển thị màu sắc tương ứng theo mức độ lỗi nghiêm trọng nhất.
+    *   **Keyboard navigation:** Hỗ trợ đầy đủ điều hướng bằng phím mũi tên `←`/`→`, `Home` để về tab đầu tiên, và `End` để tới tab cuối cùng.
+
+---
+
+### 2. Hardening Edge-states cho các Panel
+*   **Checker (Soát lỗi):**
+    *   Trạng thái chưa soát hiển thị `EmptyState` kèm hướng dẫn và nút gọi soát.
+    *   Trạng thái soát sạch lỗi hiển thị `SuccessState` chúc mừng.
+    *   Hành động "Xem" lỗi (jump-to-issue) điều hướng chính xác tới section và dòng tương ứng. Nếu section rỗng hoặc bị stale, hệ thống hiển thị `EmptyState` an toàn thay vì gây crash giao diện.
+*   **Export (Xuất bản):**
+    *   Lịch sử xuất bản rỗng hiển thị `EmptyState`.
+    *   Khi đang tiến hành xuất, nút tương ứng chuyển sang trạng thái loading khóa tương tác.
+    *   Nếu một job xuất bản bị lỗi, panel hiển thị trạng thái `ErrorState` chi tiết (stage + message) kèm theo hành động "Thử lại" (Retry) hỗ trợ người dùng phục hồi nhanh.
+*   **Submission (Nộp bài):**
+    *   Nếu chưa chạy soát lỗi, checklist hiển thị cảnh báo yêu cầu soát lỗi trước khi nộp.
+    *   Nếu thiếu file xuất bản cục bộ trong phiên này, panel hiển thị banner cảnh báo nguy cơ thiếu tệp báo cáo trước khi tải zip.
+    *   Nút tải gói zip hiển thị spinner loading rõ ràng khi đang nén dữ liệu.
+*   **Evidence (Minh chứng):**
+    *   Khi danh sách trống, hiển thị `EmptyState` khuyến khích thêm minh chứng.
+    *   Form thêm/sửa minh chứng có các trường bắt buộc và cơ chế hiển thị lỗi validation thời gian thực (ví dụ: lỗi tiêu đề trống, sai cấu trúc link URL hoặc không dùng giao thức http/https).
+*   **Present (Thuyết trình):**
+    *   Nếu báo cáo rỗng hoặc chỉ chứa các chương trống, panel chuyển hẳn sang hiển thị `EmptyState` thông báo không thể sinh slide outline.
+    *   Đề xuất outline từ AI nếu gặp lỗi gateway (API lỗi, chưa cấu hình key) sẽ hiển thị thông báo lỗi rõ ràng bên dưới nút hành động.
+    *   Nếu tab gợi ý sửa lỗi (Hints) trống sạch lỗi, hiển thị `SuccessState` thông báo slide không có lỗi yếu kém cần sửa.
+
+---
+
 ## 🔒 Cam kết thiết kế
 *   Tất cả các thay đổi được thực hiện tối thiểu, không gây xáo trộn hành vi hoặc cấu trúc của các module.
 *   Tuân thủ nghiêm ngặt bảng biến thiết kế trong `DesignSystem_Tokens.md`.
