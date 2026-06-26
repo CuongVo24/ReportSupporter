@@ -102,7 +102,7 @@ export function EvidenceForm({ initial, onSubmit, onCancel }: EvidenceFormProps)
 
       <div style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-4)" }}>
         <Button type="submit" variant="primary" style={{ flex: 1 }}>
-          {initial ? "Lưu" : "Thêm"}
+          {initial ? "Lưu" : "Thêm minh chứng"}
         </Button>
         {onCancel && (
           <Button

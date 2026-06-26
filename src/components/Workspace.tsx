@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
-import { Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
+import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast } from "@/components/ui";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -37,6 +37,8 @@ export function Workspace() {
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
   const [hasRun, setHasRun] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -81,8 +83,11 @@ export function Workspace() {
 
   const handleCheck = useCallback(() => {
     if (!bundle) return;
-    setCheckResult(runChecker(bundle));
+    const result = runChecker(bundle);
+    setCheckResult(result);
     setHasRun(true);
+    setToastMessage(`Đã soát — ${result.issues.length} vấn đề`);
+    setToastOpen(true);
   }, [bundle]);
 
   const handleJump = useCallback((sectionId?: string) => {
@@ -118,7 +123,7 @@ export function Workspace() {
   }, [bundle]);
 
   const handleReset = useCallback(() => {
-    if (!confirm("Tạo mới báo cáo? Toàn bộ nội dung hiện tại sẽ bị xóa.")) return;
+    if (!confirm("Tạo report mới? Toàn bộ nội dung hiện tại sẽ bị xóa.")) return;
     const fresh = createProjectFromTemplate(softwareProjectTemplate);
     setBundle(fresh);
     setActiveId(fresh.project.sections[0]?.id ?? null);
@@ -215,7 +220,7 @@ export function Workspace() {
           className="ws-reset-btn"
           style={{ margin: 0, padding: "var(--rs-space-1) var(--rs-space-2)", fontSize: "var(--rs-font-size-xs)" }}
         >
-          Tạo mới
+          Tạo report
         </button>
       </div>
       <Tabs defaultValue="check" className="ws-side-tabs" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -231,7 +236,7 @@ export function Workspace() {
                 : "neutral"
             }
           >
-            Kiểm tra
+            Người soát
           </TabsTrigger>
           <TabsTrigger value="export">Xuất bản</TabsTrigger>
           <TabsTrigger value="submission">Nộp bài</TabsTrigger>
@@ -280,7 +285,8 @@ export function Workspace() {
   );
 
   return (
-    <WorkspaceLayout
+    <>
+      <WorkspaceLayout
       editor={
         <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "var(--rs-space-2)" }}>
           <AiAssistBar
@@ -315,6 +321,8 @@ export function Workspace() {
       saveStatus={saveStatus}
       primaryAction={primaryAction}
     />
+      <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
+    </>
   );
 }
 

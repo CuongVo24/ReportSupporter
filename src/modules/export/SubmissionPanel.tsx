@@ -7,7 +7,6 @@ import { buildEvidenceAppendix } from "@/modules/evidence";
 import { verifyDocxLayout } from "./docx-layout-checklist";
 import { clearExportHistory, loadExportHistory } from "./export-history";
 import { Button } from "@/components/ui";
-import { EmptyState } from "@/components/states";
 
 /**
  * Panel to manage final submission packaging, checklist validation, and local export history.
@@ -106,7 +105,7 @@ export function SubmissionPanel({
         <h4 className="ws-submission-checklist-title">Checklist kiểm tra báo cáo</h4>
         {check === undefined ? (
           <div className="ws-submission-checklist-warning">
-            Hãy chạy Kiểm tra (Checker) trước khi đối chiếu checklist.
+            Soát báo cáo để rà lỗi trước khi nộp.
           </div>
         ) : (
           <ul className="ws-submission-checklist">
@@ -145,7 +144,7 @@ export function SubmissionPanel({
 
       {!hasSessionBlobs && (
         <div className="ws-submission-blobs-warning" style={{ marginTop: "var(--rs-space-3)", marginBottom: "var(--rs-space-2)" }}>
-          Bộ nộp sẽ <strong>không</strong> kèm file báo cáo (report.html/pdf/docx) vì bạn chưa export trong phiên này — hãy export lại trước khi đóng gói.
+          Bộ nộp sẽ <strong>không</strong> kèm file báo cáo (report.html/pdf/docx) vì bạn chưa xuất bản trong phiên này — hãy xuất bản lại trước khi đóng gói.
         </div>
       )}
 

@@ -6,9 +6,9 @@ type ReadinessBadgeProps = {
 };
 
 const LABELS = {
-  green: "Sẵn sàng",
-  yellow: "Cần xem lại",
-  red: "Chưa nên nộp",
+  green: "Sẵn sàng nộp",
+  yellow: "Còn cảnh báo",
+  red: "Còn lỗi chặn",
 };
 
 const BADGE_VALUES = {

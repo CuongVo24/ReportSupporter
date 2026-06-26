@@ -117,6 +117,8 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-severity-error-bg` | `rgba(248,113,113,.12)` |
 | `--rs-color-severity-warning-bg` | `rgba(251,191,36,.12)` |
 | `--rs-color-severity-info-bg` | `rgba(56,189,248,.12)` |
+| `--rs-color-error-bg` | `rgba(248,113,113,.12)` |
+| `--rs-color-focus-ring` | `#3B82F6` |
 
 > 🔒 Severity background **bắt buộc** override ở dark mode: nếu giữ nguyên nền sáng `#FEF2F2`/`#FFFBEB`/`#F0F9FF`, row issue sẽ chói lóa giữa UI tối. Báo cáo (`--rs-report-*`) thì ngược lại — **không** override, luôn nền trắng chữ đen kể cả khi app đang dark.
 
@@ -229,6 +231,15 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-overlay-width-sm` | `400px` | Chiều rộng tối đa của Dialog confirm |
 | `--rs-toast-width` | `380px` | Chiều rộng của Toast viewport |
 | `--rs-font-size-xxs` | `10px` | Cỡ chữ siêu nhỏ của Tab count badge |
+
+### 4.6. Motion Tokens
+
+| Token | Giá trị | Vai trò |
+| :--- | :--- | :--- |
+| `--rs-motion-duration-micro` | `150ms` | Thời lượng hover, focus, tab active underline |
+| `--rs-motion-duration-transition` | `200ms` | Thời lượng trượt/fade của toast/dialog |
+| `--rs-motion-easing-default` | `ease-out` | Easing mặc định (phản hồi nhanh) |
+| `--rs-motion-easing-in` | `ease-in` | Easing đi ra |
 
 ---
 

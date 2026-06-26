@@ -16,7 +16,7 @@ const ORDER: ReportIssueSeverity[] = ["error", "warning", "info"];
 const LABEL: Record<ReportIssueSeverity, string> = {
   error: "Lỗi",
   warning: "Cảnh báo",
-  info: "Thông tin",
+  info: "Gợi ý",
 };
 
 export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProps) {
@@ -31,16 +31,16 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
           className="ws-checker-run"
           style={{ width: "100%" }}
         >
-          {hasRun ? "Kiểm tra lại" : "Kiểm tra"}
+          Soát báo cáo
         </Button>
       </div>
 
       {!hasRun && (
         <div className="ws-state-block">
           <EmptyState
-            title="Chưa chạy kiểm tra"
-            message="Chạy kiểm tra để rà soát lỗi định dạng và tính nhất quán của báo cáo."
-            actionLabel="Bắt đầu kiểm tra"
+            title="Chưa soát"
+            message="Soát báo cáo để rà lỗi trước khi nộp."
+            actionLabel="Soát báo cáo"
             onAction={onRun}
           />
         </div>
@@ -52,8 +52,8 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
           {issues.length === 0 && (
             <div className="ws-state-block">
               <SuccessState
-                title="Báo cáo hoàn hảo!"
-                message="Không phát hiện bất kỳ lỗi định dạng hay lỗi cấu trúc nào."
+                title="Không có lỗi"
+                message="Báo cáo đạt các tiêu chí soát hiện tại."
               />
             </div>
           )}

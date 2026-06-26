@@ -117,7 +117,7 @@ describe("SubmissionPanel component structure", () => {
     const blobsWarning = children[2];
     expect(blobsWarning.type).toBe("div");
     expect(blobsWarning.props.className).toBe("ws-submission-blobs-warning");
-    expect(blobsWarning.props.children.join("")).toContain("chưa export trong phiên này");
+    expect(blobsWarning.props.children.join("")).toContain("chưa xuất bản trong phiên này");
 
     const button = children[3];
     expect(button.type).toBe(Button);
@@ -136,7 +136,7 @@ describe("SubmissionPanel component structure", () => {
     const checklistWarning = checklistContainer.props.children[1];
     expect(checklistWarning.type).toBe("div");
     expect(checklistWarning.props.className).toBe("ws-submission-checklist-warning");
-    expect(checklistWarning.props.children).toContain("Hãy chạy Kiểm tra (Checker)");
+    expect(checklistWarning.props.children).toContain("Soát báo cáo để rà lỗi trước khi nộp.");
     
     // blobs warning should not be rendered (since we passed html blob)
     const noBlobsWarning = childrenNoCheck[2];

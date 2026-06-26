@@ -78,7 +78,7 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
           className="ws-evidence-add-btn"
           aria-label="Thêm minh chứng mới"
         >
-          Thêm
+          Thêm minh chứng
         </Button>
       </div>
 
@@ -86,7 +86,7 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
         <div style={{ marginTop: "var(--rs-space-4)" }}>
           <EmptyState
             title="Chưa có minh chứng"
-            message="Thêm các minh chứng (Video demo, Link deploy, GitHub...) để đóng gói."
+            message="Thêm liên kết minh chứng cho báo cáo."
             actionLabel="Thêm minh chứng"
             onAction={() => {
               setIsAdding(true);
@@ -139,7 +139,7 @@ export function EvidencePanel({ evidence, onChange }: EvidencePanelProps) {
                         className="ws-evidence-action-btn ws-evidence-action-btn-delete"
                         aria-label={`Xác nhận xóa minh chứng: ${item.title}`}
                       >
-                        Xác nhận xóa?
+                        Xoá
                       </Button>
                       <Button
                         onClick={handleCancelDelete}

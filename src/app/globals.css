@@ -37,6 +37,7 @@
   /* Background tints for success/error/warning/info states */
   --rs-color-success-bg: #f0fdf4;
   --rs-color-error-bg: #fef2f2;
+  --rs-color-severity-error-bg: var(--rs-color-error-bg);
   --rs-color-severity-warning-bg: #fffbeb;
   --rs-color-severity-info-bg: #f0f9ff;
 
@@ -102,6 +103,12 @@
   --rs-overlay-width-sm: 400px;
   --rs-toast-width: 380px;
   --rs-font-size-xxs: 10px;
+
+  /* Motion tokens (DesignSystem §4.6) */
+  --rs-motion-duration-micro: 150ms;
+  --rs-motion-duration-transition: 200ms;
+  --rs-motion-easing-default: ease-out;
+  --rs-motion-easing-in: ease-in;
 }
 
 * {
@@ -2521,6 +2528,21 @@ span.ws-present-slide-speaker {
   --rs-color-severity-info-bg: rgba(56, 189, 248, 0.12);
   --rs-color-success: #4ADE80;
   --rs-color-success-bg: rgba(74, 222, 128, 0.12);
+  --rs-color-error-bg: rgba(248, 113, 113, 0.12);
+  --rs-color-focus-ring: #3B82F6;
+}
+
+/* Prefers-reduced-motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: scroll !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
 }
 
 

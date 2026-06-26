@@ -175,7 +175,7 @@ export function ExportPanel({
             aria-label="Xuất bản định dạng HTML"
             fullWidth
           >
-            HTML (Web)
+            Xuất HTML
           </Button>
 
           <Button
@@ -190,7 +190,7 @@ export function ExportPanel({
             aria-label="Xuất bản định dạng PDF"
             fullWidth
           >
-            PDF (Bản in)
+            Xuất PDF
           </Button>
 
           <Button
@@ -205,7 +205,7 @@ export function ExportPanel({
             aria-label="Xuất bản định dạng Word"
             fullWidth
           >
-            Word (DOCX)
+            Xuất DOCX
           </Button>
 
           <Button
@@ -219,7 +219,7 @@ export function ExportPanel({
             aria-label="Xuất PowerPoint (PPTX) - Tạm hoãn"
             fullWidth
           >
-            PPTX (Phase 3)
+            Xuất PPTX (Phase 3)
           </Button>
         </div>
         <p style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)", marginTop: "var(--rs-space-2)", fontStyle: "italic" }}>
