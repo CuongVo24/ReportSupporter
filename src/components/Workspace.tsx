@@ -158,7 +158,7 @@ export function Workspace() {
         activeSectionId=""
         onSectionSelect={() => {}}
         reportTitle="Đang tải..."
-        saveStatus={<span style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)" }}>Đang tải...</span>}
+        saveStatus={<span className="ws-status-loading-text">Đang tải...</span>}
       />
     );
   }
@@ -213,19 +213,18 @@ export function Workspace() {
   );
 
   const sidePanel = (
-    <div className="ws-side-inner" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "var(--rs-space-3) var(--rs-space-4)", borderBottom: "1px solid var(--rs-color-border)" }}>
-        <span style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-semibold)" }}>Trợ lý báo cáo</span>
+    <div className="ws-side-inner">
+      <div className="ws-side-panel-header">
+        <span className="ws-side-panel-title">Trợ lý báo cáo</span>
         <button
           onClick={() => setIsResetConfirmOpen(true)}
           className="ws-reset-btn"
-          style={{ margin: 0, padding: "var(--rs-space-1) var(--rs-space-2)", fontSize: "var(--rs-font-size-xs)" }}
         >
           Tạo report
         </button>
       </div>
-      <Tabs defaultValue="check" className="ws-side-tabs" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-        <TabsList style={{ borderBottom: "1px solid var(--rs-color-border)", padding: "0 var(--rs-space-2)" }}>
+      <Tabs defaultValue="check" className="ws-side-tabs">
+        <TabsList className="ws-side-tabs-list">
           <TabsTrigger
             value="check"
             count={checkResult?.issues?.length}
@@ -244,8 +243,8 @@ export function Workspace() {
           <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
           <TabsTrigger value="present">Slide</TabsTrigger>
         </TabsList>
-        <div style={{ flex: 1, overflowY: "auto", padding: "var(--rs-space-4)" }}>
-          <TabsContent value="check" style={{ margin: 0 }}>
+        <div className="ws-side-tabs-content-scroll">
+          <TabsContent value="check" className="ws-side-tabs-content">
             <CheckerPanel
               result={checkResult ?? emptyCheckResult}
               onRun={handleCheck}
@@ -253,7 +252,7 @@ export function Workspace() {
               hasRun={hasRun}
             />
           </TabsContent>
-          <TabsContent value="export" style={{ margin: 0 }}>
+          <TabsContent value="export" className="ws-side-tabs-content">
             <ExportPanel
               bundle={bundle}
               check={checkResult ?? undefined}
@@ -263,7 +262,7 @@ export function Workspace() {
               exportedBlobs={exportedBlobs}
             />
           </TabsContent>
-          <TabsContent value="submission" style={{ margin: 0 }}>
+          <TabsContent value="submission" className="ws-side-tabs-content">
             <SubmissionPanel
               bundle={bundle}
               check={checkResult ?? undefined}
@@ -271,13 +270,13 @@ export function Workspace() {
               jobs={jobs}
             />
           </TabsContent>
-          <TabsContent value="evidence" style={{ margin: 0 }}>
+          <TabsContent value="evidence" className="ws-side-tabs-content">
             <EvidencePanel
               evidence={bundle.evidence}
               onChange={handleEvidenceChange}
             />
           </TabsContent>
-          <TabsContent value="present" style={{ margin: 0 }}>
+          <TabsContent value="present" className="ws-side-tabs-content">
             <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
           </TabsContent>
         </div>
@@ -289,12 +288,12 @@ export function Workspace() {
     <>
       <WorkspaceLayout
       editor={
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "var(--rs-space-2)" }}>
+        <div className="ws-editor-container">
           <AiAssistBar
             section={activeSection}
             onChange={handleChange}
           />
-          <div style={{ flex: 1, minHeight: 0 }}>
+          <div className="ws-editor-wrapper">
             <EditorPanel
               value={activeSection.markdown}
               onChange={handleChange}
@@ -330,7 +329,7 @@ export function Workspace() {
         description="Toàn bộ nội dung hiện tại sẽ bị xóa. Hành động không thể hoàn tác."
         variant="confirm"
         footer={
-          <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
+          <div className="ws-dialog-footer-actions">
             <Button variant="ghost" onClick={() => setIsResetConfirmOpen(false)}>
               Hủy
             </Button>

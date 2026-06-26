@@ -7,6 +7,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   FileText,
+  ChevronDown,
 } from "lucide-react";
 import { SectionNav } from "./SectionNav";
 import { MobileDrawer } from "./MobileDrawer";
@@ -133,7 +134,7 @@ export function WorkspaceLayout({
           <span className="ws-brand">ReportSupporter</span>
           <div className="ws-report-switcher">
             <span className="ws-report-title" title={reportTitle}>{reportTitle}</span>
-            <span className="ws-report-switcher-chevron" aria-hidden="true">▾</span>
+            <ChevronDown className="ws-report-switcher-chevron" size={16} aria-hidden="true" />
           </div>
         </div>
         <div className="ws-topbar-center">{saveStatus}</div>
@@ -149,13 +150,13 @@ export function WorkspaceLayout({
 
       <main className="ws-main-layout">
         {isDesktop && (
-          <aside className="ws-side-column" style={{ width: isLeftCollapsed ? "48px" : "240px" }} aria-label="Mục lục">
+          <aside className={`ws-side-column ws-side-column-left ${isLeftCollapsed ? "ws-side-column-left--collapsed" : "ws-side-column-left--expanded"}`} aria-label="Mục lục">
             {isLeftCollapsed ? (
               <div className="ws-collapsed-rail-list">
                 <button type="button" className="ws-column-toggle-btn" onClick={() => setIsLeftCollapsed(false)} aria-label="Mở rộng mục lục">
                   <PanelLeftOpen size={16} />
                 </button>
-                <div className="ws-collapsed-rail-list" style={{ marginTop: "var(--rs-space-4)" }}>
+                <div className="ws-collapsed-rail-list ws-collapsed-rail-list-spaced">
                   {sections.map((sec, idx) => (
                     <button
                       key={sec.id}
@@ -163,8 +164,8 @@ export function WorkspaceLayout({
                       onClick={() => onSectionSelect(sec.id)}
                       title={sec.title}
                     >
-                      <span style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "bold" }}>{idx + 1}</span>
-                      <span className={`ws-collapsed-rail-badge ws-badge-status-${sec.status}`} style={{ backgroundColor: `var(--rs-color-status-${sec.status})` }} />
+                      <span className="ws-collapsed-rail-index">{idx + 1}</span>
+                      <span className={`ws-collapsed-rail-badge ws-badge-status-${sec.status}`} />
                     </button>
                   ))}
                 </div>
@@ -190,18 +191,18 @@ export function WorkspaceLayout({
               <div className="ws-split-pane-editor" style={{ width: `${splitWidth}%` }}>{editor}</div>
               <div className="ws-split-divider" onMouseDown={handleMouseDown} />
               <div className="ws-split-pane-preview ws-preview" ref={viewportRef} style={{ width: `${100 - splitWidth}%` }}>
-                <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, transformOrigin: "top center", width: "794px", height: height ? `${height}px` : "auto" }}>
+                <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
                   <div ref={innerRef} className="ws-preview-page">{preview}</div>
                 </div>
               </div>
             </div>
           ) : (
-            <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div className="ws-responsive-container">
               {activeTab === "editor" ? (
-                <div style={{ flex: 1, overflow: "auto" }}>{editor}</div>
+                <div className="ws-responsive-editor-scroll">{editor}</div>
               ) : (
                 <div className="ws-preview-viewport" ref={viewportRef}>
-                  <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, transformOrigin: "top center", width: "794px", height: height ? `${height}px` : "auto" }}>
+                  <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
                     <div ref={innerRef} className="ws-preview-page">{preview}</div>
                   </div>
                 </div>
@@ -211,26 +212,26 @@ export function WorkspaceLayout({
         </section>
 
         {isDesktop && (
-          <aside className="ws-side-column ws-side-column-right" style={{ width: isRightCollapsed ? "48px" : "320px" }} aria-label="Bảng điều khiển">
+          <aside className={`ws-side-column ws-side-column-right ${isRightCollapsed ? "ws-side-column-right--collapsed" : "ws-side-column-right--expanded"}`} aria-label="Bảng điều khiển">
             {isRightCollapsed ? (
               <div className="ws-collapsed-rail-list">
                 <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightCollapsed(false)} aria-label="Mở rộng bảng điều khiển">
                   <PanelRightOpen size={16} />
                 </button>
-                <div className="ws-collapsed-rail-list" style={{ marginTop: "var(--rs-space-4)" }}>
+                <div className="ws-collapsed-rail-list ws-collapsed-rail-list-spaced">
                   <button type="button" className="ws-collapsed-rail-item" onClick={() => setIsRightCollapsed(false)} title="Mở bảng điều khiển">
                     <FileText size={16} />
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
-                <div style={{ display: "flex", justifyContent: "flex-end", padding: "var(--rs-space-4) var(--rs-space-4) 0" }}>
+              <div className="ws-side-inner-right">
+                <div className="ws-side-column-right-toggle-wrapper">
                   <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightCollapsed(true)} aria-label="Thu gọn bảng điều khiển">
                     <PanelRightClose size={16} />
                   </button>
                 </div>
-                <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>{sidePanel}</div>
+                <div className="ws-side-panel-content-scroll">{sidePanel}</div>
               </div>
             )}
           </aside>

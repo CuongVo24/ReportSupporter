@@ -104,6 +104,18 @@
   --rs-toast-width: 380px;
   --rs-font-size-xxs: 10px;
 
+  --rs-rail-left-width: 240px;
+  --rs-rail-right-width: 320px;
+  --rs-rail-collapsed-width: 48px;
+  --rs-preview-page-width-px: 794px;
+  --rs-divider-width: 5px;
+  --rs-size-control-xs: 24px;
+  --rs-size-control-sm: 32px;
+  --rs-rail-mobile-width: 280px;
+  --rs-report-title-max-width: 180px;
+  --rs-badge-dot-size: 8px;
+  --rs-letter-spacing-sm: 0.5px;
+
   /* Motion tokens (DesignSystem §4.6) */
   --rs-motion-duration-micro: 150ms;
   --rs-motion-duration-transition: 200ms;

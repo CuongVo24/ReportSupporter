@@ -253,6 +253,17 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-overlay-width-sm` | `400px` | Chiều rộng tối đa của Dialog confirm |
 | `--rs-toast-width` | `380px` | Chiều rộng của Toast viewport |
 | `--rs-font-size-xxs` | `10px` | Cỡ chữ siêu nhỏ của Tab count badge |
+| `--rs-rail-left-width` | `240px` | Chiều rộng rail mục lục khi mở rộng |
+| `--rs-rail-right-width` | `320px` | Chiều rộng rail bảng điều khiển khi mở rộng |
+| `--rs-rail-collapsed-width` | `48px` | Chiều rộng rail khi thu gọn |
+| `--rs-preview-page-width-px` | `794px` | Bề rộng A4 preview tính bằng px |
+| `--rs-divider-width` | `5px` | Bề rộng đường chia split pane |
+| `--rs-size-control-xs` | `24px` | Chiều cao của nút toggle thu nhỏ |
+| `--rs-size-control-sm` | `32px` | Chiều cao của nút toggle vừa |
+| `--rs-rail-mobile-width` | `280px` | Chiều rộng của mobile drawer rail |
+| `--rs-report-title-max-width` | `180px` | Bề rộng tối đa của report title |
+| `--rs-badge-dot-size` | `8px` | Kích thước của chấm status badge |
+| `--rs-letter-spacing-sm` | `0.5px` | Khoảng cách chữ nhỏ cho tiêu đề rail |
 
 ### 4.6. Motion Tokens
 

@@ -1,8 +1,8 @@
 === VITEST RUN ===
 Test Files  72 passed (72)
      Tests  377 passed (377)
-   Start at  12:27:32
-   Duration  139.75s
+   Start at  12:41:41
+   Duration  71.41s
 
 === TYPECHECK RUN ===
 > npx tsc --noEmit
@@ -20,7 +20,7 @@ Test Files  72 passed (72)
    ▲ Next.js 15.5.19
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 60s
+ ✓ Compiled successfully in 33.3s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/5) ...
