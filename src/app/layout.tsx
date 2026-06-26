@@ -11,7 +11,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" data-theme="light">
       <body>
         <ToastProvider>
           {children}
