@@ -153,12 +153,14 @@ export function WorkspaceLayout({
             </button>
           )}
           <span className="ws-brand">ReportSupporter</span>
-          <div className="ws-report-switcher">
-            <span className="ws-report-title" title={reportTitle}>{reportTitle}</span>
-            <ChevronDown className="ws-report-switcher-chevron" size={16} aria-hidden="true" />
+          <div className="ws-report-context">
+            <div className="ws-report-switcher">
+              <span className="ws-report-title" title={reportTitle}>{reportTitle}</span>
+              <ChevronDown className="ws-report-switcher-chevron" size={16} aria-hidden="true" />
+            </div>
+            <div className="ws-save-status-anchor">{saveStatus}</div>
           </div>
         </div>
-        <div className="ws-topbar-center">{saveStatus}</div>
         <div className="ws-topbar-right">
           {primaryAction}
           {(!isDesktop || (isDesktop && !isWide)) && (
@@ -183,7 +185,9 @@ export function WorkspaceLayout({
                       key={sec.id}
                       className={`ws-collapsed-rail-item ${sec.id === activeSectionId ? "ws-collapsed-rail-item-active" : ""}`}
                       onClick={() => onSectionSelect(sec.id)}
-                      title={sec.title}
+                      title={`${idx + 1}. ${sec.title}`}
+                      aria-label={`${idx + 1}. ${sec.title}`}
+                      aria-current={sec.id === activeSectionId ? "page" : undefined}
                     >
                       <span className="ws-collapsed-rail-index">{idx + 1}</span>
                       <span className={`ws-collapsed-rail-badge ws-badge-status-${sec.status}`} />

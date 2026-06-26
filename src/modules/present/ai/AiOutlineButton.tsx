@@ -25,12 +25,12 @@ export function AiOutlineButton({ onClick, isLoading, state }: AiOutlineButtonPr
         size="sm"
       >
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <Sparkles size={14} /> Tối ưu Outline bằng AI
+          <Sparkles size={14} aria-hidden="true" /> Tối ưu Outline bằng AI
         </span>
       </Button>
       {isDisabled && (
-        <span className="ws-present-ai-note" style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-warning)" }} /> Bật AI trong Cài đặt
+        <span className="ws-present-ai-note rs-state-warning">
+          <AlertTriangle size={12} aria-hidden="true" /> Bật AI trong Cài đặt
         </span>
       )}
     </div>

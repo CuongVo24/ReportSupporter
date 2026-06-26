@@ -98,7 +98,7 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
         >
           {isAiLoading && loadingAction === "rewrite" ? "Đang viết lại..." : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Sparkles size={12} /> Viết lại đoạn (AI)
+              <Sparkles size={12} aria-hidden="true" /> Viết lại đoạn (AI)
             </span>
           )}
         </button>
@@ -112,20 +112,20 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
         >
           {isAiLoading && loadingAction === "tone" ? "Đang cải thiện..." : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Sparkles size={12} /> Cải thiện văn phong (AI)
+              <Sparkles size={12} aria-hidden="true" /> Cải thiện văn phong (AI)
             </span>
           )}
         </button>
 
         {isDisabled && (
-          <span className="ws-ai-assist-note" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="Vui lòng bật AI trong Cài đặt để sử dụng">
-            <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-warning)" }} /> Bật AI trong Cài đặt
+          <span className="ws-ai-assist-note rs-state-warning" title="Vui lòng bật AI trong Cài đặt để sử dụng">
+            <AlertTriangle size={12} aria-hidden="true" /> Bật AI trong Cài đặt
           </span>
         )}
 
         {aiError && (
-          <span className="ws-ai-assist-error" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <AlertTriangle size={12} style={{ color: "var(--rs-color-severity-error)" }} /> {aiError}
+          <span className="ws-ai-assist-error">
+            <AlertTriangle size={12} aria-hidden="true" /> {aiError}
           </span>
         )}
       </div>

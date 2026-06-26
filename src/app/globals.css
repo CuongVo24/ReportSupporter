@@ -160,6 +160,30 @@ body {
   line-height: var(--rs-font-lh-ui);
 }
 
+.rs-state-active {
+  background-color: var(--rs-color-primary-bg);
+  color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.rs-state-disabled {
+  color: var(--rs-color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.rs-state-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  color: var(--rs-color-severity-warning);
+  background-color: var(--rs-color-severity-warning-bg);
+  border: 1px solid var(--rs-color-severity-warning);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-weight: var(--rs-font-weight-medium);
+}
+
 /* Editor + preview + side panel — W1 Group D */
 .ws-editor-textarea {
   width: 100%;
@@ -2033,10 +2057,6 @@ span.ws-present-slide-speaker {
 
 .ws-present-ai-note {
   font-size: var(--rs-font-size-xs);
-  color: var(--rs-color-severity-warning);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--rs-space-1);
 }
 
 /* UserControlBar */
@@ -2406,12 +2426,14 @@ span.ws-present-slide-speaker {
 
 .ws-ai-assist-note {
   font-size: var(--rs-font-size-xs);
-  color: var(--rs-color-severity-warning);
 }
 
 .ws-ai-assist-error {
   font-size: var(--rs-font-size-xs);
   color: var(--rs-color-severity-error);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
 }
 
 /* ===== Shared UI States (Loading, Empty, Error, Success) ===== */

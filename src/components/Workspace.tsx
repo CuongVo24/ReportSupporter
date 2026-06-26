@@ -235,23 +235,38 @@ export function Workspace() {
       </div>
       <Tabs defaultValue="check" className="ws-side-tabs">
         <TabsList className="ws-side-tabs-list">
-          <TabsTrigger
-            value="check"
-            count={checkResult?.issues?.length}
-            countVariant={
-              checkResult && checkResult.issues.some((i) => i.severity === "error")
-                ? "error"
-                : checkResult && checkResult.issues.some((i) => i.severity === "warning")
-                ? "warning"
-                : "neutral"
-            }
-          >
-            Soát lỗi
-          </TabsTrigger>
-          <TabsTrigger value="export">Xuất bản</TabsTrigger>
-          <TabsTrigger value="submission">Nộp bài</TabsTrigger>
-          <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
-          <TabsTrigger value="present">Slide</TabsTrigger>
+          <div className="ws-side-tab-group" role="presentation">
+            <span className="ws-side-tab-group-label">Kiểm tra</span>
+            <div className="ws-side-tab-group-triggers" role="presentation">
+              <TabsTrigger
+                value="check"
+                count={checkResult?.issues?.length}
+                countVariant={
+                  checkResult && checkResult.issues.some((i) => i.severity === "error")
+                    ? "error"
+                    : checkResult && checkResult.issues.some((i) => i.severity === "warning")
+                    ? "warning"
+                    : "neutral"
+                }
+              >
+                Soát lỗi
+              </TabsTrigger>
+              <TabsTrigger value="evidence">Minh chứng</TabsTrigger>
+            </div>
+          </div>
+          <div className="ws-side-tab-group" role="presentation">
+            <span className="ws-side-tab-group-label">Xuất bản</span>
+            <div className="ws-side-tab-group-triggers" role="presentation">
+              <TabsTrigger value="export">Xuất bản</TabsTrigger>
+              <TabsTrigger value="submission">Nộp bài</TabsTrigger>
+            </div>
+          </div>
+          <div className="ws-side-tab-group" role="presentation">
+            <span className="ws-side-tab-group-label">Trình bày</span>
+            <div className="ws-side-tab-group-triggers" role="presentation">
+              <TabsTrigger value="present">Slide</TabsTrigger>
+            </div>
+          </div>
         </TabsList>
         <div className="ws-side-tabs-content-scroll">
           <TabsContent value="check" className="ws-side-tabs-content">

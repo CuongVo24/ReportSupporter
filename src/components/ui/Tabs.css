@@ -28,8 +28,9 @@
 }
 
 .ws-tabs-trigger:disabled {
-  opacity: 0.5;
+  opacity: 0.65;
   cursor: not-allowed;
+  color: var(--rs-color-text-muted);
 }
 
 .ws-tabs-trigger:focus-visible {
@@ -45,11 +46,12 @@
 }
 
 .ws-tabs-trigger-underline {
-  padding: var(--rs-space-3) 0;
+  padding: var(--rs-space-2);
   font-size: var(--rs-font-size-md);
   color: var(--rs-color-text-muted);
+  border-radius: var(--rs-radius-sm) var(--rs-radius-sm) 0 0;
   position: relative;
-  transition: color 120ms ease-out;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
 }
 
 .ws-tabs-trigger-underline:hover:not(:disabled) {
@@ -57,8 +59,9 @@
 }
 
 .ws-tabs-trigger-underline[data-state="active"] {
-  color: var(--rs-color-text);
-  font-weight: var(--rs-font-weight-medium);
+  background-color: var(--rs-color-primary-bg);
+  color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-bold);
 }
 
 .ws-tabs-trigger-underline[data-state="active"]::after {
@@ -107,9 +110,9 @@
 }
 
 .ws-tabs-trigger-segmented[data-state="active"] {
-  background-color: var(--rs-color-surface);
-  color: var(--rs-color-text);
-  font-weight: var(--rs-font-weight-medium);
+  background-color: var(--rs-color-primary-bg);
+  color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-bold);
   box-shadow: var(--rs-elevation-1);
 }
 
