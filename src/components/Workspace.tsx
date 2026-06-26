@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
-import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast } from "@/components/ui";
+import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -39,6 +39,7 @@ export function Workspace() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -123,7 +124,6 @@ export function Workspace() {
   }, [bundle]);
 
   const handleReset = useCallback(() => {
-    if (!confirm("Tạo report mới? Toàn bộ nội dung hiện tại sẽ bị xóa.")) return;
     const fresh = createProjectFromTemplate(softwareProjectTemplate);
     setBundle(fresh);
     setActiveId(fresh.project.sections[0]?.id ?? null);
@@ -131,6 +131,7 @@ export function Workspace() {
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(fresh);
+    setIsResetConfirmOpen(false);
   }, []);
 
   const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
@@ -216,7 +217,7 @@ export function Workspace() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "var(--rs-space-3) var(--rs-space-4)", borderBottom: "1px solid var(--rs-color-border)" }}>
         <span style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-semibold)" }}>Trợ lý báo cáo</span>
         <button
-          onClick={handleReset}
+          onClick={() => setIsResetConfirmOpen(true)}
           className="ws-reset-btn"
           style={{ margin: 0, padding: "var(--rs-space-1) var(--rs-space-2)", fontSize: "var(--rs-font-size-xs)" }}
         >
@@ -322,6 +323,23 @@ export function Workspace() {
       primaryAction={primaryAction}
     />
       <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
+      <Dialog
+        isOpen={isResetConfirmOpen}
+        onOpenChange={setIsResetConfirmOpen}
+        title="Tạo report mới?"
+        description="Toàn bộ nội dung hiện tại sẽ bị xóa. Hành động không thể hoàn tác."
+        variant="confirm"
+        footer={
+          <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
+            <Button variant="ghost" onClick={() => setIsResetConfirmOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={handleReset}>
+              Tạo report
+            </Button>
+          </div>
+        }
+      />
     </>
   );
 }

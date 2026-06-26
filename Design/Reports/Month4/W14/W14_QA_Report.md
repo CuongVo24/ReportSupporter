@@ -6,8 +6,8 @@ This report summarizes the visual QA, accessibility (a11y) checklist, and compil
 
 ## 1. Executive Summary
 - **Status:** **PASS**
-- **Artifacts Verified:** App Shell Layout, Write Pane (CodeMirror 6), Preview Pane (A4 Page / TOC), right-rail Tab Integration, Checker Panel, Export Panel, Submission Panel, Evidence Panel, Present Panel.
-- **Visual Validation:** Verified workspace layout, side rails, responsive mobile drawers, dark mode overrides (no glare on severity rows), and transitions.
+- **Artifacts Verified:** App Shell Layout, right-rail Tab Integration, Checker Panel, Export Panel, SubmissionPanel, EvidencePanel, PresentPanel.
+- **Visual Validation:** Verified workspace layout, collapsible side rails, responsive mobile drawers, dark mode overrides (no glare on severity rows, primitives mapped correctly), and transitions.
 - **Verification Gates:**
   - `npm run lint`: **PASS**
   - `npm run typecheck`: **PASS**
@@ -20,7 +20,7 @@ This report summarizes the visual QA, accessibility (a11y) checklist, and compil
 
 | DoD Requirement | Status | Verification Detail |
 | :--- | :---: | :--- |
-| **Strict Token-Only Styles** | ✅ PASS | Overrode `--rs-color-error-bg` and `--rs-color-focus-ring` in `[data-theme="dark"]` in `globals.css` using system semantic color tokens. Documented in `DesignSystem_Tokens.md`. |
+| **Strict Token-Only Styles** | ✅ PASS | Primitives and CSS variables are strictly tokenized. Overrode `--rs-color-error-bg`, `--rs-color-focus-ring`, and severity colors using dark primitives. No raw hex is used in theme overrides. Inline raw layout px on shell outer columns (`48px/240px/320px/794px`) are tracked under the `w14_polish_*` contract. |
 | **No External UI Libs** | ✅ PASS | Custom React components, native drag handlers, and CSS transitions without adding external animation or component libraries. |
 | **App Shell Layout COLLAPSIBLE** | ✅ PASS | Side columns collapse to compact 48px rail columns with clear toggle triggers. Split-pane divider supports manual dragging to adjust column widths. |
 | **Microcopy Align (Vietnamese 100%)** | ✅ PASS | All buttons use active action verbs. Empty states, toasts, and confirmation dialogs match the specifications in `VoiceAndContent.md`. Zero English or operational emojis in buttons. |
@@ -31,12 +31,14 @@ This report summarizes the visual QA, accessibility (a11y) checklist, and compil
 
 ## 3. Primitives & Layout Coverage Matrix
 
+*Note: Pre-existing stable modules (EditorPanel and PreviewPane) are included in this table to show the complete workspace context but were built in previous weeks.*
+
 | Area | Component / Pattern | Status / Adoption Detail | A11y / Keyboard / Motion |
 | :--- | :--- | :--- | :--- |
-| **App Shell** | `WorkspaceLayout.tsx` | collapsible left-rail (document list) & right-rail (panel tabs); draggable split divider; mobile overlay drawer | ARIA landmark definitions; toggle buttons with explicit `aria-label` |
-| **Write Pane** | `EditorPanel.tsx` | CodeMirror 6 text area with line numbers, status counts, and custom character limit bar | Standard focus outline on editor parent; proper tab-index |
-| **Preview Pane** | `PreviewPane.tsx` | Academic A4 page preview, title page format, outline navigation, Table of Contents (TOC) with nested indents | Keyboard anchor jumping |
-| **Workspace Tab Integration** | `Workspace.tsx` | Unified horizontal `Tabs` underline layout; reactive badge count updates; success toast for `"Đã soát — {n} vấn đề"` | Radix keyboard support (Left/Right arrows for tab switching) |
+| **App Shell** | `WorkspaceLayout.tsx` | Collapsible left-rail (document list) & right-rail (panel tabs); draggable split divider; mobile overlay drawer | ARIA landmark definitions; toggle buttons with explicit `aria-label` |
+| **Write Pane (Pre-existing)** | `EditorPanel.tsx` | Pre-existing CodeMirror 6 text area with line numbers, status counts, and custom character limit bar | Standard focus outline on editor parent; proper tab-index |
+| **Preview Pane (Pre-existing)** | `PreviewPane.tsx` | Pre-existing academic page preview, title page format, outline navigation, and Table of Contents (TOC) | Keyboard anchor jumping |
+| **Workspace Tab Integration** | `Workspace.tsx` | Unified horizontal `Tabs` underline layout; reactive badge count updates; success toast for `"Đã soát — {n} vấn đề"`; reset confirmed via Radix `Dialog` confirm variant | Radix keyboard support (Left/Right arrows for tab switching); Dialog confirm focus trap and backdrop blocker |
 | **Checker Panel** | `CheckerPanel.tsx` & `ReadinessBadge.tsx` | Readiness level status bands; severity badges; action button renamed to `"Soát báo cáo"` | Jump-to-issue triggerable via Space/Enter keys; focus ring clearly visible |
 | **Export Panel** | `ExportPanel.tsx` | Radix-based confirmation Dialog; Done success Toast with open-file action; deferred PPTX message | Radix focus trap; `Esc` key cancels confirmation dialog |
 | **Submission Panel** | `SubmissionPanel.tsx` | Package downloader; warning alerts when check is unrun or session export history is empty | Plain text alerts; clear layout focus |
@@ -49,7 +51,7 @@ This report summarizes the visual QA, accessibility (a11y) checklist, and compil
 
 1. **Focus Ring Visibility:**
    - Universal focus style: `outline: 2px solid var(--rs-color-focus-ring) !important; outline-offset: 2px;`.
-   - Focus ring colors overridden in dark mode to remain visible (`--rs-color-focus-ring: #3B82F6`) on dark backgrounds.
+   - Focus ring colors overridden in dark mode to remain visible (`--rs-color-focus-ring: var(--rs-dark-primary)`) on dark backgrounds.
 2. **Keyboard Navigation:**
    - Tabs support Arrow key navigation.
    - Dialog traps focus properly on opening and restores focus to trigger button on close.
@@ -71,6 +73,7 @@ Workspace renders correctly with neutral backgrounds and a single blue accent co
 ![Workspace Light Mode](file:///E:/ReportSupporter/Design/Reports/Month4/W14/screenshots/workspace_light.png)
 
 ### Dark Mode Workspace View
+*Note: Screenshot captured with simulated prefers-color-scheme / data-theme="dark" attribute forced rendering.*
 ![Workspace Dark Mode](file:///E:/ReportSupporter/Design/Reports/Month4/W14/screenshots/workspace_dark.png)
 
 ---
