@@ -771,10 +771,10 @@ body {
   display: flex;
   gap: var(--rs-space-2);
   padding: var(--rs-space-3);
-  background-color: #fffbeb;
+  background-color: var(--rs-color-severity-warning-bg);
   border: 1px solid var(--rs-color-severity-warning);
   border-radius: var(--rs-radius-sm);
-  color: #92400e;
+  color: var(--rs-color-text);
 }
 
 .ws-export-banner-icon {
@@ -798,7 +798,7 @@ body {
 .ws-export-banner-sub {
   font-size: var(--rs-font-size-xs);
   margin: 0;
-  color: #b45309;
+  color: var(--rs-color-text-muted);
 }
 
 .ws-export-targets {
@@ -861,8 +861,8 @@ body {
 }
 
 .ws-export-btn-docx:hover:not(:disabled) {
-  border-color: #0284c7;
-  color: #0284c7;
+  border-color: var(--rs-color-severity-info);
+  color: var(--rs-color-severity-info);
 }
 
 .ws-export-jobs-container {
@@ -987,7 +987,7 @@ body {
 }
 
 .ws-export-retry-btn:hover {
-  background-color: #fef2f2;
+  background-color: var(--rs-color-severity-error-bg);
 }
 
 .ws-export-retry-btn:focus-visible {
@@ -1031,7 +1031,7 @@ body {
 }
 
 .ws-submission-btn:hover:not(:disabled) {
-  background-color: #15803d; /* darker green */
+  opacity: 0.9;
 }
 
 .ws-submission-btn:disabled {
@@ -1292,7 +1292,7 @@ body {
 }
 
 .ws-evidence-action-btn-delete:hover {
-  background-color: #fef2f2;
+  background-color: var(--rs-color-severity-error-bg);
   color: var(--rs-color-severity-error);
 }
 
@@ -2448,7 +2448,7 @@ span.ws-present-slide-speaker {
   background-color: var(--rs-color-surface);
   border: 1px dashed var(--rs-color-border);
   border-radius: var(--rs-radius-md);
-  color: var(--rs-color-text-primary);
+  color: var(--rs-color-text);
   height: 100%;
   min-height: 200px;
   box-sizing: border-box;
@@ -2464,7 +2464,7 @@ span.ws-present-slide-speaker {
   margin: 0 0 var(--rs-space-2) 0;
   font-size: var(--rs-font-size-md);
   font-weight: var(--rs-font-weight-bold);
-  color: var(--rs-color-text-primary);
+  color: var(--rs-color-text);
 }
 
 .ws-state-message {
@@ -2492,7 +2492,7 @@ span.ws-present-slide-speaker {
 }
 
 .ws-state-error-btn {
-  background-color: var(--rs-color-error);
+  background-color: var(--rs-color-severity-error);
 }
 
 .ws-state-success-btn {
@@ -2597,6 +2597,12 @@ span.ws-present-slide-speaker {
     scroll-behavior: auto !important;
     transition-duration: 0s !important;
     transition-delay: 0s !important;
+  }
+
+  .ws-state-spinner,
+  .ws-export-spinner {
+    animation: none !important;
+    opacity: 0.7;
   }
 }
 

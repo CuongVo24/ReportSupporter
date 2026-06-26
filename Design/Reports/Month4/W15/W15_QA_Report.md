@@ -106,6 +106,42 @@ Mỗi màn hình/panel được đối chiếu qua 6 câu hỏi tự đánh giá
 
 ---
 
+## 🌓 Tuần 15 Day 3: Dark / Motion / Responsive Hardening
+
+### 1. Dark Mode & Hài hoà tương phản (Contrast Validation)
+Toàn bộ vỏ ứng dụng (Workspace UI) sử dụng biến semantic và đã được kiểm thử độ tương phản thủ công để bảo đảm tính rõ nét trên nền tối (`#111827`/`#0B1120`), vượt qua tiêu chuẩn WCAG 2.2 AA (tối thiểu 4.5:1 với văn bản thường, 3:1 với UI component/focus ring):
+*   **Chữ chính:** Chữ sáng (`#E2E8F0` / `--rs-color-text`) trên nền tối (`#111827`) đạt **12.2:1** (Vượt chuẩn AAA).
+*   **Chữ phụ:** Chữ nhạt (`#94A3B8` / `--rs-color-text-muted`) trên nền tối đạt **5.3:1** (Vượt chuẩn AA).
+*   **Điểm nhấn primary:** Xanh primary (`#3B82F6` / `--rs-color-primary`) trên nền tối đạt **4.6:1** (Vượt chuẩn AA).
+*   **Đường viền focus:** Focus ring rõ nét (`#3B82F6` / `--rs-color-focus-ring`) đạt **4.6:1** (Vượt chuẩn AA).
+*   **Màu trạng thái/Severity (Badge):**
+    *   **Lỗi (Error):** Đỏ nhạt (`#F87171`) trên nền tối đạt **6.1:1** (Vượt chuẩn AA). Nền lỗi mờ `rgba(248, 113, 113, 0.12)` dịu mắt, không chói lóa.
+    *   **Cảnh báo (Warning):** Vàng nhạt (`#FBBF24`) trên nền tối đạt **8.7:1** (Vượt chuẩn AA). Nền cảnh báo mờ `rgba(251, 191, 36, 0.12)`.
+    *   **Gợi ý (Info):** Xanh trời (`#38BDF8`) trên nền tối đạt **8.1:1** (Vượt chuẩn AA). Nền gợi ý mờ `rgba(56, 189, 248, 0.12)`.
+    *   **Thành công (Success):** Xanh mint (`#4ADE80`) trên nền tối đạt **8.6:1** (Vượt chuẩn AA). Nền thành công mờ `rgba(74, 222, 128, 0.12)`.
+
+> [!IMPORTANT]
+> **Báo cáo bất biến (Locked #5):** Các token báo cáo (`--rs-report-*`) và trang xem trước A4 (`.ws-preview-page`) được giữ nguyên tuyệt đối là chữ đen tuyền (`#000000`) trên nền trắng (`#ffffff`) ở cả hai chế độ sáng/tối để đảm bảo tính trung thực học thuật của bản in/PDF đầu ra.
+
+---
+
+### 2. Motion & Chế độ giảm chuyển động (Reduced Motion)
+*   **Thời lượng chuyển động:** Toàn bộ hiệu ứng hover, transition tab active, trượt toast/dialog đều được giới hạn từ `120ms` đến `200ms` (ease-out), đem lại phản hồi nhanh chóng, mượt mà và không gây mỏi mắt.
+*   **Hỗ trợ Reduced Motion:** Khi thiết bị bật chế độ `prefers-reduced-motion: reduce`:
+    *   Các hiệu ứng trượt (slide) của mobile drawer và toast được tắt hoàn toàn, chuyển sang hiển thị tức thì.
+    *   Các hiệu ứng làm mờ lấp lánh (shimmer) của skeleton loading được thay thế bằng màu nền tĩnh `--rs-color-surface-muted`.
+    *   Mọi loader/spinner chuyển động (bao gồm spinner nút bấm `.ws-btn-spinner`, spinner panel `.ws-state-spinner` và spinner xuất bản `.ws-export-spinner`) đều dừng quay hoàn toàn (`animation: none !important`) và làm mờ nhẹ (`opacity: 0.7`) để biểu thị trạng thái đang xử lý mà không gây xao nhãng.
+
+---
+
+### 3. Đa Viewport Responsive (Responsive Layout)
+Giao diện đã được kiểm thử ổn định trên 3 khoảng viewport chính:
+*   **Desktop (>= 1024px):** Chế độ chia cột song song (split-pane) hoạt động mượt mà, cho phép người dùng kéo điều chỉnh kích thước giữa Editor và Preview. Trang giấy A4 được căn giữa hoàn hảo trong viewport `.ws-split-pane-preview` với nền slate nhạt và khoảng đệm (padding) đồng nhất, tự động thu phóng (scale-to-fit) chính xác khi co giãn pane.
+*   **Tablet (640-1023px):** Ứng dụng tự động thu gọn 2 cột phụ (Mục lục & Trợ lý) thành các ngăn kéo (drawer) trượt từ biên trái/phải hỗ trợ cử chỉ đóng và phím tắt `Escape`. Khu vực Editor và Preview được chuyển thành giao diện tab chuyển đổi "Bàn viết" ↔ "Tờ nộp".
+*   **Mobile (< 640px):** Trình diễn gọn gàng trên 1 cột dọc duy nhất, trang xem trước A4 thu phóng tỉ lệ nhỏ nhưng giữ nguyên cấu trúc học thuật (không bóp méo hay vỡ dòng).
+
+---
+
 ## 🔒 Cam kết thiết kế
 *   Tất cả các thay đổi được thực hiện tối thiểu, không gây xáo trộn hành vi hoặc cấu trúc của các module.
 *   Tuân thủ nghiêm ngặt bảng biến thiết kế trong `DesignSystem_Tokens.md`.

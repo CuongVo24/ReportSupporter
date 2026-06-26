@@ -445,12 +445,7 @@
   box-sizing: border-box;
 }
 
-.ws-split-pane-preview {
-  height: 100%;
-  min-height: 0;
-  overflow: auto;
-  box-sizing: border-box;
-}
+
 
 /* Split pane divider handle */
 .ws-split-divider {
@@ -504,6 +499,7 @@
 }
 
 /* A4 Sheet layout & preview viewport styling */
+.ws-split-pane-preview,
 .ws-preview-viewport {
   position: relative;
   width: 100%;
