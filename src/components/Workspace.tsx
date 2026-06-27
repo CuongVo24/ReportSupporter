@@ -18,6 +18,11 @@ import {
   useImageInsert,
   buildInitialSections,
   AiAssistBar,
+  appendSections,
+  replaceSections,
+  MarkdownImportDropzone,
+  importReadme,
+  type MarkdownImportDraft,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
@@ -56,6 +61,10 @@ export function Workspace() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importDraft, setImportDraft] = useState<MarkdownImportDraft | null>(null);
+  const [importMode, setImportMode] = useState<"append" | "replace">("append");
+  const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [sideTab, setSideTab] = useState<SidePanelTab>("check");
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
   const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
@@ -277,6 +286,57 @@ export function Workspace() {
     setIsResetConfirmOpen(false);
   }, []);
 
+  const handleAppendImport = useCallback(() => {
+    if (!bundle || !importDraft) return;
+    const parsedSections = importReadme(importDraft.markdown);
+    if (parsedSections.length === 0) {
+      setIsImportDialogOpen(false);
+      setImportDraft(null);
+      return;
+    }
+
+    const next = appendSections(bundle, parsedSections);
+    const oldLength = bundle.project.sections.length;
+    const firstNewSection = next.project.sections[oldLength];
+
+    setBundle(next);
+    if (firstNewSection) {
+      setActiveId(firstNewSection.id);
+    }
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
+
+    setIsImportDialogOpen(false);
+    setImportDraft(null);
+    setToastMessage("Đã chèn thêm các mục báo cáo thành công.");
+    setToastOpen(true);
+  }, [bundle, importDraft]);
+
+  const handleReplaceImport = useCallback(() => {
+    if (!bundle || !importDraft) return;
+    const parsedSections = importReadme(importDraft.markdown);
+    if (parsedSections.length === 0) {
+      setIsReplaceConfirmOpen(false);
+      setIsImportDialogOpen(false);
+      setImportDraft(null);
+      return;
+    }
+
+    const next = replaceSections(bundle, parsedSections);
+    setBundle(next);
+    setActiveId(next.project.sections[0]?.id ?? null);
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
+
+    setIsReplaceConfirmOpen(false);
+    setIsImportDialogOpen(false);
+    setImportDraft(null);
+    setToastMessage("Đã nhập mới báo cáo thành công.");
+    setToastOpen(true);
+  }, [bundle, importDraft]);
+
   const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
     setBundle((prev) => {
       if (!prev) return prev;
@@ -459,12 +519,24 @@ export function Workspace() {
     <div className="ws-side-inner">
       <div className="ws-side-panel-header">
         <span className="ws-side-panel-title">Trợ lý báo cáo</span>
-        <button
-          onClick={() => setIsResetConfirmOpen(true)}
-          className="ws-reset-btn"
-        >
-          Tạo báo cáo
-        </button>
+        <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "center" }}>
+          <button
+            onClick={() => {
+              setImportDraft(null);
+              setImportMode("append");
+              setIsImportDialogOpen(true);
+            }}
+            className="ws-reset-btn"
+          >
+            Nhập Markdown
+          </button>
+          <button
+            onClick={() => setIsResetConfirmOpen(true)}
+            className="ws-reset-btn"
+          >
+            Tạo báo cáo
+          </button>
+        </div>
       </div>
       <Tabs
         value={sideTab}
@@ -601,6 +673,108 @@ export function Workspace() {
             </Button>
             <Button variant="danger" onClick={handleReset}>
               Tạo báo cáo
+            </Button>
+          </div>
+        }
+      />
+      <Dialog
+        isOpen={isImportDialogOpen}
+        onOpenChange={(open) => {
+          setIsImportDialogOpen(open);
+          if (!open) setImportDraft(null);
+        }}
+        title="Nhập báo cáo từ file Markdown"
+        description="Chọn file Markdown để nhập nội dung vào báo cáo hiện tại."
+        variant="modal"
+        footer={
+          <div className="ws-dialog-footer-actions">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsImportDialogOpen(false);
+                setImportDraft(null);
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!importDraft}
+              onClick={() => {
+                if (importMode === "replace") {
+                  const hasContent = bundle.project.sections.some((s) => s.markdown.trim() !== "");
+                  if (hasContent) {
+                    setIsReplaceConfirmOpen(true);
+                  } else {
+                    handleReplaceImport();
+                  }
+                } else {
+                  handleAppendImport();
+                }
+              }}
+            >
+              Nhập báo cáo
+            </Button>
+          </div>
+        }
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-2) 0" }}>
+          <MarkdownImportDropzone
+            imported={importDraft}
+            onImported={setImportDraft}
+          />
+          
+          {importDraft && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-3)" }}>
+              <label style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-medium)" }}>
+                Chế độ nhập:
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "var(--rs-font-size-sm)", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="append"
+                    checked={importMode === "append"}
+                    onChange={() => setImportMode("append")}
+                  />
+                  <span>Chèn thêm vào cuối báo cáo hiện tại</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "var(--rs-font-size-sm)", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="replace"
+                    checked={importMode === "replace"}
+                    onChange={() => setImportMode("replace")}
+                  />
+                  <span>Thay thế toàn bộ báo cáo hiện tại</span>
+                </label>
+              </div>
+              
+              {importMode === "replace" && bundle.project.sections.some((s) => s.markdown.trim() !== "") && (
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-xs)", background: "rgba(239, 68, 68, 0.08)", padding: "var(--rs-space-2)", borderRadius: "var(--rs-radius-sm)", border: "1px solid var(--rs-color-severity-error)" }}>
+                  <AlertTriangle size={14} />
+                  <span>Chú ý: Hành động này sẽ xóa toàn bộ nội dung báo cáo hiện tại!</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Dialog>
+      <Dialog
+        isOpen={isReplaceConfirmOpen}
+        onOpenChange={setIsReplaceConfirmOpen}
+        title="Ghi đè báo cáo hiện tại?"
+        description="Toàn bộ nội dung báo cáo hiện tại sẽ bị xóa và thay thế bằng file Markdown mới. Hành động này không thể hoàn tác."
+        variant="confirm"
+        footer={
+          <div className="ws-dialog-footer-actions">
+            <Button variant="ghost" onClick={() => setIsReplaceConfirmOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={handleReplaceImport}>
+              Ghi đè và Nhập mới
             </Button>
           </div>
         }

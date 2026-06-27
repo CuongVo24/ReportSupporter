@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { EditorView } from "@codemirror/view";
-import { createEditorState, insertSnippet, createImageAsset } from "@/modules/write";
+import { createEditorState, insertSnippet, createImageAsset, isMarkdownFileName } from "@/modules/write";
 import type { SnippetKind, ReportAsset } from "@/types";
 
 type EditorPanelProps = {
@@ -81,32 +81,95 @@ export function EditorPanel({
 
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = Array.from(e.clipboardData.items);
+    
+    // 1. Prioritize image paste
     const imageItem = items.find((item) => item.type.startsWith("image/"));
-    if (!imageItem || !onImageInserted) return;
+    if (imageItem && onImageInserted) {
+      const file = imageItem.getAsFile();
+      if (!file) return;
 
-    const file = imageItem.getAsFile();
-    if (!file) return;
-
-    e.preventDefault();
-    const result = await createImageAsset(file, 5 * 1024 * 1024); // max size 5MB
-    if (result.ok) {
-      const view = viewRef.current;
-      if (view) {
-        const { from, to } = view.state.selection.main;
-        view.dispatch({
-          changes: { from, to, insert: result.ref },
-          selection: { anchor: from + result.ref.length },
-        });
-        view.focus();
+      e.preventDefault();
+      const result = await createImageAsset(file, 5 * 1024 * 1024); // max size 5MB
+      if (result.ok) {
+        const view = viewRef.current;
+        if (view) {
+          const { from, to } = view.state.selection.main;
+          view.dispatch({
+            changes: { from, to, insert: result.ref },
+            selection: { anchor: from + result.ref.length },
+          });
+          view.focus();
+        }
+        onImageInserted(result.asset, result.ref);
+      } else {
+        alert(result.error);
       }
-      onImageInserted(result.asset, result.ref);
-    } else {
-      alert(result.error);
+      return;
+    }
+
+    // 2. Handle Markdown file paste
+    const fileItem = items.find((item) => item.kind === "file");
+    if (fileItem) {
+      const file = fileItem.getAsFile();
+      if (file && isMarkdownFileName(file.name)) {
+        e.preventDefault();
+        
+        if (file.size > 2 * 1024 * 1024) {
+          alert("Kích thước file vượt quá giới hạn 2MB.");
+          return;
+        }
+
+        try {
+          const text = await file.text();
+          const view = viewRef.current;
+          if (view) {
+            const { from, to } = view.state.selection.main;
+            view.dispatch({
+              changes: { from, to, insert: text },
+              selection: { anchor: from + text.length },
+            });
+            view.focus();
+          }
+        } catch {
+          alert("Không thể đọc nội dung file Markdown.");
+        }
+      }
     }
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     const files = Array.from(e.dataTransfer.files);
+    
+    // 1. Prioritize Markdown file drop
+    const mdFile = files.find((file) => isMarkdownFileName(file.name));
+    if (mdFile) {
+      e.preventDefault();
+      
+      if (mdFile.size > 2 * 1024 * 1024) {
+        alert("Kích thước file vượt quá giới hạn 2MB.");
+        return;
+      }
+
+      try {
+        const text = await mdFile.text();
+        const view = viewRef.current;
+        if (view) {
+          const x = e.clientX;
+          const y = e.clientY;
+          const pos = view.posAtCoords({ x, y }) ?? view.state.selection.main.from;
+          view.dispatch({
+            changes: { from: pos, to: pos, insert: text },
+            selection: { anchor: pos + text.length },
+          });
+          view.focus();
+        }
+      } catch {
+        alert("Không thể đọc nội dung file Markdown.");
+      }
+      return;
+    }
+
+    // 2. Handle image file drop
     const imageFile = files.find((file) => file.type.startsWith("image/"));
     if (!imageFile || !onImageInserted) return;
 

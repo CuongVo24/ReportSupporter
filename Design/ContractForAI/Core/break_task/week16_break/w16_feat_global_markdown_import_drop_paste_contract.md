@@ -73,6 +73,6 @@ Cho người dùng đưa markdown vào **không cần gõ**: chọn/thả file `
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `feat(write): global markdown import via file drop/paste, append or replace sections`.

@@ -10,6 +10,8 @@ export {
   inferMarkdownTitle,
   isMarkdownFileName,
   titleFromMarkdownFileName,
+  appendSections,
+  replaceSections,
 } from "./markdown-import";
 export type { MarkdownImportDraft } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
