@@ -104,13 +104,15 @@ Core features:
 - No mandatory login.
 - No realtime collaboration.
 - No cloud file storage.
-- AI writing assistant (introduced in Week 11 and hardened in Week 16) with local/env configurations.
+- AI writing assistant (introduced in Week 11 and hardened in Week 16) with local client-key configuration.
 - No full PDF toolbox as the product core.
 - No "convert every file format" promise.
 
 ### Privacy and AI Data Handling
 - AI capabilities are entirely opt-in and disabled by default.
-- When enabled, the application transmits active section contents to the chosen LLM provider (Google Gemini, OpenAI, or Anthropic Claude) via a secure server-side proxy `/api/ai` to perform text rewriting, tone adjustments, or outline generation.
+- When enabled, the application transmits active section/report contents to the chosen LLM provider (Google Gemini, OpenAI, or Anthropic Claude) through the first-party proxy `/api/ai`.
+- The AI provider API key is entered by the user, stored locally in browser `localStorage`, and sent per request through the `x-api-key` header. The proxy does not fall back to server environment keys.
+- Because `localStorage` can be read by script running in the same origin, XSS prevention remains a hard security requirement.
 
 
 ### Connector and AI Markdown Ingestion

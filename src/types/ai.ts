@@ -5,7 +5,9 @@
  * Design constraints (VibeCode §4 / W11 Locked):
  *   - Flag default OFF → no fetch when disabled.
  *   - Provider-agnostic: no SDK import here; gateway is an interface.
- *   - No secret/key in code.
+ *   - Client-key strategy: user key is stored in localStorage and sent to
+ *     the first-party proxy via `x-api-key`; XSS can read localStorage.
+ *   - No server-env fallback in `/api/ai`.
  */
 
 import { z } from "zod";
@@ -54,7 +56,7 @@ export type AiConfig = {
    * No SDK is bundled; the provider adapter is loaded separately after approval.
    */
   provider?: string;
-  /** API Key for the chosen provider (optional) */
+  /** API key stored locally in the browser; required when enabled. */
   apiKey?: string;
   /** Custom model identifier chosen by the user (optional) */
   model?: string;

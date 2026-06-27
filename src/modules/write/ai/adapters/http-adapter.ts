@@ -6,17 +6,14 @@ export class HttpAiAdapter implements AiAdapter {
   async request(action: AiAction, input: string): Promise<string> {
     const config = loadAiConfig();
 
-    if (!config.enabled || !config.provider) {
+    if (!config.enabled || !config.provider || !config.apiKey) {
       return "";
     }
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "x-api-key": config.apiKey,
     };
-
-    if (config.apiKey) {
-      headers["x-api-key"] = config.apiKey;
-    }
 
     const response = await fetch("/api/ai", {
       method: "POST",

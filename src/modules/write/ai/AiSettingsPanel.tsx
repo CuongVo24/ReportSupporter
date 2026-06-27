@@ -105,7 +105,7 @@ export function AiSettingsDialog({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Nhập API Key của bạn..."
-              helperText="API Key được lưu trữ cục bộ trên máy tính của bạn."
+              helperText="Chiến lược hiện tại dùng key-client: key lưu trong localStorage và gửi qua header x-api-key tới /api/ai."
             />
 
             {/* Model input (optional) */}
@@ -127,7 +127,7 @@ export function AiSettingsDialog({
             <div style={{ display: "flex", gap: "var(--rs-space-2)", color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)", padding: "var(--rs-space-3)", border: "1px solid var(--rs-color-border)", borderRadius: "var(--rs-radius-md)" }}>
               <Shield size={16} style={{ flexShrink: 0, color: "var(--rs-color-primary)" }} aria-hidden="true" />
               <div>
-                <span style={{ fontWeight: "var(--rs-font-weight-medium)", color: "var(--rs-color-text)" }}>Cảnh báo bảo mật:</span> Khi bạn sử dụng các tính năng trợ giúp AI, nội dung của phần (section) hiện tại sẽ được gửi đến nhà cung cấp dịch vụ được chọn ở trên.
+                <span style={{ fontWeight: "var(--rs-font-weight-medium)", color: "var(--rs-color-text)" }}>Cảnh báo bảo mật:</span> API key lưu trong localStorage nên có thể bị đọc nếu app gặp XSS. Route server không dùng key môi trường làm fallback; mỗi request AI cần key bạn nhập và nội dung section/báo cáo sẽ được gửi đến provider đã chọn.
               </div>
             </div>
           </>

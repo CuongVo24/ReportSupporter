@@ -11,6 +11,9 @@ type AiProxyRequest = {
   model?: string;
 };
 
+const GENERIC_PROVIDER_ERROR =
+  "AI provider request failed. Please check your API key, quota, model, or provider status.";
+
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 }
@@ -106,19 +109,12 @@ export async function POST(req: Request) {
 
     const { action, input, provider, model } = parsed;
 
-    const clientKey = req.headers.get("x-api-key");
-    let apiKey = clientKey || "";
-
-    if (!apiKey) {
-      if (provider === "gemini") apiKey = process.env.GEMINI_API_KEY || "";
-      else if (provider === "openai") apiKey = process.env.OPENAI_API_KEY || "";
-      else if (provider === "anthropic") apiKey = process.env.ANTHROPIC_API_KEY || "";
-    }
+    const apiKey = req.headers.get("x-api-key")?.trim() ?? "";
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: `API Key for provider '${provider}' is not configured on client or server.` },
-        { status: 400 },
+        { error: "Missing API key. Configure a local client API key in AI Settings." },
+        { status: 401 },
       );
     }
 
@@ -138,8 +134,7 @@ export async function POST(req: Request) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini API error: ${response.statusText} (${errorText})`);
+        throw new Error(GENERIC_PROVIDER_ERROR);
       }
 
       const data: unknown = await response.json();
@@ -161,8 +156,7 @@ export async function POST(req: Request) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`OpenAI API error: ${response.statusText} (${errorText})`);
+        throw new Error(GENERIC_PROVIDER_ERROR);
       }
 
       const data: unknown = await response.json();
@@ -186,8 +180,7 @@ export async function POST(req: Request) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Anthropic API error: ${response.statusText} (${errorText})`);
+        throw new Error(GENERIC_PROVIDER_ERROR);
       }
 
       const data: unknown = await response.json();

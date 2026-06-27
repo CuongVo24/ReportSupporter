@@ -31,7 +31,8 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 ## 3. ENVIRONMENT
 
 - **MVP không cần biến môi trường bắt buộc** (no API key, no DB URL, no secret).
-- Nếu Phase 3 (AI) thêm dịch vụ ngoài, key đặt ở **server route env** (`.env.local`, không commit) — **không bao giờ** ở client bundle (`Security.md` §3).
+- AI route `/api/ai` dùng **client-key strategy**: người dùng nhập provider key trong UI, browser lưu cục bộ và gửi qua `x-api-key` cho mỗi request. Route **không** dùng biến môi trường server làm fallback để tránh biến endpoint public thành proxy tiêu credit.
+- Không đặt `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` như fallback server cho app này nếu chưa có auth/rate-limit riêng.
 - Không có "environment matrix" phức tạp: chỉ `dev` (local) và `production` (build host).
 
 ---
@@ -64,6 +65,6 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 
 - `Design/Modules/Other/TechnicalStack.md` — runtime posture, install matrix, Puppeteer later.
 - `Design/Modules/4.Export.md` — §5.3 PDF routes (browser print vs Puppeteer).
-- `Design/Modules/Other/Security.md` — không secret ở client; env ở server route.
+- `Design/Modules/Other/Security.md` — AI client-key posture, localStorage XSS risk, proxy boundary.
 - `Design/RoadMap/MasterRoadMap.md` — W12 public demo.
 - `Design/Conventions/WorkFlow.md` — DoD gate trước release.

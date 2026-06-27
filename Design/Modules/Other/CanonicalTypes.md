@@ -415,7 +415,9 @@ Used by the optional AI assistant layer (Module Write — W11). **Feature flag d
 Design constraints:
 - Flag `enabled` is `false` by default (Locked #2).
 - `provider` is user-supplied; no SDK is bundled here (Locked #3).
-- No key/secret in code; adapter injection pattern (see `ai-gateway.ts`).
+- Client-key strategy: the user supplies a provider key in AI Settings.
+- The provider key is stored in browser `localStorage` and sent only to `/api/ai` through `x-api-key`; XSS can read localStorage, so Markdown sanitize must stay strict.
+- No server-env fallback in `/api/ai`; adapter injection pattern remains provider-agnostic (see `ai-gateway.ts`).
 
 ```ts
 /** The AI operations the assistant can perform. */
@@ -433,7 +435,7 @@ export type AiSuggestion = {
   accepted?: boolean;
 };
 
-/** Feature flag + optional provider identifier. */
+/** Feature flag + provider identifier + local client key. */
 export type AiConfig = {
   /** Master switch — default false. */
   enabled: boolean;
@@ -443,12 +445,16 @@ export type AiConfig = {
    * No SDK is bundled; adapters are approved separately.
    */
   provider?: string;
+  /** Provider API key stored in localStorage; required when enabled. */
+  apiKey?: string;
+  /** Optional model identifier. */
+  model?: string;
 };
 
 /**
  * Operational state of the AI gateway at call time.
- * - "ready"        → flag ON + adapter registered → may send request.
- * - "unconfigured" → flag ON but no adapter → no fetch.
+ * - "ready"        → flag ON + provider + local API key + adapter registered → may send request.
+ * - "unconfigured" → flag ON but provider/key/adapter missing → no fetch.
  * - "disabled"     → flag OFF → no fetch (default).
  */
 export type GatewayState = "ready" | "unconfigured" | "disabled";

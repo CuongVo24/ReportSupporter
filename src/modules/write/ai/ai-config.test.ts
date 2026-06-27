@@ -29,6 +29,7 @@ describe("ai-config unit tests", () => {
     const validConfig: AiConfig = {
       enabled: true,
       provider: "openai",
+      apiKey: "client-key",
     };
 
     saveAiConfig(validConfig);
@@ -54,19 +55,21 @@ describe("ai-config unit tests", () => {
     expect(isAiReady({ enabled: false })).toBe(false);
     expect(isAiReady({ enabled: true })).toBe(false); // missing provider
     expect(isAiReady({ enabled: true, provider: "" })).toBe(false); // empty provider
-    expect(isAiReady({ enabled: true, provider: "gemini" })).toBe(true);
+    expect(isAiReady({ enabled: true, provider: "gemini" })).toBe(false); // missing API key
+    expect(isAiReady({ enabled: true, provider: "gemini", apiKey: "client-key" })).toBe(true);
   });
 
   it("should identify isAiUnconfigured correctly", () => {
     expect(isAiUnconfigured({ enabled: false })).toBe(false);
     expect(isAiUnconfigured({ enabled: true })).toBe(true); // missing provider
     expect(isAiUnconfigured({ enabled: true, provider: "" })).toBe(true); // empty provider
-    expect(isAiUnconfigured({ enabled: true, provider: "gemini" })).toBe(false); // ready, not unconfigured
+    expect(isAiUnconfigured({ enabled: true, provider: "gemini" })).toBe(true); // missing API key
+    expect(isAiUnconfigured({ enabled: true, provider: "gemini", apiKey: "client-key" })).toBe(false);
   });
 
   it("should identify isAiDisabled correctly", () => {
     expect(isAiDisabled({ enabled: false })).toBe(true);
     expect(isAiDisabled({ enabled: true })).toBe(false);
-    expect(isAiDisabled({ enabled: true, provider: "openai" })).toBe(false);
+    expect(isAiDisabled({ enabled: true, provider: "openai", apiKey: "client-key" })).toBe(false);
   });
 });

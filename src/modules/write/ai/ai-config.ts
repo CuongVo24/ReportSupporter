@@ -7,6 +7,9 @@
  *
  * Constraints:
  *   - Default: enabled=false (Locked #2).
+ *   - Client-key strategy: provider key is stored locally and sent only to
+ *     the first-party `/api/ai` proxy through the `x-api-key` header.
+ *   - XSS risk is real: script execution in the origin can read localStorage.
  *   - No network call here; purely config storage.
  *   - No AI SDK import.
  */
@@ -76,11 +79,17 @@ export function saveAiConfig(config: AiConfig): void {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns true when AI features are enabled AND a provider is set.
+ * Returns true when AI features are enabled AND provider + local API key are set.
  * The gateway uses this to decide whether to proceed.
  */
 export function isAiReady(config: AiConfig): boolean {
-  return config.enabled && typeof config.provider === "string" && config.provider.length > 0;
+  return (
+    config.enabled &&
+    typeof config.provider === "string" &&
+    config.provider.length > 0 &&
+    typeof config.apiKey === "string" &&
+    config.apiKey.length > 0
+  );
 }
 
 /**

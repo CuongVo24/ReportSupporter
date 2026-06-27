@@ -20,6 +20,18 @@ describe("HttpAiAdapter", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("returns empty suggestion immediately if local client key is missing", async () => {
+    vi.mocked(loadAiConfig).mockReturnValue({
+      enabled: true,
+      provider: "gemini",
+    });
+
+    const suggestion = await httpAdapter.request("rewrite", "input text");
+
+    expect(suggestion).toBe("");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("calls fetch with correct payloads and headers", async () => {
     vi.mocked(loadAiConfig).mockReturnValue({
       enabled: true,
@@ -55,6 +67,7 @@ describe("HttpAiAdapter", () => {
     vi.mocked(loadAiConfig).mockReturnValue({
       enabled: true,
       provider: "openai",
+      apiKey: "client-key",
     });
 
     vi.mocked(fetch).mockResolvedValue({
