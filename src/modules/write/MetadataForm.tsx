@@ -93,7 +93,7 @@ export function MetadataForm({
               key={field.key}
               id={`meta-${field.key}`}
               label={labelText}
-              placeholder={field.placeholder ?? "Dán nội dung README.md ở đây..."}
+              placeholder={field.placeholder ?? "Dán nội dung Markdown ở đây..."}
               value={val}
               onChange={(e) => handleTextChange(field.key, e.target.value)}
               onBlur={() => onBlur?.(field.key)}

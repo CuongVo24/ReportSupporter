@@ -5,7 +5,7 @@ import { buildMemberResponsibility } from "./sections/member-responsibility";
 
 /**
  * Builds initial sections for a project given a template and metadata,
- * handling special cases like README-to-Report dynamic loading and member responsibility injection.
+ * handling special cases like Markdown-to-Report dynamic loading and member responsibility injection.
  */
 export function buildInitialSections(
   template: TemplateSchema,
@@ -19,7 +19,7 @@ export function buildInitialSections(
     const isGroup = Array.isArray(members) && members.length > 1;
 
     if (importedSections.length > 0 && isGroup) {
-      // Prepend a "Thành viên & Phân công" section for readme-report templates
+      // Prepend a "Thành viên & Phân công" section for Markdown import templates
       const memberMarkdown = buildMemberResponsibility(members as string[]);
       const memberSection: ReportSection = {
         id: crypto.randomUUID(),

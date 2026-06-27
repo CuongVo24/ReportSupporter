@@ -527,6 +527,43 @@ body {
   overflow: auto;
 }
 
+.ws-editor-cm-parent .cm-panel.cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  color: var(--rs-color-text);
+  background: var(--rs-color-surface-muted);
+  border-bottom: 1px solid var(--rs-color-border);
+  font-family: var(--rs-font-family-sans);
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search input {
+  min-height: var(--rs-control-height-sm);
+  padding: 0 var(--rs-space-2);
+  color: var(--rs-color-text);
+  background: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search button {
+  min-height: var(--rs-control-height-sm);
+  padding: 0 var(--rs-space-2);
+  color: var(--rs-color-text);
+  background: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search button:hover {
+  background: var(--rs-color-surface-muted);
+  border-color: var(--rs-color-text-muted);
+}
+
 /* PreviewPane extracted styles */
 .ws-preview-header-info {
   display: flex;
@@ -666,6 +703,95 @@ body {
   color: var(--rs-color-text-muted);
   font-size: var(--rs-font-size-xs);
   margin-top: 2px;
+}
+
+/* Markdown file import */
+.ws-md-import {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-4);
+  border: 1px dashed var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background-color: var(--rs-color-surface-muted);
+  transition: border-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default),
+    background-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default);
+}
+
+.ws-md-import-dragging {
+  border-color: var(--rs-color-primary);
+  background-color: var(--rs-color-primary-bg);
+}
+
+.ws-md-import-body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rs-space-3);
+}
+
+.ws-md-import-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rs-control-height-md);
+  height: var(--rs-control-height-md);
+  color: var(--rs-color-primary);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  flex-shrink: 0;
+}
+
+.ws-md-import-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  min-width: 0;
+}
+
+.ws-md-import-title {
+  margin: 0;
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+}
+
+.ws-md-import-subtitle {
+  margin: 0;
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-md-import-status,
+.ws-md-import-error {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-md-import-status {
+  color: var(--rs-color-success);
+}
+
+.ws-md-import-error {
+  color: var(--rs-color-severity-error);
+}
+
+.ws-md-import-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  color: var(--rs-color-text);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-md-import-count {
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
 }
 
 /* TOC (Table of Contents) block styles - Module 2, W3 Group B */

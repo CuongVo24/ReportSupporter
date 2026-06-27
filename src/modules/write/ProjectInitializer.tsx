@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import type { TemplateSchema } from "@/types";
 import { TemplatePicker } from "./TemplatePicker";
 import { MetadataForm } from "./MetadataForm";
+import { MarkdownImportDropzone } from "./MarkdownImportDropzone";
+import type { MarkdownImportDraft } from "./markdown-import";
 import { validateMetadata } from "./generate-skeleton";
 import { Button } from "@/components/ui";
 import { Lightbulb } from "lucide-react";
@@ -31,19 +33,54 @@ export function ProjectInitializer({
     return initialValues;
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [importedMarkdown, setImportedMarkdown] = useState<MarkdownImportDraft | null>(null);
 
   const activeTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0];
+  const readmeTemplate = templates.find((t) => t.id === "readme-report");
 
   const handleTemplateChange = (id: string) => {
     setSelectedTemplateId(id);
     const nextTemplate = templates.find((t) => t.id === id);
     if (nextTemplate) {
-      setValues((prev) => ({
-        ...prev,
-        title: nextTemplate.name,
-      }));
+      setValues((prev) => {
+        const nextValues: Record<string, string | string[]> = {
+          ...prev,
+          title: id === "readme-report" && importedMarkdown ? importedMarkdown.title : nextTemplate.name,
+        };
+
+        if (id === "readme-report" && importedMarkdown) {
+          nextValues.readmeContent = importedMarkdown.markdown;
+        }
+
+        if (id !== "readme-report") {
+          delete nextValues.readmeContent;
+        }
+
+        return nextValues;
+      });
+      if (id !== "readme-report") {
+        setImportedMarkdown(null);
+      }
       setErrors({});
     }
+  };
+
+  const handleMarkdownImported = (draft: MarkdownImportDraft) => {
+    setImportedMarkdown(draft);
+    if (readmeTemplate) {
+      setSelectedTemplateId(readmeTemplate.id);
+    }
+    setValues((prev) => ({
+      ...prev,
+      title: draft.title,
+      readmeContent: draft.markdown,
+    }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.title;
+      delete next.readmeContent;
+      return next;
+    });
   };
 
   const handleFormChange = (newValues: Record<string, string | string[]>) => {
@@ -77,6 +114,10 @@ export function ProjectInitializer({
     onInitialize(activeTemplate, titleVal, values);
   };
 
+  const visibleMetadataFields = (activeTemplate?.metadataFields || []).filter(
+    (field) => !(field.key === "readmeContent" && importedMarkdown),
+  );
+
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
@@ -87,6 +128,11 @@ export function ProjectInitializer({
         
         <form onSubmit={handleSubmit} style={formContainerStyle}>
           <div style={scrollAreaStyle}>
+            <MarkdownImportDropzone
+              imported={importedMarkdown}
+              onImported={handleMarkdownImported}
+            />
+
             <TemplatePicker
               templates={templates}
               value={selectedTemplateId}
@@ -96,7 +142,7 @@ export function ProjectInitializer({
             <div style={dividerStyle} />
             
             <MetadataForm
-              fields={activeTemplate?.metadataFields || []}
+              fields={visibleMetadataFields}
               values={values}
               onChange={handleFormChange}
               onBlur={handleBlur}
@@ -107,10 +153,10 @@ export function ProjectInitializer({
           <div style={footerStyle}>
             <p style={helperStyle}>
               <Lightbulb size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px", color: "var(--rs-color-warning)" }} />
-              <span style={{ verticalAlign: "middle" }}>Bấm Khởi tạo để mở trình soạn thảo — nút Xuất bản (HTML/PDF/Word) nằm trong trình soạn thảo.</span>
+              <span style={{ verticalAlign: "middle" }}>Heading trong file sẽ thành mục báo cáo để sửa tiếp trong bàn viết.</span>
             </p>
             <Button type="submit" variant="primary" fullWidth>
-              Khởi tạo báo cáo
+              Tạo báo cáo
             </Button>
           </div>
         </form>

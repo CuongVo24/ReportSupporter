@@ -62,7 +62,7 @@ describe("buildInitialSections helper", () => {
     const bundle: ReportProjectBundle = {
       project: {
         id: "proj-1",
-        title: "Báo cáo từ README",
+        title: "Báo cáo từ Markdown",
         templateId: template.id,
         metadata: {
           school: "Đại học Bách Khoa",

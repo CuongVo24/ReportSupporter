@@ -60,10 +60,10 @@ describe("ProjectInitializer UX Structure", () => {
     expect(helperP.type).toBe("p");
     const [lightbulbIcon, textSpan] = helperP.props.children;
     expect(lightbulbIcon.type).toBe(Lightbulb);
-    expect(textSpan.props.children).toContain("Bấm Khởi tạo để mở trình soạn thảo");
+    expect(textSpan.props.children).toContain("Heading trong file sẽ thành mục báo cáo");
 
     expect(submitButton.type).toBe(Button);
     expect(submitButton.props.type).toBe("submit");
-    expect(submitButton.props.children).toBe("Khởi tạo báo cáo");
+    expect(submitButton.props.children).toBe("Tạo báo cáo");
   });
 });

@@ -2,8 +2,8 @@ import type { TemplateSchema } from "@/types";
 
 export const readmeReportTemplate: TemplateSchema = {
   id: "readme-report",
-  name: "Báo cáo từ README",
-  description: "Khởi tạo khung báo cáo tự động bằng cách nhập nội dung tệp README.md.",
+  name: "Báo cáo từ Markdown",
+  description: "Khởi tạo khung báo cáo tự động bằng cách nhập nội dung tệp Markdown.",
   metadataFields: [
     {
       key: "school",
@@ -21,10 +21,10 @@ export const readmeReportTemplate: TemplateSchema = {
     },
     {
       key: "readmeContent",
-      label: "Nội dung README.md",
+      label: "Nội dung Markdown",
       type: "text",
       required: true,
-      placeholder: "Dán nội dung tệp README.md của bạn ở đây...",
+      placeholder: "Dán nội dung tệp Markdown của bạn ở đây...",
     },
   ],
   sections: [],
