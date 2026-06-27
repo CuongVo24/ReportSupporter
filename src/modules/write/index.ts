@@ -55,5 +55,4 @@ export { improveTone } from "./ai/improve-tone";
 export { UserControlBar } from "./ai/UserControlBar";
 export { AiSettingsDialog } from "./ai/AiSettingsPanel";
 export { AiAssistBar } from "./ai/AiAssistBar";
-
-
+export { httpAdapter } from "./ai/adapters/http-adapter";

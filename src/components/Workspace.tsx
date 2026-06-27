@@ -29,6 +29,10 @@ import {
   deleteSection,
   moveSection,
   AiSettingsDialog,
+  registerAdapter,
+  httpAdapter,
+  loadAiConfig,
+  isAiReady,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
@@ -44,8 +48,6 @@ const emptyCheckResult: CheckResult = {
 };
 
 type SidePanelTab = "check" | "evidence" | "export" | "submission" | "present";
-
-
 
 function focusEditorOnNextFrame() {
   window.requestAnimationFrame(() => {
@@ -99,6 +101,15 @@ export function Workspace() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const config = loadAiConfig();
+    if (isAiReady(config)) {
+      registerAdapter(httpAdapter);
+    } else {
+      registerAdapter(null);
+    }
+  }, [isAiSettingsOpen]);
 
   const activeSection = useMemo(
     () => bundle?.project.sections.find((sec) => sec.id === activeId) ?? null,

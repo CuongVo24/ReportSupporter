@@ -104,9 +104,14 @@ Core features:
 - No mandatory login.
 - No realtime collaboration.
 - No cloud file storage.
-- No AI writing assistant in the first build.
+- AI writing assistant (introduced in Week 11 and hardened in Week 16) with local/env configurations.
 - No full PDF toolbox as the product core.
 - No "convert every file format" promise.
+
+### Privacy and AI Data Handling
+- AI capabilities are entirely opt-in and disabled by default.
+- When enabled, the application transmits active section contents to the chosen LLM provider (Google Gemini, OpenAI, or Anthropic Claude) via a secure server-side proxy `/api/ai` to perform text rewriting, tone adjustments, or outline generation.
+
 
 ### Connector and AI Markdown Ingestion
 

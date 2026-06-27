@@ -2,7 +2,7 @@ import { parseMarkdown, flattenNodeText } from "@/lib/markdown-pipeline";
 import type { ReportProjectBundle, ReportSection } from "@/types";
 import { importReadme } from "./readme-import";
 
-export const MAX_MARKDOWN_IMPORT_BYTES = 2 * 1024 * 1024;
+export const MAX_MARKDOWN_IMPORT_BYTES = 50 * 1024 * 1024;
 
 export function appendSections(
   bundle: ReportProjectBundle,

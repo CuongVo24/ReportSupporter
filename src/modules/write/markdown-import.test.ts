@@ -47,7 +47,7 @@ describe("markdown import helpers", () => {
     expect(draft.sectionCount).toBe(2);
   });
 
-  it("reads Markdown files into import drafts and rejects oversized files", async () => {
+  it("reads Markdown files into import drafts and rejects files above 50MB", async () => {
     const file = {
       name: "report.md",
       type: "text/markdown",
@@ -63,10 +63,13 @@ describe("markdown import helpers", () => {
       expect(result.draft.sectionCount).toBe(1);
     }
 
-    const tooLarge = await readMarkdownFile({ ...file, size: 3 * 1024 * 1024 } as File);
+    const atLimit = await readMarkdownFile({ ...file, size: 50 * 1024 * 1024 } as File);
+    expect(atLimit.ok).toBe(true);
+
+    const tooLarge = await readMarkdownFile({ ...file, size: 51 * 1024 * 1024 } as File);
     expect(tooLarge).toEqual({
       ok: false,
-      error: "File Markdown vượt quá giới hạn 2MB.",
+      error: "File Markdown vượt quá giới hạn 50MB.",
     });
   });
 

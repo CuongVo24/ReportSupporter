@@ -77,6 +77,6 @@ Biến gateway "có khung" thành "gọi được": một adapter thật gọi p
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `feat(ai): http adapter + server route for provider calls, register on ready`.
