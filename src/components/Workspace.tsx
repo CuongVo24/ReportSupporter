@@ -275,6 +275,44 @@ export function Workspace() {
     setIsInitializing(false);
   }, [bundle]);
 
+  const handleStartBlank = useCallback(() => {
+    if (!bundle) return;
+    const blankSection: ReportSection = {
+      id: crypto.randomUUID(),
+      order: 0,
+      title: "Nội dung",
+      markdown: "",
+      status: "draft",
+    };
+
+    const next: ReportProjectBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        title: "Báo cáo chưa đặt tên",
+        metadata: {},
+        sections: [blankSection],
+        updatedAt: new Date().toISOString(),
+      },
+    };
+    
+    setBundle(next);
+    setActiveId(blankSection.id);
+    setIsInitializing(false);
+  }, [bundle]);
+
+  const handleImportMarkdown = useCallback((draft: MarkdownImportDraft) => {
+    if (!bundle) return;
+    const parsedSections = importReadme(draft.markdown);
+    
+    const next = replaceSections(bundle, parsedSections);
+    next.project.title = draft.title || "Báo cáo chưa đặt tên";
+
+    setBundle(next);
+    setActiveId(next.project.sections[0]?.id ?? null);
+    setIsInitializing(false);
+  }, [bundle]);
+
   const handleReset = useCallback(() => {
     const fresh = createProjectFromTemplate(softwareProjectTemplate);
     setBundle(fresh);
@@ -464,6 +502,8 @@ export function Workspace() {
         initialTitle={bundle.project.title}
         initialMetadata={bundle.project.metadata}
         onInitialize={handleInitialize}
+        onStartBlank={handleStartBlank}
+        onImportMarkdown={handleImportMarkdown}
       />
     );
   }

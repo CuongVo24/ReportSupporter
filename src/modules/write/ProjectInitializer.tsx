@@ -15,6 +15,8 @@ type ProjectInitializerProps = {
   initialTitle?: string;
   initialMetadata?: Record<string, string | string[]>;
   onInitialize: (template: TemplateSchema, title: string, metadata: Record<string, string | string[]>) => void;
+  onStartBlank: () => void;
+  onImportMarkdown: (draft: MarkdownImportDraft) => void;
 };
 
 export function ProjectInitializer({
@@ -22,7 +24,10 @@ export function ProjectInitializer({
   initialTitle = "",
   initialMetadata = {},
   onInitialize,
+  onStartBlank,
+  onImportMarkdown,
 }: ProjectInitializerProps) {
+  const [initMode, setInitMode] = useState<"template" | "blank" | "import">("template");
   const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0]?.id || "");
   const [values, setValues] = useState<Record<string, string | string[]>>(() => {
     const initialValues: Record<string, string | string[]> = { ...initialMetadata };
@@ -98,8 +103,7 @@ export function ProjectInitializer({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitTemplate = () => {
     if (!activeTemplate) return;
 
     const titleVal = typeof values.title === "string" ? values.title : "";
@@ -125,41 +129,113 @@ export function ProjectInitializer({
           <h2 style={titleStyle}>Khởi tạo Báo cáo Mới</h2>
           <p style={subtitleStyle}>Chọn mẫu tài liệu và điền thông tin ban đầu để tạo cấu trúc báo cáo.</p>
         </div>
-        
-        <form onSubmit={handleSubmit} style={formContainerStyle}>
-          <div style={scrollAreaStyle}>
-            <MarkdownImportDropzone
-              imported={importedMarkdown}
-              onImported={handleMarkdownImported}
-            />
 
-            <TemplatePicker
-              templates={templates}
-              value={selectedTemplateId}
-              onSelect={handleTemplateChange}
-            />
-            
-            <div style={dividerStyle} />
-            
-            <MetadataForm
-              fields={visibleMetadataFields}
-              values={values}
-              onChange={handleFormChange}
-              onBlur={handleBlur}
-              errors={errors}
-            />
+        <div style={tabContainerStyle}>
+          <button
+            type="button"
+            style={initMode === "template" ? activeTabStyle : tabStyle}
+            onClick={() => setInitMode("template")}
+          >
+            Mẫu chuẩn
+          </button>
+          <button
+            type="button"
+            style={initMode === "blank" ? activeTabStyle : tabStyle}
+            onClick={() => setInitMode("blank")}
+          >
+            Tài liệu trống
+          </button>
+          <button
+            type="button"
+            style={initMode === "import" ? activeTabStyle : tabStyle}
+            onClick={() => setInitMode("import")}
+          >
+            Nhập từ Markdown
+          </button>
+        </div>
+        
+        <div style={formContainerStyle}>
+          <div style={scrollAreaStyle}>
+            {initMode === "template" && (
+              <>
+                <TemplatePicker
+                  templates={templates}
+                  value={selectedTemplateId}
+                  onSelect={handleTemplateChange}
+                />
+                
+                <div style={dividerStyle} />
+                
+                <MetadataForm
+                  fields={visibleMetadataFields}
+                  values={values}
+                  onChange={handleFormChange}
+                  onBlur={handleBlur}
+                  errors={errors}
+                />
+              </>
+            )}
+
+            {initMode === "blank" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-8) var(--rs-space-4)", flex: 1, justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+                <p style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-sm)", margin: 0, maxWidth: "320px", lineHeight: 1.5 }}>
+                  Bắt đầu soạn thảo ngay với một trang báo cáo trống và đặt tên tiêu đề sau trong Workspace.
+                </p>
+              </div>
+            )}
+
+            {initMode === "import" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-2) 0", flex: 1 }}>
+                <MarkdownImportDropzone
+                  imported={importedMarkdown}
+                  onImported={handleMarkdownImported}
+                />
+              </div>
+            )}
           </div>
           
-          <div style={footerStyle}>
-            <p style={helperStyle}>
-              <Lightbulb size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px", color: "var(--rs-color-warning)" }} />
-              <span style={{ verticalAlign: "middle" }}>Heading trong file sẽ thành mục báo cáo để sửa tiếp trong bàn viết.</span>
-            </p>
-            <Button type="submit" variant="primary" fullWidth>
-              Tạo báo cáo
-            </Button>
-          </div>
-        </form>
+          {initMode === "template" && (
+            <div style={footerStyle}>
+              <Button type="button" onClick={handleSubmitTemplate} variant="primary" fullWidth>
+                Tạo báo cáo
+              </Button>
+            </div>
+          )}
+
+          {initMode === "blank" && (
+            <div style={footerStyle}>
+              <Button type="button" onClick={onStartBlank} variant="primary" fullWidth>
+                Tạo tài liệu trống
+              </Button>
+            </div>
+          )}
+
+          {initMode === "import" && (
+            <div style={footerStyle}>
+              {importedMarkdown && (
+                <>
+                  <p style={helperStyle}>
+                    <Lightbulb size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px", color: "var(--rs-color-warning)" }} />
+                    <span style={{ verticalAlign: "middle" }}>File Markdown của bạn sẽ được tự động phân tích thành các mục báo cáo tương ứng.</span>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => onImportMarkdown(importedMarkdown)}
+                    fullWidth
+                  >
+                    Nhập báo cáo
+                  </Button>
+                </>
+              )}
+              {!importedMarkdown && (
+                <p style={{ ...helperStyle, textAlign: "center", width: "100%" }}>
+                  Vui lòng chọn hoặc thả file Markdown ở trên để tiếp tục.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -245,4 +321,35 @@ const helperStyle = {
   color: "var(--rs-color-text-muted)",
   margin: 0,
   lineHeight: 1.4,
+};
+
+const tabContainerStyle = {
+  display: "flex",
+  gap: "var(--rs-space-1)",
+  backgroundColor: "var(--rs-color-surface-muted, #f1f5f9)",
+  padding: "4px",
+  borderRadius: "var(--rs-radius-md)",
+  marginBottom: "var(--rs-space-4)",
+  flexShrink: 0,
+};
+
+const tabStyle = {
+  flex: 1,
+  padding: "var(--rs-space-2) var(--rs-space-3)",
+  border: "none",
+  borderRadius: "var(--rs-radius-sm)",
+  backgroundColor: "transparent",
+  color: "var(--rs-color-text-muted)",
+  fontSize: "var(--rs-font-size-xs)",
+  fontWeight: "var(--rs-font-weight-medium)",
+  cursor: "pointer",
+  textAlign: "center" as const,
+  transition: "all 0.15s ease",
+};
+
+const activeTabStyle = {
+  ...tabStyle,
+  backgroundColor: "var(--rs-color-surface)",
+  color: "var(--rs-color-text)",
+  boxShadow: "var(--rs-elevation-1)",
 };

@@ -30,13 +30,17 @@ describe("ProjectInitializer UX Structure", () => {
     },
   ];
 
-  it("renders with a submit button and sticky footer warning note", () => {
+  it("renders with a submit button in template mode", () => {
     const onInitialize = vi.fn();
+    const onStartBlank = vi.fn();
+    const onImportMarkdown = vi.fn();
     
     // Call component function directly to inspect JSX element structure
     const element = ProjectInitializer({
       templates: mockTemplates,
       onInitialize,
+      onStartBlank,
+      onImportMarkdown,
     });
 
     expect(element).toBeDefined();
@@ -45,25 +49,21 @@ describe("ProjectInitializer UX Structure", () => {
     const cardDiv = element.props.children;
     expect(cardDiv.type).toBe("div"); // cardStyle div
 
-    // Children of cardStyle div: [headerStyle div, formContainerStyle form]
-    const [headerDiv, formEl] = cardDiv.props.children;
+    // Children of cardStyle div: [headerStyle div, tabContainerStyle div, formContainerStyle div]
+    const [headerDiv, tabContainerDiv, formEl] = cardDiv.props.children;
     expect(headerDiv.type).toBe("div");
-    expect(formEl.type).toBe("form");
+    expect(tabContainerDiv.type).toBe("div");
+    expect(formEl.type).toBe("div");
 
-    // Children of formContainerStyle form: [scrollAreaStyle div, footerStyle div]
+    // Children of formContainerStyle div: [scrollAreaStyle div, footerStyle div]
     const [scrollAreaDiv, footerDiv] = formEl.props.children;
     expect(scrollAreaDiv.type).toBe("div");
     expect(footerDiv.type).toBe("div");
 
-    // Children of footerStyle div: [helperText p, button]
-    const [helperP, submitButton] = footerDiv.props.children;
-    expect(helperP.type).toBe("p");
-    const [lightbulbIcon, textSpan] = helperP.props.children;
-    expect(lightbulbIcon.type).toBe(Lightbulb);
-    expect(textSpan.props.children).toContain("Heading trong file sẽ thành mục báo cáo");
-
+    // In template mode, footer contains the submit button
+    const submitButton = footerDiv.props.children;
     expect(submitButton.type).toBe(Button);
-    expect(submitButton.props.type).toBe("submit");
+    expect(submitButton.props.type).toBe("button");
     expect(submitButton.props.children).toBe("Tạo báo cáo");
   });
 });
