@@ -70,6 +70,6 @@ Mở rộng AI ra **phạm vi toàn báo cáo** và thêm action **dịch/chuẩ
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `feat(ai): whole-report scope + translate/terminology actions via diff-accept`.

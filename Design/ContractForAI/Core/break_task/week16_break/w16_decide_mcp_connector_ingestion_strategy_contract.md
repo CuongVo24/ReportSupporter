@@ -65,6 +65,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: contract docs-only — không chạm `src/`. Commit: `docs(design): MCP/connector ingestion strategy — import-first, MCP as conditional epic`.
