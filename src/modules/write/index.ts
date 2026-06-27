@@ -4,8 +4,23 @@ export { softwareProjectTemplate } from "./templates/software-project";
 export { readmeReportTemplate } from "./templates/readme-report";
 export { ALL_TEMPLATES, getTemplate } from "./templates";
 export { importReadme } from "./readme-import";
+export { MarkdownImportDropzone } from "./MarkdownImportDropzone";
+export {
+  buildMarkdownImportDraft,
+  inferMarkdownTitle,
+  isMarkdownFileName,
+  titleFromMarkdownFileName,
+} from "./markdown-import";
+export type { MarkdownImportDraft } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
 export { createEditorState } from "./editor-setup";
+export {
+  buildImageMarkdownDraft,
+  buildLinkMarkdownDraft,
+  buildWrappedMarkdownDraft,
+  createMarkdownShortcutKeymap,
+} from "./editor-shortcuts";
+export type { MarkdownReplacementDraft } from "./editor-shortcuts";
 export { insertSnippet } from "./insert-snippet";
 export { resolveAssetRefs } from "./resolve-assets";
 export { MermaidRenderer } from "./MermaidRenderer";

@@ -23,7 +23,7 @@ import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
-import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem } from "@/types";
+import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection } from "@/types";
 
 const emptyCheckResult: CheckResult = {
   issues: [],
@@ -31,6 +31,21 @@ const emptyCheckResult: CheckResult = {
   readinessScore: 100,
   ranAt: "",
 };
+
+type SidePanelTab = "check" | "evidence" | "export" | "submission" | "present";
+
+function renumberSections(sections: ReportSection[]): ReportSection[] {
+  return sections.map((section, index) => ({
+    ...section,
+    order: index,
+  }));
+}
+
+function focusEditorOnNextFrame() {
+  window.requestAnimationFrame(() => {
+    document.querySelector<HTMLElement>(".cm-content")?.focus();
+  });
+}
 
 export function Workspace() {
   const [bundle, setBundle] = useState<ReportProjectBundle | null>(null);
@@ -41,10 +56,17 @@ export function Workspace() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [sideTab, setSideTab] = useState<SidePanelTab>("check");
+  const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
+  const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
   const { jobs, runExport, retry, exportedBlobs } = useExport(bundle ?? undefined);
+
+  const requestSidePanelOpen = useCallback(() => {
+    setOpenSidePanelSignal((signal) => signal + 1);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -88,14 +110,134 @@ export function Workspace() {
     const result = runChecker(bundle);
     setCheckResult(result);
     setHasRun(true);
+    setSideTab("check");
+    requestSidePanelOpen();
     setToastMessage(`Đã soát — ${result.issues.length} vấn đề`);
     setToastOpen(true);
-  }, [bundle]);
+  }, [bundle, requestSidePanelOpen]);
 
   const handleJump = useCallback((sectionId?: string) => {
     if (sectionId) {
       setActiveId(sectionId);
+      setActiveView("editor");
+      focusEditorOnNextFrame();
     }
+  }, []);
+
+  const handleManualSave = useCallback((markdown?: string) => {
+    if (!bundle) return;
+    let next = bundle;
+
+    if (typeof markdown === "string" && activeId) {
+      const sections = bundle.project.sections.map((sec) =>
+        sec.id === activeId ? { ...sec, markdown } : sec,
+      );
+      next = {
+        ...bundle,
+        project: { ...bundle.project, sections, updatedAt: new Date().toISOString() },
+      };
+      setBundle(next);
+    }
+
+    void saveBundle(next)
+      .then(() => {
+        setToastMessage("Đã lưu nháp");
+        setToastOpen(true);
+      })
+      .catch(() => {
+        setToastMessage("Không thể lưu nháp");
+        setToastOpen(true);
+      });
+  }, [activeId, bundle]);
+
+  const handleCreateSection = useCallback(() => {
+    if (!bundle) return;
+    const currentIndex = bundle.project.sections.findIndex((section) => section.id === activeId);
+    const insertAt = currentIndex >= 0 ? currentIndex + 1 : bundle.project.sections.length;
+    const title = `Mục ${bundle.project.sections.length + 1}`;
+    const newSection: ReportSection = {
+      id: crypto.randomUUID(),
+      title,
+      order: insertAt,
+      status: "draft",
+      markdown: `# ${title}\n\n`,
+    };
+    const sections = renumberSections([
+      ...bundle.project.sections.slice(0, insertAt),
+      newSection,
+      ...bundle.project.sections.slice(insertAt),
+    ]);
+
+    setBundle({
+      ...bundle,
+      project: { ...bundle.project, sections, updatedAt: new Date().toISOString() },
+    });
+    setActiveId(newSection.id);
+    setActiveView("editor");
+    focusEditorOnNextFrame();
+  }, [activeId, bundle]);
+
+  const handleDuplicateSection = useCallback(() => {
+    if (!bundle || !activeSection) return;
+    const currentIndex = bundle.project.sections.findIndex((section) => section.id === activeSection.id);
+    const insertAt = currentIndex >= 0 ? currentIndex + 1 : bundle.project.sections.length;
+    const duplicate: ReportSection = {
+      ...activeSection,
+      id: crypto.randomUUID(),
+      title: `${activeSection.title} (bản sao)`,
+      order: insertAt,
+      status: "draft",
+    };
+    const sections = renumberSections([
+      ...bundle.project.sections.slice(0, insertAt),
+      duplicate,
+      ...bundle.project.sections.slice(insertAt),
+    ]);
+
+    setBundle({
+      ...bundle,
+      project: { ...bundle.project, sections, updatedAt: new Date().toISOString() },
+    });
+    setActiveId(duplicate.id);
+    setActiveView("editor");
+    focusEditorOnNextFrame();
+  }, [activeSection, bundle]);
+
+  const handleMoveSection = useCallback((direction: "up" | "down") => {
+    if (!bundle || !activeId) return;
+    const currentIndex = bundle.project.sections.findIndex((section) => section.id === activeId);
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= bundle.project.sections.length) {
+      return;
+    }
+
+    const sections = [...bundle.project.sections];
+    const [section] = sections.splice(currentIndex, 1);
+    sections.splice(targetIndex, 0, section);
+
+    setBundle({
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections: renumberSections(sections),
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  }, [activeId, bundle]);
+
+  const handleOpenPreview = useCallback(() => {
+    setActiveView("preview");
+  }, []);
+
+  const handleOpenExport = useCallback(() => {
+    setSideTab("export");
+    requestSidePanelOpen();
+  }, [requestSidePanelOpen]);
+
+  const handleFocusEditor = useCallback(() => {
+    setIsResetConfirmOpen(false);
+    setActiveView("editor");
+    focusEditorOnNextFrame();
   }, []);
 
   const handleInitialize = useCallback((
@@ -148,6 +290,97 @@ export function Workspace() {
       };
     });
   }, []);
+
+  useEffect(() => {
+    if (!bundle || isInitializing) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+
+      const target = event.target as HTMLElement | null;
+      const isCodeMirrorContent = Boolean(target?.closest(".cm-content"));
+      const isNativeEditable = Boolean(
+        target &&
+        !isCodeMirrorContent &&
+        (
+          target.closest("input, textarea, select") ||
+          target.isContentEditable
+        ),
+      );
+      if (isNativeEditable) return;
+
+      const isMod = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleFocusEditor();
+        return;
+      }
+
+      if (isMod && !event.shiftKey && !event.altKey && key === "s") {
+        if (isCodeMirrorContent) return;
+        event.preventDefault();
+        handleManualSave();
+        return;
+      }
+
+      if (isMod && event.shiftKey && !event.altKey && key === "n") {
+        event.preventDefault();
+        if (!event.repeat) handleCreateSection();
+        return;
+      }
+
+      if (isMod && event.shiftKey && !event.altKey && key === "d") {
+        event.preventDefault();
+        if (!event.repeat) handleDuplicateSection();
+        return;
+      }
+
+      if (!isMod && event.altKey && !event.shiftKey && event.key === "ArrowUp") {
+        event.preventDefault();
+        handleMoveSection("up");
+        return;
+      }
+
+      if (!isMod && event.altKey && !event.shiftKey && event.key === "ArrowDown") {
+        event.preventDefault();
+        handleMoveSection("down");
+        return;
+      }
+
+      if (isMod && !event.shiftKey && !event.altKey && event.key === "Enter") {
+        event.preventDefault();
+        handleCheck();
+        return;
+      }
+
+      if (isMod && !event.shiftKey && !event.altKey && key === "p") {
+        event.preventDefault();
+        handleOpenPreview();
+        return;
+      }
+
+      if (isMod && event.shiftKey && !event.altKey && key === "e") {
+        event.preventDefault();
+        handleOpenExport();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [
+    bundle,
+    handleCheck,
+    handleCreateSection,
+    handleDuplicateSection,
+    handleFocusEditor,
+    handleManualSave,
+    handleMoveSection,
+    handleOpenExport,
+    handleOpenPreview,
+    isInitializing,
+  ]);
 
   if (!bundle) {
     return (
@@ -233,7 +466,11 @@ export function Workspace() {
           Tạo báo cáo
         </button>
       </div>
-      <Tabs defaultValue="check" className="ws-side-tabs">
+      <Tabs
+        value={sideTab}
+        onValueChange={(value) => setSideTab(value as SidePanelTab)}
+        className="ws-side-tabs"
+      >
         <TabsList className="ws-side-tabs-list">
           <div className="ws-side-tab-group" role="presentation">
             <span className="ws-side-tab-group-label">Kiểm tra</span>
@@ -322,6 +559,7 @@ export function Workspace() {
             <EditorPanel
               value={activeSection.markdown}
               onChange={handleChange}
+              onSave={handleManualSave}
               ariaLabel={`Editor: ${activeSection.title}`}
               onImageInserted={handleImageInserted}
             />
@@ -345,6 +583,9 @@ export function Workspace() {
       reportTitle={bundle.project.title}
       saveStatus={saveStatus}
       primaryAction={primaryAction}
+      activeView={activeView}
+      onActiveViewChange={setActiveView}
+      openSidePanelSignal={openSidePanelSignal}
     />
       <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
       <Dialog

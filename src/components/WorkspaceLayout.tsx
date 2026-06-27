@@ -24,6 +24,9 @@ type WorkspaceLayoutProps = {
   reportTitle: string;
   saveStatus?: ReactNode;
   primaryAction?: ReactNode;
+  activeView?: "editor" | "preview";
+  onActiveViewChange?: (view: "editor" | "preview") => void;
+  openSidePanelSignal?: number;
 };
 
 export function WorkspaceLayout({
@@ -36,6 +39,9 @@ export function WorkspaceLayout({
   reportTitle,
   saveStatus,
   primaryAction,
+  activeView,
+  onActiveViewChange,
+  openSidePanelSignal,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isWide, setIsWide] = useState(true);
@@ -43,7 +49,9 @@ export function WorkspaceLayout({
   const [isRightCollapsed, setIsRightCollapsed] = useState(false);
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor");
+  const [internalActiveTab, setInternalActiveTab] = useState<"editor" | "preview">("editor");
+  const activeTab = activeView ?? internalActiveTab;
+  const setActiveTab = onActiveViewChange ?? setInternalActiveTab;
 
   const [splitWidth, setSplitWidth] = useState(50); // percentage
   const [isDragging, setIsDragging] = useState(false);
@@ -54,6 +62,7 @@ export function WorkspaceLayout({
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
+  const lastOpenSidePanelSignalRef = useRef(openSidePanelSignal);
 
   useEffect(() => {
     const desktopMedia = window.matchMedia("(min-width: 1024px)");
@@ -72,6 +81,21 @@ export function WorkspaceLayout({
       wideMedia.removeEventListener("change", wideListener);
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      !openSidePanelSignal ||
+      openSidePanelSignal === lastOpenSidePanelSignalRef.current
+    ) {
+      return;
+    }
+
+    lastOpenSidePanelSignalRef.current = openSidePanelSignal;
+    setIsRightCollapsed(false);
+    if (!isDesktop || (isDesktop && !isWide)) {
+      setIsRightDrawerOpen(true);
+    }
+  }, [openSidePanelSignal, isDesktop, isWide]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();

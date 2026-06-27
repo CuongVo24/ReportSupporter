@@ -8,6 +8,7 @@ import type { SnippetKind, ReportAsset } from "@/types";
 type EditorPanelProps = {
   value: string;
   onChange: (value: string) => void;
+  onSave?: (value: string) => void;
   ariaLabel?: string;
   onImageInserted?: (asset: ReportAsset, ref: string) => void;
 };
@@ -15,6 +16,7 @@ type EditorPanelProps = {
 export function EditorPanel({
   value,
   onChange,
+  onSave,
   ariaLabel = "Markdown editor",
   onImageInserted,
 }: EditorPanelProps) {
@@ -41,6 +43,7 @@ export function EditorPanel({
     const state = createEditorState({
       doc: value,
       onChange,
+      onSave,
       ariaLabel,
     });
 
@@ -143,12 +146,12 @@ export function EditorPanel({
     >
       {/* Minimal Formatting Toolbar */}
       <div className="ws-editor-toolbar">
-        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Bảng</button>
-        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Code</button>
-        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Công thức</button>
-        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Mermaid</button>
-        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Chú thích</button>
-        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn" title="Đặt con trỏ trong bàn viết để chèn">Ảnh</button>
+        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn" title="Chèn bảng (Ctrl+Shift+T)" aria-keyshortcuts="Control+Shift+T">Bảng</button>
+        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn" title="Chèn khối code (Ctrl+Shift+C)" aria-keyshortcuts="Control+Shift+C">Code</button>
+        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn" title="Chèn công thức (Ctrl+Shift+M)" aria-keyshortcuts="Control+Shift+M">Công thức</button>
+        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn" title="Chèn sơ đồ Mermaid">Mermaid</button>
+        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn" title="Chèn chú thích (Ctrl+Shift+Q)" aria-keyshortcuts="Control+Shift+Q">Chú thích</button>
+        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn" title="Chèn ảnh (Ctrl+Shift+I)" aria-keyshortcuts="Control+Shift+I">Ảnh</button>
       </div>
 
       {/* CodeMirror DOM Parent */}
