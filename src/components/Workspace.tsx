@@ -5,7 +5,7 @@ import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -28,6 +28,7 @@ import {
   renameSection,
   deleteSection,
   moveSection,
+  AiSettingsDialog,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
@@ -67,6 +68,7 @@ export function Workspace() {
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [sectionToDeleteId, setSectionToDeleteId] = useState<string | null>(null);
+  const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
   const [sideTab, setSideTab] = useState<SidePanelTab>("check");
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
   const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
@@ -350,12 +352,21 @@ export function Workspace() {
     if (!bundle) return;
     const parsedSections = importReadme(draft.markdown);
     
-    const next = replaceSections(bundle, parsedSections);
-    next.project.title = draft.title || "Báo cáo chưa đặt tên";
+    const replaced = replaceSections(bundle, parsedSections);
+    const next: ReportProjectBundle = {
+      ...replaced,
+      project: {
+        ...replaced.project,
+        title: draft.title || "Báo cáo chưa đặt tên",
+      },
+    };
 
     setBundle(next);
     setActiveId(next.project.sections[0]?.id ?? null);
     setIsInitializing(false);
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
   }, [bundle]);
 
   const handleReset = useCallback(() => {
@@ -385,6 +396,8 @@ export function Workspace() {
     setBundle(next);
     if (firstNewSection) {
       setActiveId(firstNewSection.id);
+      setActiveView("editor");
+      focusEditorOnNextFrame();
     }
     setCheckResult(null);
     setHasRun(false);
@@ -406,9 +419,17 @@ export function Workspace() {
       return;
     }
 
-    const next = replaceSections(bundle, parsedSections);
+    const replaced = replaceSections(bundle, parsedSections);
+    const next: ReportProjectBundle = {
+      ...replaced,
+      project: {
+        ...replaced.project,
+        title: importDraft.title || replaced.project.title,
+      },
+    };
     setBundle(next);
     setActiveId(next.project.sections[0]?.id ?? null);
+    setActiveView("editor");
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(next);
@@ -591,36 +612,52 @@ export function Workspace() {
   );
 
   const primaryAction = (
-    <Button
-      variant="primary"
-      size="sm"
-      onClick={() => runExport("pdf", bundle)}
-    >
-      Xuất bản để nộp
-    </Button>
+    <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "center" }}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsAiSettingsOpen(true)}
+        title="Cài đặt Trợ lý AI"
+        style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}
+      >
+        <Sparkles size={14} style={{ color: "var(--rs-color-primary)" }} /> Cài đặt AI
+      </Button>
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={() => runExport("pdf", bundle)}
+      >
+        Xuất bản để nộp
+      </Button>
+    </div>
   );
+
+  const hasReportContent = bundle.project.sections.some((section) => section.markdown.trim() !== "");
 
   const sidePanel = (
     <div className="ws-side-inner">
       <div className="ws-side-panel-header">
         <span className="ws-side-panel-title">Trợ lý báo cáo</span>
-        <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "center" }}>
-          <button
+        <div className="ws-side-panel-actions">
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               setImportDraft(null);
               setImportMode("append");
               setIsImportDialogOpen(true);
             }}
-            className="ws-reset-btn"
+            leadingIcon={<FileUp size={14} />}
           >
             Nhập Markdown
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setIsResetConfirmOpen(true)}
-            className="ws-reset-btn"
           >
             Tạo báo cáo
-          </button>
+          </Button>
         </div>
       </div>
       <Tabs
@@ -711,6 +748,7 @@ export function Workspace() {
           <AiAssistBar
             section={activeSection}
             onChange={handleChange}
+            onOpenSettings={() => setIsAiSettingsOpen(true)}
           />
           <div className="ws-editor-wrapper">
             <EditorPanel
@@ -770,7 +808,10 @@ export function Workspace() {
         isOpen={isImportDialogOpen}
         onOpenChange={(open) => {
           setIsImportDialogOpen(open);
-          if (!open) setImportDraft(null);
+          if (!open) {
+            setImportDraft(null);
+            setImportMode("append");
+          }
         }}
         title="Nhập báo cáo từ file Markdown"
         description="Chọn file Markdown để nhập nội dung vào báo cáo hiện tại."
@@ -791,8 +832,7 @@ export function Workspace() {
               disabled={!importDraft}
               onClick={() => {
                 if (importMode === "replace") {
-                  const hasContent = bundle.project.sections.some((s) => s.markdown.trim() !== "");
-                  if (hasContent) {
+                  if (hasReportContent) {
                     setIsReplaceConfirmOpen(true);
                   } else {
                     handleReplaceImport();
@@ -807,19 +847,17 @@ export function Workspace() {
           </div>
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-2) 0" }}>
+        <div className="ws-import-dialog-body">
           <MarkdownImportDropzone
             imported={importDraft}
             onImported={setImportDraft}
           />
           
           {importDraft && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-3)" }}>
-              <label style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-medium)" }}>
-                Chế độ nhập:
-              </label>
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "var(--rs-font-size-sm)", cursor: "pointer" }}>
+            <div className="ws-import-mode">
+              <span className="ws-import-mode-label">Chế độ nhập</span>
+              <div className="ws-import-mode-options">
+                <label className="ws-import-mode-option">
                   <input
                     type="radio"
                     name="importMode"
@@ -829,7 +867,7 @@ export function Workspace() {
                   />
                   <span>Chèn thêm vào cuối báo cáo hiện tại</span>
                 </label>
-                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "var(--rs-font-size-sm)", cursor: "pointer" }}>
+                <label className="ws-import-mode-option">
                   <input
                     type="radio"
                     name="importMode"
@@ -841,9 +879,9 @@ export function Workspace() {
                 </label>
               </div>
               
-              {importMode === "replace" && bundle.project.sections.some((s) => s.markdown.trim() !== "") && (
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-xs)", background: "rgba(239, 68, 68, 0.08)", padding: "var(--rs-space-2)", borderRadius: "var(--rs-radius-sm)", border: "1px solid var(--rs-color-severity-error)" }}>
-                  <AlertTriangle size={14} />
+              {importMode === "replace" && hasReportContent && (
+                <div className="ws-import-warning" role="alert">
+                  <AlertTriangle size={14} aria-hidden="true" />
                   <span>Chú ý: Hành động này sẽ xóa toàn bộ nội dung báo cáo hiện tại!</span>
                 </div>
               )}
@@ -897,6 +935,14 @@ export function Workspace() {
             </Button>
           </div>
         }
+      />
+      <AiSettingsDialog
+        isOpen={isAiSettingsOpen}
+        onOpenChange={setIsAiSettingsOpen}
+        onConfigSaved={() => {
+          setToastMessage("Đã lưu cấu hình Trợ lý AI.");
+          setToastOpen(true);
+        }}
       />
     </>
   );

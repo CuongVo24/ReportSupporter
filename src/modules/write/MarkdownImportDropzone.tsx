@@ -4,8 +4,7 @@ import React, { useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, FileUp } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
-  buildMarkdownImportDraft,
-  isMarkdownFileName,
+  readMarkdownFile,
   type MarkdownImportDraft,
 } from "./markdown-import";
 
@@ -24,20 +23,14 @@ export function MarkdownImportDropzone({
 
   const handleFile = async (file?: File) => {
     if (!file) return;
-    if (!isMarkdownFileName(file.name)) {
-      setError("Chỉ nhận file Markdown .md hoặc .markdown.");
+    const result = await readMarkdownFile(file);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    const markdown = await file.text();
-    if (!markdown.trim()) {
-      setError("File Markdown đang trống.");
-      return;
-    }
-
-    const draft = buildMarkdownImportDraft(file.name, markdown);
     setError("");
-    onImported(draft);
+    onImported(result.draft);
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -61,7 +54,7 @@ export function MarkdownImportDropzone({
         ref={inputRef}
         className="ws-visually-hidden"
         type="file"
-        accept=".md,.markdown,.mdown,.mkd,text/markdown,text/plain"
+        accept=".md,.markdown,text/markdown,text/x-markdown"
         onChange={(event) => {
           void handleFile(event.target.files?.[0]);
           event.target.value = "";

@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildMarkdownImportDraft,
   inferMarkdownTitle,
+  isMarkdownFile,
   isMarkdownFileName,
+  readMarkdownFile,
   titleFromMarkdownFileName,
   appendSections,
   replaceSections,
@@ -14,6 +16,12 @@ describe("markdown import helpers", () => {
     expect(isMarkdownFileName("report.md")).toBe(true);
     expect(isMarkdownFileName("README.markdown")).toBe(true);
     expect(isMarkdownFileName("notes.txt")).toBe(false);
+  });
+
+  it("accepts Markdown MIME files without relying only on extension", () => {
+    expect(isMarkdownFile({ name: "export", type: "text/markdown" })).toBe(true);
+    expect(isMarkdownFile({ name: "diagram.md", type: "image/png" })).toBe(false);
+    expect(isMarkdownFile({ name: "notes.txt", type: "text/plain" })).toBe(false);
   });
 
   it("infers title from the first top-level heading", () => {
@@ -39,6 +47,29 @@ describe("markdown import helpers", () => {
     expect(draft.sectionCount).toBe(2);
   });
 
+  it("reads Markdown files into import drafts and rejects oversized files", async () => {
+    const file = {
+      name: "report.md",
+      type: "text/markdown",
+      size: 12,
+      text: async () => "# Tóm tắt\n\nNội dung.",
+    } as File;
+
+    const result = await readMarkdownFile(file);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.markdown).toContain("# Tóm tắt");
+      expect(result.draft.title).toBe("Tóm tắt");
+      expect(result.draft.sectionCount).toBe(1);
+    }
+
+    const tooLarge = await readMarkdownFile({ ...file, size: 3 * 1024 * 1024 } as File);
+    expect(tooLarge).toEqual({
+      ok: false,
+      error: "File Markdown vượt quá giới hạn 2MB.",
+    });
+  });
+
   const createMockBundle = (sections: ReportSection[]): ReportProjectBundle => ({
     project: {
       id: "proj-1",
@@ -62,40 +93,49 @@ describe("markdown import helpers", () => {
 
   it("appendSections appends sections and updates order and IDs", () => {
     const initialSections: ReportSection[] = [
-      { id: "sec-1", order: 1, title: "Mục 1", markdown: "Nội dung 1", status: "done" },
+      { id: "sec-1", order: 0, title: "Mục 1", markdown: "Nội dung 1", status: "done" },
     ];
     const bundle = createMockBundle(initialSections);
 
     const newSections: ReportSection[] = [
       { id: "import-sec-0", order: 0, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft" },
-      { id: "import-sec-1", order: 1, title: "Mục mới 2", markdown: "Nội dung mới 2", status: "draft" },
+      { id: "external-id", order: 1, title: "Mục mới 2", markdown: "Nội dung mới 2", status: "draft" },
     ];
 
     const result = appendSections(bundle, newSections);
     expect(result.project.sections).toHaveLength(3);
     expect(result.project.sections[0]).toEqual(initialSections[0]);
     expect(result.project.sections[1].title).toBe("Mục mới 1");
-    expect(result.project.sections[1].order).toBe(2);
+    expect(result.project.sections[1].order).toBe(1);
     expect(result.project.sections[1].id).not.toBe("import-sec-0");
     expect(result.project.sections[2].title).toBe("Mục mới 2");
-    expect(result.project.sections[2].order).toBe(3);
-    expect(result.project.sections[2].id).not.toBe("import-sec-1");
+    expect(result.project.sections[2].order).toBe(2);
+    expect(result.project.sections[2].id).not.toBe("external-id");
+  });
+
+  it("appendSections starts order at zero for an empty project", () => {
+    const bundle = createMockBundle([]);
+    const result = appendSections(bundle, [
+      { id: "import-sec-0", order: 4, title: "Mục mới", markdown: "Nội dung", status: "draft" },
+    ]);
+
+    expect(result.project.sections[0].order).toBe(0);
   });
 
   it("replaceSections replaces sections and updates order and IDs", () => {
     const initialSections: ReportSection[] = [
-      { id: "sec-1", order: 1, title: "Mục 1", markdown: "Nội dung 1", status: "done" },
+      { id: "sec-1", order: 0, title: "Mục 1", markdown: "Nội dung 1", status: "done" },
     ];
     const bundle = createMockBundle(initialSections);
 
     const newSections: ReportSection[] = [
-      { id: "import-sec-0", order: 0, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft" },
+      { id: "external-id", order: 9, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft" },
     ];
 
     const result = replaceSections(bundle, newSections);
     expect(result.project.sections).toHaveLength(1);
     expect(result.project.sections[0].title).toBe("Mục mới 1");
-    expect(result.project.sections[0].order).toBe(1);
-    expect(result.project.sections[0].id).not.toBe("import-sec-0");
+    expect(result.project.sections[0].order).toBe(0);
+    expect(result.project.sections[0].id).not.toBe("external-id");
   });
 });

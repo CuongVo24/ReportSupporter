@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorView } from "@codemirror/view";
-import { createEditorState, insertSnippet, createImageAsset, isMarkdownFileName } from "@/modules/write";
+import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile } from "@/modules/write";
 import type { SnippetKind, ReportAsset } from "@/types";
 
 type EditorPanelProps = {
@@ -22,6 +22,7 @@ export function EditorPanel({
 }: EditorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const [fileError, setFileError] = useState("");
 
   // Sync external value modifications (like switching sections) with the editor
   useEffect(() => {
@@ -79,6 +80,32 @@ export function EditorPanel({
     view.focus();
   };
 
+  const insertTextAtSelection = (text: string) => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const { from, to } = view.state.selection.main;
+    view.dispatch({
+      changes: { from, to, insert: text },
+      selection: { anchor: from + text.length },
+    });
+    setFileError("");
+    view.focus();
+  };
+
+  const insertTextAtDropPosition = (text: string, x: number, y: number) => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const pos = view.posAtCoords({ x, y }) ?? view.state.selection.main.from;
+    view.dispatch({
+      changes: { from: pos, to: pos, insert: text },
+      selection: { anchor: pos + text.length },
+    });
+    setFileError("");
+    view.focus();
+  };
+
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = Array.from(e.clipboardData.items);
     
@@ -111,28 +138,14 @@ export function EditorPanel({
     const fileItem = items.find((item) => item.kind === "file");
     if (fileItem) {
       const file = fileItem.getAsFile();
-      if (file && isMarkdownFileName(file.name)) {
+      if (file && isMarkdownFile(file)) {
         e.preventDefault();
-        
-        if (file.size > 2 * 1024 * 1024) {
-          alert("Kích thước file vượt quá giới hạn 2MB.");
+        const result = await readMarkdownFile(file);
+        if (!result.ok) {
+          setFileError(result.error);
           return;
         }
-
-        try {
-          const text = await file.text();
-          const view = viewRef.current;
-          if (view) {
-            const { from, to } = view.state.selection.main;
-            view.dispatch({
-              changes: { from, to, insert: text },
-              selection: { anchor: from + text.length },
-            });
-            view.focus();
-          }
-        } catch {
-          alert("Không thể đọc nội dung file Markdown.");
-        }
+        insertTextAtSelection(result.markdown);
       }
     }
   };
@@ -140,57 +153,32 @@ export function EditorPanel({
   const handleDrop = async (e: React.DragEvent) => {
     const files = Array.from(e.dataTransfer.files);
     
-    // 1. Prioritize Markdown file drop
-    const mdFile = files.find((file) => isMarkdownFileName(file.name));
-    if (mdFile) {
+    // 1. Keep the existing image drop path first when an image is present.
+    const imageFile = files.find((file) => file.type.startsWith("image/"));
+    if (imageFile && onImageInserted) {
       e.preventDefault();
-      
-      if (mdFile.size > 2 * 1024 * 1024) {
-        alert("Kích thước file vượt quá giới hạn 2MB.");
-        return;
-      }
-
-      try {
-        const text = await mdFile.text();
-        const view = viewRef.current;
-        if (view) {
-          const x = e.clientX;
-          const y = e.clientY;
-          const pos = view.posAtCoords({ x, y }) ?? view.state.selection.main.from;
-          view.dispatch({
-            changes: { from: pos, to: pos, insert: text },
-            selection: { anchor: pos + text.length },
-          });
-          view.focus();
-        }
-      } catch {
-        alert("Không thể đọc nội dung file Markdown.");
+      const result = await createImageAsset(imageFile, 5 * 1024 * 1024); // max size 5MB
+      if (result.ok) {
+        insertTextAtDropPosition(result.ref, e.clientX, e.clientY);
+        onImageInserted(result.asset, result.ref);
+      } else {
+        alert(result.error);
       }
       return;
     }
 
-    // 2. Handle image file drop
-    const imageFile = files.find((file) => file.type.startsWith("image/"));
-    if (!imageFile || !onImageInserted) return;
+    // 2. Handle Markdown file drop as plain section content.
+    const mdFile = files.find((file) => isMarkdownFile(file));
+    if (!mdFile) return;
 
     e.preventDefault();
-    const result = await createImageAsset(imageFile, 5 * 1024 * 1024); // max size 5MB
-    if (result.ok) {
-      const view = viewRef.current;
-      if (view) {
-        const x = e.clientX;
-        const y = e.clientY;
-        const pos = view.posAtCoords({ x, y }) ?? view.state.selection.main.from;
-        view.dispatch({
-          changes: { from: pos, to: pos, insert: result.ref },
-          selection: { anchor: pos + result.ref.length },
-        });
-        view.focus();
-      }
-      onImageInserted(result.asset, result.ref);
-    } else {
-      alert(result.error);
+    const result = await readMarkdownFile(mdFile);
+    if (!result.ok) {
+      setFileError(result.error);
+      return;
     }
+
+    insertTextAtSelection(result.markdown);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -223,6 +211,12 @@ export function EditorPanel({
         aria-label={ariaLabel} 
         className="ws-editor-cm-parent"
       />
+
+      {fileError && (
+        <div className="ws-editor-file-error" role="alert">
+          {fileError}
+        </div>
+      )}
     </div>
   );
 }

@@ -13,9 +13,10 @@ import {
 interface AiAssistBarProps {
   section: ReportSection;
   onChange: (newText: string) => void;
+  onOpenSettings?: () => void;
 }
 
-export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
+export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -118,9 +119,28 @@ export function AiAssistBar({ section, onChange }: AiAssistBarProps) {
         </button>
 
         {isDisabled && (
-          <span className="ws-ai-assist-note rs-state-warning" title="Vui lòng bật AI trong Cài đặt để sử dụng">
+          <button
+            type="button"
+            className="ws-ai-assist-note rs-state-warning-btn"
+            onClick={onOpenSettings}
+            title="Vui lòng bật AI trong Cài đặt để sử dụng"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "2px 6px",
+              borderRadius: "var(--rs-radius-sm)",
+              color: "var(--rs-color-warning)",
+              fontSize: "var(--rs-font-size-xs)",
+              fontWeight: "var(--rs-font-weight-medium)",
+              textDecoration: "underline",
+            }}
+          >
             <AlertTriangle size={12} aria-hidden="true" /> Bật AI trong Cài đặt
-          </span>
+          </button>
         )}
 
         {aiError && (

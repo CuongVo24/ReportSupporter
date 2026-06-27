@@ -8,12 +8,14 @@ export { MarkdownImportDropzone } from "./MarkdownImportDropzone";
 export {
   buildMarkdownImportDraft,
   inferMarkdownTitle,
+  isMarkdownFile,
   isMarkdownFileName,
+  readMarkdownFile,
   titleFromMarkdownFileName,
   appendSections,
   replaceSections,
 } from "./markdown-import";
-export type { MarkdownImportDraft } from "./markdown-import";
+export type { MarkdownFileReadResult, MarkdownImportDraft } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
 export { createEditorState } from "./editor-setup";
 export {
@@ -51,5 +53,7 @@ export { rewriteSection } from "./ai/rewrite-section";
 export { SuggestionDiff } from "./ai/SuggestionDiff";
 export { improveTone } from "./ai/improve-tone";
 export { UserControlBar } from "./ai/UserControlBar";
+export { AiSettingsDialog } from "./ai/AiSettingsPanel";
 export { AiAssistBar } from "./ai/AiAssistBar";
+
 

@@ -108,6 +108,12 @@ Core features:
 - No full PDF toolbox as the product core.
 - No "convert every file format" promise.
 
+### Connector and AI Markdown Ingestion
+
+For Markdown produced by NotebookLM, Gemini, ChatGPT, Codex, Claude, or similar agents, the MVP follows an import-first strategy: users copy, export, drag, or paste Markdown into ReportSupporter instead of connecting the browser app directly to MCP.
+
+See [MCP / Connector Markdown Ingestion Strategy](Decisions/MCP_Connector_Strategy.md). Direct MCP/server connector work is a future epic only after an explicit decision to add server-side persistence, authentication, and browser synchronization.
+
 ## 7. Success Criteria
 
 - A student can create a clean report skeleton in under two minutes.

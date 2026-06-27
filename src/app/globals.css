@@ -219,6 +219,13 @@ body {
   gap: var(--rs-space-2);
 }
 
+.ws-side-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  flex-wrap: wrap;
+}
+
 .ws-side-label {
   font-size: var(--rs-font-size-sm);
   font-weight: var(--rs-font-weight-medium);
@@ -527,6 +534,17 @@ body {
   overflow: auto;
 }
 
+.ws-editor-file-error {
+  display: flex;
+  align-items: center;
+  padding: var(--rs-space-2) var(--rs-space-3);
+  color: var(--rs-color-severity-error);
+  background-color: var(--rs-color-severity-error-bg);
+  border-top: 1px solid var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
 .ws-editor-cm-parent .cm-panel.cm-search {
   display: flex;
   flex-wrap: wrap;
@@ -792,6 +810,57 @@ body {
 .ws-md-import-count {
   color: var(--rs-color-text-muted);
   white-space: nowrap;
+}
+
+.ws-import-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-4);
+  padding: var(--rs-space-2) 0;
+}
+
+.ws-import-mode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-import-mode-label {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-import-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-import-mode-option {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  cursor: pointer;
+}
+
+.ws-import-mode-option input {
+  accent-color: var(--rs-color-primary);
+}
+
+.ws-import-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  color: var(--rs-color-severity-error);
+  background-color: var(--rs-color-severity-error-bg);
+  border: 1px solid var(--rs-color-severity-error);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
 }
 
 /* TOC (Table of Contents) block styles - Module 2, W3 Group B */

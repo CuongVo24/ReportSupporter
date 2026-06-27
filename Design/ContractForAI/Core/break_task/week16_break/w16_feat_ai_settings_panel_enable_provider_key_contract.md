@@ -76,6 +76,6 @@ Cho người dùng **bật AI + chọn provider + nhập key** từ một màn C
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `feat(ai): AI settings panel to enable feature, choose provider and key`.

@@ -54,11 +54,17 @@ export type AiConfig = {
    * No SDK is bundled; the provider adapter is loaded separately after approval.
    */
   provider?: string;
+  /** API Key for the chosen provider (optional) */
+  apiKey?: string;
+  /** Custom model identifier chosen by the user (optional) */
+  model?: string;
 };
 
 export const aiConfigSchema = z.object({
   enabled: z.boolean(),
   provider: z.string().optional(),
+  apiKey: z.string().optional(),
+  model: z.string().optional(),
 });
 
 // ---------------------------------------------------------------------------
