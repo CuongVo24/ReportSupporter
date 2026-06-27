@@ -70,6 +70,6 @@ Cho phép sinh **dàn ý báo cáo bằng AI** từ một mô tả ngắn, rồi
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `feat(ai): generate report outline from a short prompt into sections`.

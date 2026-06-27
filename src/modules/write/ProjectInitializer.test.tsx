@@ -34,6 +34,8 @@ describe("ProjectInitializer UX Structure", () => {
     const onInitialize = vi.fn();
     const onStartBlank = vi.fn();
     const onImportMarkdown = vi.fn();
+    const onApplyAiOutline = vi.fn();
+    const onOpenAiSettings = vi.fn();
     
     // Call component function directly to inspect JSX element structure
     const element = ProjectInitializer({
@@ -41,6 +43,8 @@ describe("ProjectInitializer UX Structure", () => {
       onInitialize,
       onStartBlank,
       onImportMarkdown,
+      onApplyAiOutline,
+      onOpenAiSettings,
     });
 
     expect(element).toBeDefined();

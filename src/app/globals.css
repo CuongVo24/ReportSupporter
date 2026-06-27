@@ -2594,7 +2594,9 @@ span.ws-present-slide-speaker {
 }
 
 .ws-ai-rewrite-btn,
-.ws-ai-tone-btn {
+.ws-ai-tone-btn,
+.ws-ai-translate-btn,
+.ws-ai-terminology-btn {
   background-color: var(--rs-color-primary);
   color: var(--rs-white);
   border: 1px solid transparent;
@@ -2611,12 +2613,21 @@ span.ws-present-slide-speaker {
 }
 
 .ws-ai-rewrite-btn:disabled,
-.ws-ai-tone-btn:disabled {
+.ws-ai-tone-btn:disabled,
+.ws-ai-translate-btn:disabled,
+.ws-ai-terminology-btn:disabled,
+.ws-ai-whole-action:disabled {
   background-color: var(--rs-color-surface);
   color: var(--rs-color-text-muted);
   border-color: var(--rs-color-border);
   opacity: 0.75;
   cursor: not-allowed;
+}
+
+.ws-ai-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
 }
 
 .ws-ai-assist-note {
@@ -2629,6 +2640,123 @@ span.ws-present-slide-speaker {
   display: inline-flex;
   align-items: center;
   gap: var(--rs-space-1);
+}
+
+.ws-ai-whole-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-ai-whole-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rs-space-2);
+}
+
+.ws-ai-whole-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  color: var(--rs-color-primary);
+}
+
+.ws-ai-whole-title {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-ai-whole-meta {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  white-space: nowrap;
+}
+
+.ws-ai-whole-privacy {
+  margin: 0;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-ai-whole-warning,
+.ws-ai-whole-error {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-ai-whole-warning {
+  color: var(--rs-color-severity-warning);
+}
+
+.ws-ai-whole-error {
+  color: var(--rs-color-severity-error);
+}
+
+.ws-ai-whole-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  flex-wrap: wrap;
+}
+
+.ws-ai-whole-action,
+.ws-ai-whole-settings {
+  height: var(--rs-control-height-sm);
+  padding: var(--rs-space-1) var(--rs-space-3);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+}
+
+.ws-ai-whole-action {
+  color: var(--rs-white);
+  background-color: var(--rs-color-primary);
+  border: 1px solid transparent;
+}
+
+.ws-ai-whole-settings {
+  color: var(--rs-color-primary);
+  background-color: var(--rs-color-primary-bg);
+  border: 1px solid var(--rs-color-primary);
+}
+
+.ws-ai-whole-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-ai-whole-results-header {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-ai-whole-result-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding-top: var(--rs-space-2);
+  border-top: 1px solid var(--rs-color-border);
+}
+
+.ws-ai-whole-section-title {
+  margin: 0;
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
 }
 
 /* ===== Shared UI States (Loading, Empty, Error, Success) ===== */
@@ -2717,6 +2845,10 @@ span.ws-present-slide-speaker {
 .ws-template-picker-select:focus-visible,
 .ws-ai-rewrite-btn:focus-visible,
 .ws-ai-tone-btn:focus-visible,
+.ws-ai-translate-btn:focus-visible,
+.ws-ai-terminology-btn:focus-visible,
+.ws-ai-whole-action:focus-visible,
+.ws-ai-whole-settings:focus-visible,
 .ws-present-ai-outline-action:focus-visible,
 .ws-user-control-bar-undo-btn:focus-visible,
 .ws-user-control-bar-diff-btn:focus-visible,

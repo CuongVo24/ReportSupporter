@@ -50,6 +50,28 @@ describe("SuggestionDiff Component", () => {
       />
     );
     expect(screen.getByText("So sánh đề xuất viết lại")).toBeDefined();
+
+    rerender(
+      <SuggestionDiff
+        original="Original content"
+        suggestion="AI suggested content"
+        onAccept={onAccept}
+        onReject={onReject}
+        action="translate"
+      />
+    );
+    expect(screen.getByText("Dịch Anh/Việt")).toBeDefined();
+
+    rerender(
+      <SuggestionDiff
+        original="Original content"
+        suggestion="AI suggested content"
+        onAccept={onAccept}
+        onReject={onReject}
+        action="terminology"
+      />
+    );
+    expect(screen.getByText("Chuẩn hóa thuật ngữ")).toBeDefined();
   });
 
   it("disables the Accept button when suggestion is empty or identical to original", () => {

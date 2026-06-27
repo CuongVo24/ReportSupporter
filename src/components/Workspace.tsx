@@ -29,6 +29,7 @@ import {
   deleteSection,
   moveSection,
   AiSettingsDialog,
+  AiWholeReportPanel,
   registerAdapter,
   httpAdapter,
   loadAiConfig,
@@ -380,6 +381,25 @@ export function Workspace() {
     void saveBundle(next);
   }, [bundle]);
 
+  const handleApplyAiOutline = useCallback((sections: ReportSection[], title: string) => {
+    if (!bundle) return;
+    const replaced = replaceSections(bundle, sections);
+    const next: ReportProjectBundle = {
+      ...replaced,
+      project: {
+        ...replaced.project,
+        title: title || "Báo cáo tạo từ AI",
+      },
+    };
+
+    setBundle(next);
+    setActiveId(next.project.sections[0]?.id ?? null);
+    setIsInitializing(false);
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
+  }, [bundle]);
+
   const handleReset = useCallback(() => {
     const fresh = createProjectFromTemplate(softwareProjectTemplate);
     setBundle(fresh);
@@ -465,6 +485,30 @@ export function Workspace() {
       };
     });
   }, []);
+
+  const handleApplyWholeReportAiSection = useCallback((sectionId: string, markdown: string) => {
+    if (!bundle) return;
+    const sections = bundle.project.sections.map((section) =>
+      section.id === sectionId ? { ...section, markdown } : section,
+    );
+    const next: ReportProjectBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
+    setActiveId(sectionId);
+    setActiveView("editor");
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
+    setToastMessage("Đã áp dụng đề xuất AI cho một mục.");
+    setToastOpen(true);
+  }, [bundle]);
 
   useEffect(() => {
     if (!bundle || isInitializing) return;
@@ -581,6 +625,8 @@ export function Workspace() {
         onInitialize={handleInitialize}
         onStartBlank={handleStartBlank}
         onImportMarkdown={handleImportMarkdown}
+        onApplyAiOutline={handleApplyAiOutline}
+        onOpenAiSettings={() => setIsAiSettingsOpen(true)}
       />
     );
   }
@@ -671,6 +717,11 @@ export function Workspace() {
           </Button>
         </div>
       </div>
+      <AiWholeReportPanel
+        sections={bundle.project.sections}
+        onApplySection={handleApplyWholeReportAiSection}
+        onOpenSettings={() => setIsAiSettingsOpen(true)}
+      />
       <Tabs
         value={sideTab}
         onValueChange={(value) => setSideTab(value as SidePanelTab)}

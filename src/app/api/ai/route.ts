@@ -1,18 +1,111 @@
 import { NextResponse } from "next/server";
+import { aiActionSchema } from "@/types/ai";
+import type { AiAction } from "@/types/ai";
+
+type AiProvider = "gemini" | "openai" | "anthropic";
+
+type AiProxyRequest = {
+  action: AiAction;
+  input: string;
+  provider: AiProvider;
+  model?: string;
+};
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function parseProvider(value: unknown): AiProvider | null {
+  if (value === "gemini" || value === "openai" || value === "anthropic") return value;
+  return null;
+}
+
+function parseRequestBody(body: unknown): AiProxyRequest | null {
+  const record = asRecord(body);
+  const actionResult = aiActionSchema.safeParse(record.action);
+  const input = stringValue(record.input);
+  const provider = parseProvider(record.provider);
+  const model = stringValue(record.model);
+
+  if (!actionResult.success || !input || !provider) return null;
+
+  return {
+    action: actionResult.data,
+    input,
+    provider,
+    model,
+  };
+}
+
+function buildPrompt(action: AiAction, input: string): string {
+  switch (action) {
+    case "rewrite":
+      return `Hãy viết lại đoạn văn sau để hay hơn, mạch lạc hơn nhưng giữ nguyên ý nghĩa và định dạng Markdown:\n\n${input}`;
+    case "tone":
+      return `Hãy cải thiện văn phong của đoạn văn sau cho chuyên nghiệp, học thuật hơn phù hợp với báo cáo khoa học/kỹ thuật, giữ nguyên định dạng Markdown:\n\n${input}`;
+    case "outline":
+      return `Hãy tạo một dàn ý chi tiết cho báo cáo với chủ đề/nội dung sau dưới dạng cấu trúc Markdown:\n\n${input}`;
+    case "translate":
+      return [
+        "Dịch nội dung Markdown sau giữa tiếng Việt và tiếng Anh.",
+        "Nếu văn bản chính là tiếng Việt, dịch sang tiếng Anh học thuật. Nếu văn bản chính là tiếng Anh, dịch sang tiếng Việt học thuật.",
+        "Giữ nguyên cấu trúc Markdown, heading, bảng, code block, link, ảnh và thuật ngữ kỹ thuật phổ biến khi không nên dịch.",
+        "",
+        input,
+      ].join("\n");
+    case "terminology":
+      return [
+        "Chuẩn hóa thuật ngữ học thuật/kỹ thuật trong nội dung Markdown sau.",
+        "Giữ nguyên ý nghĩa, cấu trúc Markdown, heading, bảng, code block, link và ảnh.",
+        "Ưu tiên thuật ngữ nhất quán, trang trọng, phù hợp báo cáo sinh viên/kỹ thuật; không tự thêm nội dung mới.",
+        "",
+        input,
+      ].join("\n");
+  }
+}
+
+function readGeminiSuggestion(data: unknown): string {
+  const record = asRecord(data);
+  const candidates = Array.isArray(record.candidates) ? record.candidates : [];
+  const firstCandidate = asRecord(candidates[0]);
+  const content = asRecord(firstCandidate.content);
+  const parts = Array.isArray(content.parts) ? content.parts : [];
+  const firstPart = asRecord(parts[0]);
+  return stringValue(firstPart.text) ?? "";
+}
+
+function readOpenAiSuggestion(data: unknown): string {
+  const record = asRecord(data);
+  const choices = Array.isArray(record.choices) ? record.choices : [];
+  const firstChoice = asRecord(choices[0]);
+  const message = asRecord(firstChoice.message);
+  return stringValue(message.content) ?? "";
+}
+
+function readAnthropicSuggestion(data: unknown): string {
+  const record = asRecord(data);
+  const content = Array.isArray(record.content) ? record.content : [];
+  const firstContent = asRecord(content[0]);
+  return stringValue(firstContent.text) ?? "";
+}
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { action, input, provider, model } = body;
+    const parsed = parseRequestBody(await req.json());
 
-    if (!action || !input || !provider) {
+    if (!parsed) {
       return NextResponse.json(
-        { error: "Missing required fields: action, input, provider" },
-        { status: 400 }
+        { error: "Missing or invalid required fields: action, input, provider" },
+        { status: 400 },
       );
     }
 
-    // Determine API Key from header first, then fallback to environment variables
+    const { action, input, provider, model } = parsed;
+
     const clientKey = req.headers.get("x-api-key");
     let apiKey = clientKey || "";
 
@@ -25,25 +118,13 @@ export async function POST(req: Request) {
     if (!apiKey) {
       return NextResponse.json(
         { error: `API Key for provider '${provider}' is not configured on client or server.` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Format prompt based on action
-    let prompt = "";
-    if (action === "rewrite") {
-      prompt = `Hãy viết lại đoạn văn sau để hay hơn, mạch lạc hơn nhưng giữ nguyên ý nghĩa và định dạng Markdown:\n\n${input}`;
-    } else if (action === "tone") {
-      prompt = `Hãy cải thiện văn phong của đoạn văn sau cho chuyên nghiệp, học thuật hơn phù hợp với báo cáo khoa học/kỹ thuật, giữ nguyên định dạng Markdown:\n\n${input}`;
-    } else if (action === "outline") {
-      prompt = `Hãy tạo một dàn ý chi tiết cho báo cáo với chủ đề/nội dung sau dưới dạng cấu trúc Markdown:\n\n${input}`;
-    } else {
-      prompt = input;
-    }
-
+    const prompt = buildPrompt(action, input);
     let suggestion = "";
 
-    // 1. Google Gemini
     if (provider === "gemini") {
       const selectedModel = model || "gemini-1.5-flash";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
@@ -61,11 +142,9 @@ export async function POST(req: Request) {
         throw new Error(`Gemini API error: ${response.statusText} (${errorText})`);
       }
 
-      const data = await response.json();
-      suggestion = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    }
-    // 2. OpenAI GPT
-    else if (provider === "openai") {
+      const data: unknown = await response.json();
+      suggestion = readGeminiSuggestion(data);
+    } else if (provider === "openai") {
       const selectedModel = model || "gpt-4o";
       const url = "https://api.openai.com/v1/chat/completions";
 
@@ -86,11 +165,9 @@ export async function POST(req: Request) {
         throw new Error(`OpenAI API error: ${response.statusText} (${errorText})`);
       }
 
-      const data = await response.json();
-      suggestion = data.choices?.[0]?.message?.content || "";
-    }
-    // 3. Anthropic Claude
-    else if (provider === "anthropic") {
+      const data: unknown = await response.json();
+      suggestion = readOpenAiSuggestion(data);
+    } else {
       const selectedModel = model || "claude-3-5-sonnet-20241022";
       const url = "https://api.anthropic.com/v1/messages";
 
@@ -113,13 +190,8 @@ export async function POST(req: Request) {
         throw new Error(`Anthropic API error: ${response.statusText} (${errorText})`);
       }
 
-      const data = await response.json();
-      suggestion = data.content?.[0]?.text || "";
-    } else {
-      return NextResponse.json(
-        { error: `Provider '${provider}' is not supported.` },
-        { status: 400 }
-      );
+      const data: unknown = await response.json();
+      suggestion = readAnthropicSuggestion(data);
     }
 
     return NextResponse.json({ suggestion });
@@ -128,7 +200,7 @@ export async function POST(req: Request) {
     const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { error: message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

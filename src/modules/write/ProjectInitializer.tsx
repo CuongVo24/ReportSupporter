@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import type { TemplateSchema } from "@/types";
+import type { TemplateSchema, ReportSection } from "@/types";
 import { TemplatePicker } from "./TemplatePicker";
 import { MetadataForm } from "./MetadataForm";
 import { MarkdownImportDropzone } from "./MarkdownImportDropzone";
 import type { MarkdownImportDraft } from "./markdown-import";
 import { validateMetadata } from "./generate-skeleton";
 import { Button } from "@/components/ui";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, AlertTriangle } from "lucide-react";
+import { getGatewayState, requestSuggestion } from "./ai/ai-gateway";
+import { generateOutline } from "./ai/generate-outline";
 
 type ProjectInitializerProps = {
   templates: TemplateSchema[];
@@ -17,6 +19,8 @@ type ProjectInitializerProps = {
   onInitialize: (template: TemplateSchema, title: string, metadata: Record<string, string | string[]>) => void;
   onStartBlank: () => void;
   onImportMarkdown: (draft: MarkdownImportDraft) => void;
+  onApplyAiOutline?: (sections: ReportSection[], title: string) => void;
+  onOpenAiSettings?: () => void;
 };
 
 export function ProjectInitializer({
@@ -26,8 +30,15 @@ export function ProjectInitializer({
   onInitialize,
   onStartBlank,
   onImportMarkdown,
+  onApplyAiOutline,
+  onOpenAiSettings,
 }: ProjectInitializerProps) {
-  const [initMode, setInitMode] = useState<"template" | "blank" | "import">("template");
+  const [initMode, setInitMode] = useState<"template" | "blank" | "import" | "outline">("template");
+  const [outlineTopic, setOutlineTopic] = useState("");
+  const [outlineTitle, setOutlineTitle] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedSections, setGeneratedSections] = useState<ReportSection[]>([]);
+  const [aiError, setAiError] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0]?.id || "");
   const [values, setValues] = useState<Record<string, string | string[]>>(() => {
     const initialValues: Record<string, string | string[]> = { ...initialMetadata };
@@ -118,6 +129,29 @@ export function ProjectInitializer({
     onInitialize(activeTemplate, titleVal, values);
   };
 
+  const handleGenerateOutline = async () => {
+    if (!outlineTopic.trim()) {
+      setAiError("Vui lòng nhập mô tả chủ đề báo cáo.");
+      return;
+    }
+    setAiError("");
+    setIsGenerating(true);
+    try {
+      const sections = await generateOutline(outlineTopic, { requestSuggestion });
+      if (sections.length === 0) {
+        setAiError("Không thể tạo được dàn ý hợp lệ từ mô tả này. Vui lòng thử lại.");
+      } else {
+        setGeneratedSections(sections);
+      }
+    } catch (err) {
+      console.error(err);
+      const msg = err instanceof Error ? err.message : "Đã xảy ra lỗi khi gọi AI.";
+      setAiError(msg);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const visibleMetadataFields = (activeTemplate?.metadataFields || []).filter(
     (field) => !(field.key === "readmeContent" && importedMarkdown),
   );
@@ -151,6 +185,13 @@ export function ProjectInitializer({
             onClick={() => setInitMode("import")}
           >
             Nhập từ Markdown
+          </button>
+          <button
+            type="button"
+            style={initMode === "outline" ? activeTabStyle : tabStyle}
+            onClick={() => setInitMode("outline")}
+          >
+            Dàn ý AI
           </button>
         </div>
         
@@ -192,6 +233,120 @@ export function ProjectInitializer({
                 />
               </div>
             )}
+
+            {initMode === "outline" && (() => {
+              const gatewayState = getGatewayState();
+              const isReady = gatewayState === "ready";
+
+              if (!isReady) {
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-6) var(--rs-space-4)", alignItems: "center", textAlign: "center" }}>
+                    <div style={{ padding: "var(--rs-space-3)", borderRadius: "50%", backgroundColor: "var(--rs-color-warning-light, #fef3c7)", color: "var(--rs-color-warning)" }}>
+                      <AlertTriangle size={24} />
+                    </div>
+                    <p style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-sm)", margin: 0, maxWidth: "340px", lineHeight: 1.5 }}>
+                      Tính năng sinh dàn ý tự động yêu cầu Trợ lý AI hoạt động. Vui lòng bật AI và cấu hình khóa API.
+                    </p>
+                    <Button type="button" variant="primary" onClick={onOpenAiSettings}>
+                      Cấu hình Trợ lý AI
+                    </Button>
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-2) 0", flex: 1 }}>
+                  {generatedSections.length === 0 ? (
+                    <>
+                      <div className="rs-form-group" style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)" }}>
+                        <label style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-medium)", color: "var(--rs-color-text)" }}>
+                          Tiêu đề báo cáo
+                        </label>
+                        <input
+                          type="text"
+                          className="rs-input"
+                          value={outlineTitle}
+                          onChange={(e) => setOutlineTitle(e.target.value)}
+                          placeholder="Ví dụ: Báo cáo Đồ án tốt nghiệp"
+                          style={{
+                            width: "100%",
+                            padding: "var(--rs-space-2) var(--rs-space-3)",
+                            borderRadius: "var(--rs-radius-md)",
+                            border: "1px solid var(--rs-color-border)",
+                            backgroundColor: "var(--rs-color-surface)",
+                            color: "var(--rs-color-text)",
+                            fontSize: "var(--rs-font-size-sm)",
+                          }}
+                        />
+                      </div>
+
+                      <div className="rs-form-group" style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)" }}>
+                        <label style={{ fontSize: "var(--rs-font-size-sm)", fontWeight: "var(--rs-font-weight-medium)", color: "var(--rs-color-text)" }}>
+                          Ý tưởng / Chủ đề dàn ý cần sinh
+                        </label>
+                        <textarea
+                          className="rs-input"
+                          rows={4}
+                          value={outlineTopic}
+                          onChange={(e) => setOutlineTopic(e.target.value)}
+                          placeholder="Ví dụ: Báo cáo đồ án xây dựng trang web bán hàng quần áo thời trang bằng Next.js, có 5 chương gồm giới thiệu, phân tích thiết kế hệ thống, kiểm thử và kết luận."
+                          style={{
+                            width: "100%",
+                            padding: "var(--rs-space-2) var(--rs-space-3)",
+                            borderRadius: "var(--rs-radius-md)",
+                            border: "1px solid var(--rs-color-border)",
+                            backgroundColor: "var(--rs-color-surface)",
+                            color: "var(--rs-color-text)",
+                            fontSize: "var(--rs-font-size-sm)",
+                            resize: "vertical",
+                          }}
+                        />
+                      </div>
+
+                      {aiError && (
+                        <div style={{ display: "flex", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "var(--rs-radius-md)", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--rs-color-danger)", fontSize: "var(--rs-font-size-sm)" }}>
+                          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
+                          <span>{aiError}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-3)" }}>
+                      <div style={{ fontSize: "var(--rs-font-size-sm)", color: "var(--rs-color-text-muted)" }}>
+                        Xem trước dàn ý đề xuất ({generatedSections.length} mục):
+                      </div>
+                      <div style={{
+                        maxHeight: "220px",
+                        overflowY: "auto",
+                        border: "1px solid var(--rs-color-border)",
+                        borderRadius: "var(--rs-radius-md)",
+                        padding: "var(--rs-space-3)",
+                        backgroundColor: "rgba(0, 0, 0, 0.02)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "var(--rs-space-2)"
+                      }}>
+                        {generatedSections.map((sec, idx) => (
+                          <div key={sec.id} style={{
+                            fontSize: "var(--rs-font-size-sm)",
+                            padding: "var(--rs-space-2)",
+                            borderRadius: "var(--rs-radius-sm)",
+                            backgroundColor: "var(--rs-color-surface)",
+                            border: "1px solid var(--rs-color-border)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "var(--rs-space-2)"
+                          }}>
+                            <span style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)" }}>#{idx + 1}</span>
+                            <span style={{ fontWeight: "var(--rs-font-weight-medium)" }}>{sec.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           
           {initMode === "template" && (
@@ -232,6 +387,48 @@ export function ProjectInitializer({
                 <p style={{ ...helperStyle, textAlign: "center", width: "100%" }}>
                   Vui lòng chọn hoặc thả file Markdown ở trên để tiếp tục.
                 </p>
+              )}
+            </div>
+          )}
+
+          {initMode === "outline" && getGatewayState() === "ready" && (
+            <div style={footerStyle}>
+              {generatedSections.length === 0 ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleGenerateOutline}
+                  disabled={isGenerating || !outlineTopic.trim()}
+                  fullWidth
+                >
+                  {isGenerating ? "Đang tạo dàn ý..." : "Tạo dàn ý bằng AI"}
+                </Button>
+              ) : (
+                <div style={{ display: "flex", gap: "var(--rs-space-2)", width: "100%" }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setGeneratedSections([]);
+                      setAiError("");
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    Tạo lại
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => {
+                      if (onApplyAiOutline) {
+                        onApplyAiOutline(generatedSections, outlineTitle || "Báo cáo từ AI");
+                      }
+                    }}
+                    style={{ flex: 2 }}
+                  >
+                    Áp dụng dàn ý
+                  </Button>
+                </div>
               )}
             </div>
           )}

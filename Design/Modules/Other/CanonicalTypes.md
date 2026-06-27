@@ -419,7 +419,7 @@ Design constraints:
 
 ```ts
 /** The AI operations the assistant can perform. */
-export type AiAction = "outline" | "rewrite" | "tone";
+export type AiAction = "outline" | "rewrite" | "tone" | "translate" | "terminology";
 
 /** A single AI suggestion, before or after user acceptance. */
 export type AiSuggestion = {

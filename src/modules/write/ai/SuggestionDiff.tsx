@@ -18,9 +18,16 @@ export function SuggestionDiff({
   title = "So sánh đề xuất thay đổi",
   action,
 }: SuggestionDiffProps) {
-  const displayTitle = action === "tone"
-    ? "Cải thiện văn phong học thuật"
-    : (action === "rewrite" ? "So sánh đề xuất viết lại" : title);
+  const displayTitle =
+    action === "tone"
+      ? "Cải thiện văn phong học thuật"
+      : action === "rewrite"
+        ? "So sánh đề xuất viết lại"
+        : action === "translate"
+          ? "Dịch Anh/Việt"
+          : action === "terminology"
+            ? "Chuẩn hóa thuật ngữ"
+            : title;
 
   const canAccept = suggestion.trim().length > 0 && suggestion !== original;
 

@@ -14,9 +14,9 @@ import { z } from "zod";
 // Primitive unions
 // ---------------------------------------------------------------------------
 
-export type AiAction = "outline" | "rewrite" | "tone";
+export type AiAction = "outline" | "rewrite" | "tone" | "translate" | "terminology";
 
-export const aiActionSchema = z.enum(["outline", "rewrite", "tone"]);
+export const aiActionSchema = z.enum(["outline", "rewrite", "tone", "translate", "terminology"]);
 
 // ---------------------------------------------------------------------------
 // AiSuggestion

@@ -6,6 +6,8 @@ import {
   requestSuggestion,
   rewriteSection,
   improveTone,
+  translateSection,
+  improveTerminology,
   SuggestionDiff,
   UserControlBar,
 } from "@/modules/write";
@@ -23,7 +25,7 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
   const [showDiff, setShowDiff] = useState(false);
   // originalText is only set right before an AI request, not on section open.
   const [originalText, setOriginalText] = useState<string | null>(null);
-  const [loadingAction, setLoadingAction] = useState<"rewrite" | "tone" | null>(null);
+  const [loadingAction, setLoadingAction] = useState<"rewrite" | "tone" | "translate" | "terminology" | null>(null);
 
   // Reset AI states when the user switches sections
   useEffect(() => {
@@ -84,6 +86,48 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
     }
   };
 
+  const handleTranslate = async () => {
+    setOriginalText(section.markdown);
+    setIsAiLoading(true);
+    setLoadingAction("translate");
+    setAiError(null);
+    try {
+      const suggestion = await translateSection(section, gateway);
+      if (suggestion.suggestion) {
+        setAiSuggestion(suggestion);
+        setShowDiff(true);
+      } else {
+        setAiError("AI không trả về kết quả.");
+      }
+    } catch {
+      setAiError("Lỗi kết nối AI gateway.");
+    } finally {
+      setIsAiLoading(false);
+      setLoadingAction(null);
+    }
+  };
+
+  const handleTerminology = async () => {
+    setOriginalText(section.markdown);
+    setIsAiLoading(true);
+    setLoadingAction("terminology");
+    setAiError(null);
+    try {
+      const suggestion = await improveTerminology(section.markdown, gateway);
+      if (suggestion.suggestion) {
+        setAiSuggestion(suggestion);
+        setShowDiff(true);
+      } else {
+        setAiError("AI không trả về kết quả.");
+      }
+    } catch {
+      setAiError("Lỗi kết nối AI gateway.");
+    } finally {
+      setIsAiLoading(false);
+      setLoadingAction(null);
+    }
+  };
+
   // UserControlBar only shown when an AI interaction has occurred (originalText set)
   const showControlBar = originalText !== null;
 
@@ -114,6 +158,34 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
           {isAiLoading && loadingAction === "tone" ? "Đang cải thiện..." : (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
               <Sparkles size={12} aria-hidden="true" /> Cải thiện văn phong (AI)
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          disabled={isDisabled || isAiLoading}
+          onClick={handleTranslate}
+          className="ws-ai-translate-btn"
+          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Dịch Anh/Việt bằng AI"}
+        >
+          {isAiLoading && loadingAction === "translate" ? "Đang dịch..." : (
+            <span className="ws-ai-button-label">
+              <Sparkles size={12} aria-hidden="true" /> Dịch Anh/Việt (AI)
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          disabled={isDisabled || isAiLoading}
+          onClick={handleTerminology}
+          className="ws-ai-terminology-btn"
+          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Chuẩn hóa thuật ngữ bằng AI"}
+        >
+          {isAiLoading && loadingAction === "terminology" ? "Đang chuẩn hóa..." : (
+            <span className="ws-ai-button-label">
+              <Sparkles size={12} aria-hidden="true" /> Chuẩn thuật ngữ (AI)
             </span>
           )}
         </button>
