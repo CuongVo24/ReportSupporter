@@ -23,6 +23,11 @@ import {
   MarkdownImportDropzone,
   importReadme,
   type MarkdownImportDraft,
+  addSection,
+  duplicateSection,
+  renameSection,
+  deleteSection,
+  moveSection,
 } from "@/modules/write";
 import { CheckerPanel, runChecker } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
@@ -39,12 +44,7 @@ const emptyCheckResult: CheckResult = {
 
 type SidePanelTab = "check" | "evidence" | "export" | "submission" | "present";
 
-function renumberSections(sections: ReportSection[]): ReportSection[] {
-  return sections.map((section, index) => ({
-    ...section,
-    order: index,
-  }));
-}
+
 
 function focusEditorOnNextFrame() {
   window.requestAnimationFrame(() => {
@@ -65,6 +65,8 @@ export function Workspace() {
   const [importDraft, setImportDraft] = useState<MarkdownImportDraft | null>(null);
   const [importMode, setImportMode] = useState<"append" | "replace">("append");
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [sectionToDeleteId, setSectionToDeleteId] = useState<string | null>(null);
   const [sideTab, setSideTab] = useState<SidePanelTab>("check");
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
   const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
@@ -163,24 +165,19 @@ export function Workspace() {
     if (!bundle) return;
     const currentIndex = bundle.project.sections.findIndex((section) => section.id === activeId);
     const insertAt = currentIndex >= 0 ? currentIndex + 1 : bundle.project.sections.length;
-    const title = `Mục ${bundle.project.sections.length + 1}`;
-    const newSection: ReportSection = {
-      id: crypto.randomUUID(),
-      title,
-      order: insertAt,
-      status: "draft",
-      markdown: `# ${title}\n\n`,
-    };
-    const sections = renumberSections([
-      ...bundle.project.sections.slice(0, insertAt),
-      newSection,
-      ...bundle.project.sections.slice(insertAt),
-    ]);
+    
+    const { sections, newSection } = addSection(bundle.project.sections, insertAt);
 
-    setBundle({
+    const next = {
       ...bundle,
-      project: { ...bundle.project, sections, updatedAt: new Date().toISOString() },
-    });
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
     setActiveId(newSection.id);
     setActiveView("editor");
     focusEditorOnNextFrame();
@@ -188,51 +185,99 @@ export function Workspace() {
 
   const handleDuplicateSection = useCallback(() => {
     if (!bundle || !activeSection) return;
-    const currentIndex = bundle.project.sections.findIndex((section) => section.id === activeSection.id);
-    const insertAt = currentIndex >= 0 ? currentIndex + 1 : bundle.project.sections.length;
-    const duplicate: ReportSection = {
-      ...activeSection,
-      id: crypto.randomUUID(),
-      title: `${activeSection.title} (bản sao)`,
-      order: insertAt,
-      status: "draft",
-    };
-    const sections = renumberSections([
-      ...bundle.project.sections.slice(0, insertAt),
-      duplicate,
-      ...bundle.project.sections.slice(insertAt),
-    ]);
+    
+    const { sections, duplicate } = duplicateSection(bundle.project.sections, activeSection);
 
-    setBundle({
+    const next = {
       ...bundle,
-      project: { ...bundle.project, sections, updatedAt: new Date().toISOString() },
-    });
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
     setActiveId(duplicate.id);
     setActiveView("editor");
     focusEditorOnNextFrame();
   }, [activeSection, bundle]);
 
-  const handleMoveSection = useCallback((direction: "up" | "down") => {
-    if (!bundle || !activeId) return;
-    const currentIndex = bundle.project.sections.findIndex((section) => section.id === activeId);
-    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= bundle.project.sections.length) {
-      return;
-    }
+  const handleMoveSection = useCallback((direction: "up" | "down", id?: string) => {
+    if (!bundle) return;
+    const targetId = id || activeId;
+    if (!targetId) return;
 
-    const sections = [...bundle.project.sections];
-    const [section] = sections.splice(currentIndex, 1);
-    sections.splice(targetIndex, 0, section);
+    const sections = moveSection(bundle.project.sections, targetId, direction);
 
     setBundle({
       ...bundle,
       project: {
         ...bundle.project,
-        sections: renumberSections(sections),
+        sections,
         updatedAt: new Date().toISOString(),
       },
     });
   }, [activeId, bundle]);
+
+  const handleMoveSectionFromMenu = useCallback((id: string, direction: "up" | "down") => {
+    handleMoveSection(direction, id);
+  }, [handleMoveSection]);
+
+  const handleRenameSection = useCallback((id: string, newTitle: string) => {
+    if (!bundle) return;
+    const sections = renameSection(bundle.project.sections, id, newTitle);
+
+    setBundle({
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  }, [bundle]);
+
+  const executeDeleteSection = useCallback((id: string) => {
+    if (!bundle) return;
+    const sections = deleteSection(bundle.project.sections, id);
+
+    let nextActiveId = activeId;
+    if (activeId === id) {
+      const currentIndex = bundle.project.sections.findIndex((s) => s.id === id);
+      const neighbor = bundle.project.sections[currentIndex + 1] || bundle.project.sections[currentIndex - 1];
+      nextActiveId = neighbor ? neighbor.id : null;
+    }
+
+    const nextBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(nextBundle);
+    setActiveId(nextActiveId);
+    void saveBundle(nextBundle);
+    setIsDeleteConfirmOpen(false);
+    setSectionToDeleteId(null);
+  }, [bundle, activeId]);
+
+  const handleDeleteSection = useCallback((id: string) => {
+    if (!bundle) return;
+    const section = bundle.project.sections.find((s) => s.id === id);
+    if (!section) return;
+
+    const hasContent = section.markdown.trim() !== "";
+    if (hasContent) {
+      setSectionToDeleteId(id);
+      setIsDeleteConfirmOpen(true);
+    } else {
+      executeDeleteSection(id);
+    }
+  }, [bundle, executeDeleteSection]);
 
   const handleOpenPreview = useCallback(() => {
     setActiveView("preview");
@@ -698,6 +743,10 @@ export function Workspace() {
       activeView={activeView}
       onActiveViewChange={setActiveView}
       openSidePanelSignal={openSidePanelSignal}
+      onAddSection={handleCreateSection}
+      onRenameSection={handleRenameSection}
+      onDeleteSection={handleDeleteSection}
+      onMoveSection={handleMoveSectionFromMenu}
     />
       <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
       <Dialog
@@ -815,6 +864,36 @@ export function Workspace() {
             </Button>
             <Button variant="danger" onClick={handleReplaceImport}>
               Ghi đè và Nhập mới
+            </Button>
+          </div>
+        }
+      />
+      <Dialog
+        isOpen={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="Xóa mục báo cáo này?"
+        description="Mục báo cáo hiện tại đang chứa nội dung. Hành động xóa sẽ không thể hoàn tác."
+        variant="confirm"
+        footer={
+          <div className="ws-dialog-footer-actions">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsDeleteConfirmOpen(false);
+                setSectionToDeleteId(null);
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (sectionToDeleteId) {
+                  executeDeleteSection(sectionToDeleteId);
+                }
+              }}
+            >
+              Xóa mục
             </Button>
           </div>
         }

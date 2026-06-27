@@ -35,6 +35,14 @@ export { createImageAsset, useImageInsert } from "./use-image-insert";
 export { buildMemberResponsibility } from "./sections/member-responsibility";
 export { buildProjectTimeline } from "./sections/project-timeline";
 export { buildInitialSections } from "./buildInitialSections";
+export {
+  addSection,
+  duplicateSection,
+  renameSection,
+  deleteSection,
+  moveSection,
+  renumberSections,
+} from "./section-ops";
 // AI layer — Group A (W11)
 export { loadAiConfig, saveAiConfig, isAiReady, isAiUnconfigured, isAiDisabled, DEFAULT_AI_CONFIG } from "./ai/ai-config";
 export { requestSuggestion, getGatewayState, registerAdapter } from "./ai/ai-gateway";

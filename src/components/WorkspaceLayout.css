@@ -739,3 +739,94 @@
     display: none;
   }
 }
+
+/* Section Nav Action Controls - W16 */
+.ws-section-nav-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text-muted);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ws-section-nav-action-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text);
+  border-color: var(--rs-color-text-muted);
+}
+
+.ws-section-nav-item-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+  border-radius: var(--rs-radius-sm);
+  transition: background-color 150ms ease-out;
+}
+
+.ws-section-nav-item-container:hover {
+  background-color: var(--rs-color-surface-muted);
+}
+
+.ws-section-nav-item-container.active {
+  background-color: var(--rs-color-primary-bg);
+}
+
+.ws-section-nav-item-container .ws-section-nav-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-section-nav-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: var(--rs-space-2);
+  flex-shrink: 0;
+}
+
+.ws-section-nav-item-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text-muted);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ws-section-nav-item-actions button:hover:not(:disabled) {
+  background-color: var(--rs-color-border);
+  color: var(--rs-color-text);
+}
+
+.ws-section-nav-item-actions button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ws-section-nav-edit-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-primary);
+  border-radius: var(--rs-radius-sm);
+  padding: 2px var(--rs-space-1);
+  margin: var(--rs-space-2) var(--rs-space-3);
+  outline: none;
+}

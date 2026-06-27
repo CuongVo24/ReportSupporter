@@ -75,6 +75,6 @@ Cho người dùng tự nắn cấu trúc báo cáo. Logic thao tác tách thàn
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit: `feat(write): add/rename/delete/reorder sections in nav with pure section-ops`.

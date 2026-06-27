@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { ProjectInitializer } from "./ProjectInitializer";
 import type { TemplateSchema } from "@/types";
 import { Button } from "@/components/ui";
-import { Lightbulb } from "lucide-react";
+
 
 // Mock React hooks to allow direct invocation of the component function in pure Node
 vi.mock("react", async (importOriginal) => {

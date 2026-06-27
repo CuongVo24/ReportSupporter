@@ -27,6 +27,10 @@ type WorkspaceLayoutProps = {
   activeView?: "editor" | "preview";
   onActiveViewChange?: (view: "editor" | "preview") => void;
   openSidePanelSignal?: number;
+  onAddSection?: () => void;
+  onRenameSection?: (id: string, title: string) => void;
+  onDeleteSection?: (id: string) => void;
+  onMoveSection?: (id: string, direction: "up" | "down") => void;
 };
 
 export function WorkspaceLayout({
@@ -42,6 +46,10 @@ export function WorkspaceLayout({
   activeView,
   onActiveViewChange,
   openSidePanelSignal,
+  onAddSection,
+  onRenameSection,
+  onDeleteSection,
+  onMoveSection,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isWide, setIsWide] = useState(true);
@@ -164,6 +172,10 @@ export function WorkspaceLayout({
       onSectionSelect={handleSectionClick}
       isDesktop={isDesktop}
       onCollapse={() => setIsLeftCollapsed(true)}
+      onAddSection={onAddSection}
+      onRenameSection={onRenameSection}
+      onDeleteSection={onDeleteSection}
+      onMoveSection={onMoveSection}
     />
   );
 
