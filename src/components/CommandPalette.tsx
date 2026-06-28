@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Search } from "lucide-react";
 import { Dialog, Input } from "@/components/ui";
 import {
@@ -47,7 +47,7 @@ export function CommandPalette({ isOpen, commands, onOpenChange }: CommandPalett
     command.run();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setActiveIndex((index) => (filteredCommands.length ? (index + 1) % filteredCommands.length : 0));
