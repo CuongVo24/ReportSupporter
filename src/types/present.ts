@@ -64,6 +64,67 @@ export const weakSectionHintSchema = z.object({
 
 export type WeakSectionHint = z.infer<typeof weakSectionHintSchema>;
 
+export const mockDefensePersonaSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  stance: z.string(),
+});
+
+export type MockDefensePersona = z.infer<typeof mockDefensePersonaSchema>;
+
+export const defenseQuestionSchema = z.object({
+  id: z.string(),
+  personaId: z.string(),
+  question: z.string(),
+  sectionId: z.string().optional(),
+  evidenceIds: z.array(z.string()).default([]),
+  supportExcerpt: z.string().optional(),
+  risk: z.enum(["scope", "technical", "evidence", "result", "limitation"]),
+});
+
+export type DefenseQuestion = z.infer<typeof defenseQuestionSchema>;
+
+export const answerVerdictSchema = z.object({
+  verdict: z.enum(["answered", "evaded", "incorrect"]),
+  rationale: z.string(),
+  supportingSectionId: z.string().optional(),
+  supportExcerpt: z.string().optional(),
+  followUp: z.string().optional(),
+});
+
+export type AnswerVerdict = z.infer<typeof answerVerdictSchema>;
+
+export const mockDefenseTurnSchema = z.object({
+  question: defenseQuestionSchema,
+  answer: z.string().optional(),
+  verdict: answerVerdictSchema.optional(),
+});
+
+export type MockDefenseTurn = z.infer<typeof mockDefenseTurnSchema>;
+
+export const readinessScorecardSchema = z.object({
+  readiness: z.number().int().min(0).max(100),
+  perPersona: z.array(z.object({
+    personaId: z.string(),
+    answered: z.number().int().nonnegative(),
+    evaded: z.number().int().nonnegative(),
+    incorrect: z.number().int().nonnegative(),
+  })),
+  hotQuestions: z.array(z.string()),
+  weakClaims: z.array(z.string()),
+});
+
+export type ReadinessScorecard = z.infer<typeof readinessScorecardSchema>;
+
+export const mockDefenseSessionSchema = z.object({
+  id: z.string(),
+  startedAt: z.string(),
+  currentTurnIndex: z.number().int().nonnegative(),
+  turns: z.array(mockDefenseTurnSchema),
+  scorecard: readinessScorecardSchema.optional(),
+});
+
+export type MockDefenseSession = z.infer<typeof mockDefenseSessionSchema>;
 
 
 

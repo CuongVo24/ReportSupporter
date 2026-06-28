@@ -17,6 +17,19 @@ export {
 } from "./markdown-import";
 export type { MarkdownFileReadResult, MarkdownImportDraft } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
+export { computeWritingStats } from "./writing-stats";
+export type { WritingStats } from "./writing-stats";
+export {
+  MAX_PROJECT_SNAPSHOTS,
+  createSnapshotRecord,
+  listSnapshots,
+  parseSnapshotRecord,
+  pruneSnapshotRecords,
+  pruneSnapshots,
+  restoreSnapshot,
+  takeSnapshot,
+} from "./snapshots";
+export type { ReportSnapshot, SnapshotStore } from "./snapshots";
 export { createEditorState } from "./editor-setup";
 export {
   buildImageMarkdownDraft,
@@ -43,6 +56,7 @@ export {
   renameSection,
   deleteSection,
   moveSection,
+  moveSectionToIndex,
   renumberSections,
 } from "./section-ops";
 // AI layer — Group A (W11)

@@ -184,6 +184,95 @@ body {
   font-weight: var(--rs-font-weight-medium);
 }
 
+/* Command palette */
+.ws-command-palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  max-height: min(420px, 58vh);
+  overflow-y: auto;
+  padding-right: var(--rs-space-1);
+}
+
+.ws-command-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-command-group-label {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--rs-letter-spacing-sm);
+  padding: 0 var(--rs-space-2);
+}
+
+.ws-command-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--rs-space-3);
+  min-height: 40px;
+  width: 100%;
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.ws-command-item:hover,
+.ws-command-item-active {
+  border-color: var(--rs-color-border);
+  background: var(--rs-color-surface-muted);
+}
+
+.ws-command-item:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-command-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+}
+
+.ws-command-hint {
+  min-width: max-content;
+  padding: 2px var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text-muted);
+  background: var(--rs-color-surface);
+  font-family: var(--rs-font-family-mono);
+  font-size: var(--rs-font-size-xs);
+  line-height: 1.5;
+}
+
+.ws-command-empty {
+  padding: var(--rs-space-5);
+  border: 1px dashed var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-text-muted);
+  background: var(--rs-color-surface-muted);
+  font-size: var(--rs-font-size-sm);
+  text-align: center;
+}
+
 /* Editor + preview + side panel — W1 Group D */
 .ws-editor-textarea {
   width: 100%;
@@ -543,6 +632,24 @@ body {
   border-top: 1px solid var(--rs-color-severity-error);
   font-size: var(--rs-font-size-xs);
   line-height: var(--rs-font-lh-ui);
+}
+
+.ws-editor-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border-top: 1px solid var(--rs-color-border);
+  background: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-editor-statusbar-focus {
+  color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-semibold);
 }
 
 .ws-editor-cm-parent .cm-panel.cm-search {
@@ -1701,6 +1808,134 @@ body {
   font-size: 10px;
   font-weight: var(--rs-font-weight-semibold);
   border-radius: var(--rs-radius-sm);
+}
+
+.ws-mock-defense {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-header,
+.ws-mock-defense-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-note,
+.ws-mock-defense-progress {
+  margin: var(--rs-space-1) 0 0;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-warning,
+.ws-mock-defense-error {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-md);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-warning {
+  border: 1px dashed var(--rs-color-severity-warning);
+  background: var(--rs-color-severity-warning-bg);
+  color: var(--rs-color-text);
+}
+
+.ws-mock-defense-error {
+  border: 1px solid var(--rs-color-severity-error);
+  background: var(--rs-color-severity-error-bg);
+  color: var(--rs-color-severity-error);
+}
+
+.ws-mock-defense-session,
+.ws-mock-defense-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-card,
+.ws-mock-defense-verdict,
+.ws-mock-defense-scorecard {
+  padding: var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+}
+
+.ws-mock-defense-persona {
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  text-transform: uppercase;
+}
+
+.ws-mock-defense-question {
+  margin: var(--rs-space-2) 0;
+  color: var(--rs-color-text);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-mock-defense-excerpt {
+  margin: 0;
+  padding: var(--rs-space-2);
+  border-left: 3px solid var(--rs-color-primary);
+  color: var(--rs-color-text-muted);
+  background: var(--rs-color-surface-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-answer-label {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-mock-defense-answer {
+  width: 100%;
+  resize: vertical;
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  font: inherit;
+}
+
+.ws-mock-defense-answer:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-mock-defense-verdict {
+  border-left: 4px solid var(--rs-color-border);
+}
+
+.ws-mock-defense-verdict.verdict-answered {
+  border-left-color: var(--rs-color-success);
+}
+
+.ws-mock-defense-verdict.verdict-evaded {
+  border-left-color: var(--rs-color-severity-warning);
+}
+
+.ws-mock-defense-verdict.verdict-incorrect {
+  border-left-color: var(--rs-color-severity-error);
+}
+
+.ws-mock-defense-verdict p {
+  margin: var(--rs-space-1) 0;
+  color: var(--rs-color-text);
+}
+
+.ws-mock-defense-verdict small {
+  color: var(--rs-color-text-muted);
 }
 
 .ws-present-bullets-list {
@@ -2938,6 +3173,189 @@ span.ws-present-slide-speaker {
   display: block;
   width: 100%;
   overflow-x: auto;
+}
+
+/* Report health */
+.ws-report-health {
+  position: relative;
+  display: inline-flex;
+}
+
+.ws-report-health-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  min-height: 34px;
+  max-width: 260px;
+  padding: var(--rs-space-1) var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-border-radius-md);
+  background: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.ws-report-health-button:hover,
+.ws-report-health-button:focus-visible {
+  border-color: currentColor;
+}
+
+.ws-report-health-button:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-report-health-green {
+  color: var(--rs-color-success);
+  background: var(--rs-color-success-bg);
+}
+
+.ws-report-health-yellow {
+  color: var(--rs-color-severity-warning);
+  background: var(--rs-color-severity-warning-bg);
+}
+
+.ws-report-health-red {
+  color: var(--rs-color-severity-error);
+  background: var(--rs-color-severity-error-bg);
+}
+
+.ws-report-health-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.ws-report-health-label {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-report-health-score {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-report-health-status {
+  color: currentColor;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.ws-report-health-tooltip {
+  position: absolute;
+  top: calc(100% + var(--rs-space-2));
+  right: 0;
+  z-index: 20;
+  display: none;
+  width: min(320px, 80vw);
+  padding: var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-border-radius-md);
+  background: var(--rs-color-surface);
+  box-shadow: var(--rs-elevation-2);
+  color: var(--rs-color-text);
+}
+
+.ws-report-health:hover .ws-report-health-tooltip,
+.ws-report-health:focus-within .ws-report-health-tooltip {
+  display: grid;
+  gap: var(--rs-space-2);
+}
+
+.ws-report-health-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-report-health-row strong {
+  color: var(--rs-color-text);
+}
+
+.ws-report-health-row small {
+  grid-column: 1 / -1;
+  color: var(--rs-color-text-muted);
+}
+
+/* Snapshot history */
+.ws-snapshot-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-4);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-border-radius-md);
+  background: var(--rs-color-surface);
+}
+
+.ws-snapshot-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+}
+
+.ws-snapshot-title {
+  margin: 0;
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-semibold);
+  line-height: 1.3;
+}
+
+.ws-snapshot-subtitle,
+.ws-snapshot-empty {
+  margin: var(--rs-space-1) 0 0;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-snapshot-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ws-snapshot-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--rs-space-2);
+  min-width: 0;
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-border-radius-sm);
+  background: var(--rs-color-surface-muted);
+}
+
+.ws-snapshot-meta {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ws-snapshot-time {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-snapshot-reason {
+  overflow: hidden;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Empty Report Recovery Hub ── */

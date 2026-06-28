@@ -65,6 +65,6 @@ Cho phép kéo-thả tự nhiên trên mục lục (đổi thứ tự) và thả
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w18/upgrade-ai`): `feat(write): drag-to-reorder outline and drop images/markdown into sections`.

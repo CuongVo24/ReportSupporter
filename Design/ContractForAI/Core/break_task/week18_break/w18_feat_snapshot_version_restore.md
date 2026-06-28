@@ -72,6 +72,6 @@ Thêm tầng **snapshot nhẹ** trong IndexedDB: tự chụp bản trước **c�
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w18/upgrade-ai`): `feat(write): lightweight snapshots with restore before destructive actions`.

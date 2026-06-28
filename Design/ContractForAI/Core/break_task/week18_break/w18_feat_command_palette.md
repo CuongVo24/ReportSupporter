@@ -66,6 +66,6 @@ Một bảng lệnh tìm-kiếm-được gom mọi hành động + phím tắt v
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w18/upgrade-ai`): `feat(ui): command palette (ctrl+k) surfacing existing actions and shortcuts`.

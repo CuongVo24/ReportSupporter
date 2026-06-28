@@ -46,4 +46,4 @@
 - **A2** có thể kéo theo lib kéo-thả: mặc định ưu tiên `moveSection` (nút) đã có; chỉ thêm lib nếu Approve nêu rõ.
 - **A4** chạm tầng lưu trữ: phải tránh phình quota IndexedDB (giới hạn số snapshot + nén/cắt bớt).
 
-> Tất cả contract đang `WAITING_FOR_APPROVAL`. VibeCode Step 2: chưa chạm `src/` cho tới khi Approve từng cái. Mọi commit đi trên `w18/upgrade-ai`.
+> Tất cả contract đã `COMPLETED` trên nhánh `w18/upgrade-ai`.

@@ -31,6 +31,9 @@ type WorkspaceLayoutProps = {
   onRenameSection?: (id: string, title: string) => void;
   onDeleteSection?: (id: string) => void;
   onMoveSection?: (id: string, direction: "up" | "down") => void;
+  onReorderSection?: (activeId: string, overId: string) => void;
+  onSectionFilesDrop?: (id: string, files: File[]) => void;
+  focusMode?: boolean;
 };
 
 export function WorkspaceLayout({
@@ -50,6 +53,9 @@ export function WorkspaceLayout({
   onRenameSection,
   onDeleteSection,
   onMoveSection,
+  onReorderSection,
+  onSectionFilesDrop,
+  focusMode = false,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isWide, setIsWide] = useState(true);
@@ -176,12 +182,14 @@ export function WorkspaceLayout({
       onRenameSection={onRenameSection}
       onDeleteSection={onDeleteSection}
       onMoveSection={onMoveSection}
+      onReorderSection={onReorderSection}
+      onSectionFilesDrop={onSectionFilesDrop}
     />
   );
 
   return (
-    <div className="ws-shell">
-      <header className="ws-topbar">
+    <div className={`ws-shell ${focusMode ? "ws-shell-focus" : ""}`}>
+      <header className={`ws-topbar ${focusMode ? "ws-topbar-focus" : ""}`}>
         <div className="ws-topbar-left">
           {!isDesktop && (
             <button type="button" className="ws-column-toggle-btn" onClick={() => setIsLeftDrawerOpen(true)} aria-label="Mở mục lục">
@@ -199,7 +207,7 @@ export function WorkspaceLayout({
         </div>
         <div className="ws-topbar-right">
           {primaryAction}
-          {(!isDesktop || (isDesktop && !isWide)) && (
+          {!focusMode && (!isDesktop || (isDesktop && !isWide)) && (
             <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightDrawerOpen(true)} aria-label="Mở bảng điều khiển">
               <Menu size={16} />
             </button>
@@ -235,23 +243,23 @@ export function WorkspaceLayout({
           </aside>
         )}
 
-        <section className="ws-workspace-core" aria-label="Khu vực làm việc">
+        <section className={`ws-workspace-core ${focusMode ? "ws-workspace-core-focus" : ""}`} aria-label="Khu vực làm việc">
           {!isDesktop && (
             <div className="ws-responsive-tabs">
               <button type="button" className={`ws-responsive-tab-btn ${activeTab === "editor" ? "ws-responsive-tab-btn-active" : ""}`} onClick={() => setActiveTab("editor")}>
                 Bàn viết
               </button>
-              <button type="button" className={`ws-responsive-tab-btn ${activeTab === "preview" ? "ws-responsive-tab-btn-active" : ""}`} onClick={() => setActiveTab("preview")}>
+              {!focusMode && <button type="button" className={`ws-responsive-tab-btn ${activeTab === "preview" ? "ws-responsive-tab-btn-active" : ""}`} onClick={() => setActiveTab("preview")}>
                 Tờ nộp
-              </button>
+              </button>}
             </div>
           )}
 
           {isDesktop ? (
-            <div className="ws-split-pane-container" ref={containerRef}>
-              <div className="ws-split-pane-editor" style={{ width: `${splitWidth}%` }}>{editor}</div>
-              <div className="ws-split-divider" onMouseDown={handleMouseDown} />
-              <div className="ws-split-pane-preview ws-preview" ref={viewportRef} style={{ width: `${100 - splitWidth}%` }}>
+            <div className={`ws-split-pane-container ${focusMode ? "ws-split-pane-container-focus" : ""}`} ref={containerRef}>
+              <div className="ws-split-pane-editor" style={{ width: focusMode ? "100%" : `${splitWidth}%` }}>{editor}</div>
+              {!focusMode && <div className="ws-split-divider" onMouseDown={handleMouseDown} />}
+              {!focusMode && <div className="ws-split-pane-preview ws-preview" ref={viewportRef} style={{ width: `${100 - splitWidth}%` }}>
                 <div className="ws-preview-zoom-control">
                   <span className="ws-preview-zoom-label">Zoom: {Math.round(scale * 100)}%</span>
                   <Select
@@ -272,11 +280,11 @@ export function WorkspaceLayout({
                 <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
                   <div ref={innerRef} className="ws-preview-page">{preview}</div>
                 </div>
-              </div>
+              </div>}
             </div>
           ) : (
             <div className="ws-responsive-container">
-              {activeTab === "editor" ? (
+              {focusMode || activeTab === "editor" ? (
                 <div className="ws-responsive-editor-scroll">{editor}</div>
               ) : (
                 <div className="ws-preview-viewport" ref={viewportRef}>
@@ -289,7 +297,7 @@ export function WorkspaceLayout({
           )}
         </section>
 
-        {isDesktop && isWide && (
+        {isDesktop && isWide && !focusMode && (
           <aside className={`ws-side-column ws-side-column-right ${isRightCollapsed ? "ws-side-column-right--collapsed" : "ws-side-column-right--expanded"}`} aria-label="Bảng điều khiển">
             {isRightCollapsed ? (
               <div className="ws-collapsed-rail-list">
@@ -321,7 +329,7 @@ export function WorkspaceLayout({
           {navContent}
         </MobileDrawer>
       )}
-      {(!isDesktop || (isDesktop && !isWide)) && (
+      {(!isDesktop || (isDesktop && !isWide)) && !focusMode && (
         <MobileDrawer isOpen={isRightDrawerOpen} onClose={() => setIsRightDrawerOpen(false)} side="right" title="Bảng điều khiển">
           {sidePanel}
         </MobileDrawer>

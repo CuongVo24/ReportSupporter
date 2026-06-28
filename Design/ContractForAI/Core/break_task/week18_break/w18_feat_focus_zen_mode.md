@@ -66,6 +66,6 @@ Chế độ Focus ẩn bớt chrome (preview/side panel/header phụ) để ch�
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w18/upgrade-ai`): `feat(write): focus mode with word count and reading-time status bar`.

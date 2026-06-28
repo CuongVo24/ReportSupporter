@@ -8,12 +8,13 @@ import { usePresent } from "./use-present";
 import { SlideOutlineView } from "./SlideOutlineView";
 import { ScriptView } from "./ScriptView";
 import { DefenseQAView } from "./DefenseQAView";
+import { MockDefenseView } from "./MockDefenseView";
 import { getGatewayState, requestSuggestion } from "@/modules/write";
 import { assistOutline } from "./ai/assist-outline";
 import { AiOutlineButton } from "./ai/AiOutlineButton";
 import { EmptyState, SuccessState } from "@/components/states";
 import { Button, Badge } from "@/components/ui";
-import { List, Mic, HelpCircle, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { List, Mic, HelpCircle, AlertTriangle, Sparkles, Loader2, ShieldQuestion } from "lucide-react";
 import { useExport } from "@/modules/export";
 
 export interface PresentPanelProps {
@@ -29,10 +30,11 @@ export interface PresentPanelProps {
     }
   ) => Promise<void>;
   jobs?: ExportJob[];
+  onOpenAiSettings?: () => void;
 }
 
-export function PresentPanel({ bundle, checkResult, runExport, jobs }: PresentPanelProps) {
-  const [activeTab, setActiveTab] = useState<"outline" | "script" | "qa" | "hints">("outline");
+export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSettings }: PresentPanelProps) {
+  const [activeTab, setActiveTab] = useState<"outline" | "script" | "qa" | "mock" | "hints">("outline");
 
   const {
     slides,
@@ -169,6 +171,12 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs }: PresentPa
           onClick={() => setActiveTab("qa")}
         >
           <HelpCircle size={14} style={{ marginRight: "var(--rs-space-1)" }} /> Hỏi đáp phản biện
+        </button>
+        <button
+          className={`ws-present-tab-btn ${activeTab === "mock" ? "active" : ""}`}
+          onClick={() => setActiveTab("mock")}
+        >
+          <ShieldQuestion size={14} style={{ marginRight: "var(--rs-space-1)" }} /> Luyện phản biện
         </button>
         <button
           className={`ws-present-tab-btn ${activeTab === "hints" ? "active" : ""}`}
@@ -330,6 +338,17 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs }: PresentPa
       {activeTab === "qa" && (
         <div className="ws-present-tab-content">
           <DefenseQAView qas={qas} sections={bundle.project.sections} />
+        </div>
+      )}
+
+      {activeTab === "mock" && (
+        <div className="ws-present-tab-content">
+          <MockDefenseView
+            bundle={bundle}
+            checkResult={checkResult}
+            slides={slides}
+            onOpenSettings={onOpenAiSettings}
+          />
         </div>
       )}
 

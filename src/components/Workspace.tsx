@@ -6,8 +6,10 @@ import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
 import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
+import { SnapshotHistory } from "@/components/SnapshotHistory";
+import { ReportHealthBadge } from "@/components/ReportHealthBadge";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
-import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2 } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -30,14 +32,23 @@ import {
   renameSection,
   deleteSection,
   moveSection,
+  moveSectionToIndex,
+  createImageAsset,
+  isMarkdownFile,
+  readMarkdownFile,
   AiSettingsDialog,
   AiWholeReportPanel,
   registerAdapter,
   httpAdapter,
   loadAiConfig,
   isAiReady,
+  listSnapshots,
+  restoreSnapshot,
+  takeSnapshot,
+  computeWritingStats,
+  type ReportSnapshot,
 } from "@/modules/write";
-import { CheckerPanel, runChecker } from "@/modules/check";
+import { CheckerPanel, computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
@@ -56,6 +67,12 @@ function focusEditorOnNextFrame() {
   window.requestAnimationFrame(() => {
     document.querySelector<HTMLElement>(".cm-content")?.focus();
   });
+}
+
+function appendMarkdown(existing: string, addition: string) {
+  const trimmedAddition = addition.trim();
+  if (!trimmedAddition) return existing;
+  return `${existing.trimEnd()}${existing.trim() ? "\n\n" : ""}${trimmedAddition}`;
 }
 
 export function Workspace() {
@@ -78,6 +95,11 @@ export function Workspace() {
   const [sideTab, setSideTab] = useState<SidePanelTab>("check");
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
   const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
+  const [snapshots, setSnapshots] = useState<ReportSnapshot[]>([]);
+  const [isSnapshotLoading, setIsSnapshotLoading] = useState(false);
+  const [snapshotToRestore, setSnapshotToRestore] = useState<ReportSnapshot | null>(null);
+  const [reportHealth, setReportHealth] = useState<ReportHealth | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -115,10 +137,64 @@ export function Workspace() {
     }
   }, [isAiSettingsOpen]);
 
+  const refreshSnapshots = useCallback(async (projectId?: string) => {
+    if (!projectId) {
+      setSnapshots([]);
+      return;
+    }
+
+    setIsSnapshotLoading(true);
+    try {
+      setSnapshots(await listSnapshots(projectId));
+    } catch (error) {
+      console.warn("Unable to load report snapshots", error);
+      setSnapshots([]);
+    } finally {
+      setIsSnapshotLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshSnapshots(bundle?.project.id);
+  }, [bundle?.project.id, refreshSnapshots]);
+
+  const snapshotBefore = useCallback(async (reason: string) => {
+    if (!bundle) return;
+    try {
+      await takeSnapshot(bundle, reason);
+      void refreshSnapshots(bundle.project.id);
+    } catch (error) {
+      console.warn("Unable to create report snapshot", error);
+      setToastMessage("Không thể tạo bản lưu an toàn, thao tác vẫn tiếp tục.");
+      setToastOpen(true);
+    }
+  }, [bundle, refreshSnapshots]);
+
   const activeSection = useMemo(
     () => bundle?.project.sections.find((sec) => sec.id === activeId) ?? null,
     [bundle, activeId],
   );
+  const sectionWritingStats = useMemo(
+    () => computeWritingStats(activeSection?.markdown ?? ""),
+    [activeSection?.markdown],
+  );
+  const reportWritingStats = useMemo(
+    () => computeWritingStats(bundle?.project.sections ?? []),
+    [bundle?.project.sections],
+  );
+
+  useEffect(() => {
+    if (!bundle) {
+      setReportHealth(null);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setReportHealth(computeReportHealth(bundle, checkResult));
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [bundle, checkResult]);
 
   const handleChange = useCallback((markdown: string) => {
     setBundle((prev) => {
@@ -151,6 +227,12 @@ export function Workspace() {
       focusEditorOnNextFrame();
     }
   }, []);
+
+  const handleOpenReportHealth = useCallback(() => {
+    setSideTab("check");
+    requestSidePanelOpen();
+    handleJump(reportHealth?.weakestSectionId);
+  }, [handleJump, reportHealth?.weakestSectionId, requestSidePanelOpen]);
 
   const handleManualSave = useCallback((markdown?: string) => {
     if (!bundle) return;
@@ -241,6 +323,108 @@ export function Workspace() {
     handleMoveSection(direction, id);
   }, [handleMoveSection]);
 
+  const handleReorderSection = useCallback((draggedId: string, overId: string) => {
+    if (!bundle || draggedId === overId) return;
+    const targetIndex = bundle.project.sections.findIndex((section) => section.id === overId);
+    if (targetIndex < 0) return;
+
+    const sections = moveSectionToIndex(bundle.project.sections, draggedId, targetIndex);
+    const next = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
+    setActiveId(draggedId);
+    void saveBundle(next);
+  }, [bundle]);
+
+  const handleSectionFilesDrop = useCallback(async (sectionId: string, files: File[]) => {
+    if (!bundle) return;
+
+    const imageFile = files.find((file) => file.type.startsWith("image/"));
+    if (imageFile) {
+      const result = await createImageAsset(imageFile, 5 * 1024 * 1024);
+      if (!result.ok) {
+        setToastMessage(result.error);
+        setToastOpen(true);
+        return;
+      }
+
+      const sections = bundle.project.sections.map((section) =>
+        section.id === sectionId
+          ? { ...section, markdown: appendMarkdown(section.markdown, result.ref) }
+          : section,
+      );
+      const next: ReportProjectBundle = {
+        ...bundle,
+        assets: bundle.assets.some((asset) => asset.id === result.asset.id)
+          ? bundle.assets
+          : [...bundle.assets, result.asset],
+        project: {
+          ...bundle.project,
+          sections,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      setBundle(next);
+      setActiveId(sectionId);
+      setActiveView("editor");
+      setCheckResult(null);
+      setHasRun(false);
+      void saveBundle(next);
+      setToastMessage("Da chen anh vao muc da tha.");
+      setToastOpen(true);
+      return;
+    }
+
+    const markdownFile = files.find((file) => isMarkdownFile(file));
+    if (!markdownFile) {
+      setToastMessage("Chi ho tro tha anh hoac file Markdown vao muc luc.");
+      setToastOpen(true);
+      return;
+    }
+
+    const result = await readMarkdownFile(markdownFile);
+    if (!result.ok) {
+      setToastMessage(result.error);
+      setToastOpen(true);
+      return;
+    }
+
+    const parsedSections = importReadme(result.markdown);
+    const markdownToInsert = parsedSections.length > 0
+      ? parsedSections.map((section) => section.markdown).join("\n\n")
+      : result.markdown;
+    const sections = bundle.project.sections.map((section) =>
+      section.id === sectionId
+        ? { ...section, markdown: appendMarkdown(section.markdown, markdownToInsert) }
+        : section,
+    );
+    const next: ReportProjectBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
+    setActiveId(sectionId);
+    setActiveView("editor");
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
+    setToastMessage("Da chen noi dung Markdown vao muc da tha.");
+    setToastOpen(true);
+  }, [bundle]);
+
   const handleRenameSection = useCallback((id: string, newTitle: string) => {
     if (!bundle) return;
     const sections = renameSection(bundle.project.sections, id, newTitle);
@@ -255,8 +439,12 @@ export function Workspace() {
     });
   }, [bundle]);
 
-  const executeDeleteSection = useCallback((id: string) => {
+  const executeDeleteSection = useCallback(async (id: string, shouldSnapshot = false) => {
     if (!bundle) return;
+    const section = bundle.project.sections.find((s) => s.id === id);
+    if (shouldSnapshot && section) {
+      await snapshotBefore(`Trước khi xóa mục "${section.title}"`);
+    }
     const sections = deleteSection(bundle.project.sections, id);
 
     let nextActiveId = activeId;
@@ -280,7 +468,7 @@ export function Workspace() {
     void saveBundle(nextBundle);
     setIsDeleteConfirmOpen(false);
     setSectionToDeleteId(null);
-  }, [bundle, activeId]);
+  }, [bundle, activeId, snapshotBefore]);
 
   const handleDeleteSection = useCallback((id: string) => {
     if (!bundle) return;
@@ -292,12 +480,22 @@ export function Workspace() {
       setSectionToDeleteId(id);
       setIsDeleteConfirmOpen(true);
     } else {
-      executeDeleteSection(id);
+      void executeDeleteSection(id);
     }
   }, [bundle, executeDeleteSection]);
 
   const handleOpenPreview = useCallback(() => {
+    setFocusMode(false);
     setActiveView("preview");
+  }, []);
+
+  const handleToggleFocusMode = useCallback(() => {
+    setFocusMode((enabled) => {
+      const next = !enabled;
+      if (next) setActiveView("editor");
+      return next;
+    });
+    focusEditorOnNextFrame();
   }, []);
 
   const handleOpenExport = useCallback(() => {
@@ -421,7 +619,8 @@ export function Workspace() {
     void saveBundle(next);
   }, [bundle]);
 
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
+    await snapshotBefore("Trước khi tạo báo cáo mới");
     const fresh = createProjectFromTemplate(softwareProjectTemplate);
     setBundle(fresh);
     setActiveId(fresh.project.sections[0]?.id ?? null);
@@ -430,7 +629,7 @@ export function Workspace() {
     setHasRun(false);
     void saveBundle(fresh);
     setIsResetConfirmOpen(false);
-  }, []);
+  }, [snapshotBefore]);
 
   const handleAppendImport = useCallback(() => {
     if (!bundle || !importDraft) return;
@@ -461,7 +660,7 @@ export function Workspace() {
     setToastOpen(true);
   }, [bundle, importDraft]);
 
-  const handleReplaceImport = useCallback(() => {
+  const handleReplaceImport = useCallback(async () => {
     if (!bundle || !importDraft) return;
     const parsedSections = importReadme(importDraft.markdown);
     if (parsedSections.length === 0) {
@@ -471,6 +670,7 @@ export function Workspace() {
       return;
     }
 
+    await snapshotBefore("Trước khi ghi đè báo cáo bằng Markdown");
     const replaced = replaceSections(bundle, parsedSections);
     const next: ReportProjectBundle = {
       ...replaced,
@@ -491,7 +691,7 @@ export function Workspace() {
     setImportDraft(null);
     setToastMessage("Đã nhập mới báo cáo thành công.");
     setToastOpen(true);
-  }, [bundle, importDraft]);
+  }, [bundle, importDraft, snapshotBefore]);
 
   const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
     setBundle((prev) => {
@@ -507,8 +707,10 @@ export function Workspace() {
     });
   }, []);
 
-  const handleApplyWholeReportAiSection = useCallback((sectionId: string, markdown: string) => {
+  const handleApplyWholeReportAiSection = useCallback(async (sectionId: string, markdown: string) => {
     if (!bundle) return;
+    const targetSection = bundle.project.sections.find((section) => section.id === sectionId);
+    await snapshotBefore(`Trước khi áp dụng AI cho "${targetSection?.title ?? "mục"}"`);
     const sections = bundle.project.sections.map((section) =>
       section.id === sectionId ? { ...section, markdown } : section,
     );
@@ -529,7 +731,29 @@ export function Workspace() {
     void saveBundle(next);
     setToastMessage("Đã áp dụng đề xuất AI cho một mục.");
     setToastOpen(true);
-  }, [bundle]);
+  }, [bundle, snapshotBefore]);
+
+  const handleConfirmRestoreSnapshot = useCallback(async () => {
+    if (!snapshotToRestore) return;
+    const restored = await restoreSnapshot(snapshotToRestore.id);
+    if (!restored) {
+      setSnapshotToRestore(null);
+      setToastMessage("Không thể khôi phục bản lưu này.");
+      setToastOpen(true);
+      return;
+    }
+
+    setBundle(restored);
+    setActiveId(restored.project.sections[0]?.id ?? null);
+    setActiveView("editor");
+    setCheckResult(null);
+    setHasRun(false);
+    await saveBundle(restored);
+    await refreshSnapshots(restored.project.id);
+    setSnapshotToRestore(null);
+    setToastMessage("Đã khôi phục phiên bản đã chọn.");
+    setToastOpen(true);
+  }, [refreshSnapshots, snapshotToRestore]);
 
   const commands = useMemo(() => buildWorkspaceCommands({
     createSection: handleCreateSection,
@@ -543,6 +767,7 @@ export function Workspace() {
     openAiSettings: () => setIsAiSettingsOpen(true),
     openMarkdownImport: handleOpenMarkdownImport,
     createReport: handleOpenCreateReport,
+    toggleFocusMode: handleToggleFocusMode,
   }), [
     handleCheck,
     handleCreateSection,
@@ -553,6 +778,7 @@ export function Workspace() {
     handleOpenExport,
     handleOpenMarkdownImport,
     handleOpenPreview,
+    handleToggleFocusMode,
   ]);
 
   useEffect(() => {
@@ -586,7 +812,18 @@ export function Workspace() {
 
       if (event.key === "Escape") {
         event.preventDefault();
+        if (focusMode) {
+          setFocusMode(false);
+          focusEditorOnNextFrame();
+          return;
+        }
         handleFocusEditor();
+        return;
+      }
+
+      if (isMod && event.shiftKey && !event.altKey && key === "f") {
+        event.preventDefault();
+        if (!event.repeat) handleToggleFocusMode();
         return;
       }
 
@@ -643,6 +880,7 @@ export function Workspace() {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [
     bundle,
+    focusMode,
     handleCheck,
     handleCreateSection,
     handleDuplicateSection,
@@ -651,6 +889,7 @@ export function Workspace() {
     handleMoveSection,
     handleOpenExport,
     handleOpenPreview,
+    handleToggleFocusMode,
     isCommandPaletteOpen,
     isInitializing,
   ]);
@@ -734,6 +973,22 @@ export function Workspace() {
 
   const primaryAction = (
     <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "center" }}>
+      {reportHealth && (
+        <ReportHealthBadge
+          health={reportHealth}
+          onOpenDetails={handleOpenReportHealth}
+        />
+      )}
+      <Button
+        variant={focusMode ? "primary" : "ghost"}
+        size="sm"
+        onClick={handleToggleFocusMode}
+        aria-pressed={focusMode}
+        title="Bật/tắt Focus (Ctrl+Shift+F)"
+        style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}
+      >
+        {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />} Focus
+      </Button>
       <Button
         variant="ghost"
         size="sm"
@@ -781,6 +1036,12 @@ export function Workspace() {
         sections={bundle.project.sections}
         onApplySection={handleApplyWholeReportAiSection}
         onOpenSettings={() => setIsAiSettingsOpen(true)}
+      />
+      <SnapshotHistory
+        snapshots={snapshots}
+        isLoading={isSnapshotLoading}
+        onRefresh={() => refreshSnapshots(bundle.project.id)}
+        onRestore={setSnapshotToRestore}
       />
       <Tabs
         value={sideTab}
@@ -855,12 +1116,13 @@ export function Workspace() {
             />
           </TabsContent>
           <TabsContent value="present" className="ws-side-tabs-content">
-            <PresentPanel
-              bundle={bundle}
-              checkResult={checkResult ?? undefined}
-              runExport={runExport}
-              jobs={jobs}
-            />
+          <PresentPanel
+            bundle={bundle}
+            checkResult={checkResult ?? undefined}
+            runExport={runExport}
+            jobs={jobs}
+            onOpenAiSettings={() => setIsAiSettingsOpen(true)}
+          />
           </TabsContent>
         </div>
       </Tabs>
@@ -884,6 +1146,9 @@ export function Workspace() {
               onSave={handleManualSave}
               ariaLabel={`Editor: ${activeSection.title}`}
               onImageInserted={handleImageInserted}
+              sectionStats={sectionWritingStats}
+              reportStats={reportWritingStats}
+              focusMode={focusMode}
             />
           </div>
         </div>
@@ -912,7 +1177,15 @@ export function Workspace() {
       onRenameSection={handleRenameSection}
       onDeleteSection={handleDeleteSection}
       onMoveSection={handleMoveSectionFromMenu}
+      onReorderSection={handleReorderSection}
+      onSectionFilesDrop={handleSectionFilesDrop}
+      focusMode={focusMode}
     />
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        commands={commands}
+        onOpenChange={handleCommandPaletteOpenChange}
+      />
       <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
       <Dialog
         isOpen={isResetConfirmOpen}
@@ -1054,11 +1327,30 @@ export function Workspace() {
               variant="danger"
               onClick={() => {
                 if (sectionToDeleteId) {
-                  executeDeleteSection(sectionToDeleteId);
+                  void executeDeleteSection(sectionToDeleteId, true);
                 }
               }}
             >
               Xóa mục
+            </Button>
+          </div>
+        }
+      />
+      <Dialog
+        isOpen={snapshotToRestore !== null}
+        onOpenChange={(open) => {
+          if (!open) setSnapshotToRestore(null);
+        }}
+        title="Khôi phục phiên bản này?"
+        description="Nội dung báo cáo hiện tại sẽ được thay bằng bản lưu đã chọn."
+        variant="confirm"
+        footer={
+          <div className="ws-dialog-footer-actions">
+            <Button variant="ghost" onClick={() => setSnapshotToRestore(null)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={() => void handleConfirmRestoreSnapshot()}>
+              Khôi phục
             </Button>
           </div>
         }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorView } from "@codemirror/view";
 import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile } from "@/modules/write";
+import type { WritingStats } from "@/modules/write";
 import type { SnippetKind, ReportAsset } from "@/types";
 
 type EditorPanelProps = {
@@ -11,6 +12,9 @@ type EditorPanelProps = {
   onSave?: (value: string) => void;
   ariaLabel?: string;
   onImageInserted?: (asset: ReportAsset, ref: string) => void;
+  sectionStats?: WritingStats;
+  reportStats?: WritingStats;
+  focusMode?: boolean;
 };
 
 export function EditorPanel({
@@ -19,6 +23,9 @@ export function EditorPanel({
   onSave,
   ariaLabel = "Markdown editor",
   onImageInserted,
+  sectionStats,
+  reportStats,
+  focusMode = false,
 }: EditorPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -215,6 +222,22 @@ export function EditorPanel({
       {fileError && (
         <div className="ws-editor-file-error" role="alert">
           {fileError}
+        </div>
+      )}
+
+      {(sectionStats || reportStats) && (
+        <div className="ws-editor-statusbar" aria-live="polite">
+          {sectionStats && (
+            <span>
+              Mục: {sectionStats.words} chữ · {sectionStats.readingMinutes} phút đọc
+            </span>
+          )}
+          {reportStats && (
+            <span>
+              Báo cáo: {reportStats.words} chữ · {reportStats.readingMinutes} phút đọc
+            </span>
+          )}
+          {focusMode && <span className="ws-editor-statusbar-focus">Focus</span>}
         </div>
       )}
     </div>
