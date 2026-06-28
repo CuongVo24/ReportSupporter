@@ -64,6 +64,6 @@ Gộp các tín hiệu chất lượng thành **một chỉ số % "Sức khỏe
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w18/upgrade-ai`): `feat(check): always-on report health score aggregating checker/weak-sections/evidence`.

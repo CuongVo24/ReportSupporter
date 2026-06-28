@@ -34,4 +34,4 @@
 - #2 PPTX **thêm dependency** `pptxgenjs` (~bundle nặng). Cân nhắc `import()` động để tránh phình bundle trang chính. Cần cập nhật `Design/` (Module Present / Export) khi Approve.
 - #1 cần chốt hành vi khi xóa mục cuối: **hiện màn trống có nút** hay **tự về `ProjectInitializer`** — contract đề xuất "màn trống có nút" làm mặc định, kèm option tự-về như biến thể (chọn lúc Approve).
 
-> Tất cả contract đang `WAITING_FOR_APPROVAL`. VibeCode Step 2: chưa chạm `src/` cho tới khi Approve từng cái. Mọi commit đi trên `w17/upgrade-ux`.
+> Tất cả contract đã `COMPLETED` và lên `w17/upgrade-ux` (đã merge vào `main`).

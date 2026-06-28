@@ -75,6 +75,6 @@ Biến màn "Báo cáo trống" từ **ngõ cụt** thành **hub có lối thoá
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w17/upgrade-ux`): `fix(write): empty report becomes a recovery hub with add/import/restart exits`.
