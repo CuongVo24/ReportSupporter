@@ -7,6 +7,7 @@ import { PreviewPane } from "@/components/PreviewPane";
 import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
 import { SnapshotHistory } from "@/components/SnapshotHistory";
+import { ReportHealthBadge } from "@/components/ReportHealthBadge";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
@@ -46,7 +47,7 @@ import {
   takeSnapshot,
   type ReportSnapshot,
 } from "@/modules/write";
-import { CheckerPanel, runChecker } from "@/modules/check";
+import { CheckerPanel, computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
@@ -96,6 +97,7 @@ export function Workspace() {
   const [snapshots, setSnapshots] = useState<ReportSnapshot[]>([]);
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(false);
   const [snapshotToRestore, setSnapshotToRestore] = useState<ReportSnapshot | null>(null);
+  const [reportHealth, setReportHealth] = useState<ReportHealth | null>(null);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -171,6 +173,19 @@ export function Workspace() {
     [bundle, activeId],
   );
 
+  useEffect(() => {
+    if (!bundle) {
+      setReportHealth(null);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setReportHealth(computeReportHealth(bundle, checkResult));
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [bundle, checkResult]);
+
   const handleChange = useCallback((markdown: string) => {
     setBundle((prev) => {
       if (!prev || !activeId) return prev;
@@ -202,6 +217,12 @@ export function Workspace() {
       focusEditorOnNextFrame();
     }
   }, []);
+
+  const handleOpenReportHealth = useCallback(() => {
+    setSideTab("check");
+    requestSidePanelOpen();
+    handleJump(reportHealth?.weakestSectionId);
+  }, [handleJump, reportHealth?.weakestSectionId, requestSidePanelOpen]);
 
   const handleManualSave = useCallback((markdown?: string) => {
     if (!bundle) return;
@@ -917,6 +938,12 @@ export function Workspace() {
 
   const primaryAction = (
     <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "center" }}>
+      {reportHealth && (
+        <ReportHealthBadge
+          health={reportHealth}
+          onOpenDetails={handleOpenReportHealth}
+        />
+      )}
       <Button
         variant="ghost"
         size="sm"

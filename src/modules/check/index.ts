@@ -1,6 +1,8 @@
 export { runChecker } from "./run-checker";
 export { CheckerPanel } from "./CheckerPanel";
 export { computeReadiness, scoreBand } from "./readiness-score";
+export { computeReportHealth, REPORT_HEALTH_WEIGHTS } from "./report-health";
+export type { ReportHealth, ReportHealthBreakdown } from "./report-health";
 export { ReadinessBadge } from "./ReadinessBadge";
 export {
   tocDisabledRule,
