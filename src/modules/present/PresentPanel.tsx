@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { z } from "zod";
-import type { ReportProjectBundle, CheckResult, SlideOutline } from "@/types";
+import type { ReportProjectBundle, CheckResult, SlideOutline, ExportJob, ExportTarget, Speaker, SpeakerScript } from "@/types";
 import { slideOutlineSchema } from "@/types";
 import { usePresent } from "./use-present";
 import { SlideOutlineView } from "./SlideOutlineView";
@@ -13,14 +13,25 @@ import { assistOutline } from "./ai/assist-outline";
 import { AiOutlineButton } from "./ai/AiOutlineButton";
 import { EmptyState, SuccessState } from "@/components/states";
 import { Button, Badge } from "@/components/ui";
-import { List, Mic, HelpCircle, AlertTriangle, Sparkles } from "lucide-react";
+import { List, Mic, HelpCircle, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { useExport } from "@/modules/export";
 
 export interface PresentPanelProps {
   bundle: ReportProjectBundle;
   checkResult?: CheckResult;
+  runExport?: (
+    target: ExportTarget,
+    bundle: ReportProjectBundle,
+    extraParams?: {
+      slides?: SlideOutline[];
+      speakers?: Speaker[];
+      scripts?: Record<string, SpeakerScript>;
+    }
+  ) => Promise<void>;
+  jobs?: ExportJob[];
 }
 
-export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
+export function PresentPanel({ bundle, checkResult, runExport, jobs }: PresentPanelProps) {
   const [activeTab, setActiveTab] = useState<"outline" | "script" | "qa" | "hints">("outline");
 
   const {
@@ -39,6 +50,11 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
     handleScriptChange,
     handleAcceptAiOutline,
   } = usePresent({ bundle, checkResult });
+
+  const localExport = useExport(bundle);
+  const activeRunExport = runExport || localExport.runExport;
+  const activeJobs = jobs || localExport.jobs;
+  const isPptxExporting = activeJobs.some((j) => j.target === "pptx" && j.status === "running");
 
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<SlideOutline[] | null>(null);
@@ -107,17 +123,30 @@ export function PresentPanel({ bundle, checkResult }: PresentPanelProps) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--rs-space-4)", gap: "var(--rs-space-2)" }}>
         <h3 className="ws-present-panel-title" style={{ margin: 0 }}>Thuyết trình</h3>
         <Button
-          disabled
+          disabled={slides.length === 0 || isPptxExporting}
           variant="secondary"
           size="sm"
+          onClick={async () => {
+            if (activeRunExport && bundle) {
+              const scriptsRecord: Record<string, SpeakerScript> = {};
+              scripts.forEach((s) => {
+                scriptsRecord[s.slideId] = s;
+              });
+              await activeRunExport("pptx", bundle, { slides, speakers, scripts: scriptsRecord });
+            }
+          }}
           leadingIcon={
-            <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "14px", height: "14px" }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+            isPptxExporting ? (
+              <Loader2 className="ws-btn-icon ws-export-spinner animate-spin" style={{ width: "14px", height: "14px" }} />
+            ) : (
+              <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "14px", height: "14px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            )
           }
-          title="Tính năng xuất PowerPoint (PPTX) hiện tại đang tạm hoãn (cần bật Phase 3)"
+          title="Xuất dàn ý slide hiện tại thành file PowerPoint (.pptx)"
         >
-          Xuất PPTX (Phase 3)
+          {isPptxExporting ? "Đang xuất..." : "Xuất PowerPoint (.pptx)"}
         </Button>
       </div>
 

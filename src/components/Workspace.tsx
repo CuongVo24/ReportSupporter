@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
+import { CommandPalette } from "@/components/CommandPalette";
+import { buildWorkspaceCommands } from "@/components/command-registry";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/states";
@@ -72,6 +74,7 @@ export function Workspace() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [sectionToDeleteId, setSectionToDeleteId] = useState<string | null>(null);
   const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [sideTab, setSideTab] = useState<SidePanelTab>("check");
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
   const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
@@ -302,8 +305,26 @@ export function Workspace() {
     requestSidePanelOpen();
   }, [requestSidePanelOpen]);
 
+  const handleOpenMarkdownImport = useCallback(() => {
+    setImportDraft(null);
+    setImportMode("append");
+    setIsImportDialogOpen(true);
+  }, []);
+
+  const handleOpenCreateReport = useCallback(() => {
+    setIsResetConfirmOpen(true);
+  }, []);
+
+  const handleCommandPaletteOpenChange = useCallback((open: boolean) => {
+    setIsCommandPaletteOpen(open);
+    if (!open) {
+      focusEditorOnNextFrame();
+    }
+  }, []);
+
   const handleFocusEditor = useCallback(() => {
     setIsResetConfirmOpen(false);
+    setIsCommandPaletteOpen(false);
     setActiveView("editor");
     focusEditorOnNextFrame();
   }, []);
@@ -510,6 +531,30 @@ export function Workspace() {
     setToastOpen(true);
   }, [bundle]);
 
+  const commands = useMemo(() => buildWorkspaceCommands({
+    createSection: handleCreateSection,
+    duplicateSection: handleDuplicateSection,
+    moveSectionUp: () => handleMoveSection("up"),
+    moveSectionDown: () => handleMoveSection("down"),
+    runCheck: handleCheck,
+    openPreview: handleOpenPreview,
+    openExport: handleOpenExport,
+    saveDraft: () => handleManualSave(),
+    openAiSettings: () => setIsAiSettingsOpen(true),
+    openMarkdownImport: handleOpenMarkdownImport,
+    createReport: handleOpenCreateReport,
+  }), [
+    handleCheck,
+    handleCreateSection,
+    handleDuplicateSection,
+    handleManualSave,
+    handleMoveSection,
+    handleOpenCreateReport,
+    handleOpenExport,
+    handleOpenMarkdownImport,
+    handleOpenPreview,
+  ]);
+
   useEffect(() => {
     if (!bundle || isInitializing) return;
 
@@ -530,6 +575,14 @@ export function Workspace() {
 
       const isMod = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
+
+      if (isMod && !event.shiftKey && !event.altKey && key === "k") {
+        event.preventDefault();
+        if (!event.repeat) setIsCommandPaletteOpen((open) => !open);
+        return;
+      }
+
+      if (isCommandPaletteOpen) return;
 
       if (event.key === "Escape") {
         event.preventDefault();
@@ -598,6 +651,7 @@ export function Workspace() {
     handleMoveSection,
     handleOpenExport,
     handleOpenPreview,
+    isCommandPaletteOpen,
     isInitializing,
   ]);
 
@@ -699,11 +753,7 @@ export function Workspace() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => {
-              setImportDraft(null);
-              setImportMode("append");
-              setIsImportDialogOpen(true);
-            }}
+            onClick={handleOpenMarkdownImport}
             leadingIcon={<FileUp size={14} />}
           >
             Nhập Markdown
@@ -711,7 +761,7 @@ export function Workspace() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => setIsResetConfirmOpen(true)}
+            onClick={handleOpenCreateReport}
           >
             Tạo báo cáo
           </Button>
@@ -795,7 +845,12 @@ export function Workspace() {
             />
           </TabsContent>
           <TabsContent value="present" className="ws-side-tabs-content">
-            <PresentPanel bundle={bundle} checkResult={checkResult ?? undefined} />
+            <PresentPanel
+              bundle={bundle}
+              checkResult={checkResult ?? undefined}
+              runExport={runExport}
+              jobs={jobs}
+            />
           </TabsContent>
         </div>
       </Tabs>

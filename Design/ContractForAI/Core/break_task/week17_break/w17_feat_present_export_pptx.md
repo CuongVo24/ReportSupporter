@@ -78,6 +78,6 @@ Hiện thực xuất `.pptx` từ slide outline **client-side**, mỗi `SlideOut
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w17/upgrade-ux`): `feat(present): export slide outline to pptx via lazy pptxgenjs, wired into export jobs`.

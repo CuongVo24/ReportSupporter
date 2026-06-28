@@ -9,6 +9,4 @@ export { DefenseQAView } from "./DefenseQAView";
 export { PresentPanel } from "./PresentPanel";
 export { assistOutline } from "./ai/assist-outline";
 export { AiOutlineButton } from "./ai/AiOutlineButton";
-
-
-
+export { buildPptx } from "./export-pptx";
