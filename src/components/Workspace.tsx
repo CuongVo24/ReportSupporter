@@ -9,7 +9,7 @@ import { buildWorkspaceCommands } from "@/components/command-registry";
 import { SnapshotHistory } from "@/components/SnapshotHistory";
 import { ReportHealthBadge } from "@/components/ReportHealthBadge";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
-import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2 } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -45,6 +45,7 @@ import {
   listSnapshots,
   restoreSnapshot,
   takeSnapshot,
+  computeWritingStats,
   type ReportSnapshot,
 } from "@/modules/write";
 import { CheckerPanel, computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
@@ -98,6 +99,7 @@ export function Workspace() {
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(false);
   const [snapshotToRestore, setSnapshotToRestore] = useState<ReportSnapshot | null>(null);
   const [reportHealth, setReportHealth] = useState<ReportHealth | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -171,6 +173,14 @@ export function Workspace() {
   const activeSection = useMemo(
     () => bundle?.project.sections.find((sec) => sec.id === activeId) ?? null,
     [bundle, activeId],
+  );
+  const sectionWritingStats = useMemo(
+    () => computeWritingStats(activeSection?.markdown ?? ""),
+    [activeSection?.markdown],
+  );
+  const reportWritingStats = useMemo(
+    () => computeWritingStats(bundle?.project.sections ?? []),
+    [bundle?.project.sections],
   );
 
   useEffect(() => {
@@ -475,7 +485,17 @@ export function Workspace() {
   }, [bundle, executeDeleteSection]);
 
   const handleOpenPreview = useCallback(() => {
+    setFocusMode(false);
     setActiveView("preview");
+  }, []);
+
+  const handleToggleFocusMode = useCallback(() => {
+    setFocusMode((enabled) => {
+      const next = !enabled;
+      if (next) setActiveView("editor");
+      return next;
+    });
+    focusEditorOnNextFrame();
   }, []);
 
   const handleOpenExport = useCallback(() => {
@@ -747,6 +767,7 @@ export function Workspace() {
     openAiSettings: () => setIsAiSettingsOpen(true),
     openMarkdownImport: handleOpenMarkdownImport,
     createReport: handleOpenCreateReport,
+    toggleFocusMode: handleToggleFocusMode,
   }), [
     handleCheck,
     handleCreateSection,
@@ -757,6 +778,7 @@ export function Workspace() {
     handleOpenExport,
     handleOpenMarkdownImport,
     handleOpenPreview,
+    handleToggleFocusMode,
   ]);
 
   useEffect(() => {
@@ -790,7 +812,18 @@ export function Workspace() {
 
       if (event.key === "Escape") {
         event.preventDefault();
+        if (focusMode) {
+          setFocusMode(false);
+          focusEditorOnNextFrame();
+          return;
+        }
         handleFocusEditor();
+        return;
+      }
+
+      if (isMod && event.shiftKey && !event.altKey && key === "f") {
+        event.preventDefault();
+        if (!event.repeat) handleToggleFocusMode();
         return;
       }
 
@@ -847,6 +880,7 @@ export function Workspace() {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [
     bundle,
+    focusMode,
     handleCheck,
     handleCreateSection,
     handleDuplicateSection,
@@ -855,6 +889,7 @@ export function Workspace() {
     handleMoveSection,
     handleOpenExport,
     handleOpenPreview,
+    handleToggleFocusMode,
     isCommandPaletteOpen,
     isInitializing,
   ]);
@@ -944,6 +979,16 @@ export function Workspace() {
           onOpenDetails={handleOpenReportHealth}
         />
       )}
+      <Button
+        variant={focusMode ? "primary" : "ghost"}
+        size="sm"
+        onClick={handleToggleFocusMode}
+        aria-pressed={focusMode}
+        title="Bật/tắt Focus (Ctrl+Shift+F)"
+        style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}
+      >
+        {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />} Focus
+      </Button>
       <Button
         variant="ghost"
         size="sm"
@@ -1100,6 +1145,9 @@ export function Workspace() {
               onSave={handleManualSave}
               ariaLabel={`Editor: ${activeSection.title}`}
               onImageInserted={handleImageInserted}
+              sectionStats={sectionWritingStats}
+              reportStats={reportWritingStats}
+              focusMode={focusMode}
             />
           </div>
         </div>
@@ -1130,6 +1178,7 @@ export function Workspace() {
       onMoveSection={handleMoveSectionFromMenu}
       onReorderSection={handleReorderSection}
       onSectionFilesDrop={handleSectionFilesDrop}
+      focusMode={focusMode}
     />
       <CommandPalette
         isOpen={isCommandPaletteOpen}

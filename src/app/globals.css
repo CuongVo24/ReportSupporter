@@ -634,6 +634,24 @@ body {
   line-height: var(--rs-font-lh-ui);
 }
 
+.ws-editor-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border-top: 1px solid var(--rs-color-border);
+  background: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-editor-statusbar-focus {
+  color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
 .ws-editor-cm-parent .cm-panel.cm-search {
   display: flex;
   flex-wrap: wrap;

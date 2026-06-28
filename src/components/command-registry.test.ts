@@ -20,6 +20,7 @@ function createHandlers(): CommandHandlers {
     openAiSettings: vi.fn(),
     openMarkdownImport: vi.fn(),
     createReport: vi.fn(),
+    toggleFocusMode: vi.fn(),
   };
 }
 
@@ -37,6 +38,7 @@ describe("command registry", () => {
       "create-report",
       "run-check",
       "open-preview",
+      "toggle-focus-mode",
       "open-export",
       "open-ai-settings",
     ]);
@@ -46,6 +48,7 @@ describe("command registry", () => {
     expect(commands.find((command) => command.id === "move-section-down")?.hint).toBe("Alt+Down");
     expect(commands.find((command) => command.id === "run-check")?.hint).toBe("Ctrl+Enter");
     expect(commands.find((command) => command.id === "open-preview")?.hint).toBe("Ctrl+P");
+    expect(commands.find((command) => command.id === "toggle-focus-mode")?.hint).toBe("Ctrl+Shift+F");
     expect(commands.find((command) => command.id === "open-export")?.hint).toBe("Ctrl+Shift+E");
     expect(commands.find((command) => command.id === "save-draft")?.hint).toBe("Ctrl+S");
   });
@@ -73,7 +76,7 @@ describe("command registry", () => {
       "create-report",
     ]);
     expect(grouped.review.map((command) => command.id)).toEqual(["run-check"]);
-    expect(grouped.view.map((command) => command.id)).toEqual(["open-preview"]);
+    expect(grouped.view.map((command) => command.id)).toEqual(["open-preview", "toggle-focus-mode"]);
     expect(grouped.export.map((command) => command.id)).toEqual(["open-export"]);
     expect(grouped.setup.map((command) => command.id)).toEqual(["open-ai-settings"]);
   });

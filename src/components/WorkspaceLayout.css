@@ -512,6 +512,19 @@
   background-color: var(--rs-color-surface);
 }
 
+.ws-shell-focus .ws-topbar {
+  border-bottom-color: var(--rs-color-primary);
+}
+
+.ws-topbar-focus .ws-brand,
+.ws-topbar-focus .ws-report-switcher-chevron {
+  display: none;
+}
+
+.ws-workspace-core-focus {
+  background: var(--rs-color-bg);
+}
+
 /* Split Pane container */
 .ws-split-pane-container {
   display: flex;
@@ -522,11 +535,20 @@
   box-sizing: border-box;
 }
 
+.ws-split-pane-container-focus {
+  justify-content: center;
+  padding: var(--rs-space-6);
+}
+
 .ws-split-pane-editor {
   height: 100%;
   min-height: 0;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.ws-split-pane-container-focus .ws-split-pane-editor {
+  max-width: 980px;
 }
 
 

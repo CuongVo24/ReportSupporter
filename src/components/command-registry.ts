@@ -26,6 +26,7 @@ export type CommandHandlers = {
   openAiSettings: () => void;
   openMarkdownImport: () => void;
   createReport: () => void;
+  toggleFocusMode: () => void;
 };
 
 export const commandGroupLabels: Record<CommandGroup, string> = {
@@ -107,6 +108,14 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
       hint: "Ctrl+P",
       keywords: ["preview", "xem truoc"],
       run: handlers.openPreview,
+    },
+    {
+      id: "toggle-focus-mode",
+      label: "Bat/tat che do Focus",
+      group: "view",
+      hint: "Ctrl+Shift+F",
+      keywords: ["focus", "zen", "tap trung"],
+      run: handlers.toggleFocusMode,
     },
     {
       id: "open-export",
