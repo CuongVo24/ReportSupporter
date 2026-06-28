@@ -8,7 +8,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
-import { LoadingSkeleton, EmptyState } from "@/components/states";
+import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
 import {
   createProjectFromTemplate,
   loadBundle,
@@ -688,13 +688,23 @@ export function Workspace() {
   if (!activeSection) {
     return (
       <WorkspaceLayout
-        editor={<EmptyState title="Báo cáo trống" message="Thêm mục đầu tiên để bắt đầu." />}
+        editor={
+          <EmptyReportHub
+            onCreateSection={handleCreateSection}
+            onImportMarkdown={() => setIsImportDialogOpen(true)}
+            onRestart={() => setIsInitializing(true)}
+          />
+        }
         preview={<EmptyState title="Chưa có nội dung" message="Viết nội dung trong editor để hiển thị bản in thử." />}
         sidePanel={null}
-        sections={[]}
+        sections={bundle ? bundle.project.sections : []}
         activeSectionId=""
-        onSectionSelect={() => {}}
-        reportTitle="Báo cáo trống"
+        onSectionSelect={(id) => setActiveId(id)}
+        reportTitle={bundle ? bundle.project.title : "Báo cáo trống"}
+        onAddSection={handleCreateSection}
+        onRenameSection={handleRenameSection}
+        onDeleteSection={handleDeleteSection}
+        onMoveSection={handleMoveSectionFromMenu}
       />
     );
   }
