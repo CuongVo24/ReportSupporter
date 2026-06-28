@@ -31,6 +31,8 @@ type WorkspaceLayoutProps = {
   onRenameSection?: (id: string, title: string) => void;
   onDeleteSection?: (id: string) => void;
   onMoveSection?: (id: string, direction: "up" | "down") => void;
+  onReorderSection?: (activeId: string, overId: string) => void;
+  onSectionFilesDrop?: (id: string, files: File[]) => void;
 };
 
 export function WorkspaceLayout({
@@ -50,6 +52,8 @@ export function WorkspaceLayout({
   onRenameSection,
   onDeleteSection,
   onMoveSection,
+  onReorderSection,
+  onSectionFilesDrop,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isWide, setIsWide] = useState(true);
@@ -176,6 +180,8 @@ export function WorkspaceLayout({
       onRenameSection={onRenameSection}
       onDeleteSection={onDeleteSection}
       onMoveSection={onMoveSection}
+      onReorderSection={onReorderSection}
+      onSectionFilesDrop={onSectionFilesDrop}
     />
   );
 

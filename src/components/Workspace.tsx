@@ -8,7 +8,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
-import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
+import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
   loadBundle,
@@ -30,6 +30,10 @@ import {
   renameSection,
   deleteSection,
   moveSection,
+  moveSectionToIndex,
+  createImageAsset,
+  isMarkdownFile,
+  readMarkdownFile,
   AiSettingsDialog,
   AiWholeReportPanel,
   registerAdapter,
@@ -56,6 +60,12 @@ function focusEditorOnNextFrame() {
   window.requestAnimationFrame(() => {
     document.querySelector<HTMLElement>(".cm-content")?.focus();
   });
+}
+
+function appendMarkdown(existing: string, addition: string) {
+  const trimmedAddition = addition.trim();
+  if (!trimmedAddition) return existing;
+  return `${existing.trimEnd()}${existing.trim() ? "\n\n" : ""}${trimmedAddition}`;
 }
 
 export function Workspace() {
@@ -240,6 +250,108 @@ export function Workspace() {
   const handleMoveSectionFromMenu = useCallback((id: string, direction: "up" | "down") => {
     handleMoveSection(direction, id);
   }, [handleMoveSection]);
+
+  const handleReorderSection = useCallback((draggedId: string, overId: string) => {
+    if (!bundle || draggedId === overId) return;
+    const targetIndex = bundle.project.sections.findIndex((section) => section.id === overId);
+    if (targetIndex < 0) return;
+
+    const sections = moveSectionToIndex(bundle.project.sections, draggedId, targetIndex);
+    const next = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
+    setActiveId(draggedId);
+    void saveBundle(next);
+  }, [bundle]);
+
+  const handleSectionFilesDrop = useCallback(async (sectionId: string, files: File[]) => {
+    if (!bundle) return;
+
+    const imageFile = files.find((file) => file.type.startsWith("image/"));
+    if (imageFile) {
+      const result = await createImageAsset(imageFile, 5 * 1024 * 1024);
+      if (!result.ok) {
+        setToastMessage(result.error);
+        setToastOpen(true);
+        return;
+      }
+
+      const sections = bundle.project.sections.map((section) =>
+        section.id === sectionId
+          ? { ...section, markdown: appendMarkdown(section.markdown, result.ref) }
+          : section,
+      );
+      const next: ReportProjectBundle = {
+        ...bundle,
+        assets: bundle.assets.some((asset) => asset.id === result.asset.id)
+          ? bundle.assets
+          : [...bundle.assets, result.asset],
+        project: {
+          ...bundle.project,
+          sections,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      setBundle(next);
+      setActiveId(sectionId);
+      setActiveView("editor");
+      setCheckResult(null);
+      setHasRun(false);
+      void saveBundle(next);
+      setToastMessage("Da chen anh vao muc da tha.");
+      setToastOpen(true);
+      return;
+    }
+
+    const markdownFile = files.find((file) => isMarkdownFile(file));
+    if (!markdownFile) {
+      setToastMessage("Chi ho tro tha anh hoac file Markdown vao muc luc.");
+      setToastOpen(true);
+      return;
+    }
+
+    const result = await readMarkdownFile(markdownFile);
+    if (!result.ok) {
+      setToastMessage(result.error);
+      setToastOpen(true);
+      return;
+    }
+
+    const parsedSections = importReadme(result.markdown);
+    const markdownToInsert = parsedSections.length > 0
+      ? parsedSections.map((section) => section.markdown).join("\n\n")
+      : result.markdown;
+    const sections = bundle.project.sections.map((section) =>
+      section.id === sectionId
+        ? { ...section, markdown: appendMarkdown(section.markdown, markdownToInsert) }
+        : section,
+    );
+    const next: ReportProjectBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        sections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(next);
+    setActiveId(sectionId);
+    setActiveView("editor");
+    setCheckResult(null);
+    setHasRun(false);
+    void saveBundle(next);
+    setToastMessage("Da chen noi dung Markdown vao muc da tha.");
+    setToastOpen(true);
+  }, [bundle]);
 
   const handleRenameSection = useCallback((id: string, newTitle: string) => {
     if (!bundle) return;
@@ -680,6 +792,28 @@ export function Workspace() {
         onStartBlank={handleStartBlank}
         onImportMarkdown={handleImportMarkdown}
         onApplyAiOutline={handleApplyAiOutline}
+        onOpenAiSettings={() => setIsAiSettingsOpen(true)}
+      />
+    );
+  }
+
+  if (!activeSection) {
+    return (
+      <WorkspaceLayout
+        editor={<EmptyState title="Báo cáo trống" message="Thêm mục đầu tiên để bắt đầu." />}
+        preview={<EmptyState title="Chưa có nội dung" message="Viết nội dung trong editor để hiển thị bản in thử." />}
+        sidePanel={null}
+        sections={[]}
+        activeSectionId=""
+        onSectionSelect={() => {}}
+        reportTitle="Báo cáo trống"
+      />
+    );
+  }
+
+  const saveStatus = (
+    <p className="ws-save-status" aria-live="polite">
+      {quotaFull ? (
         <span className="ws-save-status-error">
           <AlertTriangle size={14} aria-hidden="true" />
           Bộ nhớ đầy
@@ -880,6 +1014,8 @@ export function Workspace() {
       onRenameSection={handleRenameSection}
       onDeleteSection={handleDeleteSection}
       onMoveSection={handleMoveSectionFromMenu}
+      onReorderSection={handleReorderSection}
+      onSectionFilesDrop={handleSectionFilesDrop}
     />
       <CommandPalette
         isOpen={isCommandPaletteOpen}

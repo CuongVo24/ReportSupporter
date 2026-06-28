@@ -115,3 +115,25 @@ export function moveSection(
 
   return renumberSections(result);
 }
+
+export function moveSectionToIndex(
+  sections: ReportSection[],
+  id: string,
+  targetIndex: number
+): ReportSection[] {
+  const currentIndex = sections.findIndex((s) => s.id === id);
+  if (
+    currentIndex < 0 ||
+    targetIndex < 0 ||
+    targetIndex >= sections.length ||
+    currentIndex === targetIndex
+  ) {
+    return sections;
+  }
+
+  const result = [...sections];
+  const [section] = result.splice(currentIndex, 1);
+  result.splice(targetIndex, 0, section);
+
+  return renumberSections(result);
+}

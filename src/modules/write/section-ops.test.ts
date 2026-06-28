@@ -5,6 +5,7 @@ import {
   renameSection,
   deleteSection,
   moveSection,
+  moveSectionToIndex,
   renumberSections,
 } from "./section-ops";
 import type { ReportSection } from "@/types";
@@ -101,5 +102,20 @@ describe("section-ops helpers", () => {
     expect(movedUp[0].order).toBe(0);
     expect(movedUp[1].id).toBe("1");
     expect(movedUp[1].order).toBe(1);
+  });
+
+  it("moveSectionToIndex moves any section to a target index and renumbers", () => {
+    const initial = [
+      ...createMockSections(),
+      { id: "3", order: 2, title: "Má»¥c 3", markdown: "# Má»¥c 3", status: "review" as const },
+    ];
+
+    const movedToStart = moveSectionToIndex(initial, "3", 0);
+
+    expect(movedToStart.map((section) => section.id)).toEqual(["3", "1", "2"]);
+    expect(movedToStart.map((section) => section.order)).toEqual([0, 1, 2]);
+
+    const unchanged = moveSectionToIndex(initial, "missing", 0);
+    expect(unchanged).toBe(initial);
   });
 });

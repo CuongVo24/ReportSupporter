@@ -43,6 +43,7 @@ export {
   renameSection,
   deleteSection,
   moveSection,
+  moveSectionToIndex,
   renumberSections,
 } from "./section-ops";
 // AI layer — Group A (W11)
