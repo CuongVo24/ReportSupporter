@@ -8,7 +8,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp } from "lucide-react";
-import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
+import { LoadingSkeleton, EmptyState } from "@/components/states";
 import {
   createProjectFromTemplate,
   loadBundle,
