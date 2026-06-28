@@ -1,12 +1,12 @@
 // Export types - see Design/Modules/Other/CanonicalTypes.md §8
 import type { ReportIssueSeverity } from "./report";
 
-export type ExportTarget = "html" | "pdf" | "docx";
+export type ExportTarget = "html" | "pdf" | "docx" | "pptx";
 
 export type ExportStatus = "idle" | "running" | "done" | "error";
 
 export type ExportError = {
-  stage: "merge" | "parse" | "format" | "render-html" | "render-pdf" | "render-docx";
+  stage: "merge" | "parse" | "format" | "render-html" | "render-pdf" | "render-docx" | "render-pptx";
   message: string;
   recoverable: boolean;
 };

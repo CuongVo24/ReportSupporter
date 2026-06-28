@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { ExportJob, ExportTarget, ReportProjectBundle, ExportError } from "@/types";
+import type { ExportJob, ExportTarget, ReportProjectBundle, ExportError, SlideOutline, Speaker, SpeakerScript } from "@/types";
 import { exportHtml } from "./export-html";
 import { exportPdf } from "./export-pdf";
 import { exportDocx, packDocx } from "./export-docx";
@@ -8,7 +8,12 @@ import { recordExport } from "./export-history";
 
 async function executeExport(
   target: ExportTarget,
-  bundle: ReportProjectBundle
+  bundle: ReportProjectBundle,
+  extraParams?: {
+    slides?: SlideOutline[];
+    speakers?: Speaker[];
+    scripts?: Record<string, SpeakerScript>;
+  }
 ): Promise<Blob> {
   let blob: Blob;
 
@@ -60,6 +65,26 @@ async function executeExport(
       };
       throw docxError;
     }
+  } else if (target === "pptx") {
+    if (!extraParams?.slides) {
+      throw new Error("Missing slides outline data for PPTX generation");
+    }
+    try {
+      const { buildPptx } = await import("@/modules/present/export-pptx");
+      blob = await buildPptx(
+        extraParams.slides,
+        extraParams.speakers || [],
+        extraParams.scripts || {}
+      );
+    } catch (pptxErr: unknown) {
+      const msg = pptxErr instanceof Error ? pptxErr.message : "Failed to generate PPTX document.";
+      const pptxError: ExportError = {
+        stage: "render-pptx",
+        message: msg,
+        recoverable: true,
+      };
+      throw pptxError;
+    }
   } else {
     throw new Error(`Unsupported export target: ${target}`);
   }
@@ -71,10 +96,18 @@ export function useExport(currentBundle?: ReportProjectBundle) {
   const [jobs, setJobs] = useState<ExportJob[]>([]);
   const [exportedBlobs, setExportedBlobs] = useState<Partial<Record<ExportTarget, Blob>>>({});
 
-  const runExport = useCallback(async (target: ExportTarget, bundle: ReportProjectBundle) => {
+  const runExport = useCallback(async (
+    target: ExportTarget,
+    bundle: ReportProjectBundle,
+    extraParams?: {
+      slides?: SlideOutline[];
+      speakers?: Speaker[];
+      scripts?: Record<string, SpeakerScript>;
+    }
+  ) => {
     const id = Math.random().toString(36).substring(2, 11);
     const safeTitle = bundle.project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "report";
-    const ext = target === "pdf" ? "pdf" : target === "docx" ? "docx" : "html";
+    const ext = target === "pdf" ? "pdf" : target === "docx" ? "docx" : target === "pptx" ? "pptx" : "html";
     const fileName = `${safeTitle}.${ext}`;
 
     const newJob: ExportJob = {
@@ -89,7 +122,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
     setJobs((prev) => [newJob, ...prev]);
 
     try {
-      const blob = await executeExport(target, bundle);
+      const blob = await executeExport(target, bundle, extraParams);
 
       if (target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
         const url = URL.createObjectURL(blob);
@@ -117,7 +150,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         error && typeof error === "object" && "stage" in error && "message" in error
           ? (error as ExportError)
           : {
-              stage: target === "html" ? "render-html" : target === "pdf" ? "render-pdf" : "render-docx",
+              stage: target === "html" ? "render-html" : target === "pdf" ? "render-pdf" : target === "docx" ? "render-docx" : "render-pptx",
               message: error instanceof Error ? error.message : "An unknown error occurred during export.",
               recoverable: true,
             };
@@ -135,7 +168,15 @@ export function useExport(currentBundle?: ReportProjectBundle) {
   }, []);
 
   const retry = useCallback(
-    async (jobId: string, overrideBundle?: ReportProjectBundle) => {
+    async (
+      jobId: string,
+      overrideBundle?: ReportProjectBundle,
+      extraParams?: {
+        slides?: SlideOutline[];
+        speakers?: Speaker[];
+        scripts?: Record<string, SpeakerScript>;
+      }
+    ) => {
       const activeBundle = overrideBundle || currentBundle;
       if (!activeBundle) return;
 
@@ -157,7 +198,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
       );
 
       try {
-        const blob = await executeExport(job.target, activeBundle);
+        const blob = await executeExport(job.target, activeBundle, extraParams);
 
         if (job.target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
           const url = URL.createObjectURL(blob);
@@ -189,7 +230,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
           error && typeof error === "object" && "stage" in error && "message" in error
             ? (error as ExportError)
             : {
-                stage: job.target === "html" ? "render-html" : job.target === "pdf" ? "render-pdf" : "render-docx",
+                stage: job.target === "html" ? "render-html" : job.target === "pdf" ? "render-pdf" : job.target === "docx" ? "render-docx" : "render-pptx",
                 message: error instanceof Error ? error.message : "An unknown error occurred during export.",
                 recoverable: true,
               };

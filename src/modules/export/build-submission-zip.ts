@@ -49,6 +49,12 @@ export async function buildSubmissionZip(input: {
     files.push({ name: "report.docx", target: "docx" });
   }
 
+  if (exportsMap.pptx) {
+    const buffer = await exportsMap.pptx.arrayBuffer();
+    zip.file("report.pptx", buffer);
+    files.push({ name: "report.pptx", target: "pptx" });
+  }
+
   // 4. Build manifest.json
   const manifest: PackageManifest = {
     generatedAt: new Date().toISOString(),

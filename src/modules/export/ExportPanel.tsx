@@ -43,6 +43,7 @@ export function ExportPanel({
           html: "HTML",
           pdf: "PDF",
           docx: "Word (DOCX)",
+          pptx: "PowerPoint (PPTX)",
         };
         const target = job.target;
         setToastVariant("success");
