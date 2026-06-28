@@ -17,7 +17,20 @@ export type { FormatPreset, FormatSettings, TocNode, CaptionEntry } from "./form
 export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./template";
 export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob, PackageManifest, SubmissionPackage, SubmissionChecklistItem } from "./export";
 export type { ParsedSection, PipelineResult, FormattedReport } from "./pipeline";
-export type { SlideOutline, PresentationTimeline, Speaker, SpeakerScript, DefenseQA, WeakSectionHint } from "./present";
+export type {
+  SlideOutline,
+  PresentationTimeline,
+  Speaker,
+  SpeakerScript,
+  DefenseQA,
+  WeakSectionHint,
+  MockDefensePersona,
+  DefenseQuestion,
+  AnswerVerdict,
+  MockDefenseTurn,
+  ReadinessScorecard,
+  MockDefenseSession,
+} from "./present";
 export type { AiAction, AiSuggestion, AiConfig, GatewayState, AiActionGateway } from "./ai";
 export { aiActionSchema, aiSuggestionSchema, aiConfigSchema } from "./ai";
 
@@ -35,7 +48,20 @@ export {
   storedBundleSchema,
 } from "./schemas";
 
-export { slideOutlineSchema, presentationTimelineSchema, speakerSchema, speakerScriptSchema, defenseQASchema, weakSectionHintSchema } from "./present";
+export {
+  slideOutlineSchema,
+  presentationTimelineSchema,
+  speakerSchema,
+  speakerScriptSchema,
+  defenseQASchema,
+  weakSectionHintSchema,
+  mockDefensePersonaSchema,
+  defenseQuestionSchema,
+  answerVerdictSchema,
+  mockDefenseTurnSchema,
+  readinessScorecardSchema,
+  mockDefenseSessionSchema,
+} from "./present";
 
 export { SCHEMA_VERSION, DEFAULT_TEMPLATE_ID, DEFAULT_FORMAT_SETTINGS } from "./defaults";
 

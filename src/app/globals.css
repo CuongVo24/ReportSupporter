@@ -1810,6 +1810,134 @@ body {
   border-radius: var(--rs-radius-sm);
 }
 
+.ws-mock-defense {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-header,
+.ws-mock-defense-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-note,
+.ws-mock-defense-progress {
+  margin: var(--rs-space-1) 0 0;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-warning,
+.ws-mock-defense-error {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-md);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-warning {
+  border: 1px dashed var(--rs-color-severity-warning);
+  background: var(--rs-color-severity-warning-bg);
+  color: var(--rs-color-text);
+}
+
+.ws-mock-defense-error {
+  border: 1px solid var(--rs-color-severity-error);
+  background: var(--rs-color-severity-error-bg);
+  color: var(--rs-color-severity-error);
+}
+
+.ws-mock-defense-session,
+.ws-mock-defense-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-card,
+.ws-mock-defense-verdict,
+.ws-mock-defense-scorecard {
+  padding: var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+}
+
+.ws-mock-defense-persona {
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  text-transform: uppercase;
+}
+
+.ws-mock-defense-question {
+  margin: var(--rs-space-2) 0;
+  color: var(--rs-color-text);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-mock-defense-excerpt {
+  margin: 0;
+  padding: var(--rs-space-2);
+  border-left: 3px solid var(--rs-color-primary);
+  color: var(--rs-color-text-muted);
+  background: var(--rs-color-surface-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-answer-label {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-mock-defense-answer {
+  width: 100%;
+  resize: vertical;
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  font: inherit;
+}
+
+.ws-mock-defense-answer:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-mock-defense-verdict {
+  border-left: 4px solid var(--rs-color-border);
+}
+
+.ws-mock-defense-verdict.verdict-answered {
+  border-left-color: var(--rs-color-success);
+}
+
+.ws-mock-defense-verdict.verdict-evaded {
+  border-left-color: var(--rs-color-severity-warning);
+}
+
+.ws-mock-defense-verdict.verdict-incorrect {
+  border-left-color: var(--rs-color-severity-error);
+}
+
+.ws-mock-defense-verdict p {
+  margin: var(--rs-space-1) 0;
+  color: var(--rs-color-text);
+}
+
+.ws-mock-defense-verdict small {
+  color: var(--rs-color-text-muted);
+}
+
 .ws-present-bullets-list {
   display: flex;
   flex-direction: column;

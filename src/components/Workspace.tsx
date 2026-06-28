@@ -1116,12 +1116,13 @@ export function Workspace() {
             />
           </TabsContent>
           <TabsContent value="present" className="ws-side-tabs-content">
-            <PresentPanel
-              bundle={bundle}
-              checkResult={checkResult ?? undefined}
-              runExport={runExport}
-              jobs={jobs}
-            />
+          <PresentPanel
+            bundle={bundle}
+            checkResult={checkResult ?? undefined}
+            runExport={runExport}
+            jobs={jobs}
+            onOpenAiSettings={() => setIsAiSettingsOpen(true)}
+          />
           </TabsContent>
         </div>
       </Tabs>
