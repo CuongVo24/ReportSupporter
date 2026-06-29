@@ -23,25 +23,23 @@ export function buildPrintCss(preset: FormatPreset): string {
 @media print {
   @page {
     size: ${preset.page || "A4"};
-    margin: ${top} ${right} ${bottom} ${left};
-    ${preset.header ? `@top-center { content: "${preset.header}"; font-family: ${fontFamily}; font-size: 10pt; color: #666; }` : ""}
-    ${preset.footer ? `@bottom-center { content: "${preset.footer}"; font-family: ${fontFamily}; font-size: 10pt; color: #666; }` : ""}
-  }
-  @page :first {
-    @top-center { content: none !important; }
-    @bottom-center { content: none !important; }
+    margin: 0;
   }
   body { font-family: ${fontFamily}; font-size: ${fontPt}pt; line-height: ${lh}; color: #000; background: #fff; margin: 0; padding: 0; }
+  .print-page-wrapper {
+    padding: ${top} ${right} ${bottom} ${left};
+    box-sizing: border-box;
+  }
   p, li { text-align: ${align}; orphans: 3; widows: 3; }
   li { page-break-inside: avoid; break-inside: avoid; }
-  h1, h2, h3, h4, h5, h6 { font-family: ${fontFamily}; color: #000; page-break-after: avoid; break-after: avoid; }
+  h1, h2, h3, h4, h5, h6 { font-family: ${fontFamily}; color: #000; page-break-after: avoid !important; break-after: avoid !important; }
   h1 { font-size: 18pt; text-align: center; margin-top: 0; margin-bottom: 20pt; ${breakPageBeforeH1} }${firstH1AvoidBreak}
   h2 { font-size: 14pt; margin-top: 24pt; margin-bottom: 12pt; }
   h3 { font-size: 13pt; margin-top: 18pt; margin-bottom: 6pt; }
   .cover-page {
     page-break-before: avoid; break-before: avoid; page-break-after: always; break-after: page;
     box-sizing: border-box; display: flex; flex-direction: column;
-    align-items: center; text-align: center; min-height: 240mm; padding: 15mm 0;
+    align-items: center; text-align: center; min-height: 297mm; padding: ${top} ${right} ${bottom} ${left};
   }
   .page-break { page-break-before: always; break-before: page; }
   figure, img, table { page-break-inside: avoid; break-inside: avoid; }
@@ -52,7 +50,7 @@ export function buildPrintCss(preset: FormatPreset): string {
   .tbl-caption { page-break-after: avoid; break-after: avoid; }
   table { width: 100%; border-collapse: collapse; margin: 15pt 0; }
   table, th, td { border: 1px solid #000; }
-  th, td { padding: 6pt; text-align: left; }
+  th, td { padding: 8pt; text-align: left; }
   img[alt^="QR:"] { width: 80pt; height: 80pt; vertical-align: middle; }
 }
 @media screen {

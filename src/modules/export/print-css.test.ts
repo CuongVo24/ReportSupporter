@@ -50,17 +50,11 @@ describe("buildPrintCss", () => {
     expect(css).toContain(".tbl-caption { page-break-after: avoid; break-after: avoid; }");
   });
 
-  it("should generate running header and footer @page content when provided", () => {
-    const cssWithHeaderFooter = buildPrintCss({
-      ...basePreset,
-      header: "Báo cáo khóa luận",
-      footer: "Đại học Bách Khoa",
-    });
-
-    expect(cssWithHeaderFooter).toContain('@top-center { content: "Báo cáo khóa luận"');
-    expect(cssWithHeaderFooter).toContain('@bottom-center { content: "Đại học Bách Khoa"');
-    expect(cssWithHeaderFooter).toContain("@page :first {");
-    expect(cssWithHeaderFooter).toContain("content: none !important;");
+  it("should generate zero-margin @page print styles and a simulated print-page-wrapper", () => {
+    const css = buildPrintCss(basePreset);
+    expect(css).toContain("margin: 0;");
+    expect(css).toContain(".print-page-wrapper {");
+    expect(css).toContain("padding: 20mm 20mm 20mm 30mm;");
   });
 
   it("should generate dot leader, spacing, and page break rules for Table of Contents", () => {
@@ -80,7 +74,7 @@ describe("buildPrintCss", () => {
   it("should balance the cover-page layout vertically", () => {
     const css = buildPrintCss(basePreset);
     expect(css).toContain(".cover-page {");
-    expect(css).toContain("min-height: 240mm;");
+    expect(css).toContain("min-height: 297mm;");
     expect(css).toContain("display: flex; flex-direction: column;");
     expect(css).toContain(".cover-title-container { margin: auto 0; }");
     expect(css).toContain(".cover-course { font-size: 14pt; font-weight: bold; margin-top: 10pt; margin-bottom: auto; }");

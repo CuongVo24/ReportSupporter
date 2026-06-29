@@ -54,7 +54,10 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
       }
     }
     const resolvedMarkdown = resolveAssetRefs(markdown, assets);
-    const ast = parseMarkdown(resolvedMarkdown);
+    const strippedMarkdown = resolvedMarkdown
+      .replace(/\[(CHÈN|TODO)[^\]]*\]/gi, "")
+      .replace(/\{\{[^\}]*\}\}/g, "");
+    const ast = parseMarkdown(strippedMarkdown);
     return { sec, ast };
   });
 

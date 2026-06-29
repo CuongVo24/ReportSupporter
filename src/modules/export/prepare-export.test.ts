@@ -130,4 +130,41 @@ describe("prepareExport Optimization Parity", () => {
       }
     }
   });
+
+  it("strips placeholders from the exported markdown content", () => {
+    const placeholderBundle: ReportProjectBundle = {
+      ...mockBundle,
+      project: {
+        ...mockBundle.project,
+        sections: [
+          {
+            id: "sec-1",
+            order: 1,
+            title: "Test Placeholders",
+            markdown: "# Heading\n\nThis is a [CHÈN ẢNH BUYER LOGIN] placeholder and [TODO: fix it] and {{STUDENT_NAME}}.",
+            status: "draft",
+          },
+        ],
+      },
+    };
+
+    const result = prepareExport(placeholderBundle);
+    const textNodes: { type: string; value?: string }[] = [];
+    const walk = (node: unknown) => {
+      if (!node) return;
+      const n = node as { type: string; value?: string; children?: unknown[] };
+      if (n.type === "text") {
+        textNodes.push(n);
+      }
+      if (n.children && Array.isArray(n.children)) {
+        n.children.forEach(walk);
+      }
+    };
+    walk(result.formatted.mdast);
+
+    const fullText = textNodes.map((n) => n.value).join(" ");
+    expect(fullText).not.toContain("[CHÈN");
+    expect(fullText).not.toContain("[TODO");
+    expect(fullText).not.toContain("STUDENT_NAME");
+  });
 });

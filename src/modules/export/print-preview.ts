@@ -55,9 +55,11 @@ export function buildPrintableHtml(input: ExportInput): string {
 </head>
 <body>
   ${coverHtml}
-  ${tocHtml}
-  <div class="report-body">
-    ${bodyHtml}
+  <div class="print-page-wrapper">
+    ${tocHtml}
+    <div class="report-body">
+      ${bodyHtml}
+    </div>
   </div>
 </body>
 </html>`.trim();
