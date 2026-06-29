@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 import { EmptyState, ErrorState } from "@/components/states";
 import { Button, Dialog, Toast } from "@/components/ui";
+import { validateExport, type ExportIssue } from "./validate-export";
 
 export function ExportPanel({
   bundle,
@@ -20,6 +21,8 @@ export function ExportPanel({
 }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingTarget, setPendingTarget] = useState<ExportTarget | null>(null);
+  const [isValidationOpen, setIsValidationOpen] = useState(false);
+  const [validationResult, setValidationResult] = useState<{ ok: boolean; issues: ExportIssue[] } | null>(null);
 
   // Toast states
   const [toastOpen, setToastOpen] = useState(false);
@@ -67,7 +70,12 @@ export function ExportPanel({
   }, [jobs, exportedBlobs]);
 
   const handleExportClick = (target: ExportTarget) => {
-    if (errorsCount > 0) {
+    const valResult = validateExport(bundle);
+    if (valResult.issues.length > 0) {
+      setValidationResult(valResult);
+      setPendingTarget(target);
+      setIsValidationOpen(true);
+    } else if (errorsCount > 0) {
       setPendingTarget(target);
       setIsConfirmOpen(true);
     } else {
@@ -81,6 +89,21 @@ export function ExportPanel({
       setPendingTarget(null);
     }
     setIsConfirmOpen(false);
+  };
+
+  const handleConfirmValidationExport = () => {
+    setIsValidationOpen(false);
+    setValidationResult(null);
+    if (pendingTarget) {
+      const target = pendingTarget;
+      setPendingTarget(null);
+      if (errorsCount > 0) {
+        setPendingTarget(target);
+        setIsConfirmOpen(true);
+      } else {
+        void runExport(target, bundle);
+      }
+    }
   };
 
   const getTargetLabel = (target: string) => {
@@ -138,6 +161,20 @@ export function ExportPanel({
       </Button>
       <Button variant="primary" onClick={handleConfirmExport}>
         Vẫn xuất
+      </Button>
+    </div>
+  );
+
+  const validationDialogFooter = (
+    <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
+      <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setValidationResult(null); setPendingTarget(null); }}>
+        Hủy
+      </Button>
+      <Button
+        variant={validationResult?.ok ? "primary" : "secondary"}
+        onClick={handleConfirmValidationExport}
+      >
+        Vẫn xuất bản
       </Button>
     </div>
   );
@@ -278,6 +315,47 @@ export function ExportPanel({
         variant="confirm"
         footer={dialogFooter}
       />
+
+      {/* Validation Dialog */}
+      <Dialog
+        isOpen={isValidationOpen}
+        onOpenChange={(open) => {
+          setIsValidationOpen(open);
+          if (!open) {
+            setValidationResult(null);
+            setPendingTarget(null);
+          }
+        }}
+        title="Kiểm tra chất lượng báo cáo"
+        description={
+          validationResult?.ok
+            ? "Báo cáo có một số cảnh báo định dạng nhẹ. Bạn vẫn có thể xuất bản."
+            : "Phát hiện lỗi nghiêm trọng (ví dụ: ảnh chưa được nhúng). Tệp tin xuất ra (PDF/Word) có thể bị lỗi hình ảnh hoặc hiển thị."
+        }
+        variant="confirm"
+        footer={validationDialogFooter}
+      >
+        <div className="ws-validation-list">
+          {validationResult?.issues.map((issue, idx) => (
+            <div
+              key={idx}
+              className={`ws-validation-item ws-validation-item-${issue.severity}`}
+            >
+              <span className="ws-validation-icon">
+                {issue.severity === "error" ? "❌" : "⚠️"}
+              </span>
+              <div className="ws-validation-msg">
+                {issue.sectionId && (
+                  <span className="ws-validation-section">
+                    [{bundle.project.sections.find((s) => s.id === issue.sectionId)?.title || issue.sectionId}]:
+                  </span>
+                )}
+                {issue.message}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Dialog>
 
       {/* Export Toast Notification */}
       <Toast
