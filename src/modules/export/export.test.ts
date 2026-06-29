@@ -123,8 +123,8 @@ describe("Export Module", () => {
   });
 
   describe("exportPdf", () => {
-    it("returns ok:false with stage:render-pdf in server environment", () => {
-      const result = exportPdf(bundle);
+    it("returns ok:false with stage:render-pdf in server environment", async () => {
+      const result = await exportPdf(bundle);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");

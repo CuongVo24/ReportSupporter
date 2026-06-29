@@ -24,6 +24,7 @@ export type ExportJob = {
   finishedAt?: string;
   fileName: string;
   error?: ExportError;
+  phase?: "preparing" | "rendering-assets" | "ready" | "printing";
 };
 
 export type PackageManifest = {

@@ -119,18 +119,25 @@ export function ExportPanel({
     }
   };
 
-  const getJobStatusElement = (status: string) => {
-    switch (status) {
-      case "running":
+  const getJobStatusElement = (job: ExportJob) => {
+    switch (job.status) {
+      case "running": {
+        let phaseText = "Đang xử lý...";
+        if (job.phase === "preparing") phaseText = "Chuẩn bị...";
+        if (job.phase === "rendering-assets") phaseText = "Đang tạo ảnh/sơ đồ...";
+        if (job.phase === "ready") phaseText = "Đang bố cục trang in...";
+        if (job.phase === "printing") phaseText = "Đang in...";
+
         return (
           <span className="ws-export-status ws-export-status-running" aria-live="polite">
             <svg className="ws-export-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="ws-export-spinner-bg" />
               <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" />
             </svg>
-            Đang xử lý...
+            {phaseText}
           </span>
         );
+      }
       case "done":
         return (
           <span className="ws-export-status ws-export-status-done">
@@ -282,7 +289,7 @@ export function ExportPanel({
                   <span className="ws-export-job-target-badge">
                     {getTargetLabel(job.target)}
                   </span>
-                  {getJobStatusElement(job.status)}
+                  {getJobStatusElement(job)}
                 </div>
                 <div className="ws-export-job-filename" title={job.fileName}>
                   {job.fileName}

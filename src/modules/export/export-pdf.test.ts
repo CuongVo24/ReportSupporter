@@ -9,15 +9,17 @@ describe("export-pdf", () => {
     vi.restoreAllMocks();
     // @ts-expect-error window is not defined on global in node types
     delete global.window;
+    // @ts-expect-error document is not defined on global in node types
+    delete global.document;
   });
 
   describe("exportPdfViaBrowserPrint", () => {
-    it("should return a recoverable error when running in server-side/no-window environment", () => {
+    it("should return a recoverable error when running in server-side/no-window environment", async () => {
       // Ensure window is undefined
       // @ts-expect-error window is not defined on global in node types
       delete global.window;
 
-      const result = exportPdfViaBrowserPrint(bundle);
+      const result = await exportPdfViaBrowserPrint(bundle);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");
@@ -26,54 +28,59 @@ describe("export-pdf", () => {
       }
     });
 
-    it("should return a recoverable error when browser popup is blocked", () => {
-      // Mock client environment with a blocked popup window.open returning null
-      const mockWindow = {
-        open: vi.fn().mockReturnValue(null),
-      };
-      // @ts-expect-error window is not defined on global in node types
-      global.window = mockWindow;
+    it("should successfully trigger browser print through a hidden iframe", async () => {
+      // Mock global window
+      global.window = {} as unknown as typeof window;
 
-      const result = exportPdfViaBrowserPrint(bundle);
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.stage).toBe("render-pdf");
-        expect(result.error.message).toContain("Popup blocked");
-        expect(result.error.recoverable).toBe(true);
-      }
-      expect(mockWindow.open).toHaveBeenCalledWith("", "_blank");
-    });
-
-    it("should successfully trigger browser print when popup window opens", () => {
-      const mockDocument = {
+      const mockIframeDoc = {
         open: vi.fn(),
         write: vi.fn(),
         close: vi.fn(),
-      };
-      const mockOpenedWindow = {
-        document: mockDocument,
-        focus: vi.fn(),
-        print: vi.fn(),
-        onload: null as ((this: Window, ev: Event) => unknown) | null,
+        head: {
+          appendChild: vi.fn(),
+        },
+        querySelectorAll: vi.fn().mockReturnValue([]),
+        title: "",
       };
 
-      const mockWindow = {
-        open: vi.fn().mockReturnValue(mockOpenedWindow),
+      const mockIframe = {
+        style: {},
+        contentWindow: {
+          document: mockIframeDoc,
+          focus: vi.fn(),
+          print: vi.fn(),
+        },
       };
-      // @ts-expect-error window is not defined on global in node types
-      global.window = mockWindow;
 
-      const result = exportPdfViaBrowserPrint(bundle);
+      const mockCreateElement = vi.fn().mockImplementation((tag) => {
+        if (tag === "iframe") return mockIframe;
+        return {};
+      });
+
+      const mockQuerySelectorAll = vi.fn().mockReturnValue([]);
+
+      // Mock global document
+      global.document = {
+        createElement: mockCreateElement,
+        querySelectorAll: mockQuerySelectorAll,
+        body: {
+          appendChild: vi.fn(),
+          removeChild: vi.fn(),
+        },
+      } as unknown as typeof document;
+
+      const result = await exportPdfViaBrowserPrint(bundle);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.blob).toBeInstanceOf(Blob);
         expect(result.blob.type).toBe("text/html;charset=utf-8");
       }
 
-      expect(mockWindow.open).toHaveBeenCalledWith("", "_blank");
-      expect(mockDocument.open).toHaveBeenCalled();
-      expect(mockDocument.write).toHaveBeenCalled();
-      expect(mockDocument.close).toHaveBeenCalled();
+      expect(mockCreateElement).toHaveBeenCalledWith("iframe");
+      expect(mockIframeDoc.open).toHaveBeenCalled();
+      expect(mockIframeDoc.write).toHaveBeenCalled();
+      expect(mockIframeDoc.close).toHaveBeenCalled();
+      expect(mockIframe.contentWindow.print).toHaveBeenCalled();
     });
   });
 
@@ -90,9 +97,9 @@ describe("export-pdf", () => {
   });
 
   describe("exportPdf alias", () => {
-    it("should point to exportPdfViaBrowserPrint", () => {
+    it("should point to exportPdfViaBrowserPrint", async () => {
       // In no-window, it should behave like exportPdfViaBrowserPrint
-      const result = exportPdf(bundle);
+      const result = await exportPdf(bundle);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");

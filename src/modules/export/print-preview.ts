@@ -49,7 +49,6 @@ export function buildPrintableHtml(input: ExportInput): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(bundle.project.title)}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
   <style>
     ${printCss}
   </style>
@@ -60,12 +59,6 @@ export function buildPrintableHtml(input: ExportInput): string {
   <div class="report-body">
     ${bodyHtml}
   </div>
-
-  <!-- Mermaid Client-side Renderer -->
-  <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: true, theme: 'default' });
-  </script>
 </body>
 </html>`.trim();
 }
