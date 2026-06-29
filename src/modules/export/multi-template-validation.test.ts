@@ -114,9 +114,7 @@ describe("Multi-Template Export Validation Tests", () => {
         const originalWindow = global.window;
         const originalDocument = global.document;
 
-        // @ts-expect-error window is mocked
         global.window = {} as unknown as typeof window;
-        // @ts-expect-error document is mocked
         global.document = {
           createElement: mockCreateElement,
           querySelectorAll: mockQuerySelectorAll,

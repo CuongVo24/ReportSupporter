@@ -596,6 +596,9 @@ body {
   background: var(--rs-color-surface-muted);
   border-bottom: 1px solid var(--rs-color-border);
   overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .ws-editor-toolbar-btn {
