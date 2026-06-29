@@ -12,6 +12,7 @@ export type {
   CheckContext,
   CheckResult,
 } from "./report";
+export type { Root as MdastRoot } from "mdast";
 export type { EvidenceKind, EvidenceItem } from "./evidence";
 export type { FormatPreset, FormatSettings, TocNode, CaptionEntry } from "./format";
 export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./template";
