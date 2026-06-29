@@ -68,6 +68,6 @@ Cho phép "chương" bắt đầu ở **mức heading nông nhất thực tế**
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w20/import-fidelity`): `fix(format): number chapters from shallowest heading level so H2-rooted imported docs paginate captions/headings correctly`.
+> Commit (trên `w20/import-fidelity`): `fix(format): number chapters from shallowest heading level so H2-rooted imported docs paginate captions/headings correctly`

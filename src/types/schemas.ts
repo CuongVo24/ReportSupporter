@@ -56,6 +56,7 @@ export const formatSettingsSchema = z.object({
   includeListOfFigures: z.boolean(),
   includeListOfTables: z.boolean(),
   captionNumbering: z.enum(["continuous", "per-chapter"]),
+  respectAuthorNumbering: z.boolean().optional(),
 });
 
 export const metadataFieldSpecSchema = z.object({

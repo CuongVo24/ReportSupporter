@@ -11,4 +11,5 @@ export const DEFAULT_FORMAT_SETTINGS: FormatSettings = {
   includeListOfFigures: false,
   includeListOfTables: false,
   captionNumbering: "per-chapter",
+  respectAuthorNumbering: true,
 };

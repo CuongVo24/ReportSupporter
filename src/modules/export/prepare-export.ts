@@ -67,7 +67,7 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
     allHeadings.push(...secHeadings);
   }
 
-  const globalNumberedHeadings = numberHeadings(allHeadings);
+  const globalNumberedHeadings = numberHeadings(allHeadings, formatSettings);
   const toc = generateToc(globalNumberedHeadings);
 
   const presetId = formatSettings.presetId || "academic-default";
@@ -76,7 +76,10 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
   // 3. Build unified caption registry and normalize captions in-place
   const captionRegistry = buildCaptionRegistry(
     parsedSections.map((p) => ({ id: p.sec.id, ast: p.ast })),
-    preset
+    {
+      captionNumbering: preset.captionNumbering,
+      respectAuthorNumbering: formatSettings.respectAuthorNumbering,
+    }
   );
   normalizeCaptions(
     parsedSections.map((p) => ({ id: p.sec.id, ast: p.ast })),

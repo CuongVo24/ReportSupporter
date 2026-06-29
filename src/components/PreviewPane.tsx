@@ -162,9 +162,9 @@ export function PreviewPane({
       const secHeadings = parseHeadings(ast, id);
       allHeadings.push(...secHeadings);
     }
-    const globalNumbered = numberHeadings(allHeadings);
+    const globalNumbered = numberHeadings(allHeadings, formatSettings);
     return globalNumbered.filter((h) => h.sectionId === activeSectionId);
-  }, [parsedSections, activeSectionId]);
+  }, [parsedSections, activeSectionId, formatSettings]);
 
   // Build the unified caption registry
   const captionRegistry = useMemo(() => {

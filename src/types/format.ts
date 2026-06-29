@@ -21,6 +21,7 @@ export type FormatSettings = {
   includeListOfFigures: boolean;
   includeListOfTables: boolean;
   captionNumbering: "continuous" | "per-chapter";
+  respectAuthorNumbering?: boolean;
 };
 
 /**
