@@ -1,4 +1,5 @@
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
+import { stripHeadingNumberPrefix } from "./strip-heading-number";
 
 export type HeadingNode = { depth: number; text: string; sectionId?: string };
 
@@ -34,7 +35,8 @@ export function parseHeadings(ast: MdastRoot, sectionId?: string): HeadingNode[]
 
     if (n.type === "heading") {
       const heading = n as unknown as MdastHeading;
-      const text = getHeadingText(heading.children).trim();
+      const rawText = getHeadingText(heading.children).trim();
+      const text = stripHeadingNumberPrefix(rawText);
       headings.push({
         depth: heading.depth, // 1..6
         text,

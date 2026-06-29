@@ -88,4 +88,47 @@ describe("Heading Parser & Numbering", () => {
     expect(numbered[1].number).toBe("1.1");
     expect(numbered[1].id).toBe("1-1-h1-2");
   });
+
+  it("should stabilize parent levels to avoid 0.x numbering when starting with a sublevel", () => {
+    const headings = [
+      { depth: 2, text: "Mở đầu h2" },
+      { depth: 3, text: "Mở đầu h3" },
+      { depth: 1, text: "Chương mới h1" },
+    ];
+    const numbered = numberHeadings(headings);
+    expect(numbered[0].number).toBe("1.1");
+    expect(numbered[1].number).toBe("1.1.1");
+    expect(numbered[2].number).toBe("2");
+  });
+
+  it("should strip manual prefix numbers and generate clean heading texts", () => {
+    const md = `
+# 1. Giới thiệu
+## 6.1. Vấn đề chính
+### 1) Tổng quan chi tiết
+## 1.1 - Quy trình hoạt động
+    `;
+    const ast = parseMarkdown(md);
+    const headings = parseHeadings(ast);
+    expect(headings).toEqual([
+      { depth: 1, text: "Giới thiệu" },
+      { depth: 2, text: "Vấn đề chính" },
+      { depth: 3, text: "Tổng quan chi tiết" },
+      { depth: 2, text: "Quy trình hoạt động" },
+    ]);
+  });
+
+  it("should protect non-numbering years at heading starts", () => {
+    const md = `
+# 2026 Báo cáo thường niên
+# Báo cáo năm 2024
+    `;
+    const ast = parseMarkdown(md);
+    const headings = parseHeadings(ast);
+    expect(headings).toEqual([
+      { depth: 1, text: "2026 Báo cáo thường niên" },
+      { depth: 1, text: "Báo cáo năm 2024" },
+    ]);
+  });
 });
+

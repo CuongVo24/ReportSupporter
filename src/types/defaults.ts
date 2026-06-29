@@ -10,5 +10,5 @@ export const DEFAULT_FORMAT_SETTINGS: FormatSettings = {
   includeToc: true,
   includeListOfFigures: false,
   includeListOfTables: false,
-  captionNumbering: "continuous",
+  captionNumbering: "per-chapter",
 };

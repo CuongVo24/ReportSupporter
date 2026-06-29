@@ -6,4 +6,5 @@ export { normalizeCaptions } from "./captions";
 export { generateListOfFigures, generateListOfTables } from "./generate-lof-lot";
 export type { HeadingNode } from "./parse-headings";
 export type { NumberedHeading } from "./number-headings";
-
+export { injectHeadingNumbers, getFlatText } from "./inject-headings";
+export { renderTocToHtml } from "./toc-renderer";

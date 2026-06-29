@@ -8,10 +8,11 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import type { MdastRoot } from "./pipeline-types";
+import type { Root as HastRoot } from "hast";
 
 // Extended sanitize schema to preserve LaTeX math classes and code syntax highlight classes.
 // data: URIs are allowed for images (offline assets), style attributes are stripped.
-const customSchema = {
+export const customSchema = {
   ...defaultSchema,
   clobberPrefix: "",
   attributes: {
@@ -53,7 +54,9 @@ const astRenderProcessor = unified()
   .use(remarkRehype)
   .use(rehypeSanitize, customSchema)
   .use(rehypeKatex)
-  .use(rehypeHighlight)
+  .use(rehypeHighlight);
+
+const htmlProcessor = unified()
   .use(rehypeStringify);
 
 /**
@@ -81,13 +84,26 @@ export function renderMarkdown(markdown: string): string {
 }
 
 /**
+ * Transforms an MDAST root to a HAST root using the unified pipeline.
+ */
+export function renderMdastToHast(ast: MdastRoot): HastRoot {
+  return astRenderProcessor.runSync(ast) as HastRoot;
+}
+
+/**
+ * Serializes a HAST root to an HTML string.
+ */
+export function stringifyHast(hast: HastRoot): string {
+  return htmlProcessor.stringify(hast);
+}
+
+/**
  * Renders an already parsed mdast AST Root to a sanitized HTML string.
  */
 export function renderMdastToHtml(ast: MdastRoot): string {
   try {
-    const hast = astRenderProcessor.runSync(ast);
-    const result = astRenderProcessor.stringify(hast);
-    return result.toString();
+    const hast = renderMdastToHast(ast);
+    return stringifyHast(hast);
   } catch (error) {
     console.error("Failed to render MDAST:", error);
     return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';

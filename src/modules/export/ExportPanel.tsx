@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 import { EmptyState, ErrorState } from "@/components/states";
 import { Button, Dialog, Toast } from "@/components/ui";
+import { validateExport, type ExportIssue } from "./validate-export";
 
 export function ExportPanel({
   bundle,
@@ -20,6 +21,8 @@ export function ExportPanel({
 }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingTarget, setPendingTarget] = useState<ExportTarget | null>(null);
+  const [isValidationOpen, setIsValidationOpen] = useState(false);
+  const [validationResult, setValidationResult] = useState<{ ok: boolean; issues: ExportIssue[] } | null>(null);
 
   // Toast states
   const [toastOpen, setToastOpen] = useState(false);
@@ -67,7 +70,12 @@ export function ExportPanel({
   }, [jobs, exportedBlobs]);
 
   const handleExportClick = (target: ExportTarget) => {
-    if (errorsCount > 0) {
+    const valResult = validateExport(bundle);
+    if (valResult.issues.length > 0) {
+      setValidationResult(valResult);
+      setPendingTarget(target);
+      setIsValidationOpen(true);
+    } else if (errorsCount > 0) {
       setPendingTarget(target);
       setIsConfirmOpen(true);
     } else {
@@ -83,6 +91,21 @@ export function ExportPanel({
     setIsConfirmOpen(false);
   };
 
+  const handleConfirmValidationExport = () => {
+    setIsValidationOpen(false);
+    setValidationResult(null);
+    if (pendingTarget) {
+      const target = pendingTarget;
+      setPendingTarget(null);
+      if (errorsCount > 0) {
+        setPendingTarget(target);
+        setIsConfirmOpen(true);
+      } else {
+        void runExport(target, bundle);
+      }
+    }
+  };
+
   const getTargetLabel = (target: string) => {
     switch (target) {
       case "html":
@@ -96,18 +119,25 @@ export function ExportPanel({
     }
   };
 
-  const getJobStatusElement = (status: string) => {
-    switch (status) {
-      case "running":
+  const getJobStatusElement = (job: ExportJob) => {
+    switch (job.status) {
+      case "running": {
+        let phaseText = "Đang xử lý...";
+        if (job.phase === "preparing") phaseText = "Chuẩn bị...";
+        if (job.phase === "rendering-assets") phaseText = "Đang tạo ảnh/sơ đồ...";
+        if (job.phase === "ready") phaseText = "Đang bố cục trang in...";
+        if (job.phase === "printing") phaseText = "Đang in...";
+
         return (
           <span className="ws-export-status ws-export-status-running" aria-live="polite">
             <svg className="ws-export-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="ws-export-spinner-bg" />
               <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" />
             </svg>
-            Đang xử lý...
+            {phaseText}
           </span>
         );
+      }
       case "done":
         return (
           <span className="ws-export-status ws-export-status-done">
@@ -138,6 +168,20 @@ export function ExportPanel({
       </Button>
       <Button variant="primary" onClick={handleConfirmExport}>
         Vẫn xuất
+      </Button>
+    </div>
+  );
+
+  const validationDialogFooter = (
+    <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
+      <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setValidationResult(null); setPendingTarget(null); }}>
+        Hủy
+      </Button>
+      <Button
+        variant={validationResult?.ok ? "primary" : "secondary"}
+        onClick={handleConfirmValidationExport}
+      >
+        Vẫn xuất bản
       </Button>
     </div>
   );
@@ -245,7 +289,7 @@ export function ExportPanel({
                   <span className="ws-export-job-target-badge">
                     {getTargetLabel(job.target)}
                   </span>
-                  {getJobStatusElement(job.status)}
+                  {getJobStatusElement(job)}
                 </div>
                 <div className="ws-export-job-filename" title={job.fileName}>
                   {job.fileName}
@@ -278,6 +322,47 @@ export function ExportPanel({
         variant="confirm"
         footer={dialogFooter}
       />
+
+      {/* Validation Dialog */}
+      <Dialog
+        isOpen={isValidationOpen}
+        onOpenChange={(open) => {
+          setIsValidationOpen(open);
+          if (!open) {
+            setValidationResult(null);
+            setPendingTarget(null);
+          }
+        }}
+        title="Kiểm tra chất lượng báo cáo"
+        description={
+          validationResult?.ok
+            ? "Báo cáo có một số cảnh báo định dạng nhẹ. Bạn vẫn có thể xuất bản."
+            : "Phát hiện lỗi nghiêm trọng (ví dụ: ảnh chưa được nhúng). Tệp tin xuất ra (PDF/Word) có thể bị lỗi hình ảnh hoặc hiển thị."
+        }
+        variant="confirm"
+        footer={validationDialogFooter}
+      >
+        <div className="ws-validation-list">
+          {validationResult?.issues.map((issue, idx) => (
+            <div
+              key={idx}
+              className={`ws-validation-item ws-validation-item-${issue.severity}`}
+            >
+              <span className="ws-validation-icon">
+                {issue.severity === "error" ? "❌" : "⚠️"}
+              </span>
+              <div className="ws-validation-msg">
+                {issue.sectionId && (
+                  <span className="ws-validation-section">
+                    [{bundle.project.sections.find((s) => s.id === issue.sectionId)?.title || issue.sectionId}]:
+                  </span>
+                )}
+                {issue.message}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Dialog>
 
       {/* Export Toast Notification */}
       <Toast

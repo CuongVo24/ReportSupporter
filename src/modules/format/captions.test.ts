@@ -282,4 +282,50 @@ Bảng: Dữ liệu giới thiệu
     expect(table1?.label).toBe("Bảng 1.1");
     expect(fig2?.label).toBe("Hình 1.1");
   });
+
+  it("should deduplicate adjacent figure caption paragraph and strip manual label in alt and registry", () => {
+    const sections = [
+      {
+        id: "sec-1",
+        ast: parseMarkdown(`
+# Chương 1
+
+![Sơ đồ workflow](workflow.png)
+Hình 1.2: Sơ đồ workflow chi tiết
+
+![Alt containing label](label.png)
+        `),
+      },
+    ];
+
+    const registry = buildCaptionRegistry(sections, {
+      captionNumbering: "per-chapter",
+    });
+
+    expect(registry).toHaveLength(2);
+    // Figure 1: has adjacent caption "Hình 1.2: Sơ đồ workflow chi tiết"
+    // The manual prefix "Hình 1.2:" should be stripped
+    expect(registry[0].text).toBe("Sơ đồ workflow chi tiết");
+    expect(registry[0].label).toBe("Hình 1.1");
+
+    normalizeCaptions(sections, registry);
+
+    const children = sections[0].ast.children;
+    // Verify first image paragraph caption is updated in-place (no new paragraph inserted)
+    const imgPara1Idx = children.findIndex(
+      (c) => c.type === "paragraph" && "children" in c && Array.isArray(c.children) && c.children.some((child) => child.type === "image" && child.url === "workflow.png")
+    );
+    expect(imgPara1Idx).toBeGreaterThan(-1);
+
+    // The immediately following node should be the manual caption paragraph but UPDATED in-place
+    const captionPara1 = children[imgPara1Idx + 1] as MdastParagraph;
+    expect(captionPara1.type).toBe("paragraph");
+    expect(captionPara1.data?.hProperties?.className).toBe("fig-caption");
+    const captionTextNode1 = captionPara1.children[0] as MdastText;
+    expect(captionTextNode1.value).toBe("Hình 1.1: Sơ đồ workflow chi tiết");
+
+    // Verify there isn't a third duplicate paragraph inserted
+    const nextNode = children[imgPara1Idx + 2] as MdastParagraph;
+    expect(nextNode.children[0].type).toBe("image");
+  });
 });

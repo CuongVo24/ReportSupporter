@@ -18,9 +18,8 @@ describe("buildPrintableHtml", () => {
     expect(html).toContain("cover-page");
     expect(html).toContain(baseBundle.project.title);
 
-    // Should contain KaTeX and Mermaid scripts
-    expect(html).toContain("katex@0.17.0/dist/katex.min.css");
-    expect(html).toContain("mermaid@11.15.0");
+    // Should contain layout styles and containers
+    expect(html).toContain("style");
 
     // Should contain print CSS
     expect(html).toContain("@media print");

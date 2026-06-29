@@ -6,7 +6,8 @@ import { generateReadme } from "./generate-readme";
 import { buildEvidenceAppendix } from "@/modules/evidence";
 import { verifyDocxLayout } from "./docx-layout-checklist";
 import { clearExportHistory, loadExportHistory } from "./export-history";
-import { Button } from "@/components/ui";
+import { Button, Dialog } from "@/components/ui";
+import { validateExport, type ExportIssue } from "./validate-export";
 
 /**
  * Panel to manage final submission packaging, checklist validation, and local export history.
@@ -24,6 +25,8 @@ export function SubmissionPanel({
 }) {
   const [history, setHistory] = useState<ExportJob[]>([]);
   const [packaging, setPackaging] = useState(false);
+  const [isValidationOpen, setIsValidationOpen] = useState(false);
+  const [validationResult, setValidationResult] = useState<{ ok: boolean; issues: ExportIssue[] } | null>(null);
 
   const refreshHistory = useCallback(async () => {
     const list = await loadExportHistory();
@@ -66,7 +69,7 @@ export function SubmissionPanel({
 
   const hasSessionBlobs = Object.keys(exportedBlobs).length > 0;
 
-  const handleDownloadPackage = async () => {
+  const executeDownloadPackage = async () => {
     try {
       setPackaging(true);
       const readmeMarkdown = generateReadme(bundle);
@@ -95,6 +98,22 @@ export function SubmissionPanel({
     } finally {
       setPackaging(false);
     }
+  };
+
+  const handleDownloadPackage = async () => {
+    const valResult = validateExport(bundle);
+    if (valResult.issues.length > 0) {
+      setValidationResult(valResult);
+      setIsValidationOpen(true);
+    } else {
+      await executeDownloadPackage();
+    }
+  };
+
+  const handleConfirmValidationDownload = async () => {
+    setIsValidationOpen(false);
+    setValidationResult(null);
+    await executeDownloadPackage();
   };
 
   return (
@@ -193,6 +212,57 @@ export function SubmissionPanel({
           </ul>
         </div>
       )}
+      {/* Validation Dialog */}
+      <Dialog
+        isOpen={isValidationOpen}
+        onOpenChange={(open) => {
+          setIsValidationOpen(open);
+          if (!open) {
+            setValidationResult(null);
+          }
+        }}
+        title="Kiểm tra chất lượng báo cáo trước khi nộp"
+        description={
+          validationResult?.ok
+            ? "Báo cáo đạt chất lượng cơ bản, chỉ có cảnh báo định dạng nhẹ. Bạn có thể tiếp tục đóng gói."
+            : "Cảnh báo lỗi nghiêm trọng (ảnh chưa nhúng). Tệp tin trong bộ nộp bài có thể bị lỗi hình ảnh hoặc hiển thị."
+        }
+        variant="confirm"
+        footer={
+          <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
+            <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setValidationResult(null); }}>
+              Hủy
+            </Button>
+            <Button
+              variant={validationResult?.ok ? "primary" : "secondary"}
+              onClick={handleConfirmValidationDownload}
+            >
+              Vẫn tải xuống
+            </Button>
+          </div>
+        }
+      >
+        <div className="ws-validation-list">
+          {validationResult?.issues.map((issue, idx) => (
+            <div
+              key={idx}
+              className={`ws-validation-item ws-validation-item-${issue.severity}`}
+            >
+              <span className="ws-validation-icon">
+                {issue.severity === "error" ? "❌" : "⚠️"}
+              </span>
+              <div className="ws-validation-msg">
+                {issue.sectionId && (
+                  <span className="ws-validation-section">
+                    [{bundle.project.sections.find((s) => s.id === issue.sectionId)?.title || issue.sectionId}]:
+                  </span>
+                )}
+                {issue.message}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Dialog>
     </div>
   );
 }

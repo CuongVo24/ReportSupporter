@@ -1,24 +1,18 @@
 import type { ReportProjectBundle, ExportResult } from "@/types";
 import { prepareExport } from "./prepare-export";
 import { buildPrintableHtml } from "./print-preview";
+import mermaid from "mermaid";
 
 /**
- * Triggers PDF export via the browser's native print surface.
- * Reuses the formatted HTML structure from Group A to guarantee formatting parity.
- * 
- * Note on running headers, footers, and page numbers:
- * - These are browser best-effort.
- * - CSS @page rules are provided in `print-css.ts` to support running headers/footers.
- * - For browsers that override @page margins (like Chrome/Edge), the user must enable 
- *   "Headers and footers" in the browser's print options dialog to display page numbers 
- *   and document titles correctly.
- * 
- * @param bundle The report project bundle.
- * @returns An ExportResult containing the printable HTML Blob.
+ * Triggers PDF export via a hidden print iframe.
+ * Renders KaTeX styles locally by inheriting parent styles, renders Mermaid diagrams
+ * to static SVGs, decodes local image references, and reports export progress phases.
  */
-export function exportPdfViaBrowserPrint(bundle: ReportProjectBundle): ExportResult {
-  // 1. Client-only guard (no-window context)
-  if (typeof window === "undefined") {
+export async function exportPdfViaBrowserPrint(
+  bundle: ReportProjectBundle,
+  onPhaseChange?: (phase: "preparing" | "rendering-assets" | "ready" | "printing") => void
+): Promise<ExportResult> {
+  if (typeof window === "undefined" || typeof document === "undefined") {
     return {
       ok: false,
       error: {
@@ -29,49 +23,115 @@ export function exportPdfViaBrowserPrint(bundle: ReportProjectBundle): ExportRes
     };
   }
 
+  onPhaseChange?.("preparing");
+
+  let iframe: HTMLIFrameElement | null = null;
   try {
-    // 2. Prepare printable HTML content
+    // 1. Prepare printable HTML content
     const input = prepareExport(bundle);
     const htmlContent = buildPrintableHtml(input);
 
-    // 3. Open a new window print surface
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      return {
-        ok: false,
-        error: {
-          stage: "render-pdf",
-          message: "Popup blocked. Please allow popups to export PDF.",
-          recoverable: true,
-        },
-      };
+    onPhaseChange?.("rendering-assets");
+
+    // 2. Create a hidden print iframe
+    iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.visibility = "hidden";
+    document.body.appendChild(iframe);
+
+    const iframeWindow = iframe.contentWindow;
+    const iframeDoc = iframeWindow?.document;
+    if (!iframeWindow || !iframeDoc) {
+      throw new Error("Failed to create printing iframe context.");
     }
 
-    // 4. Write content and trigger native browser print dialog
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    // 3. Write raw HTML structure
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
 
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-    };
+    // 4. Set titled context to avoid about:blank in printed headers
+    iframeDoc.title = bundle.project.title;
 
-    // Fallback if onload event fails to fire
+    // 5. Inherit parent stylesheets (resolves local KaTeX and app-compiled rules)
+    const parentStyles = document.querySelectorAll("style, link[rel='stylesheet']");
+    parentStyles.forEach((styleNode) => {
+      iframeDoc.head.appendChild(styleNode.cloneNode(true));
+    });
+
+    // 6. Compile Mermaid diagrams to static SVGs locally
+    mermaid.initialize({ startOnLoad: false, theme: "default" });
+    const mermaidBlocks = iframeDoc.querySelectorAll("pre code.language-mermaid");
+    for (let i = 0; i < mermaidBlocks.length; i++) {
+      const block = mermaidBlocks[i];
+      const code = block.textContent || "";
+      const id = `mermaid-print-${i}`;
+      try {
+        const { svg } = await mermaid.render(id, code);
+        const pre = block.parentElement;
+        if (pre) {
+          const div = iframeDoc.createElement("div");
+          div.className = "mermaid-container";
+          div.innerHTML = svg;
+          pre.replaceWith(div);
+        }
+      } catch (err) {
+        console.error("Mermaid print render failed:", err);
+      }
+    }
+
+    // 7. Await all images to fully load and decode
+    const imgs = Array.from(iframeDoc.querySelectorAll("img"));
+    const imgPromises = imgs.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
+    });
+    await Promise.all(imgPromises);
+
+    onPhaseChange?.("ready");
+    
+    // Give browser a frame to compute lay-outs (with fallback for testing/node environments)
+    const raf = typeof window !== "undefined" && window.requestAnimationFrame
+      ? window.requestAnimationFrame
+      : (cb: FrameRequestCallback | (() => void)) => setTimeout(cb, 0);
+    await new Promise((resolve) => raf(resolve as () => void));
+
+    onPhaseChange?.("printing");
+    iframeWindow.focus();
+    if (typeof iframeWindow.print === "function") {
+      iframeWindow.print();
+    } else {
+      console.warn("iframeWindow.print is not supported in this environment.");
+    }
+
+    // Delay cleanup to ensure browser print dialog initializes safely
+    const targetIframe = iframe;
     setTimeout(() => {
       try {
-        printWindow.focus();
-        printWindow.print();
+        if (targetIframe.parentNode) {
+          document.body.removeChild(targetIframe);
+        }
       } catch {
-        // ignore errors if print was already triggered or window closed
+        // ignore if already removed
       }
-    }, 500);
+    }, 2000);
 
-    // Return the HTML Blob of the printed document as a representation of output
     const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
     return { ok: true, blob };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to trigger browser print.";
+    if (iframe && iframe.parentNode) {
+      document.body.removeChild(iframe);
+    }
+    const message = error instanceof Error ? error.message : "Failed to render PDF print surface.";
+    console.error("PDF export error details:", error);
     return {
       ok: false,
       error: {
@@ -100,9 +160,11 @@ export function renderPdfWithPuppeteer(_bundle: ReportProjectBundle): ExportResu
 }
 
 /**
- * PDF Exporter entry point. Defaults to exportPdfViaBrowserPrint in MVP.
+ * PDF Exporter entry point.
  */
-export function exportPdf(bundle: ReportProjectBundle): ExportResult {
-  return exportPdfViaBrowserPrint(bundle);
+export async function exportPdf(
+  bundle: ReportProjectBundle,
+  onPhaseChange?: (phase: "preparing" | "rendering-assets" | "ready" | "printing") => void
+): Promise<ExportResult> {
+  return exportPdfViaBrowserPrint(bundle, onPhaseChange);
 }
-

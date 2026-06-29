@@ -67,6 +67,6 @@ Bảo đảm **chỉ một nguồn số duy nhất** (số tự sinh), loại s�
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(format): single source heading numbering — strip manual prefixes and stabilize level-1 counter`.

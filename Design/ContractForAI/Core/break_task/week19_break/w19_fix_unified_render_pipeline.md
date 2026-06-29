@@ -78,6 +78,6 @@ Thiết lập **một nguồn render duy nhất** dùng chung cho preview, print
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(export): unify preview/export into one render core, schema, heading injector and TOC renderer`.

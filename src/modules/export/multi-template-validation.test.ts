@@ -57,8 +57,8 @@ describe("Multi-Template Export Validation Tests", () => {
           expect(htmlText).toContain("class=\"page-break\"");
 
           // Assert Caption Numbering Parity
-          expect(htmlText).toContain("Hình 1: Mô tả hình minh họa");
-          expect(htmlText).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+          expect(htmlText).toContain("Hình 1.1: Mô tả hình minh họa");
+          expect(htmlText).toContain("Bảng 1.1: Bảng dữ liệu mẫu kiểm thử");
 
           // Verify that sections are exported in correct order
           const sortedSections = [...bundle.project.sections].sort((a, b) => a.order - b.order);
@@ -81,31 +81,59 @@ describe("Multi-Template Export Validation Tests", () => {
         expect(printableHtml).toContain("class=\"page-break\"");
 
         // Assert Caption Numbering Parity in printable HTML
-        expect(printableHtml).toContain("Hình 1: Mô tả hình minh họa");
-        expect(printableHtml).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+        expect(printableHtml).toContain("Hình 1.1: Mô tả hình minh họa");
+        expect(printableHtml).toContain("Bảng 1.1: Bảng dữ liệu mẫu kiểm thử");
 
-        const mockDocument = {
+        const mockIframeDoc = {
           open: vi.fn(),
           write: vi.fn(),
           close: vi.fn(),
+          head: {
+            appendChild: vi.fn(),
+          },
+          querySelectorAll: vi.fn().mockReturnValue([]),
+          title: "",
         };
-        const mockOpenedWindow = {
-          document: mockDocument,
-          focus: vi.fn(),
-          print: vi.fn(),
-          onload: null,
-        };
-        const mockWindow = {
-          open: vi.fn().mockReturnValue(mockOpenedWindow),
-        };
-        // @ts-expect-error window is not defined on global in node types
-        global.window = mockWindow;
 
-        const result = exportPdfViaBrowserPrint(bundle);
-        expect(result.ok).toBe(true);
-        if (result.ok) {
-          expect(result.blob).toBeInstanceOf(Blob);
-          expect(result.blob.type).toBe("text/html;charset=utf-8");
+        const mockIframe = {
+          style: {},
+          contentWindow: {
+            document: mockIframeDoc,
+            focus: vi.fn(),
+            print: vi.fn(),
+          },
+        };
+
+        const mockCreateElement = vi.fn().mockImplementation((tag) => {
+          if (tag === "iframe") return mockIframe;
+          return {};
+        });
+
+        const mockQuerySelectorAll = vi.fn().mockReturnValue([]);
+
+        const originalWindow = global.window;
+        const originalDocument = global.document;
+
+        global.window = {} as unknown as typeof window;
+        global.document = {
+          createElement: mockCreateElement,
+          querySelectorAll: mockQuerySelectorAll,
+          body: {
+            appendChild: vi.fn(),
+            removeChild: vi.fn(),
+          },
+        } as unknown as typeof document;
+
+        try {
+          const result = await exportPdfViaBrowserPrint(bundle);
+          expect(result.ok).toBe(true);
+          if (result.ok) {
+            expect(result.blob).toBeInstanceOf(Blob);
+            expect(result.blob.type).toBe("text/html;charset=utf-8");
+          }
+        } finally {
+          global.window = originalWindow;
+          global.document = originalDocument;
         }
       });
 
@@ -123,8 +151,8 @@ describe("Multi-Template Export Validation Tests", () => {
           expect(docJson).toContain("Nguyễn Văn An - 20261111");
 
           // Assert Caption Numbering Parity in DOCX representation
-          expect(docJson).toContain("Hình 1: Mô tả hình minh họa");
-          expect(docJson).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+          expect(docJson).toContain("Hình 1.1: Mô tả hình minh họa");
+          expect(docJson).toContain("Bảng 1.1: Bảng dữ liệu mẫu kiểm thử");
 
           // Verify that template specific elements (metadata title or section titles) are present in DOCX
           const sortedSections = [...bundle.project.sections].sort((a, b) => a.order - b.order);

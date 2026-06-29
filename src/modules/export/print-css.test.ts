@@ -62,4 +62,28 @@ describe("buildPrintCss", () => {
     expect(cssWithHeaderFooter).toContain("@page :first {");
     expect(cssWithHeaderFooter).toContain("content: none !important;");
   });
+
+  it("should generate dot leader, spacing, and page break rules for Table of Contents", () => {
+    const css = buildPrintCss(basePreset);
+    expect(css).toContain(".ws-toc-link { display: flex; align-items: flex-end; text-decoration: none; color: #000; width: 100%; }");
+    expect(css).toContain(".ws-toc-leader { flex-grow: 1; border-bottom: 1px dotted #000; margin: 0 5pt 3pt; min-width: 15px; }");
+    expect(css).toContain(".ws-toc-page { flex-shrink: 0; min-width: 25px; text-align: right; }");
+    expect(css).toContain(".ws-toc-container { page-break-inside: auto; break-inside: auto; }");
+    expect(css).toContain(".ws-toc-item { page-break-inside: avoid; break-inside: avoid; }");
+    
+    // Assert generalized indent levels 1-6
+    for (let level = 1; level <= 6; level++) {
+      expect(css).toContain(`.ws-toc-level-${level} { padding-left:`);
+    }
+  });
+
+  it("should balance the cover-page layout vertically", () => {
+    const css = buildPrintCss(basePreset);
+    expect(css).toContain(".cover-page {");
+    expect(css).toContain("min-height: 240mm;");
+    expect(css).toContain("display: flex; flex-direction: column;");
+    expect(css).toContain(".cover-title-container { margin: auto 0; }");
+    expect(css).toContain(".cover-course { font-size: 14pt; font-weight: bold; margin-top: 10pt; margin-bottom: auto; }");
+    expect(css).toContain(".cover-info { margin-top: auto; margin-bottom: auto;");
+  });
 });

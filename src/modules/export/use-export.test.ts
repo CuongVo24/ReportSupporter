@@ -169,7 +169,7 @@ describe("useExport hook logic", () => {
     try {
       const mockBlob = new Blob(["pdf html representation"], { type: "text/html" });
       const { exportPdf } = await import("./export-pdf");
-      vi.mocked(exportPdf).mockReturnValue({ ok: true, blob: mockBlob });
+      vi.mocked(exportPdf).mockResolvedValue({ ok: true, blob: mockBlob });
 
       const { runExport } = useExport();
       await runExport("pdf", mockBundle);
@@ -224,5 +224,24 @@ describe("useExport hook logic", () => {
       global.window = originalWindow;
       global.document = originalDocument;
     }
+  });
+
+  it("should report phases during PDF export execution", async () => {
+    const mockBlob = new Blob(["pdf html representation"], { type: "text/html" });
+    const { exportPdf } = await import("./export-pdf");
+    vi.mocked(exportPdf).mockImplementation(async (bundle, onPhaseChange) => {
+      onPhaseChange?.("preparing");
+      onPhaseChange?.("rendering-assets");
+      onPhaseChange?.("ready");
+      onPhaseChange?.("printing");
+      return { ok: true, blob: mockBlob };
+    });
+
+    const { runExport } = useExport();
+    await runExport("pdf", mockBundle);
+
+    expect(jobsArray).toHaveLength(1);
+    expect(jobsArray[0].status).toBe("done");
+    expect(jobsArray[0].phase).toBe("printing");
   });
 });

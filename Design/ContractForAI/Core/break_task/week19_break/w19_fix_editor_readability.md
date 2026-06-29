@@ -64,6 +64,6 @@ Editor đọc được: tô màu cú pháp markdown, toolbar dính khi cuộn, d
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(write): markdown syntax highlighting, sticky editor toolbar and clearer active line`.

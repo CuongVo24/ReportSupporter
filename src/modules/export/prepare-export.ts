@@ -1,17 +1,11 @@
 import type { ReportProjectBundle, FormattedReport } from "@/types";
-import { parseMarkdown } from "@/lib/markdown-pipeline";
-import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions } from "@/modules/format";
+import { parseMarkdown, renderMdastToHast } from "@/lib/markdown-pipeline";
+import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, injectHeadingNumbers } from "@/modules/format";
 import { resolveAssetRefs } from "@/modules/write";
 import { buildEvidenceAppendix, injectQrImages, type UnistNode } from "@/modules/evidence";
-import { unified } from "unified";
-import remarkRehype from "remark-rehype";
-import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import rehypeKatex from "rehype-katex";
-import rehypeHighlight from "rehype-highlight";
 import type { Root as MdastRoot, Content as MdastContent } from "mdast";
-import type { Root as HastRoot } from "hast";
 import type { CoverPageData, ExportInput } from "./types";
-import { injectHeadingNumbers, PRESETS } from "./helpers";
+import { PRESETS } from "./helpers";
 
 /**
  * Standard processing pipeline orchestrating:
@@ -108,28 +102,7 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
 
   injectQrImages(combinedMdast as unknown as UnistNode, qrDataUrls);
 
-  const customSchema = {
-    ...defaultSchema,
-    attributes: {
-      ...defaultSchema.attributes,
-      span: [...(defaultSchema.attributes?.span || []), "className", "data-url"],
-      div: [...(defaultSchema.attributes?.div || []), "className"],
-      code: [...(defaultSchema.attributes?.code || []), "className"],
-      pre: [...(defaultSchema.attributes?.pre || []), "className"],
-    },
-    protocols: {
-      ...defaultSchema.protocols,
-      src: [...(defaultSchema.protocols?.src || []), "data"],
-    },
-  };
-
-  const hastProcessor = unified()
-    .use(remarkRehype)
-    .use(rehypeSanitize, customSchema)
-    .use(rehypeKatex)
-    .use(rehypeHighlight);
-
-  const hast = hastProcessor.runSync(combinedMdast) as HastRoot;
+  const hast = renderMdastToHast(combinedMdast);
 
   const formatted: FormattedReport = {
     projectId: project.id,

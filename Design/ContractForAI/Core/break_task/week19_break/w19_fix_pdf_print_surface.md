@@ -68,6 +68,6 @@ In từ một **document có URL/định danh thật**, **chờ asset render xon
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(export): print from titled blob surface, embed KaTeX/Mermaid locally, await assets, report progress`.

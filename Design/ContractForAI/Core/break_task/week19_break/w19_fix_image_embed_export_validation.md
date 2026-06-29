@@ -72,6 +72,6 @@ Bảo đảm **mọi ảnh xuất hiện trong report đều nhúng được** (
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(export): detect non-embeddable images and add pre-export validation gate`.

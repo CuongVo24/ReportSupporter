@@ -596,6 +596,9 @@ body {
   background: var(--rs-color-surface-muted);
   border-bottom: 1px solid var(--rs-color-border);
   overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .ws-editor-toolbar-btn {
@@ -1294,6 +1297,55 @@ body {
 }
  
  
+/* Pre-export validation styles */
+.ws-validation-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-3);
+  max-height: 250px;
+  overflow-y: auto;
+  padding: var(--rs-space-1);
+}
+
+.ws-validation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-md);
+  font-size: var(--rs-font-size-sm);
+  background-color: var(--rs-color-background-offset);
+  border: 1px solid var(--rs-color-border);
+}
+
+.ws-validation-item-error {
+  border-color: var(--rs-color-severity-error);
+  background-color: rgba(220, 38, 38, 0.05);
+}
+
+.ws-validation-item-warning {
+  border-color: var(--rs-color-severity-warning);
+  background-color: rgba(217, 119, 6, 0.05);
+}
+
+.ws-validation-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ws-validation-msg {
+  flex-grow: 1;
+  color: var(--rs-color-text);
+  line-height: 1.4;
+}
+
+.ws-validation-section {
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text-muted);
+  margin-right: var(--rs-space-1);
+}
+
 /* Submission Panel (W8 Group E) */
 .ws-submission-panel {
   display: flex;

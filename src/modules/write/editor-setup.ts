@@ -3,7 +3,28 @@ import { EditorView, lineNumbers, highlightActiveLine, drawSelection, dropCursor
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { markdown } from "@codemirror/lang-markdown";
+import { tags as t } from "@lezer/highlight";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { createMarkdownShortcutKeymap } from "./editor-shortcuts";
+
+export const markdownHighlightStyle = HighlightStyle.define([
+  { tag: t.heading1, color: "var(--rs-color-primary)", fontWeight: "bold", fontSize: "1.3em" },
+  { tag: t.heading2, color: "var(--rs-color-primary)", fontWeight: "bold", fontSize: "1.2em" },
+  { tag: t.heading3, color: "var(--rs-color-primary)", fontWeight: "bold", fontSize: "1.1em" },
+  { tag: t.heading, color: "var(--rs-color-primary)", fontWeight: "bold" },
+  { tag: t.strong, color: "var(--rs-color-text)", fontWeight: "bold" },
+  { tag: t.emphasis, color: "var(--rs-color-text)", fontStyle: "italic" },
+  { tag: t.strikethrough, textDecoration: "line-through" },
+  { tag: t.list, color: "var(--rs-color-primary)", fontWeight: "bold" },
+  { tag: t.link, color: "var(--rs-color-primary)", textDecoration: "underline" },
+  { tag: t.url, color: "var(--rs-color-text-muted)" },
+  { tag: t.monospace, color: "var(--rs-color-text)", fontFamily: "var(--rs-font-family-mono)" },
+  { tag: t.quote, color: "var(--rs-color-text-muted)", fontStyle: "italic" },
+  { tag: t.comment, color: "var(--rs-color-text-muted)" },
+  { tag: t.meta, color: "var(--rs-color-text-muted)" },
+  { tag: t.keyword, color: "var(--rs-color-primary)" },
+  { tag: t.processingInstruction, color: "var(--rs-color-text-muted)" },
+]);
 
 /**
  * Creates an EditorState configured for Markdown editing.
@@ -25,6 +46,7 @@ export function createEditorState(opts: {
     doc: opts.doc,
     extensions: [
       markdown(),
+      syntaxHighlighting(markdownHighlightStyle),
       history({ minDepth: 200 }),
       search({ top: true }),
       highlightSelectionMatches(),
@@ -69,11 +91,12 @@ export function createEditorState(opts: {
           borderRight: "none",
         },
         ".cm-activeLine": {
-          backgroundColor: "var(--rs-color-surface-muted)",
+          backgroundColor: "var(--rs-color-primary-bg)",
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "var(--rs-color-surface-muted)",
-          color: "var(--rs-color-text)",
+          backgroundColor: "var(--rs-color-primary-bg)",
+          color: "var(--rs-color-primary)",
+          fontWeight: "bold",
         },
         ".cm-gutterElement": {
           padding: "0 var(--rs-space-3)",

@@ -31,6 +31,13 @@ export function numberHeadings(headings: HeadingNode[]): NumberedHeading[] {
     // Increment current depth counter
     counters[d]++;
 
+    // Ensure all parent levels are at least 1 (avoid 0.x numbering)
+    for (let i = 1; i < d; i++) {
+      if (counters[i] === 0) {
+        counters[i] = 1;
+      }
+    }
+
     // Reset deeper levels (k > d)
     for (let k = d + 1; k <= 6; k++) {
       counters[k] = 0;

@@ -4,10 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { Info } from "lucide-react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
-import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode } from "@/modules/format";
+import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode, injectHeadingNumbers, renderTocToHtml } from "@/modules/format";
 import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as EvidenceUnistNode } from "@/modules/evidence";
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem, CaptionEntry } from "@/types";
-import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 import { EmptyState } from "@/components/states";
 
@@ -20,102 +19,15 @@ type PreviewPaneProps = {
   evidence?: EvidenceItem[];
 };
 
-interface UnistNode {
-  type: string;
-  children?: UnistNode[];
-}
-
-function getHeadingText(nodes: PhrasingContent[]): string {
-  let text = "";
-  for (const node of nodes) {
-    if ("value" in node && typeof node.value === "string") {
-      text += node.value;
-    } else if ("children" in node && Array.isArray(node.children)) {
-      text += getHeadingText(node.children as PhrasingContent[]);
-    }
-  }
-  return text;
-}
-
-/**
- * Traverses MDAST in-place to inject heading numbers before heading children.
- * Uses index state tracking to map back to the globalNumberedHeadings correctly across split blocks.
- */
-export function injectHeadingNumbers(
-  ast: MdastRoot,
-  globalNumberedHeadings: { number: string; text: string; id: string }[],
-  state: { index: number }
-): MdastRoot {
-  function walk(node: unknown) {
-    if (!node || typeof node !== "object") {
-      return;
-    }
-    const n = node as UnistNode;
-
-    if (n.type === "heading") {
-      const heading = n as unknown as MdastHeading;
-      const text = getHeadingText(heading.children).trim();
-      if (text !== "") {
-        const numHeading = globalNumberedHeadings[state.index++];
-        if (numHeading && numHeading.text) {
-          // Unshift the text node representing the hierarchy prefix (e.g. "1.1 ")
-          const numberTextNode: PhrasingContent = {
-            type: "text",
-            value: `${numHeading.number} `,
-          };
-          heading.children.unshift(numberTextNode);
-
-          // Assign correct HTML element ID for TOC anchor linking
-          heading.data = {
-            ...heading.data,
-            hProperties: {
-              ...(heading.data?.hProperties || {}),
-              id: numHeading.id,
-            },
-          };
-        }
-      }
-    }
-
-    if (n.children && Array.isArray(n.children)) {
-      for (const child of n.children) {
-        walk(child);
-      }
-    }
-  }
-
-  walk(ast);
-  return ast;
-}
-
-/**
- * Component displaying the table of contents block.
- */
 function TocBlock({ toc }: { toc: TocNode[] }) {
   if (toc.length === 0) {
     return null;
   }
-
-  function renderNodes(nodes: TocNode[]) {
-    return (
-      <ul className="ws-toc-list">
-        {nodes.map((node) => (
-          <li key={node.id} className={`ws-toc-item ws-toc-level-${node.level}`}>
-            <a href={`#${node.id}`} className="ws-toc-link">
-              <span className="ws-toc-number">{node.number}</span>{" "}
-              <span className="ws-toc-text">{node.text}</span>
-            </a>
-            {node.children && node.children.length > 0 && renderNodes(node.children)}
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
+  const html = renderTocToHtml(toc);
   return (
     <div className="ws-toc-container">
       <div className="ws-toc-title">Mục lục</div>
-      {renderNodes(toc)}
+      <div dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );
 }
@@ -131,8 +43,12 @@ function LofBlock({ lof }: { lof: CaptionEntry[] }) {
         {lof.map((node) => (
           <li key={node.id} className="ws-lof-item ws-toc-item">
             <a href={`#${node.id}`} className="ws-lof-link ws-toc-link">
-              <span className="ws-lof-number ws-toc-number">{node.label}</span>{" "}
-              <span className="ws-lof-text ws-toc-text">{node.text}</span>
+              <span className="ws-toc-left">
+                <span className="ws-lof-number ws-toc-number">{node.label}</span>{" "}
+                <span className="ws-lof-text ws-toc-text">{node.text}</span>
+              </span>
+              <span className="ws-toc-leader"></span>
+              <span className="ws-toc-page">...</span>
             </a>
           </li>
         ))}
@@ -152,8 +68,12 @@ function LotBlock({ lot }: { lot: CaptionEntry[] }) {
         {lot.map((node) => (
           <li key={node.id} className="ws-lot-item ws-toc-item">
             <a href={`#${node.id}`} className="ws-lot-link ws-toc-link">
-              <span className="ws-lot-number ws-toc-number">{node.label}</span>{" "}
-              <span className="ws-lot-text ws-toc-text">{node.text}</span>
+              <span className="ws-toc-left">
+                <span className="ws-lot-number ws-toc-number">{node.label}</span>{" "}
+                <span className="ws-lot-text ws-toc-text">{node.text}</span>
+              </span>
+              <span className="ws-toc-leader"></span>
+              <span className="ws-toc-page">...</span>
             </a>
           </li>
         ))}
