@@ -1,9 +1,8 @@
 import type { ExportInput } from "./types";
-import type { TocNode } from "@/types";
 import { buildCoverPage } from "./build-cover-page";
 import { buildPrintCss } from "./print-css";
-import { unified } from "unified";
-import rehypeStringify from "rehype-stringify";
+import { stringifyHast } from "@/lib/markdown-pipeline";
+import { renderTocToHtml } from "@/modules/format";
 
 function escapeHtml(str: string): string {
   return str
@@ -28,37 +27,17 @@ export function buildPrintableHtml(input: ExportInput): string {
   // 2. Build TOC block if configured
   let tocHtml = "";
   if (bundle.formatSettings.includeToc && formatted.toc.length > 0) {
-    const renderNodes = (nodes: TocNode[]): string => {
-      return `
-        <ul class="ws-toc-list">
-          ${nodes
-            .map(
-              (node) => `
-            <li class="ws-toc-item ws-toc-level-${node.level}">
-              <a href="#${node.id}" class="ws-toc-link">
-                <span class="ws-toc-number">${node.number}</span>
-                <span class="ws-toc-text">${node.text}</span>
-              </a>
-              ${node.children && node.children.length > 0 ? renderNodes(node.children) : ""}
-            </li>
-          `,
-            )
-            .join("")}
-        </ul>
-      `;
-    };
-
     tocHtml = `
       <div class="ws-toc-container">
         <div class="ws-toc-title">Mục lục</div>
-        ${renderNodes(formatted.toc)}
+        ${renderTocToHtml(formatted.toc)}
       </div>
       <div class="page-break"></div>
     `;
   }
 
   // 3. Stringify HAST to HTML body
-  const bodyHtml = unified().use(rehypeStringify).stringify(formatted.hast);
+  const bodyHtml = stringifyHast(formatted.hast);
 
   // 4. Build print CSS stylesheet
   const printCss = buildPrintCss(formatted.preset);

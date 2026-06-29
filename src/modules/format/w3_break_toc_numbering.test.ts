@@ -3,7 +3,7 @@ import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { parseHeadings } from "./parse-headings";
 import { numberHeadings } from "./number-headings";
 import { generateToc } from "./generate-toc";
-import { injectHeadingNumbers } from "@/components/PreviewPane";
+import { injectHeadingNumbers } from "./index";
 
 describe("W3 Break: TOC Anchors & Heading Numbering Parity", () => {
   it("preserves heading id through sanitization for TOC anchors (clobberPrefix check)", () => {

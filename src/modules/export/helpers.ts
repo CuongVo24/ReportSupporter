@@ -1,10 +1,6 @@
 import type { FormatPreset } from "@/types";
-import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
+import type { PhrasingContent } from "mdast";
 
-interface UnistNode {
-  type: string;
-  children?: UnistNode[];
-}
 
 export function getFlatText(nodes: PhrasingContent[]): string {
   let text = "";
@@ -16,33 +12,6 @@ export function getFlatText(nodes: PhrasingContent[]): string {
     }
   }
   return text;
-}
-
-export function injectHeadingNumbers(
-  ast: MdastRoot,
-  globalNumberedHeadings: { number: string; text: string; id: string }[],
-  state: { index: number }
-): MdastRoot {
-  function walk(node: unknown) {
-    if (!node || typeof node !== "object") return;
-    const n = node as UnistNode;
-    if (n.type === "heading") {
-      const heading = n as unknown as MdastHeading;
-      const numHeading = globalNumberedHeadings[state.index++];
-      if (numHeading?.text) {
-        heading.children.unshift({ type: "text", value: `${numHeading.number} ` });
-        heading.data = {
-          ...heading.data,
-          hProperties: { ...(heading.data?.hProperties || {}), id: numHeading.id },
-        };
-      }
-    }
-    if (n.children && Array.isArray(n.children)) {
-      for (const child of n.children) walk(child);
-    }
-  }
-  walk(ast);
-  return ast;
 }
 
 export const PRESETS: Record<string, FormatPreset> = {
