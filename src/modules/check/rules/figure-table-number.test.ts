@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { figureTableNumberRule } from "./figure-table-number";
-import type { CheckContext } from "@/types";
+import type { CheckContext, ReportSection, MdastRoot } from "@/types";
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 
 const mockCtx = (
@@ -8,11 +8,11 @@ const mockCtx = (
   captionNumbering: "continuous" | "per-chapter" = "per-chapter",
   respectAuthorNumbering = true
 ): CheckContext => {
-  const sectionAsts: Record<string, unknown> = {};
-  const bundleSections: unknown[] = [];
+  const sectionAsts: Record<string, MdastRoot> = {};
+  const bundleSections: ReportSection[] = [];
   
   for (const [id, markdown] of Object.entries(sections)) {
-    sectionAsts[id] = parseMarkdown(markdown);
+    sectionAsts[id] = parseMarkdown(markdown) as MdastRoot;
     bundleSections.push({ id, order: 1, title: id, markdown, status: "draft" as const });
   }
 

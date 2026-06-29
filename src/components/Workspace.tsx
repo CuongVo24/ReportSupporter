@@ -101,10 +101,19 @@ export function Workspace() {
   const [snapshotToRestore, setSnapshotToRestore] = useState<ReportSnapshot | null>(null);
   const [reportHealth, setReportHealth] = useState<ReportHealth | null>(null);
   const [focusMode, setFocusMode] = useState(false);
+  const [darkPreview, setDarkPreview] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState<string>("");
+  const [isManualSaving, setIsManualSaving] = useState(false);
 
   const { status, quotaFull } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
   const { jobs, runExport, retry, exportedBlobs } = useExport(bundle ?? undefined);
+
+  useEffect(() => {
+    if (status === "saved") {
+      setLastSavedTime(new Date().toLocaleTimeString());
+    }
+  }, [status]);
 
   const requestSidePanelOpen = useCallback(() => {
     setOpenSidePanelSignal((signal) => signal + 1);
@@ -237,6 +246,7 @@ export function Workspace() {
 
   const handleManualSave = useCallback((markdown?: string) => {
     if (!bundle) return;
+    setIsManualSaving(true);
     let next = bundle;
 
     if (typeof markdown === "string" && activeId) {
@@ -252,12 +262,15 @@ export function Workspace() {
 
     void saveBundle(next)
       .then(() => {
-        setToastMessage("Đã lưu nháp");
+        setToastMessage("Đã lưu bản thảo thành công");
         setToastOpen(true);
+        setLastSavedTime(new Date().toLocaleTimeString());
+        setIsManualSaving(false);
       })
       .catch(() => {
-        setToastMessage("Không thể lưu nháp");
+        setToastMessage("Không thể lưu bản thảo");
         setToastOpen(true);
+        setIsManualSaving(false);
       });
   }, [activeId, bundle]);
 
@@ -984,10 +997,20 @@ export function Workspace() {
           <AlertTriangle size={14} aria-hidden="true" />
           Bộ nhớ đầy
         </span>
+      ) : isManualSaving ? (
+        <span className="ws-save-status-saving">
+          <Loader2 size={14} aria-hidden="true" style={{ animation: "ws-spin 1s linear infinite" }} />
+          Đang lưu bản thảo…
+        </span>
       ) : status === "saving" ? (
         <span className="ws-save-status-saving">
-          <Loader2 size={14} aria-hidden="true" />
-          Đang lưu…
+          <Loader2 size={14} aria-hidden="true" style={{ animation: "ws-spin 1s linear infinite" }} />
+          Đang tự động lưu…
+        </span>
+      ) : lastSavedTime ? (
+        <span className="ws-save-status-saved">
+          <CheckCircle2 size={14} aria-hidden="true" />
+          Đã lưu tự động lúc {lastSavedTime}
         </span>
       ) : status === "saved" ? (
         <span className="ws-save-status-saved">
@@ -1026,6 +1049,14 @@ export function Workspace() {
         style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}
       >
         <Sparkles size={14} style={{ color: "var(--rs-color-primary)" }} /> Cài đặt AI
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => handleManualSave()}
+        title="Lưu bản thảo hiện tại (Ctrl+S)"
+      >
+        Lưu bản thảo
       </Button>
       <Button
         variant="primary"
@@ -1190,6 +1221,7 @@ export function Workspace() {
           sections={bundle.project.sections}
           activeSectionId={activeSection.id}
           evidence={bundle.evidence}
+          darkPreview={darkPreview}
         />
       }
       sidePanel={sidePanel}
@@ -1209,6 +1241,8 @@ export function Workspace() {
       onReorderSection={handleReorderSection}
       onSectionFilesDrop={handleSectionFilesDrop}
       focusMode={focusMode}
+      darkPreview={darkPreview}
+      onDarkPreviewToggle={() => setDarkPreview(prev => !prev)}
     />
       <CommandPalette
         isOpen={isCommandPaletteOpen}

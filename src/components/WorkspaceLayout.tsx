@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useRef, ReactNode } from "react";
 import {
   Menu,
-  PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   FileText,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { SectionNav } from "./SectionNav";
 import { MobileDrawer } from "./MobileDrawer";
@@ -34,6 +34,8 @@ type WorkspaceLayoutProps = {
   onReorderSection?: (activeId: string, overId: string) => void;
   onSectionFilesDrop?: (id: string, files: File[]) => void;
   focusMode?: boolean;
+  darkPreview?: boolean;
+  onDarkPreviewToggle?: () => void;
 };
 
 export function WorkspaceLayout({
@@ -56,6 +58,8 @@ export function WorkspaceLayout({
   onReorderSection,
   onSectionFilesDrop,
   focusMode = false,
+  darkPreview = false,
+  onDarkPreviewToggle,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isWide, setIsWide] = useState(true);
@@ -149,6 +153,8 @@ export function WorkspaceLayout({
         if (availableWidth < a4Width) {
           nextScale = Math.max(0.6, availableWidth / a4Width); // Ngưỡng đọc tối thiểu là 0.6
         }
+      } else if (zoomMode === "50") {
+        nextScale = 0.5;
       } else if (zoomMode === "75") {
         nextScale = 0.75;
       } else if (zoomMode === "100" || zoomMode === "actual") {
@@ -165,6 +171,46 @@ export function WorkspaceLayout({
     observer.observe(inner);
     return () => observer.disconnect();
   }, [activeTab, splitWidth, isDesktop, zoomMode]);
+
+  // Synchronize scroll between Editor (CodeMirror .cm-scroller) and Preview Pane (.ws-preview)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // We search for the scroller inside the container
+    const editorScroller = container.querySelector(".cm-scroller") as HTMLElement;
+    const previewScroller = viewportRef.current;
+
+    if (!editorScroller || !previewScroller) return;
+
+    let activeScroller: HTMLElement | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const handleScroll = (source: HTMLElement, target: HTMLElement) => {
+      if (activeScroller && activeScroller !== source) return;
+
+      activeScroller = source;
+      const sourcePercent = source.scrollTop / (source.scrollHeight - source.clientHeight || 1);
+      target.scrollTop = sourcePercent * (target.scrollHeight - target.clientHeight);
+
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        activeScroller = null;
+      }, 50);
+    };
+
+    const onEditorScroll = () => handleScroll(editorScroller, previewScroller);
+    const onPreviewScroll = () => handleScroll(previewScroller, editorScroller);
+
+    editorScroller.addEventListener("scroll", onEditorScroll, { passive: true });
+    previewScroller.addEventListener("scroll", onPreviewScroll, { passive: true });
+
+    return () => {
+      editorScroller.removeEventListener("scroll", onEditorScroll);
+      previewScroller.removeEventListener("scroll", onPreviewScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [activeTab, splitWidth, isDesktop, focusMode]);
 
   const handleSectionClick = (id: string) => {
     onSectionSelect(id);
@@ -221,7 +267,7 @@ export function WorkspaceLayout({
             {isLeftCollapsed ? (
               <div className="ws-collapsed-rail-list">
                 <button type="button" className="ws-column-toggle-btn" onClick={() => setIsLeftCollapsed(false)} aria-label="Mở rộng mục lục">
-                  <PanelLeftOpen size={16} />
+                  <ChevronRight size={16} />
                 </button>
                 <div className="ws-collapsed-rail-list ws-collapsed-rail-list-spaced">
                   {sections.map((sec, idx) => (
@@ -268,6 +314,7 @@ export function WorkspaceLayout({
                     ariaLabel="Chọn tỷ lệ zoom"
                     options={[
                       { value: "fit", label: "Tự động" },
+                      { value: "50", label: "50%" },
                       { value: "75", label: "75%" },
                       { value: "100", label: "100%" },
                       { value: "125", label: "125%" },
@@ -276,6 +323,29 @@ export function WorkspaceLayout({
                     size="sm"
                     fullWidth={false}
                   />
+                  {onDarkPreviewToggle && (
+                    <button
+                      type="button"
+                      className={`ws-preview-dark-toggle ${darkPreview ? "active" : ""}`}
+                      onClick={onDarkPreviewToggle}
+                      title="Bật/Tắt chế độ xem tối"
+                      style={{
+                        marginLeft: "var(--rs-space-2)",
+                        padding: "4px 8px",
+                        fontSize: "12px",
+                        borderRadius: "var(--rs-radius-sm)",
+                        border: "1px solid var(--rs-color-border)",
+                        backgroundColor: darkPreview ? "var(--rs-color-surface-hover)" : "var(--rs-color-surface)",
+                        color: darkPreview ? "var(--rs-color-primary)" : "var(--rs-color-text-muted)",
+                        cursor: "pointer",
+                        height: "28px",
+                        display: "inline-flex",
+                        alignItems: "center"
+                      }}
+                    >
+                      {darkPreview ? "Nền tối" : "Nền sáng"}
+                    </button>
+                  )}
                 </div>
                 <div className="ws-preview-scale-wrapper" style={{ transform: `scale(${scale})`, height: height ? `${height}px` : "auto" }}>
                   <div ref={innerRef} className="ws-preview-page">{preview}</div>

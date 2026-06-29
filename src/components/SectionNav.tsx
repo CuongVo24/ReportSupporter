@@ -21,7 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   GripVertical,
-  PanelLeftClose,
+  ChevronLeft,
   Pencil,
   Plus,
   Trash,
@@ -345,7 +345,7 @@ export function SectionNav({
               onClick={onCollapse}
               aria-label="Thu gon muc luc"
             >
-              <PanelLeftClose size={16} />
+              <ChevronLeft size={16} />
             </button>
           )}
         </div>

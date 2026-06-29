@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Sparkles, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Sparkles, AlertTriangle, ChevronDown } from "lucide-react";
 import type { ReportSection, AiSuggestion } from "@/types";
 import {
   getGatewayState,
@@ -26,6 +26,8 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
   // originalText is only set right before an AI request, not on section open.
   const [originalText, setOriginalText] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState<"rewrite" | "tone" | "translate" | "terminology" | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Reset AI states when the user switches sections
   useEffect(() => {
@@ -34,7 +36,18 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
     setAiError(null);
     setShowDiff(false);
     setLoadingAction(null);
+    setIsDropdownOpen(false);
   }, [section.id]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   const state = getGatewayState();
   const isDisabled = state === "disabled" || state === "unconfigured";
@@ -128,67 +141,87 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
     }
   };
 
+  const getTriggerLabel = () => {
+    if (isAiLoading) {
+      if (loadingAction === "rewrite") return "Đang viết lại...";
+      if (loadingAction === "tone") return "Đang cải thiện...";
+      if (loadingAction === "translate") return "Đang dịch...";
+      if (loadingAction === "terminology") return "Đang chuẩn hóa...";
+      return "Đang xử lý...";
+    }
+    return "Trợ lý AI";
+  };
+
   // UserControlBar only shown when an AI interaction has occurred (originalText set)
   const showControlBar = originalText !== null;
 
   return (
     <div className="ws-ai-assist-bar-container">
       <div className="ws-ai-assist-buttons-row">
-        <button
-          type="button"
-          disabled={isDisabled || isAiLoading}
-          onClick={handleRewrite}
-          className="ws-ai-rewrite-btn"
-          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Viết lại đoạn văn bằng AI"}
-        >
-          {isAiLoading && loadingAction === "rewrite" ? "Đang viết lại..." : (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Sparkles size={12} aria-hidden="true" /> Viết lại đoạn (AI)
-            </span>
+        <div className="ws-ai-dropdown-container" ref={dropdownRef}>
+          <button
+            type="button"
+            disabled={isDisabled || isAiLoading}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="ws-ai-dropdown-trigger"
+            title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Mở các tác vụ Trợ lý AI"}
+            aria-haspopup="listbox"
+            aria-expanded={isDropdownOpen}
+          >
+            <Sparkles size={12} aria-hidden="true" />
+            <span>{getTriggerLabel()}</span>
+            <ChevronDown size={12} aria-hidden="true" />
+          </button>
+          
+          {isDropdownOpen && !isAiLoading && (
+            <div className="ws-ai-dropdown-menu" role="listbox">
+              <button
+                type="button"
+                onClick={() => {
+                  handleRewrite();
+                  setIsDropdownOpen(false);
+                }}
+                role="option"
+                aria-selected="false"
+              >
+                <Sparkles size={12} aria-hidden="true" /> Viết lại đoạn (AI)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleTone();
+                  setIsDropdownOpen(false);
+                }}
+                role="option"
+                aria-selected="false"
+              >
+                <Sparkles size={12} aria-hidden="true" /> Cải thiện văn phong (AI)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleTranslate();
+                  setIsDropdownOpen(false);
+                }}
+                role="option"
+                aria-selected="false"
+              >
+                <Sparkles size={12} aria-hidden="true" /> Dịch Anh/Việt (AI)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleTerminology();
+                  setIsDropdownOpen(false);
+                }}
+                role="option"
+                aria-selected="false"
+              >
+                <Sparkles size={12} aria-hidden="true" /> Chuẩn thuật ngữ (AI)
+              </button>
+            </div>
           )}
-        </button>
-
-        <button
-          type="button"
-          disabled={isDisabled || isAiLoading}
-          onClick={handleTone}
-          className="ws-ai-tone-btn"
-          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Cải thiện văn phong bằng AI"}
-        >
-          {isAiLoading && loadingAction === "tone" ? "Đang cải thiện..." : (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Sparkles size={12} aria-hidden="true" /> Cải thiện văn phong (AI)
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          disabled={isDisabled || isAiLoading}
-          onClick={handleTranslate}
-          className="ws-ai-translate-btn"
-          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Dịch Anh/Việt bằng AI"}
-        >
-          {isAiLoading && loadingAction === "translate" ? "Đang dịch..." : (
-            <span className="ws-ai-button-label">
-              <Sparkles size={12} aria-hidden="true" /> Dịch Anh/Việt (AI)
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          disabled={isDisabled || isAiLoading}
-          onClick={handleTerminology}
-          className="ws-ai-terminology-btn"
-          title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Chuẩn hóa thuật ngữ bằng AI"}
-        >
-          {isAiLoading && loadingAction === "terminology" ? "Đang chuẩn hóa..." : (
-            <span className="ws-ai-button-label">
-              <Sparkles size={12} aria-hidden="true" /> Chuẩn thuật ngữ (AI)
-            </span>
-          )}
-        </button>
+        </div>
 
         {isDisabled && (
           <button

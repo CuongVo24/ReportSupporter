@@ -7,6 +7,7 @@ import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
 import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode, injectHeadingNumbers, renderTocToHtml } from "@/modules/format";
 import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as EvidenceUnistNode } from "@/modules/evidence";
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem, CaptionEntry } from "@/types";
+import { PRESETS } from "@/modules/export/helpers";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 import { EmptyState } from "@/components/states";
 
@@ -17,6 +18,7 @@ type PreviewPaneProps = {
   sections?: { id: string; order: number; markdown: string }[];
   activeSectionId?: string;
   evidence?: EvidenceItem[];
+  darkPreview?: boolean;
 };
 
 function TocBlock({ toc }: { toc: TocNode[] }) {
@@ -89,6 +91,7 @@ export function PreviewPane({
   sections,
   activeSectionId,
   evidence = [],
+  darkPreview = false,
 }: PreviewPaneProps) {
   const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
 
@@ -232,6 +235,22 @@ export function PreviewPane({
     };
   }, [evidence]);
 
+  useEffect(() => {
+    const pageEl = document.querySelector(".ws-preview-page");
+    if (pageEl) {
+      if (darkPreview) {
+        pageEl.classList.add("ws-preview-page--dark");
+      } else {
+        pageEl.classList.remove("ws-preview-page--dark");
+      }
+    }
+    return () => {
+      if (pageEl) {
+        pageEl.classList.remove("ws-preview-page--dark");
+      }
+    };
+  }, [darkPreview]);
+
   if (!hasContent) {
     return (
       <div className="ws-preview-container-empty">
@@ -244,8 +263,76 @@ export function PreviewPane({
   const renderState = { index: 0 };
   const captionState = { figIdx: 0, tableIdx: 0 };
 
+  const presetId = formatSettings?.presetId || "academic-default";
+  const preset = PRESETS[presetId] || PRESETS["academic-default"];
+  const fontFamily = `"${preset.fontFamily || "Times New Roman"}", Times, serif`;
+  const fontPt = preset.fontSizePt || 13;
+  const lh = preset.lineHeight || 1.5;
+  const align = preset.bodyAlign || "justify";
+  const { top, right, bottom, left } = preset.margin || { top: "20mm", right: "20mm", bottom: "20mm", left: "30mm" };
+
   return (
     <div className="ws-preview-container">
+      <style>{`
+        .ws-preview-page {
+          font-family: ${fontFamily} !important;
+          font-size: ${fontPt}pt !important;
+          line-height: ${lh} !important;
+          text-align: ${align} !important;
+          padding-top: ${top} !important;
+          padding-right: ${right} !important;
+          padding-bottom: ${bottom} !important;
+          padding-left: ${left} !important;
+        }
+        .ws-preview-page p, .ws-preview-page li {
+          text-align: ${align} !important;
+        }
+        .ws-preview-page h1, .ws-preview-page h2, .ws-preview-page h3, .ws-preview-page h4, .ws-preview-page h5, .ws-preview-page h6 {
+          font-family: ${fontFamily} !important;
+        }
+        .ws-preview-page table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 15pt 0;
+        }
+        .ws-preview-page table, .ws-preview-page th, .ws-preview-page td {
+          border: 1px solid #000;
+        }
+        .ws-preview-page th, .ws-preview-page td {
+          padding: 8pt !important;
+          text-align: left;
+        }
+        
+        /* Dark Preview overrides */
+        .ws-preview-page.ws-preview-page--dark {
+          background-color: #1e1e1e !important;
+          color: #e0e0e0 !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+        .ws-preview-page.ws-preview-page--dark table,
+        .ws-preview-page.ws-preview-page--dark th,
+        .ws-preview-page.ws-preview-page--dark td {
+          border-color: #444 !important;
+        }
+        .ws-preview-page.ws-preview-page--dark .ws-toc-leader {
+          border-bottom-color: #444 !important;
+        }
+        .ws-preview-page.ws-preview-page--dark .ws-toc-link {
+          color: #e0e0e0 !important;
+        }
+        .ws-preview-page.ws-preview-page--dark .ws-toc-number {
+          color: var(--rs-color-primary) !important;
+        }
+        .ws-preview-page.ws-preview-page--dark h1,
+        .ws-preview-page.ws-preview-page--dark h2,
+        .ws-preview-page.ws-preview-page--dark h3,
+        .ws-preview-page.ws-preview-page--dark h4,
+        .ws-preview-page.ws-preview-page--dark h5,
+        .ws-preview-page.ws-preview-page--dark h6 {
+          color: #ffffff !important;
+        }
+      `}</style>
+
       <div className="ws-preview-header-info">
         <span className="ws-preview-scope-label">
           <Info size={14} aria-hidden="true" />
