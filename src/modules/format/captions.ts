@@ -57,15 +57,71 @@ export function normalizeCaptions(
                   hProperties: { ...(img.data?.hProperties || {}), id: entry.id },
                 };
 
-                // Inject a figure caption paragraph immediately after the paragraph containing the image
-                const captionText = `${entry.label}: ${entry.text}`.trim();
-                newChildren.push({
-                  type: "paragraph",
-                  children: [{ type: "text", value: captionText }],
-                  data: {
-                    hProperties: { className: "fig-caption", id: entry.id },
-                  },
-                } as unknown as MdastContent);
+                // Look for adjacent caption paragraph in parent's children (before or after) or inline sibling
+                let adjacentFound = false;
+
+                // 1. Dò inline sibling trong chính paragraphNode
+                if (paragraphNode.children.length > 1) {
+                  for (let idx = 0; idx < paragraphNode.children.length; idx++) {
+                    const child = paragraphNode.children[idx];
+                    if (child.type === "text" && "value" in child && typeof child.value === "string") {
+                      const text = child.value.trim();
+                      if (/^(hình|figure)/i.test(text)) {
+                        // Remove inline manual caption node from paragraph
+                        paragraphNode.children = paragraphNode.children.filter((c) => c !== child);
+                        
+                        // Inject clean caption paragraph
+                        const captionText = `${entry.label}: ${entry.text}`.trim();
+                        newChildren.push({
+                          type: "paragraph",
+                          children: [{ type: "text", value: captionText }],
+                          data: {
+                            hProperties: { className: "fig-caption", id: entry.id },
+                          },
+                        } as unknown as MdastContent);
+                        adjacentFound = true;
+                        break;
+                      }
+                    }
+                  }
+                }
+
+                // 2. Dò block-level paragraph lân cận trong parent.children
+                if (!adjacentFound) {
+                  const adjacentIndices = [i - 1, i + 1];
+                  for (const idx of adjacentIndices) {
+                    if (idx >= 0 && idx < parent.children.length) {
+                      const adj = parent.children[idx] as MdastContent;
+                      if (adj && adj.type === "paragraph") {
+                        const paragraphAdj = adj as MdastParagraph;
+                        const text = flattenNodeText(paragraphAdj).trim();
+                        if (/^(hình|figure)/i.test(text)) {
+                          // Update content in-place with normalized label and text
+                          const captionText = `${entry.label}: ${entry.text}`.trim();
+                          paragraphAdj.children = [{ type: "text", value: captionText }];
+                          paragraphAdj.data = {
+                            ...paragraphAdj.data,
+                            hProperties: { className: "fig-caption", id: entry.id },
+                          };
+                          adjacentFound = true;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                // If no adjacent manual caption is found, inject a new caption paragraph
+                if (!adjacentFound) {
+                  const captionText = `${entry.label}: ${entry.text}`.trim();
+                  newChildren.push({
+                    type: "paragraph",
+                    children: [{ type: "text", value: captionText }],
+                    data: {
+                      hProperties: { className: "fig-caption", id: entry.id },
+                    },
+                  } as unknown as MdastContent);
+                }
               }
             }
           }

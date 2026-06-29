@@ -24,6 +24,6 @@ export const PRESETS: Record<string, FormatPreset> = {
     lineHeight: 1.5,
     bodyAlign: "justify",
     chapterStartsNewPage: true,
-    captionNumbering: "continuous",
+    captionNumbering: "per-chapter",
   },
 };

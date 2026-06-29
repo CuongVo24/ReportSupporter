@@ -89,7 +89,7 @@ describe("prepareExport Optimization Parity", () => {
       id: "fig-1",
       kind: "figure",
       number: 1,
-      label: "Hình 1",
+      label: "Hình 1.1",
       text: "My Figure",
       sectionId: "sec-1",
     });
@@ -100,7 +100,7 @@ describe("prepareExport Optimization Parity", () => {
       id: "table-1",
       kind: "table",
       number: 1,
-      label: "Bảng 1",
+      label: "Bảng 2.1",
       text: "My Table Caption",
       sectionId: "sec-2",
     });

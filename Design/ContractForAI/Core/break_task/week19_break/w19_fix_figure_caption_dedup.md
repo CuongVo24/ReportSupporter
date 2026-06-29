@@ -68,6 +68,6 @@ Caption hình dùng **cùng quy tắc với bảng**: dò caption sẵn có rồ
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(format): dedupe figure captions (reuse existing), strip duplicated label, unify numbering scheme`.

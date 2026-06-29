@@ -27,7 +27,9 @@ export function buildCaptionRegistry(
   function walk(
     node: MdastContent | MdastRoot,
     parent: (MdastContent | MdastRoot) | null,
+    grandParent: (MdastContent | MdastRoot) | null,
     index: number,
+    parentIndex: number,
     sectionId: string
   ) {
     if (!node) return;
@@ -48,6 +50,50 @@ export function buildCaptionRegistry(
       const img = node as MdastImage;
       figChapterCount++;
       figGlobalCount++;
+
+      let captionText = "";
+
+      // 1. Dò inline sibling trong cùng paragraph (parent của image)
+      if (parent && parent.type === "paragraph" && "children" in parent && Array.isArray(parent.children)) {
+        const adjacentIndices = [index - 1, index + 1];
+        for (const idx of adjacentIndices) {
+          if (idx >= 0 && idx < parent.children.length) {
+            const adj = parent.children[idx];
+            if (adj && adj.type === "text" && "value" in adj && typeof adj.value === "string") {
+              const text = adj.value.trim();
+              if (/^(hình|figure)/i.test(text)) {
+                // Strip the starting prefix e.g. "Hình 1.2:" or "Figure 2 -"
+                captionText = text.replace(/^(hình|figure)\s*\d+(\.\d+)*\s*[:.-]?\s*/i, "");
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Dò block-level paragraph lân cận của paragraph chứa image (parent)
+      if (!captionText && grandParent && "children" in grandParent && Array.isArray(grandParent.children)) {
+        const adjacentIndices = [parentIndex - 1, parentIndex + 1];
+        for (const idx of adjacentIndices) {
+          if (idx >= 0 && idx < grandParent.children.length) {
+            const adj = grandParent.children[idx];
+            if (adj && adj.type === "paragraph") {
+              const text = flattenNodeText(adj).trim();
+              if (/^(hình|figure)/i.test(text)) {
+                // Strip the starting prefix e.g. "Hình 1.2:" or "Figure 2 -"
+                captionText = text.replace(/^(hình|figure)\s*\d+(\.\d+)*\s*[:.-]?\s*/i, "");
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Fallback to img.alt
+      if (!captionText && img.alt) {
+        captionText = img.alt.replace(/^(hình|figure)\s*\d+(\.\d+)*\s*[:.-]?\s*/i, "");
+      }
+
       const num = captionNumbering === "per-chapter" ? figChapterCount : figGlobalCount;
       const label = captionNumbering === "per-chapter"
         ? `Hình ${Math.max(chapterNum, 1)}.${figChapterCount}`
@@ -58,7 +104,7 @@ export function buildCaptionRegistry(
         kind: "figure",
         number: num,
         label,
-        text: img.alt || "",
+        text: captionText,
         sectionId,
       });
     }
@@ -103,13 +149,13 @@ export function buildCaptionRegistry(
     // Traverse children nodes in document order
     if ("children" in node && Array.isArray(node.children)) {
       node.children.forEach((child, idx) => {
-        walk(child as MdastContent, node, idx, sectionId);
+        walk(child as MdastContent, node, parent, idx, index, sectionId);
       });
     }
   }
 
   for (const sec of sections) {
-    walk(sec.ast, null, 0, sec.id);
+    walk(sec.ast, null, null, 0, 0, sec.id);
   }
 
   return registry;

@@ -57,8 +57,8 @@ describe("Multi-Template Export Validation Tests", () => {
           expect(htmlText).toContain("class=\"page-break\"");
 
           // Assert Caption Numbering Parity
-          expect(htmlText).toContain("Hình 1: Mô tả hình minh họa");
-          expect(htmlText).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+          expect(htmlText).toContain("Hình 1.1: Mô tả hình minh họa");
+          expect(htmlText).toContain("Bảng 1.1: Bảng dữ liệu mẫu kiểm thử");
 
           // Verify that sections are exported in correct order
           const sortedSections = [...bundle.project.sections].sort((a, b) => a.order - b.order);
@@ -81,8 +81,8 @@ describe("Multi-Template Export Validation Tests", () => {
         expect(printableHtml).toContain("class=\"page-break\"");
 
         // Assert Caption Numbering Parity in printable HTML
-        expect(printableHtml).toContain("Hình 1: Mô tả hình minh họa");
-        expect(printableHtml).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+        expect(printableHtml).toContain("Hình 1.1: Mô tả hình minh họa");
+        expect(printableHtml).toContain("Bảng 1.1: Bảng dữ liệu mẫu kiểm thử");
 
         const mockDocument = {
           open: vi.fn(),
@@ -123,8 +123,8 @@ describe("Multi-Template Export Validation Tests", () => {
           expect(docJson).toContain("Nguyễn Văn An - 20261111");
 
           // Assert Caption Numbering Parity in DOCX representation
-          expect(docJson).toContain("Hình 1: Mô tả hình minh họa");
-          expect(docJson).toContain("Bảng 1: Bảng dữ liệu mẫu kiểm thử");
+          expect(docJson).toContain("Hình 1.1: Mô tả hình minh họa");
+          expect(docJson).toContain("Bảng 1.1: Bảng dữ liệu mẫu kiểm thử");
 
           // Verify that template specific elements (metadata title or section titles) are present in DOCX
           const sortedSections = [...bundle.project.sections].sort((a, b) => a.order - b.order);
