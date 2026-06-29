@@ -1,5 +1,5 @@
 import { parseMarkdown, flattenNodeText } from "@/lib/markdown-pipeline";
-import type { ReportProjectBundle, ReportSection } from "@/types";
+import type { ReportProjectBundle, ReportSection, ReportAsset, EvidenceItem } from "@/types";
 import { importReadme } from "./readme-import";
 
 export const MAX_MARKDOWN_IMPORT_BYTES = 50 * 1024 * 1024;
@@ -54,6 +54,15 @@ export type MarkdownImportDraft = {
   markdown: string;
   title: string;
   sectionCount: number;
+  assets?: ReportAsset[];
+  evidence?: EvidenceItem[];
+  summary?: {
+    totalScanned: number;
+    embeddedCount: number;
+    missingCount: number;
+    warnings: string[];
+    missingList: string[];
+  };
 };
 
 const MARKDOWN_EXTENSIONS = [".md", ".markdown", ".mdown", ".mkd"];
@@ -94,7 +103,13 @@ export function inferMarkdownTitle(markdown: string, fileName: string): string {
   return titleFromMarkdownFileName(fileName);
 }
 
-export function buildMarkdownImportDraft(fileName: string, markdown: string): MarkdownImportDraft {
+export function buildMarkdownImportDraft(
+  fileName: string,
+  markdown: string,
+  assets?: ReportAsset[],
+  evidence?: EvidenceItem[],
+  summary?: MarkdownImportDraft["summary"]
+): MarkdownImportDraft {
   const normalizedMarkdown = markdown.trim();
   const persistedMarkdown = normalizedMarkdown ? `${normalizedMarkdown}\n` : "";
   const sectionCount = importReadme(persistedMarkdown).length;
@@ -104,6 +119,9 @@ export function buildMarkdownImportDraft(fileName: string, markdown: string): Ma
     markdown: persistedMarkdown,
     title: inferMarkdownTitle(persistedMarkdown, fileName),
     sectionCount,
+    assets,
+    evidence,
+    summary,
   };
 }
 

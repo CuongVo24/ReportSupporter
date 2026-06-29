@@ -640,7 +640,23 @@ export function Workspace() {
       return;
     }
 
-    const next = appendSections(bundle, parsedSections);
+    const replaced = appendSections(bundle, parsedSections);
+    
+    // Merge new assets without duplicating IDs
+    const newAssets = (importDraft.assets || []).filter(
+      (newAsset) => !replaced.assets.some((existing) => existing.id === newAsset.id)
+    );
+    // Merge new evidence without duplicating IDs
+    const newEvidence = (importDraft.evidence || []).filter(
+      (newEv) => !replaced.evidence.some((existing) => existing.id === newEv.id)
+    );
+
+    const next: ReportProjectBundle = {
+      ...replaced,
+      assets: [...replaced.assets, ...newAssets],
+      evidence: [...replaced.evidence, ...newEvidence],
+    };
+
     const oldLength = bundle.project.sections.length;
     const firstNewSection = next.project.sections[oldLength];
 
@@ -672,12 +688,24 @@ export function Workspace() {
 
     await snapshotBefore("Trước khi ghi đè báo cáo bằng Markdown");
     const replaced = replaceSections(bundle, parsedSections);
+    
+    // Merge new assets without duplicating IDs
+    const newAssets = (importDraft.assets || []).filter(
+      (newAsset) => !replaced.assets.some((existing) => existing.id === newAsset.id)
+    );
+    // Merge new evidence without duplicating IDs
+    const newEvidence = (importDraft.evidence || []).filter(
+      (newEv) => !replaced.evidence.some((existing) => existing.id === newEv.id)
+    );
+
     const next: ReportProjectBundle = {
       ...replaced,
       project: {
         ...replaced.project,
         title: importDraft.title || replaced.project.title,
       },
+      assets: [...replaced.assets, ...newAssets],
+      evidence: [...replaced.evidence, ...newEvidence],
     };
     setBundle(next);
     setActiveId(next.project.sections[0]?.id ?? null);

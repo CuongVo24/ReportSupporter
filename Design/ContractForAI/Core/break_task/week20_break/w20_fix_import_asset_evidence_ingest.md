@@ -75,8 +75,6 @@ Khi nhập một `.md`, **ingest mọi tham chiếu ảnh/minh chứng** kèm th
 - Panel "Minh chứng" có item sau import (không còn rỗng).
 - Thiếu 1 ảnh → tóm tắt "đã nhúng N, thiếu 1" + tên file thiếu; không 404 thầm lặng. 4 gate xanh.
 
-## 7. Status
+`COMPLETED`
 
-`PROPOSED — chờ Approve`
-
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w20/import-fidelity`): `fix(write): ingest referenced images & evidence on markdown import, rewrite refs to embedded assets`.
+> Commit (trên `w20/import-fidelity`): `fix(write): ingest referenced images & evidence on markdown import, rewrite refs to embedded assets`
