@@ -73,6 +73,6 @@ Chuẩn hoá bố cục mục lục & trang bìa khi in: dot leader, indent theo
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w19/near-completed`): `fix(export): print TOC dot leaders, per-level indent, page-break rules and balanced cover`.

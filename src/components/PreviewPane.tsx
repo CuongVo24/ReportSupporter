@@ -43,8 +43,12 @@ function LofBlock({ lof }: { lof: CaptionEntry[] }) {
         {lof.map((node) => (
           <li key={node.id} className="ws-lof-item ws-toc-item">
             <a href={`#${node.id}`} className="ws-lof-link ws-toc-link">
-              <span className="ws-lof-number ws-toc-number">{node.label}</span>{" "}
-              <span className="ws-lof-text ws-toc-text">{node.text}</span>
+              <span className="ws-toc-left">
+                <span className="ws-lof-number ws-toc-number">{node.label}</span>{" "}
+                <span className="ws-lof-text ws-toc-text">{node.text}</span>
+              </span>
+              <span className="ws-toc-leader"></span>
+              <span className="ws-toc-page">...</span>
             </a>
           </li>
         ))}
@@ -64,8 +68,12 @@ function LotBlock({ lot }: { lot: CaptionEntry[] }) {
         {lot.map((node) => (
           <li key={node.id} className="ws-lot-item ws-toc-item">
             <a href={`#${node.id}`} className="ws-lot-link ws-toc-link">
-              <span className="ws-lot-number ws-toc-number">{node.label}</span>{" "}
-              <span className="ws-lot-text ws-toc-text">{node.text}</span>
+              <span className="ws-toc-left">
+                <span className="ws-lot-number ws-toc-number">{node.label}</span>{" "}
+                <span className="ws-lot-text ws-toc-text">{node.text}</span>
+              </span>
+              <span className="ws-toc-leader"></span>
+              <span className="ws-toc-page">...</span>
             </a>
           </li>
         ))}

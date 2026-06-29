@@ -17,8 +17,12 @@ export function renderTocToHtml(nodes: TocNode[]): string {
             (node) => `
           <li class="ws-toc-item ws-toc-level-${node.level}">
             <a href="#${node.id}" class="ws-toc-link">
-              <span class="ws-toc-number">${node.number}</span>
-              <span class="ws-toc-text">${node.text}</span>
+              <span class="ws-toc-left">
+                <span class="ws-toc-number">${node.number}</span>
+                <span class="ws-toc-text">${node.text}</span>
+              </span>
+              <span class="ws-toc-leader"></span>
+              <span class="ws-toc-page">...</span>
             </a>
             ${node.children && node.children.length > 0 ? renderNodes(node.children) : ""}
           </li>

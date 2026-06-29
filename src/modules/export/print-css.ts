@@ -13,6 +13,12 @@ export function buildPrintCss(preset: FormatPreset): string {
   const firstH1AvoidBreak = preset.chapterStartsNewPage ? "\n  .report-body > h1:first-of-type { page-break-before: avoid !important; break-before: avoid !important; }" : "";
   const fontFamily = `"${preset.fontFamily || "Times New Roman"}", Times, serif`;
 
+  const levelStyles = Array.from({ length: 6 }, (_, idx) => {
+    const level = idx + 1;
+    const padding = (level - 1) * 20; // 20px per level indent
+    return `.ws-toc-level-${level} { padding-left: ${padding}px !important; }`;
+  }).join("\n  ");
+
   return `
 @media print {
   @page {
@@ -34,11 +40,13 @@ export function buildPrintCss(preset: FormatPreset): string {
   h3 { font-size: 13pt; margin-top: 18pt; margin-bottom: 6pt; }
   .cover-page {
     page-break-before: avoid; break-before: avoid; page-break-after: always; break-after: page;
-    height: 90vh; box-sizing: border-box; display: flex; flex-direction: column;
-    justify-content: space-between; align-items: center; text-align: center; padding: 20mm 0;
+    box-sizing: border-box; display: flex; flex-direction: column;
+    align-items: center; text-align: center; min-height: 240mm; padding: 15mm 0;
   }
   .page-break { page-break-before: always; break-before: page; }
-  figure, img, table, .ws-toc-container { page-break-inside: avoid; break-inside: avoid; }
+  figure, img, table { page-break-inside: avoid; break-inside: avoid; }
+  .ws-toc-container { page-break-inside: auto; break-inside: auto; }
+  .ws-toc-item { page-break-inside: avoid; break-inside: avoid; }
   .fig-caption, .tbl-caption { page-break-inside: avoid; break-inside: avoid; }
   .fig-caption { page-break-before: avoid; break-before: avoid; }
   .tbl-caption { page-break-after: avoid; break-after: avoid; }
@@ -59,12 +67,12 @@ export function buildPrintCss(preset: FormatPreset): string {
 }
 /* Common cover page styling */
 .cover-page { text-align: center; font-family: ${fontFamily}; }
-.cover-school { font-size: 16pt; font-weight: bold; text-transform: uppercase; }
-.cover-divider { width: 150px; height: 2px; background: #000; margin: 10px auto 40px; }
-.cover-title-container { margin: 80px 0; }
-.cover-title { font-size: 24pt; font-weight: bold; text-transform: uppercase; line-height: 1.3; }
-.cover-course { font-size: 14pt; font-weight: bold; margin-bottom: 40px; }
-.cover-info { margin: 60px auto; max-width: 400px; text-align: left; font-size: 13pt; line-height: 1.6; }
+.cover-school { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin-bottom: 5pt; }
+.cover-divider { width: 150px; height: 2px; background: #000; margin: 5pt auto 20pt; }
+.cover-title-container { margin: auto 0; }
+.cover-title { font-size: 24pt; font-weight: bold; text-transform: uppercase; line-height: 1.3; margin: 0; }
+.cover-course { font-size: 14pt; font-weight: bold; margin-top: 10pt; margin-bottom: auto; }
+.cover-info { margin-top: auto; margin-bottom: auto; max-width: 400px; text-align: left; font-size: 13pt; line-height: 1.6; }
 .cover-members-list { margin: 5px 0 0 20px; padding: 0; }
 .cover-date { margin-top: auto; font-size: 13pt; }
 /* Table of Contents styling */
@@ -72,9 +80,13 @@ export function buildPrintCss(preset: FormatPreset): string {
 .ws-toc-title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 20px; }
 .ws-toc-list { list-style: none; padding: 0; margin: 0; }
 .ws-toc-item { margin-bottom: 8px; }
-.ws-toc-link { display: flex; justify-content: space-between; text-decoration: none; color: #000; }
+.ws-toc-link { display: flex; align-items: flex-end; text-decoration: none; color: #000; width: 100%; }
 .ws-toc-link:hover { text-decoration: underline; }
-.ws-toc-level-2 { padding-left: 20px; }
-.ws-toc-level-3 { padding-left: 40px; }
+.ws-toc-left { display: flex; gap: 5pt; flex-shrink: 0; max-width: 85%; }
+.ws-toc-number { font-weight: bold; }
+.ws-toc-text { }
+.ws-toc-leader { flex-grow: 1; border-bottom: 1px dotted #000; margin: 0 5pt 3pt; min-width: 15px; }
+.ws-toc-page { flex-shrink: 0; min-width: 25px; text-align: right; }
+${levelStyles}
   `.trim();
 }

@@ -45,7 +45,7 @@ describe("Pre-export validation gate rules", () => {
         `,
       }
     ], [
-      { id: "img-ok", kind: "image", data: "base64", fileName: "img.png", mimeType: "image/png" }
+      { id: "img-ok", kind: "image", data: "base64", fileName: "img.png", mimeType: "image/png", insertedAt: new Date().toISOString() }
     ]);
 
     const result = validateExport(bundle);
