@@ -1,4 +1,5 @@
 import type { Root as MdastRoot, Heading as MdastHeading, PhrasingContent } from "mdast";
+import { stripAstHeadingPrefix } from "./strip-heading-number";
 
 interface UnistNode {
   type: string;
@@ -32,6 +33,7 @@ export function injectHeadingNumbers(
 
     if (n.type === "heading") {
       const heading = n as unknown as MdastHeading;
+      stripAstHeadingPrefix(heading);
       const text = getFlatText(heading.children).trim();
       if (text !== "") {
         const numHeading = globalNumberedHeadings[state.index++];
