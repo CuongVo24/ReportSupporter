@@ -32,6 +32,20 @@ export const brokenImageRule: CheckRule = {
           continue;
         }
 
+        // Detect raw relative/local paths not processed as asset/data URIs
+        const isRemoteOrEmbedded = /^(https?:|data:|asset:|image:)/i.test(url);
+        if (!isRemoteOrEmbedded) {
+          issues.push({
+            id: "broken-image",
+            severity: "error",
+            module: "check",
+            message: `Ảnh sử dụng đường dẫn cục bộ chưa được nhúng: "${url}".`,
+            suggestion: "Vui lòng import lại tài liệu kèm theo thư mục/tệp ảnh để nhúng tự động.",
+            sectionId,
+          });
+          continue;
+        }
+
         // Match asset:<id> or image:<id> formats
         const assetMatch = /^(asset|image):(.+)$/.exec(url);
         if (assetMatch) {

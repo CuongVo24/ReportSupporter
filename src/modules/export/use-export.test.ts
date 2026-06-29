@@ -52,7 +52,41 @@ describe("useExport hook logic", () => {
     project: {
       id: "proj-1",
       title: "Test Report Title",
-      sections: [],
+      sections: [
+        {
+          id: "sec-1",
+          order: 1,
+          title: "Introduction",
+          markdown: "# Giới thiệu\n\nNội dung giới thiệu.",
+          status: "draft",
+        },
+        {
+          id: "sec-2",
+          order: 2,
+          title: "Conclusion",
+          markdown: "# Kết luận\n\nNội dung kết luận.",
+          status: "draft",
+        },
+        {
+          id: "sec-3",
+          order: 3,
+          title: "References",
+          markdown: "# Tài liệu tham khảo\n\n1. Nguyễn Văn A. Sách mẫu, 2026.",
+          status: "draft",
+        },
+      ],
+      metadata: {
+        members: ["A"],
+      },
+    },
+    assets: [],
+    evidence: [],
+    formatSettings: {
+      presetId: "academic-default",
+      includeToc: false,
+      includeListOfFigures: false,
+      includeListOfTables: false,
+      captionNumbering: "continuous",
     },
   } as unknown as ReportProjectBundle;
 
@@ -243,5 +277,31 @@ describe("useExport hook logic", () => {
     expect(jobsArray).toHaveLength(1);
     expect(jobsArray[0].status).toBe("done");
     expect(jobsArray[0].phase).toBe("printing");
+  });
+
+  it("should fail export with parse stage when bundle has P0 error (e.g. unembedded image path)", async () => {
+    const badBundle: ReportProjectBundle = {
+      ...mockBundle,
+      project: {
+        ...mockBundle.project,
+        sections: [
+          {
+            id: "sec-bad",
+            order: 1,
+            title: "Bad Section",
+            markdown: "![Unembedded Image](relative/path.png)",
+            status: "draft",
+          },
+        ],
+      },
+    };
+
+    const { runExport } = useExport();
+    await runExport("html", badBundle);
+
+    expect(jobsArray).toHaveLength(1);
+    expect(jobsArray[0].status).toBe("error");
+    expect(jobsArray[0].error?.stage).toBe("parse");
+    expect(jobsArray[0].error?.message).toContain("lỗi nghiêm trọng (P0)");
   });
 });

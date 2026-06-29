@@ -105,9 +105,11 @@ export function numberHeadings(
 
     const d = heading.depth;
     const effectiveDepth = d - chapterDepth + 1;
+    const cleanText = heading.text.trim().toLowerCase();
+    const isTocHeading = cleanText === "mục lục" || cleanText === "table of contents" || cleanText === "toc";
 
-    if (effectiveDepth < 1 || effectiveDepth > 6) {
-      // Heading is shallower than the base chapter depth (e.g., report title)
+    if (effectiveDepth < 1 || effectiveDepth > 6 || isTocHeading) {
+      // Heading is shallower than the base chapter depth (e.g., report title) or is a TOC heading
       const slug = slugify(heading.text);
       numberedHeadings.push({
         ...heading,

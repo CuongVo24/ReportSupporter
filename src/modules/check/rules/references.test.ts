@@ -97,4 +97,28 @@ describe("References Section check rule", () => {
 
     expect(issues).toHaveLength(0);
   });
+
+  it("should warn if inline cross-references point to non-existent figures or tables", () => {
+    const markdown = "Xem Hình 5.2 và Bảng 1.1 để biết chi tiết.";
+    const ctx = createMockContext(markdown);
+    const issues = referencesRule.run(ctx);
+    expect(issues).toHaveLength(2);
+    expect(issues[0].message).toContain("hình ảnh không tồn tại");
+    expect(issues[1].message).toContain("bảng biểu không tồn tại");
+  });
+
+  it("should not warn if inline cross-references point to existing figures or tables", () => {
+    const markdown = `
+![Alt](img1.png)
+Hình 1: Biểu đồ kết quả
+
+Xem Hình 1 để biết chi tiết.
+    `;
+    const ctx = createMockContext(markdown);
+    const issues = referencesRule.run(ctx);
+    // There shouldn't be any warnings because Hình 1 exists, and there is no references section so no warning for references-format either?
+    // Wait! Since there is no "Tài liệu tham khảo" section, referencesRule won't complain about empty references unless it actually finds a references heading first.
+    // In references.ts line 26: it only checks empty section if it finds references heading. So no warning.
+    expect(issues).toHaveLength(0);
+  });
 });

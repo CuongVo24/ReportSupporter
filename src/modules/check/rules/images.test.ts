@@ -71,10 +71,12 @@ describe("brokenImageRule", () => {
     expect(issues).toEqual([]);
   });
 
-  it("does not flag regular HTTP URLs or absolute local paths (not asset: prefix)", () => {
-    const md = "![alt](https://example.com/img.png)\n![alt](/images/local.png)";
+  it("does not flag regular HTTP URLs, but flags local paths (not asset: prefix)", () => {
+    const md = "![alt](https://example.com/img.png)\n![alt](/images/local.png)\n![alt](Figures/photo.png)";
     const ctx = mockCtx(md);
     const issues = brokenImageRule.run(ctx);
-    expect(issues).toEqual([]);
+    expect(issues).toHaveLength(2);
+    expect(issues[0].message).toContain("cục bộ chưa được nhúng");
+    expect(issues[1].message).toContain("cục bộ chưa được nhúng");
   });
 });

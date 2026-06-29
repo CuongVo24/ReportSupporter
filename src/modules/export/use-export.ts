@@ -6,6 +6,8 @@ import { exportDocx, packDocx } from "./export-docx";
 import { toQrDataUrl } from "@/modules/evidence";
 import { recordExport } from "./export-history";
 
+import { runChecker } from "@/modules/check/run-checker";
+
 async function executeExport(
   target: ExportTarget,
   bundle: ReportProjectBundle,
@@ -16,6 +18,19 @@ async function executeExport(
   },
   onPhaseChange?: (phase: ExportJob["phase"]) => void
 ): Promise<Blob> {
+  // Gate export if there are any P0 (severity === "error") issues
+  const checkResult = runChecker(bundle);
+  const errorIssues = checkResult.issues.filter((i) => i.severity === "error");
+  if (errorIssues.length > 0) {
+    const errorMessages = errorIssues.map((i) => i.message).join("; ");
+    const exportError: ExportError = {
+      stage: "parse",
+      message: `Không thể xuất bản báo cáo do có lỗi nghiêm trọng (P0): ${errorMessages}`,
+      recoverable: false,
+    };
+    throw exportError;
+  }
+
   let blob: Blob;
   onPhaseChange?.("preparing");
 

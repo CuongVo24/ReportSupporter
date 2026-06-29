@@ -18,6 +18,10 @@ import { missingCaptionsRule } from "./rules/captions";
 import { brokenImageRule } from "./rules/images";
 import { tableTooWideRule } from "./rules/table-width";
 import { referencesRule } from "./rules/references";
+import { brokenLinkRule } from "./rules/broken-link";
+import { duplicateHeadingRule } from "./rules/duplicate-heading";
+import { figureTableNumberRule } from "./rules/figure-table-number";
+import { tocDriftRule } from "./rules/toc-drift";
 
 /**
  * Ordered registry of all active checker rules.
@@ -42,6 +46,10 @@ export const RULES_REGISTRY: CheckRule[] = [
   missingCaptionsRule,
   brokenImageRule,
   tableTooWideRule,
+  brokenLinkRule,
+  duplicateHeadingRule,
+  figureTableNumberRule,
+  tocDriftRule,
 
   // Text-based and code-block checks
   placeholderTextRule,

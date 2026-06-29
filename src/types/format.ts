@@ -46,5 +46,6 @@ export type CaptionEntry = {
   label: string;         // "Hình 1", "Bảng 2"
   text: string;          // caption description
   sectionId: string;
+  authorNumber?: string;
 };
 

@@ -84,6 +84,7 @@ Bảng 2: Dữ liệu mẫu 2
       label: "Bảng 1",
       text: "Dữ liệu mẫu 1",
       sectionId: "sec-1",
+      authorNumber: "1",
     });
     expect(tables[1]).toEqual({
       id: "table-2",
@@ -92,6 +93,7 @@ Bảng 2: Dữ liệu mẫu 2
       label: "Bảng 2",
       text: "Dữ liệu mẫu 2",
       sectionId: "sec-2",
+      authorNumber: "2",
     });
   });
 
@@ -138,6 +140,7 @@ Bảng 2: Dữ liệu mẫu 2
       label: "Bảng 1.1",
       text: "Dữ liệu mẫu 1",
       sectionId: "sec-1",
+      authorNumber: "1",
     });
     // Table 2 (Chương 2) -> Bảng 2.1
     expect(tables[1]).toEqual({
@@ -147,6 +150,7 @@ Bảng 2: Dữ liệu mẫu 2
       label: "Bảng 2.1",
       text: "Dữ liệu mẫu 2",
       sectionId: "sec-2",
+      authorNumber: "2",
     });
   });
 

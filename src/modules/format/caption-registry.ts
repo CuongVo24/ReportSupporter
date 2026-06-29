@@ -196,6 +196,14 @@ export function buildCaptionRegistry(
         rawCaptionText = img.alt;
       }
 
+      let parsedAuthorNumStr: string | undefined;
+      if (rawCaptionText) {
+        const match = rawCaptionText.match(/^(?:hình|figure)\s*(\d+(?:\.\d+)*)/i);
+        if (match) {
+          parsedAuthorNumStr = match[1];
+        }
+      }
+
       if (respectAuthorNumbering && rawCaptionText) {
         const authorNum = extractCaptionAuthorNumber(rawCaptionText, "hình|figure");
         if (authorNum) {
@@ -221,6 +229,7 @@ export function buildCaptionRegistry(
         label,
         text: captionText,
         sectionId,
+        authorNumber: parsedAuthorNumStr,
       });
     }
 
@@ -242,6 +251,14 @@ export function buildCaptionRegistry(
               }
             }
           }
+        }
+      }
+
+      let parsedAuthorNumStr: string | undefined;
+      if (rawCaptionText) {
+        const match = rawCaptionText.match(/^(?:bảng|table)\s*(\d+(?:\.\d+)*)/i);
+        if (match) {
+          parsedAuthorNumStr = match[1];
         }
       }
 
@@ -269,6 +286,7 @@ export function buildCaptionRegistry(
         label,
         text: captionText,
         sectionId,
+        authorNumber: parsedAuthorNumStr,
       });
     }
 

@@ -1,11 +1,13 @@
 import type { Heading as MdastHeading, List as MdastList, ListItem as MdastListItem } from "mdast";
 import type { CheckRule, CheckContext, ReportIssue } from "@/types";
 import { flattenNodeText } from "@/lib/markdown-pipeline";
+import { buildCaptionRegistry } from "@/modules/format/caption-registry";
 
 /**
  * Rule: references-format
  * Warns if the References section is empty, contains entries that are too short/malformed,
- * or if the numeric ordering of references is incorrect.
+ * or if the numeric ordering of references is incorrect. Also warns if inline cross-references
+ * to figures or tables point to non-existent entries.
  */
 export const referencesRule: CheckRule = {
   id: "references-format",
@@ -13,6 +15,71 @@ export const referencesRule: CheckRule = {
   detect: ["ast"],
   run(ctx: CheckContext): ReportIssue[] {
     const issues: ReportIssue[] = [];
+
+    // 1. Build caption registry and valid number sets
+    const sections = Object.entries(ctx.sectionAsts).map(([id, ast]) => ({ id, ast }));
+    const captionRegistry = buildCaptionRegistry(sections, ctx.bundle.formatSettings);
+
+    const validFigures = new Set<string>();
+    const validTables = new Set<string>();
+    for (const entry of captionRegistry) {
+      const numStr = entry.label.replace(/^(?:hình|bảng|figure|table)\s*/i, "").trim();
+      if (entry.kind === "figure") {
+        validFigures.add(numStr);
+      } else if (entry.kind === "table") {
+        validTables.add(numStr);
+      }
+    }
+
+    // 2. Scan for cross-reference issues inside text nodes
+    for (const [sectionId, ast] of Object.entries(ctx.sectionAsts)) {
+      const walk = (node: unknown) => {
+        if (!node) return;
+        const n = node as { type: string; value?: unknown; children?: unknown[]; position?: { start?: { line?: number } } };
+        if (n.type === "text" && typeof n.value === "string") {
+          const val = n.value;
+          const regex = /(hình|bảng|figure|table)(?:\s+số)?\s*(\d+(?:\.\d+)*)/gi;
+          let match;
+          while ((match = regex.exec(val)) !== null) {
+            const typeKeyword = match[1].toLowerCase();
+            const numRef = match[2];
+            
+            const isFig = typeKeyword.includes("hình") || typeKeyword.includes("figure");
+            const isTbl = typeKeyword.includes("bảng") || typeKeyword.includes("table");
+
+            if (isFig) {
+              if (!validFigures.has(numRef)) {
+                issues.push({
+                  id: "references-format",
+                  severity: "warning",
+                  module: "check",
+                  message: `Tham chiếu tới hình ảnh không tồn tại: "${match[0]}".`,
+                  suggestion: "Kiểm tra lại số thứ tự hình ảnh hoặc sửa lại tham chiếu chéo.",
+                  sectionId,
+                  line: n.position?.start?.line,
+                });
+              }
+            } else if (isTbl) {
+              if (!validTables.has(numRef)) {
+                issues.push({
+                  id: "references-format",
+                  severity: "warning",
+                  module: "check",
+                  message: `Tham chiếu tới bảng biểu không tồn tại: "${match[0]}".`,
+                  suggestion: "Kiểm tra lại số thứ tự bảng biểu hoặc sửa lại tham chiếu chéo.",
+                  sectionId,
+                  line: n.position?.start?.line,
+                });
+              }
+            }
+          }
+        }
+        if (n.children && Array.isArray(n.children)) {
+          n.children.forEach(walk);
+        }
+      };
+      walk(ast);
+    }
 
     for (const [sectionId, ast] of Object.entries(ctx.sectionAsts)) {
       const children = ast.children || [];

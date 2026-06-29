@@ -103,6 +103,7 @@ describe("prepareExport Optimization Parity", () => {
       label: "Bảng 2.1",
       text: "My Table Caption",
       sectionId: "sec-2",
+      authorNumber: "2.1",
     });
   });
 

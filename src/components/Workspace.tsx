@@ -8,6 +8,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
 import { SnapshotHistory } from "@/components/SnapshotHistory";
 import { ReportHealthBadge } from "@/components/ReportHealthBadge";
+import { IssuesPanel } from "@/components/IssuesPanel";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2 } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
@@ -48,7 +49,7 @@ import {
   computeWritingStats,
   type ReportSnapshot,
 } from "@/modules/write";
-import { CheckerPanel, computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
+import { computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
@@ -1112,7 +1113,7 @@ export function Workspace() {
         </TabsList>
         <div className="ws-side-tabs-content-scroll">
           <TabsContent value="check" className="ws-side-tabs-content">
-            <CheckerPanel
+            <IssuesPanel
               result={checkResult ?? emptyCheckResult}
               onRun={handleCheck}
               onJump={handleJump}
