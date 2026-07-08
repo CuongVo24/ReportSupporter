@@ -73,6 +73,6 @@ PDF nộp bài **sạch dấu vết trình duyệt**: không URL/timestamp hệ 
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w20/import-fidelity`): `fix(export): suppress browser print header/footer via zero-margin page, strip authoring placeholders, tighten page-breaks and table padding`.
+> Commit (trên `w20/import-fidelity`): `fix(export): suppress browser print header/footer via zero-margin page, strip authoring placeholders, tighten page-breaks and table padding`.

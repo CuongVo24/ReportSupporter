@@ -37,6 +37,14 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
     };
   }, [issues]);
 
+  // Dev-only badge: surfaces the count of broken image assets (the terminal 404s)
+  // directly in the UI instead of only in the dev server console (#VII).
+  const brokenAssetCount = useMemo(
+    () => issues.filter((i) => i.id === "broken-image").length,
+    [issues]
+  );
+  const isDev = process.env.NODE_ENV === "development";
+
   return (
     <div className="ws-checker" style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", height: "100%" }}>
       <div className="ws-checker-header" style={{ paddingBottom: "var(--rs-space-2)", borderBottom: "1px solid var(--rs-color-border)" }}>
@@ -64,6 +72,28 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
       {hasRun && (
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-3)" }}>
           <ReadinessBadge score={result.readinessScore} />
+
+          {isDev && (
+            <div
+              title="Chỉ hiển thị ở môi trường phát triển — số ảnh hỏng (tương ứng lỗi 404 trong terminal)."
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--rs-space-2)",
+                padding: "4px 10px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: 500,
+                border: "1px dashed var(--rs-color-border)",
+                background: brokenAssetCount > 0 ? "var(--rs-color-bg-danger-weak)" : "var(--rs-color-bg-muted)",
+                color: brokenAssetCount > 0 ? "var(--rs-color-text-danger)" : "var(--rs-color-text-secondary)",
+              }}
+            >
+              <AlertCircle size={12} aria-hidden="true" />
+              <span>Broken assets: {brokenAssetCount}</span>
+              <span style={{ fontSize: "10px", opacity: 0.7 }}>(dev)</span>
+            </div>
+          )}
 
           {/* Quick Filters */}
           <div style={{ display: "flex", gap: "var(--rs-space-1)", overflowX: "auto", paddingBottom: "var(--rs-space-2)" }}>

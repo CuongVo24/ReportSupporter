@@ -303,22 +303,22 @@ export function PreviewPane({
           text-align: left;
         }
         
-        /* Dark Preview overrides */
+        /* Dark Preview overrides (screen-only; export page stays black-and-white) */
         .ws-preview-page.ws-preview-page--dark {
-          background-color: #1e1e1e !important;
-          color: #e0e0e0 !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+          background-color: var(--rs-dark-surface-muted) !important;
+          color: var(--rs-dark-text) !important;
+          box-shadow: var(--rs-elevation-2) !important;
         }
         .ws-preview-page.ws-preview-page--dark table,
         .ws-preview-page.ws-preview-page--dark th,
         .ws-preview-page.ws-preview-page--dark td {
-          border-color: #444 !important;
+          border-color: var(--rs-dark-border) !important;
         }
         .ws-preview-page.ws-preview-page--dark .ws-toc-leader {
-          border-bottom-color: #444 !important;
+          border-bottom-color: var(--rs-dark-border) !important;
         }
         .ws-preview-page.ws-preview-page--dark .ws-toc-link {
-          color: #e0e0e0 !important;
+          color: var(--rs-dark-text) !important;
         }
         .ws-preview-page.ws-preview-page--dark .ws-toc-number {
           color: var(--rs-color-primary) !important;
@@ -329,7 +329,7 @@ export function PreviewPane({
         .ws-preview-page.ws-preview-page--dark h4,
         .ws-preview-page.ws-preview-page--dark h5,
         .ws-preview-page.ws-preview-page--dark h6 {
-          color: #ffffff !important;
+          color: var(--rs-white) !important;
         }
       `}</style>
 

@@ -71,6 +71,6 @@ Tăng khả năng đọc & rõ phân cấp **mà không** đổi pipeline render
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w20/import-fidelity`): `feat(ui): preview zoom presets & PDF parity, grouped AI toolbar with primary Save/Export, collapsible tooltip sidebar, sync-scroll, clear save state and dark preview`.
+> Commit (trên `w20/import-fidelity`): `feat(w20): w20_fix_editor_preview_ux - optimize workspace toolbar, sidebar, zoom controls, dark preview, sync scroll, and save statuses`.

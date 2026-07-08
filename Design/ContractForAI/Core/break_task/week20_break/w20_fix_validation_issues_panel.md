@@ -82,6 +82,6 @@ Mở rộng **độ phủ kiểm tra** để bắt đúng các lỗi của báo 
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Commit (trên `w20/import-fidelity`): `fix(check): path-aware broken-image/link, duplicate-heading, figure/table-number, reference & TOC-drift rules surfaced in Issues panel; gate every export path`.
+> Commit (trên `w20/import-fidelity`): `fix(check): path-aware broken-image/link, duplicate-heading, figure/table-number, reference & TOC-drift rules surfaced in Issues panel; gate every export path`.
