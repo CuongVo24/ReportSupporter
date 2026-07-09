@@ -1,4 +1,4 @@
-# 📐 CANONICAL TYPES — Single Source of Truth (V1.1)
+# 📐 CANONICAL TYPES — Single Source of Truth (V1.2)
 
 This document locks the core TypeScript definitions for the entire ReportSupporter application. All code in `src/types/` must conform to these interfaces, and **every module spec references this file instead of re-declaring types** (see import-boundary rules in `Design/Conventions/Coding & Git Standard.md` §4b).
 
@@ -214,7 +214,7 @@ export type ReportIssueSeverity = "error" | "warning" | "info";
 export type ReportIssue = {
   id: string;            // checker rule id, e.g. "missing-references" (user-visible prefix)
   severity: ReportIssueSeverity;
-  module: "write" | "format" | "check" | "export";
+  module: "write" | "format" | "check" | "export" | "import"; // "import" added in V1.2 (Phase 5 / W21)
   message: string;
   suggestion: string;
   sectionId?: string;
@@ -458,6 +458,65 @@ export type AiConfig = {
  * - "disabled"     → flag OFF → no fetch (default).
  */
 export type GatewayState = "ready" | "unconfigured" | "disabled";
+```
+
+---
+
+## 11. Import Model (V1.2 — Phase 5 / W21-W24)
+
+Used by Module 6 — Import (`Design/Modules/6.Import.md`): universal import PDF/DOCX/XLSX/PPTX → Markdown.
+Mọi converter chạy **client-side**; output là **Markdown text + `ReportAsset[]`** — import **không bao giờ** tự sinh mdast
+(Markdown import re-enter pipeline chuẩn qua `remark-parse`, xem `PipelineContract.md` §4).
+
+```ts
+/** Source formats the universal import accepts. "markdown" là đường .md hiện có, refactor vào registry ở W21. */
+export type ImportSourceFormat = "markdown" | "docx" | "pdf" | "xlsx" | "pptx";
+
+/** Machine-readable warning codes — mỗi converter phải dùng code chuẩn, không tự chế string. */
+export type ImportWarningCode =
+  | "unsupported-element"  // SmartArt/chart/OLE... bị bỏ qua
+  | "scanned-page"         // trang PDF không có text layer (OCR experimental — W24)
+  | "table-flattened"      // bảng không tái tạo được → flatten thành text
+  | "sheet-truncated"      // sheet vượt row cap
+  | "image-skipped"        // ảnh không trích được / vượt giới hạn
+  | "heading-guessed"      // heading suy ra từ heuristic (font-size / OCR), cần user xác nhận
+  | "file-too-large";      // vượt maxBytes của converter
+
+export type ImportWarning = {
+  code: ImportWarningCode;
+  message: string;         // human-readable, tiếng Việt
+  location?: string;       // "page 3" | "sheet Data" | "slide 5"
+};
+
+/** Kết quả thuần của một converter — chưa gắn vào project. */
+export type ImportResult = {
+  sourceFormat: ImportSourceFormat;
+  fileName: string;
+  markdown: string;
+  assets: ReportAsset[];   // ảnh nhúng → base64 data URL (§1)
+  warnings: ImportWarning[];
+  convertedAt: string;     // ISO 8601
+};
+
+/** Một converter đăng ký vào registry (Module 6). Route theo extension + MIME, extension thắng khi MIME rỗng/sai. */
+export type ImportConverter = {
+  format: ImportSourceFormat;
+  extensions: string[];    // [".docx"]
+  mimeTypes: string[];
+  maxBytes: number;        // per-format cap (mặc định 50MB — MAX_MARKDOWN_IMPORT_BYTES)
+  convert: (file: File) => Promise<ImportResult>;
+};
+
+/**
+ * Draft trình cho user duyệt trước khi commit vào bundle (preview diff — W24).
+ * Thay thế/absorb `MarkdownImportDraft` (type cục bộ W-trước tại `src/modules/write/markdown-import.ts`) — W21 reconcile.
+ */
+export type ImportDraft = {
+  result: ImportResult;
+  sections: ReportSection[];  // đề xuất split theo heading; id sinh lại khi commit
+  mode: "append" | "replace";
+  issues?: ReportIssue[];     // Check engine chạy trên draft (module: "import") — W24
+};
 ```
 
 

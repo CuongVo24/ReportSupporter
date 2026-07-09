@@ -1,4 +1,4 @@
-# 🔗 PIPELINE CONTRACT — Unified AST Document Model (V1.0)
+# 🔗 PIPELINE CONTRACT — Unified AST Document Model (V1.1)
 
 This contract defines the unified data structures, caching strategy, and thread boundaries for the Markdown-to-AST parsing pipeline. It ensures that the Write, Format, Check, and Export modules consume a single source of truth without redundant parsing.
 
@@ -45,3 +45,15 @@ To keep the UI main thread responsive:
 2. **Data Transfer:** Data is transferred between the main thread and the worker using `postMessage()` via **Structured Clone**.
 3. **Banned Types:** The AST objects transferred must not contain functions, DOM nodes, or cyclical references.
 4. **Mermaid Rendering Exception:** Since Mermaid requires DOM access, it cannot be rendered in the worker. The worker only tags Mermaid code blocks, and the main thread performs the rendering lazy client-side.
+
+---
+
+## 4. Import Boundary (V1.1 — Phase 5 / W21-W24)
+
+Module 6 — Import (`Design/Modules/6.Import.md`) chuyển PDF/DOCX/XLSX/PPTX → Markdown. Ranh giới với pipeline:
+
+1. **Markdown là giao diện duy nhất.** Converter output là **Markdown text + `ReportAsset[]`** (`ImportResult` — `CanonicalTypes.md` §11). Import **không được** sinh mdast/hast trực tiếp — nội dung import re-enter pipeline chuẩn qua `remark-parse` như mọi section khác. Một parser, một nguồn sự thật.
+2. **Reverse pipeline (HTML → Markdown) chỉ sống trong Import.** `rehype-remark` + `remark-stringify` (W21) chỉ được import bên trong `src/modules/import/` — Write/Format/Check/Export không được dùng chiều ngược.
+3. **Worker boundary.** Converter nặng (DOCX/XLSX/PPTX parse, PDF heuristic) chạy trong **import worker** riêng (W24 hardening), tách khỏi parse worker §3; `pdfjs-dist` tự mang worker của nó (bundle local, không CDN). Dữ liệu qua `postMessage()` Structured Clone — cùng banned types §3. OCR (`tesseract.js`, experimental W24) lazy-load, chỉ chạy sau explicit user action.
+4. **Sanitize bắt buộc.** HTML trung gian (mammoth output) phải qua sanitize trước khi vào `rehype-remark` — cùng chính sách `rehype-sanitize` của preview.
+5. **Asset contract.** Ảnh trích từ file nguồn → `ReportAsset` base64 data URL (§1 CanonicalTypes), đăng ký qua đường `import-assets` hiện có; Markdown tham chiếu `asset://<id>` như asset chèn tay.
