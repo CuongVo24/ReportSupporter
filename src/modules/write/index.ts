@@ -4,7 +4,7 @@ export { softwareProjectTemplate } from "./templates/software-project";
 export { readmeReportTemplate } from "./templates/readme-report";
 export { ALL_TEMPLATES, getTemplate } from "./templates";
 export { importReadme } from "./readme-import";
-export { MarkdownImportDropzone } from "./MarkdownImportDropzone";
+export { UniversalImportDropzone } from "./UniversalImportDropzone";
 export {
   buildMarkdownImportDraft,
   inferMarkdownTitle,

@@ -25,7 +25,7 @@ import {
   AiAssistBar,
   appendSections,
   replaceSections,
-  MarkdownImportDropzone,
+  UniversalImportDropzone,
   importReadme,
   type MarkdownImportDraft,
   addSection,
@@ -1311,7 +1311,7 @@ export function Workspace() {
         }
       >
         <div className="ws-import-dialog-body">
-          <MarkdownImportDropzone
+          <UniversalImportDropzone
             imported={importDraft}
             onImported={setImportDraft}
           />

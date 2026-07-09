@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import type { TemplateSchema, ReportSection } from "@/types";
 import { TemplatePicker } from "./TemplatePicker";
 import { MetadataForm } from "./MetadataForm";
-import { MarkdownImportDropzone } from "./MarkdownImportDropzone";
+import { UniversalImportDropzone } from "./UniversalImportDropzone";
 import type { MarkdownImportDraft } from "./markdown-import";
 import { validateMetadata } from "./generate-skeleton";
 import { Button } from "@/components/ui";
@@ -227,7 +227,7 @@ export function ProjectInitializer({
 
             {initMode === "import" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-2) 0", flex: 1 }}>
-                <MarkdownImportDropzone
+                <UniversalImportDropzone
                   imported={importedMarkdown}
                   onImported={handleMarkdownImported}
                 />
