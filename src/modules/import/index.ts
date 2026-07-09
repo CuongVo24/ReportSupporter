@@ -1,4 +1,5 @@
 export { htmlToMarkdown } from "./html-to-markdown";
+export { stripHeadingNumbers } from "./strip-heading-number";
 export {
   registerConverter,
   resolveConverter,
