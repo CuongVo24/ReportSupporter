@@ -19,6 +19,14 @@ export type { TemplateSchema, MetadataFieldSpec, TemplateSectionSeed } from "./t
 export type { ExportTarget, ExportStatus, ExportError, ExportResult, ExportJob, PackageManifest, SubmissionPackage, SubmissionChecklistItem } from "./export";
 export type { ParsedSection, PipelineResult, FormattedReport } from "./pipeline";
 export type {
+  ImportSourceFormat,
+  ImportWarningCode,
+  ImportWarning,
+  ImportResult,
+  ImportConverter,
+  ImportDraft,
+} from "./import";
+export type {
   SlideOutline,
   PresentationTimeline,
   Speaker,
@@ -48,6 +56,15 @@ export {
   templateSchemaSchema,
   storedBundleSchema,
 } from "./schemas";
+
+export {
+  importSourceFormatSchema,
+  importWarningCodeSchema,
+  importWarningSchema,
+  importResultSchema,
+  reportIssueSchema,
+  importDraftSchema,
+} from "./import";
 
 export {
   slideOutlineSchema,
