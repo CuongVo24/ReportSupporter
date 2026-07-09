@@ -106,7 +106,7 @@ Core features:
 - No cloud file storage.
 - AI writing assistant (introduced in Week 11 and hardened in Week 16) with local client-key configuration.
 - No full PDF toolbox as the product core.
-- No "convert every file format" promise.
+- No "convert every file format" promise. *(Amended — Phase 5 / W21-24: có universal import cho 4 format curated DOCX/PDF/XLSX/PPTX theo hướng **import-to-edit** — đưa tài liệu vào workspace để viết tiếp, không phải trang convert-rồi-đi. Vẫn không hứa "mọi định dạng". Xem `Design/Modules/6.Import.md`.)*
 
 ### Privacy and AI Data Handling
 - AI capabilities are entirely opt-in and disabled by default.
