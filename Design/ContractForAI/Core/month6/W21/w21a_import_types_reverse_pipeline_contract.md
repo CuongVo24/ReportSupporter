@@ -65,6 +65,6 @@
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. ⚠️ Approve bao gồm cài `rehype-remark` + `remark-stringify` + `mammoth` **runtime** exact pin. Đề xuất commit: `feat(import): add import model types + zod`; `feat(import): html-to-markdown reverse pipeline`; `docs(import): commit w21a contract`.
+> Commit (trên `feature/W21-import-foundation`): `feat(import): html-to-markdown reverse pipeline`, `feat(import): add import model types + zod`, `chore(import): install rehype-remark, remark-stringify, rehype-parse, and mammoth exact pinned`.
