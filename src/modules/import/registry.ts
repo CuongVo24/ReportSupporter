@@ -1,5 +1,6 @@
 import type { ImportConverter, ImportResult } from "@/types";
 import { markdownConverter } from "./converters/markdown";
+import { docxConverter } from "./converters/docx";
 
 const converters: ImportConverter[] = [];
 
@@ -77,5 +78,6 @@ export async function convertImportFile(file: File): Promise<ImportResult> {
   return converter.convert(file);
 }
 
-// Bootstrap registry with the baseline Markdown converter
+// Bootstrap registry with the baseline Markdown and DOCX converters
 registerConverter(markdownConverter);
+registerConverter(docxConverter);
