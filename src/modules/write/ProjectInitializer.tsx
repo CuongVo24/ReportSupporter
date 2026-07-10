@@ -163,6 +163,7 @@ export function ProjectInitializer({
     <div style={containerStyle}>
       <div style={cardStyle}>
         <div style={headerStyle}>
+          <span style={brandStyle}>ReportSupporter</span>
           <h2 style={titleStyle}>Khởi tạo Báo cáo Mới</h2>
           <p style={subtitleStyle}>Chọn mẫu tài liệu và điền thông tin ban đầu để tạo cấu trúc báo cáo.</p>
         </div>
@@ -307,7 +308,7 @@ export function ProjectInitializer({
                       </div>
 
                       {aiError && (
-                        <div style={{ display: "flex", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "var(--rs-radius-md)", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-sm)" }}>
+                        <div style={{ display: "flex", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "var(--rs-radius-md)", backgroundColor: "var(--rs-color-severity-error-bg)", border: "1px solid var(--rs-color-severity-error)", color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-sm)" }}>
                           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
                           <span>{aiError}</span>
                         </div>
@@ -324,7 +325,7 @@ export function ProjectInitializer({
                         border: "1px solid var(--rs-color-border)",
                         borderRadius: "var(--rs-radius-md)",
                         padding: "var(--rs-space-3)",
-                        backgroundColor: "rgba(0, 0, 0, 0.02)",
+                        backgroundColor: "var(--rs-color-surface-muted)",
                         display: "flex",
                         flexDirection: "column",
                         gap: "var(--rs-space-2)"
@@ -452,24 +453,35 @@ const containerStyle = {
 
 const cardStyle = {
   width: "100%",
-  maxWidth: "520px",
+  maxWidth: "640px",
   maxHeight: "calc(100vh - 80px)",
   display: "flex",
   flexDirection: "column" as const,
   backgroundColor: "var(--rs-color-surface)",
   border: "1px solid var(--rs-color-border)",
   borderRadius: "var(--rs-radius-lg)",
-  boxShadow: "var(--rs-elevation-1)",
-  padding: "var(--rs-space-6)",
+  boxShadow: "var(--rs-elevation-2)",
+  padding: "var(--rs-space-8)",
 };
 
 const headerStyle = {
   flexShrink: 0,
 };
 
+const brandStyle = {
+  display: "inline-block",
+  fontSize: "var(--rs-font-size-xs)",
+  fontWeight: "var(--rs-font-weight-semibold)",
+  color: "var(--rs-color-primary)",
+  textTransform: "uppercase" as const,
+  letterSpacing: "var(--rs-letter-spacing-sm)",
+  marginBottom: "var(--rs-space-2)",
+};
+
 const titleStyle = {
-  fontSize: "var(--rs-font-size-xl)",
+  fontSize: "var(--rs-font-size-xxl)",
   fontWeight: "var(--rs-font-weight-bold)",
+  letterSpacing: "-0.02em",
   color: "var(--rs-color-text)",
   margin: 0,
 };
