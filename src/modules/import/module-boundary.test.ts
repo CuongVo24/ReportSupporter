@@ -28,7 +28,7 @@ describe("Module boundary checks", () => {
     const srcDir = path.resolve(process.cwd(), "src");
     const files = getAllFiles(srcDir);
 
-    const forbiddenImports = ["rehype-remark", "remark-stringify", "mammoth", "pdfjs-dist"];
+    const forbiddenImports = ["rehype-remark", "remark-stringify", "mammoth", "pdfjs-dist", "xlsx"];
     const violations: { file: string; match: string }[] = [];
 
     files.forEach((filePath) => {

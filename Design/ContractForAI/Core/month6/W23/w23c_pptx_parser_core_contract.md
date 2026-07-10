@@ -59,6 +59,6 @@ Dựng **PPTX parser core, zero dep mới**: `jszip` unzip + `DOMParser` đọc 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): pptx slide xml parser (jszip + DOMParser, zero new deps)`; `feat(import): pptx converter — slides to headings/bullets/notes`; `docs(import): commit w23c contract`.
+> Commit: `feat(import): pptx slide xml parser (jszip + DOMParser, zero new deps)`; `feat(import): pptx converter — slides to headings/bullets/notes`; `docs(import): commit w23c contract`.
