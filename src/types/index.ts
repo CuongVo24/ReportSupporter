@@ -25,6 +25,7 @@ export type {
   ImportResult,
   ImportConverter,
   ImportDraft,
+  OcrProgress,
 } from "./import";
 export type {
   SlideOutline,

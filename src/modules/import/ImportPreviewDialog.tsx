@@ -7,6 +7,9 @@ import { SectionControls } from "./preview/SectionControls";
 import { WarningsPanel } from "./preview/WarningsPanel";
 import { IssuesPanel } from "./preview/IssuesPanel";
 import { remapMarkdownHeadings } from "./remap-heading";
+import { loadOcrConfig, saveOcrConfig } from "./ocr-settings";
+import { performOcrOnCanvas, formatOcrTextToMarkdown, renderPdfPageToCanvas } from "./converters/ocr";
+import { ToastProvider, Toast, ToastViewport } from "@/components/ui/Toast";
 import type { ImportDraft, ReportSection } from "@/types";
 import "./ImportPreviewDialog.css";
 
@@ -34,6 +37,22 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
   const [deltaMaps, setDeltaMaps] = useState<Record<string, Record<string, number>>>({});
   // Maps: file/draft fileName -> import mode ("append" | "replace")
   const [modes, setModes] = useState<Record<string, "append" | "replace">>({});
+
+  // OCR configs and states
+  const [ocrEnabled, setOcrEnabled] = useState(false);
+  const [ocrStates, setOcrStates] = useState<Record<string, { status: string; progress: number; controller: AbortController }>>({});
+  
+  // Toast state
+  const [toast, setToast] = useState<{ isOpen: boolean; title?: string; description?: string; variant?: "success" | "info" | "error" }>({
+    isOpen: false,
+  });
+
+  // Sync prop drafts to state when dialog opens or drafts list changes
+  useEffect(() => {
+    if (isOpen) {
+      setOcrEnabled(loadOcrConfig().enabled);
+    }
+  }, [isOpen]);
 
   // Sync prop drafts to state when dialog opens or drafts list changes
   useEffect(() => {
@@ -120,6 +139,125 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
       ...prev,
       [activeFileName]: mode,
     }));
+  };
+
+  const handleOcrToggle = (checked: boolean) => {
+    setOcrEnabled(checked);
+    saveOcrConfig({ enabled: checked });
+  };
+
+  const updateSectionMarkdown = (sectionId: string, newMarkdown: string, pageNum: number) => {
+    setCurrentDrafts((prevDrafts) => {
+      return prevDrafts.map((d) => {
+        if (d.result.fileName !== activeFileName) return d;
+        const updatedSections = d.sections.map((sec) => {
+          if (sec.id !== sectionId) return sec;
+          
+          let title = sec.title;
+          const headingMatch = newMarkdown.match(/^##\s+([^\n<]+)/m);
+          if (headingMatch) {
+            title = headingMatch[1].trim();
+          }
+          return {
+            ...sec,
+            title,
+            markdown: newMarkdown,
+          };
+        });
+
+        // Filter out scanned-page warnings for this page
+        const updatedWarnings = d.result.warnings.filter((w) => {
+          if (w.code !== "scanned-page") return true;
+          const pageMatch = w.location?.match(/trang\s+(\d+)/i);
+          return pageMatch ? parseInt(pageMatch[1], 10) !== pageNum : true;
+        });
+
+        return {
+          ...d,
+          sections: updatedSections,
+          result: {
+            ...d.result,
+            warnings: updatedWarnings,
+          },
+        };
+      });
+    });
+  };
+
+  const handleRunOcr = async (sectionId: string) => {
+    const sec = activeDraft.sections.find((s) => s.id === sectionId);
+    if (!sec || !activeDraft.file) return;
+
+    const pageMatch = sec.markdown.match(/Trang (\d+): bản scan/i);
+    if (!pageMatch) return;
+    const pageNum = parseInt(pageMatch[1], 10);
+
+    const controller = new AbortController();
+    setOcrStates((prev) => ({
+      ...prev,
+      [sectionId]: { status: "Đang dựng trang...", progress: 0, controller },
+    }));
+
+    try {
+      // 1. Render PDF page to canvas
+      const canvas = await renderPdfPageToCanvas(activeDraft.file, pageNum);
+
+      // 2. Run OCR recognize
+      const rawText = await performOcrOnCanvas(
+        canvas,
+        (p) => {
+          setOcrStates((prev) => {
+            if (!prev[sectionId]) return prev;
+            return {
+              ...prev,
+              [sectionId]: { ...prev[sectionId], status: p.status, progress: p.progress },
+            };
+          });
+        },
+        controller.signal
+      );
+
+      // 3. Format and update draft
+      const formattedMarkdown = formatOcrTextToMarkdown(rawText);
+      updateSectionMarkdown(sectionId, formattedMarkdown, pageNum);
+
+      // Clear OCR state on success
+      setOcrStates((prev) => {
+        const next = { ...prev };
+        delete next[sectionId];
+        return next;
+      });
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.message === "OCR cancelled") {
+        // do nothing
+      } else {
+        console.error("OCR error:", error);
+        setToast({
+          isOpen: true,
+          variant: "error",
+          title: "Lỗi nhận diện OCR",
+          description: `Không thể trích xuất văn bản từ trang ${pageNum}: ${error.message || "Lỗi không xác định"}`,
+        });
+      }
+      setOcrStates((prev) => {
+        const next = { ...prev };
+        delete next[sectionId];
+        return next;
+      });
+    }
+  };
+
+  const handleCancelOcr = (sectionId: string) => {
+    const ocr = ocrStates[sectionId];
+    if (ocr && ocr.controller) {
+      ocr.controller.abort();
+    }
+    setOcrStates((prev) => {
+      const next = { ...prev };
+      delete next[sectionId];
+      return next;
+    });
   };
 
   // Scroll preview window to the matched section heading title
@@ -267,6 +405,17 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
                   <span>Chú ý: Hành động này sẽ xóa toàn bộ nội dung báo cáo hiện tại!</span>
                 </div>
               )}
+
+              <div style={{ marginTop: "var(--rs-space-3)", paddingTop: "var(--rs-space-3)", borderTop: "1px solid var(--rs-color-border)" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "13px", cursor: "pointer", fontWeight: 5, color: "var(--rs-color-text-primary)" }}>
+                  <input
+                    type="checkbox"
+                    checked={ocrEnabled}
+                    onChange={(e) => handleOcrToggle(e.target.checked)}
+                  />
+                  <span>Thử nghiệm nhận diện chữ (OCR) (experimental)</span>
+                </label>
+              </div>
             </div>
 
             {/* Sections control list */}
@@ -277,9 +426,13 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
                 warnings={activeWarnings}
                 excludedMap={activeExcludedMap}
                 deltaMap={activeDeltaMap}
+                ocrEnabled={ocrEnabled}
+                ocrStates={ocrStates}
                 onToggleExclude={handleToggleExclude}
                 onAdjustHeading={handleAdjustHeading}
                 onNavigateToSection={handleNavigateToSection}
+                onRunOcr={handleRunOcr}
+                onCancelOcr={handleCancelOcr}
               />
             </div>
 
@@ -341,6 +494,18 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
           </Button>
         </div>
       </div>
+      <ToastProvider>
+        {toast.isOpen && (
+          <Toast
+            open={toast.isOpen}
+            onOpenChange={(open) => setToast((prev) => ({ ...prev, isOpen: open }))}
+            variant={toast.variant}
+            title={toast.title}
+            description={toast.description}
+          />
+        )}
+        <ToastViewport />
+      </ToastProvider>
     </Dialog>
   );
 };

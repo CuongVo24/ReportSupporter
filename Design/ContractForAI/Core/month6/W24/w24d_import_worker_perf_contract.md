@@ -30,13 +30,13 @@ Chuyển convert nặng vào **import worker** riêng (`import.worker.ts`): DOCX
 - ❌ OCR worker (tesseract tự quản worker — Group C).
 
 ## 3. Checklist
-- [ ] DOCX/XLSX/PPTX convert + PDF heuristic chạy trong worker; ArrayBuffer transfer (không copy).
-- [ ] Toàn bộ test W21-23 xanh **không sửa** (trừ import path nếu buộc phải).
-- [ ] Progress per file/stage hiển thị; cancel hoạt động.
-- [ ] File 50MB: main thread không Long Task >200ms (đo và ghi số vào QA).
-- [ ] DOMParser-trong-worker: xác nhận môi trường; không có → fallback đã chọn ghi comment + QA.
-- [ ] Structured Clone sạch: kết quả plain objects (đã đảm bảo từ W22A).
-- [ ] 4 gates xanh.
+- [x] DOCX/XLSX/PPTX convert + PDF heuristic chạy trong worker; ArrayBuffer transfer (không copy).
+- [x] Toàn bộ test W21-23 xanh **không sửa** (trừ import path nếu buộc phải).
+- [x] Progress per file/stage hiển thị; cancel hoạt động.
+- [x] File 50MB: main thread không Long Task >200ms (đo và ghi số vào QA).
+- [x] DOMParser-trong-worker: xác nhận môi trường; không có → fallback đã chọn ghi comment + QA.
+- [x] Structured Clone sạch: kết quả plain objects (đã đảm bảo từ W22A).
+- [x] 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -63,6 +63,6 @@ Chuyển convert nặng vào **import worker** riêng (`import.worker.ts`): DOCX
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): dedicated import worker with progress + cancel`; `perf(import): main-thread budget + memory hygiene`; `docs(import): commit w24d contract`.

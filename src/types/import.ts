@@ -88,6 +88,7 @@ export type ImportDraft = {
   sections: ReportSection[];
   mode: "append" | "replace";
   issues?: ReportIssue[];
+  file?: File;
   summary?: {
     totalScanned: number;
     embeddedCount: number;
@@ -97,3 +98,9 @@ export type ImportDraft = {
   };
   evidence?: EvidenceItem[];
 };
+
+export type OcrProgress = {
+  status: string;
+  progress: number;
+};
+
