@@ -64,6 +64,6 @@ Ship **DOCX converter**: `mammoth` (docx → HTML semantic, chạy client-side) 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve (mammoth đã approve ở W21A). Đề xuất commit: `feat(import): docx converter via mammoth`; `feat(import): strip hardcoded heading numbers on import`; `docs(import): commit w21c contract`.
+> Commit (trên `feature/W21-import-foundation`): `feat(import): docx converter via mammoth`, `feat(import): strip hardcoded heading numbers on import`, `docs(import): commit w21c contract`.

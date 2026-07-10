@@ -2,10 +2,13 @@ import { parseMarkdown, flattenNodeText } from "@/lib/markdown-pipeline";
 import type { ReportSection } from "@/types";
 
 /**
- * Parses Markdown README text and maps its headings of depth 1 or 2
- * to structured ReportSections in a pure and deterministic way.
+ * Parses Markdown text and splits it into structured ReportSections based on headings of depth 1 or 2.
+ * Fallbacks to a single section with the defaultTitle if no headings are present.
  */
-export function importReadme(markdown: string): ReportSection[] {
+export function splitMarkdownIntoSections(
+  markdown: string,
+  defaultTitle: string
+): ReportSection[] {
   if (!markdown || markdown.trim() === "") {
     return [];
   }
@@ -34,19 +37,19 @@ export function importReadme(markdown: string): ReportSection[] {
     if (leadingContent) {
       sections.push({
         id: `import-sec-${order}`,
-        title: "Mở đầu",
+        title: defaultTitle,
         markdown: leadingContent + "\n",
         order: order++,
         status: "draft",
       });
     }
   } else if (headingIndices.length === 0) {
-    // If no headings of depth 1 or 2 are found, put everything in a single "Mở đầu" section
+    // If no headings of depth 1 or 2 are found, put everything in a single section
     const trimmed = markdown.trim();
     if (trimmed) {
       sections.push({
         id: `import-sec-${order}`,
-        title: "Mở đầu",
+        title: defaultTitle,
         markdown: trimmed + "\n",
         order: order++,
         status: "draft",
@@ -59,7 +62,9 @@ export function importReadme(markdown: string): ReportSection[] {
   for (let i = 0; i < headingIndices.length; i++) {
     const hIdx = headingIndices[i];
     const headingNode = children[hIdx];
-    const title = flattenNodeText(headingNode as { value?: string; children?: unknown[] }).trim() || `Mục ${order + 1}`;
+    const title =
+      flattenNodeText(headingNode as { value?: string; children?: unknown[] }).trim() ||
+      `Mục ${order + 1}`;
 
     const startOffset = headingNode.position?.start?.offset ?? 0;
     let endOffset = markdown.length;
@@ -80,4 +85,12 @@ export function importReadme(markdown: string): ReportSection[] {
   }
 
   return sections;
+}
+
+/**
+ * Parses Markdown README text and maps its headings of depth 1 or 2
+ * to structured ReportSections in a pure and deterministic way.
+ */
+export function importReadme(markdown: string): ReportSection[] {
+  return splitMarkdownIntoSections(markdown, "Mở đầu");
 }

@@ -25,9 +25,7 @@ import {
   AiAssistBar,
   appendSections,
   replaceSections,
-  MarkdownImportDropzone,
-  importReadme,
-  type MarkdownImportDraft,
+  UniversalImportDropzone,
   addSection,
   duplicateSection,
   renameSection,
@@ -37,6 +35,7 @@ import {
   createImageAsset,
   isMarkdownFile,
   readMarkdownFile,
+  importReadme,
   AiSettingsDialog,
   AiWholeReportPanel,
   registerAdapter,
@@ -53,7 +52,7 @@ import { computeReportHealth, runChecker, type ReportHealth } from "@/modules/ch
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
-import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection } from "@/types";
+import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection, ImportDraft } from "@/types";
 
 const emptyCheckResult: CheckResult = {
   issues: [],
@@ -86,7 +85,7 @@ export function Workspace() {
   const [toastMessage, setToastMessage] = useState("");
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [importDraft, setImportDraft] = useState<MarkdownImportDraft | null>(null);
+  const [importDraft, setImportDraft] = useState<ImportDraft | null>(null);
   const [importMode, setImportMode] = useState<"append" | "replace">("append");
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -413,7 +412,7 @@ export function Workspace() {
 
     const parsedSections = importReadme(result.markdown);
     const markdownToInsert = parsedSections.length > 0
-      ? parsedSections.map((section) => section.markdown).join("\n\n")
+      ? parsedSections.map((section: ReportSection) => section.markdown).join("\n\n")
       : result.markdown;
     const sections = bundle.project.sections.map((section) =>
       section.id === sectionId
@@ -593,16 +592,20 @@ export function Workspace() {
     setIsInitializing(false);
   }, [bundle]);
 
-  const handleImportMarkdown = useCallback((draft: MarkdownImportDraft) => {
+  const handleImportMarkdown = useCallback((draft: ImportDraft) => {
     if (!bundle) return;
-    const parsedSections = importReadme(draft.markdown);
+    const parsedSections = draft.sections;
     
-    const replaced = replaceSections(bundle, parsedSections);
+    const replaced = replaceSections(bundle, parsedSections, draft.result.assets, draft.evidence || []);
+    const titleVal = draft.result.fileName 
+      ? draft.result.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") 
+      : "Báo cáo chưa đặt tên";
+    const title = titleVal.charAt(0).toUpperCase() + titleVal.slice(1);
     const next: ReportProjectBundle = {
       ...replaced,
       project: {
         ...replaced.project,
-        title: draft.title || "Báo cáo chưa đặt tên",
+        title,
       },
     };
 
@@ -647,29 +650,19 @@ export function Workspace() {
 
   const handleAppendImport = useCallback(() => {
     if (!bundle || !importDraft) return;
-    const parsedSections = importReadme(importDraft.markdown);
+    const parsedSections = importDraft.sections;
     if (parsedSections.length === 0) {
       setIsImportDialogOpen(false);
       setImportDraft(null);
       return;
     }
 
-    const replaced = appendSections(bundle, parsedSections);
-    
-    // Merge new assets without duplicating IDs
-    const newAssets = (importDraft.assets || []).filter(
-      (newAsset) => !replaced.assets.some((existing) => existing.id === newAsset.id)
+    const next = appendSections(
+      bundle,
+      parsedSections,
+      importDraft.result.assets,
+      importDraft.evidence
     );
-    // Merge new evidence without duplicating IDs
-    const newEvidence = (importDraft.evidence || []).filter(
-      (newEv) => !replaced.evidence.some((existing) => existing.id === newEv.id)
-    );
-
-    const next: ReportProjectBundle = {
-      ...replaced,
-      assets: [...replaced.assets, ...newAssets],
-      evidence: [...replaced.evidence, ...newEvidence],
-    };
 
     const oldLength = bundle.project.sections.length;
     const firstNewSection = next.project.sections[oldLength];
@@ -692,7 +685,7 @@ export function Workspace() {
 
   const handleReplaceImport = useCallback(async () => {
     if (!bundle || !importDraft) return;
-    const parsedSections = importReadme(importDraft.markdown);
+    const parsedSections = importDraft.sections;
     if (parsedSections.length === 0) {
       setIsReplaceConfirmOpen(false);
       setIsImportDialogOpen(false);
@@ -701,26 +694,25 @@ export function Workspace() {
     }
 
     await snapshotBefore("Trước khi ghi đè báo cáo bằng Markdown");
-    const replaced = replaceSections(bundle, parsedSections);
+    const replaced = replaceSections(
+      bundle,
+      parsedSections,
+      importDraft.result.assets,
+      importDraft.evidence
+    );
     
-    // Merge new assets without duplicating IDs
-    const newAssets = (importDraft.assets || []).filter(
-      (newAsset) => !replaced.assets.some((existing) => existing.id === newAsset.id)
-    );
-    // Merge new evidence without duplicating IDs
-    const newEvidence = (importDraft.evidence || []).filter(
-      (newEv) => !replaced.evidence.some((existing) => existing.id === newEv.id)
-    );
-
+    const titleVal = importDraft.result.fileName 
+      ? importDraft.result.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") 
+      : replaced.project.title;
+    const title = titleVal.charAt(0).toUpperCase() + titleVal.slice(1);
     const next: ReportProjectBundle = {
       ...replaced,
       project: {
         ...replaced.project,
-        title: importDraft.title || replaced.project.title,
+        title,
       },
-      assets: [...replaced.assets, ...newAssets],
-      evidence: [...replaced.evidence, ...newEvidence],
     };
+
     setBundle(next);
     setActiveId(next.project.sections[0]?.id ?? null);
     setActiveView("editor");
@@ -1311,7 +1303,7 @@ export function Workspace() {
         }
       >
         <div className="ws-import-dialog-body">
-          <MarkdownImportDropzone
+          <UniversalImportDropzone
             imported={importDraft}
             onImported={setImportDraft}
           />

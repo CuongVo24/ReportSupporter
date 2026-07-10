@@ -62,6 +62,6 @@ Hoàn tất **đoạn cuối flow import**: ảnh nhúng → `ReportAsset` (base
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): embedded images to ReportAsset with asset:// rewrite`; `refactor(import): unify ImportDraft, absorb MarkdownImportDraft`; `docs(import): commit w21d contract`.
+> Commit: `feat(import): embedded images to ReportAsset with asset:// rewrite`; `refactor(import): unify ImportDraft, absorb MarkdownImportDraft`; `docs(import): commit w21d contract`.
