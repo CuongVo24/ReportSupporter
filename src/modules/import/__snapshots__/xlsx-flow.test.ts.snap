@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`XLSX Flow Snapshot and Hardening > should process bang_diem_merges.xlsx successfully and flatten merges with a warning 1`] = `
+"## Bảng Điểm
+
+| Mã HS | Họ và Tên | Điểm Thành Phần |  | Điểm Trung Bình |
+| --- | --- | --- | --- | --- |
+|  |  | Lý thuyết | Thực hành |  |
+| HS001 | Nguyễn Văn A | 8 | 9 | 8.5 |
+| HS002 | Trần Thị B | 7.5 | 8.5 | 8 |"
+`;
+
+exports[`XLSX Flow Snapshot and Hardening > should process sheet_an.xlsx successfully and skip hidden sheets with warnings 1`] = `
+"## Báo Cáo
+
+| Mục | Doanh Thu |
+| --- | --- |
+| Sản phẩm A | 15000000 |
+| Sản phẩm B | 22000000 |"
+`;
