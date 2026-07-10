@@ -2,6 +2,7 @@ import type { ImportConverter, ImportResult } from "@/types";
 import { markdownConverter } from "./converters/markdown";
 import { docxConverter } from "./converters/docx";
 import { pdfConverter } from "./converters/pdf";
+import { xlsxConverter } from "./converters/xlsx";
 
 const converters: ImportConverter[] = [];
 
@@ -86,3 +87,4 @@ export async function convertImportFile(
 registerConverter(markdownConverter);
 registerConverter(docxConverter);
 registerConverter(pdfConverter);
+registerConverter(xlsxConverter);
