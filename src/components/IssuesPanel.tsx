@@ -85,8 +85,8 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                 fontSize: "12px",
                 fontWeight: 500,
                 border: "1px dashed var(--rs-color-border)",
-                background: brokenAssetCount > 0 ? "var(--rs-color-bg-danger-weak)" : "var(--rs-color-bg-muted)",
-                color: brokenAssetCount > 0 ? "var(--rs-color-text-danger)" : "var(--rs-color-text-secondary)",
+                background: brokenAssetCount > 0 ? "var(--rs-color-severity-error-bg)" : "var(--rs-color-surface-muted)",
+                color: brokenAssetCount > 0 ? "var(--rs-color-severity-error)" : "var(--rs-color-text-muted)",
               }}
             >
               <AlertCircle size={12} aria-hidden="true" />
@@ -105,8 +105,8 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                 fontSize: "12px",
                 fontWeight: 500,
                 border: "none",
-                background: activeFilter === "all" ? "var(--rs-color-bg-brand)" : "var(--rs-color-bg-muted)",
-                color: activeFilter === "all" ? "var(--rs-color-text-brand-on)" : "var(--rs-color-text)",
+                background: activeFilter === "all" ? "var(--rs-color-primary)" : "var(--rs-color-surface-muted)",
+                color: activeFilter === "all" ? "var(--rs-white)" : "var(--rs-color-text)",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
               }}
@@ -121,8 +121,8 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                 fontSize: "12px",
                 fontWeight: 500,
                 border: "none",
-                background: activeFilter === "error" ? "var(--rs-color-bg-danger-weak)" : "var(--rs-color-bg-muted)",
-                color: activeFilter === "error" ? "var(--rs-color-text-danger)" : "var(--rs-color-text)",
+                background: activeFilter === "error" ? "var(--rs-color-severity-error-bg)" : "var(--rs-color-surface-muted)",
+                color: activeFilter === "error" ? "var(--rs-color-severity-error)" : "var(--rs-color-text)",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 display: "flex",
@@ -140,8 +140,8 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                 fontSize: "12px",
                 fontWeight: 500,
                 border: "none",
-                background: activeFilter === "warning" ? "var(--rs-color-bg-warning-weak)" : "var(--rs-color-bg-muted)",
-                color: activeFilter === "warning" ? "var(--rs-color-text-warning)" : "var(--rs-color-text)",
+                background: activeFilter === "warning" ? "var(--rs-color-severity-warning-bg)" : "var(--rs-color-surface-muted)",
+                color: activeFilter === "warning" ? "var(--rs-color-severity-warning)" : "var(--rs-color-text)",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 display: "flex",
@@ -159,8 +159,8 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                 fontSize: "12px",
                 fontWeight: 500,
                 border: "none",
-                background: activeFilter === "info" ? "var(--rs-color-bg-info-weak)" : "var(--rs-color-bg-muted)",
-                color: activeFilter === "info" ? "var(--rs-color-text-info)" : "var(--rs-color-text)",
+                background: activeFilter === "info" ? "var(--rs-color-severity-info-bg)" : "var(--rs-color-surface-muted)",
+                color: activeFilter === "info" ? "var(--rs-color-severity-info)" : "var(--rs-color-text)",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 display: "flex",
@@ -190,7 +190,7 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                   color: "var(--rs-color-text)",
                 }}
               />
-              <Search size={14} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--rs-color-text-secondary)" }} />
+              <Search size={14} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--rs-color-text-muted)" }} />
             </div>
           )}
 
@@ -203,7 +203,7 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
               />
             </div>
           ) : filteredIssues.length === 0 ? (
-            <div style={{ padding: "var(--rs-space-6) 0", textAlign: "center", color: "var(--rs-color-text-secondary)" }}>
+            <div style={{ padding: "var(--rs-space-6) 0", textAlign: "center", color: "var(--rs-color-text-muted)" }}>
               Không tìm thấy vấn đề phù hợp với bộ lọc.
             </div>
           ) : (
@@ -215,11 +215,11 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                 let borderColor = "var(--rs-color-border)";
                 let icon = <Info size={16} className="text-info" />;
                 if (isError) {
-                  borderColor = "var(--rs-color-border-danger)";
-                  icon = <AlertCircle size={16} style={{ color: "var(--rs-color-text-danger)" }} />;
+                  borderColor = "var(--rs-color-severity-error)";
+                  icon = <AlertCircle size={16} style={{ color: "var(--rs-color-severity-error)" }} />;
                 } else if (isWarning) {
-                  borderColor = "var(--rs-color-border-warning)";
-                  icon = <AlertTriangle size={16} style={{ color: "var(--rs-color-text-warning)" }} />;
+                  borderColor = "var(--rs-color-severity-warning)";
+                  icon = <AlertTriangle size={16} style={{ color: "var(--rs-color-severity-warning)" }} />;
                 }
 
                 return (
@@ -228,7 +228,7 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                     style={{
                       borderLeft: `4px solid ${borderColor}`,
                       padding: "var(--rs-space-3)",
-                      background: "var(--rs-color-bg-card)",
+                      background: "var(--rs-color-surface)",
                       borderRadius: "0 6px 6px 0",
                       boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
                       display: "flex",
@@ -240,22 +240,22 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                       <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "flex-start" }}>
                         <span style={{ marginTop: "2px" }}>{icon}</span>
                         <div style={{ display: "flex", flexDirection: "column" }}>
-                          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--rs-color-text-primary)" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--rs-color-text)" }}>
                             {issue.message}
                           </span>
                           {issue.suggestion && (
-                            <span style={{ fontSize: "12px", color: "var(--rs-color-text-secondary)", marginTop: "2px" }}>
+                            <span style={{ fontSize: "12px", color: "var(--rs-color-text-muted)", marginTop: "2px" }}>
                               {issue.suggestion}
                             </span>
                           )}
                           <div style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-2)", flexWrap: "wrap" }}>
                             {issue.sectionId && (
-                              <span style={{ fontSize: "10px", padding: "2px 6px", background: "var(--rs-color-bg-muted)", borderRadius: "4px", color: "var(--rs-color-text-secondary)" }}>
+                              <span style={{ fontSize: "10px", padding: "2px 6px", background: "var(--rs-color-surface-muted)", borderRadius: "4px", color: "var(--rs-color-text-muted)" }}>
                                 Mục: {issue.sectionId}
                               </span>
                             )}
                             {issue.line !== undefined && (
-                              <span style={{ fontSize: "10px", padding: "2px 6px", background: "var(--rs-color-bg-muted)", borderRadius: "4px", color: "var(--rs-color-text-secondary)" }}>
+                              <span style={{ fontSize: "10px", padding: "2px 6px", background: "var(--rs-color-surface-muted)", borderRadius: "4px", color: "var(--rs-color-text-muted)" }}>
                                 Dòng: {issue.line}
                               </span>
                             )}
@@ -275,7 +275,7 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                             display: "flex",
                             alignItems: "center",
                             gap: "2px",
-                            color: "var(--rs-color-text-brand)",
+                            color: "var(--rs-color-primary)",
                           }}
                           aria-label={`Đi tới phần ${issue.sectionId}${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
                         >

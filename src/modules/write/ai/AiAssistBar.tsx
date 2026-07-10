@@ -238,7 +238,7 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
               cursor: "pointer",
               padding: "2px 6px",
               borderRadius: "var(--rs-radius-sm)",
-              color: "var(--rs-color-warning)",
+              color: "var(--rs-color-severity-warning)",
               fontSize: "var(--rs-font-size-xs)",
               fontWeight: "var(--rs-font-weight-medium)",
               textDecoration: "underline",

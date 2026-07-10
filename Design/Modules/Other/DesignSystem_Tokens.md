@@ -51,7 +51,8 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-slate-900` | `#0F172A` | Text mạnh nhất |
 | `--rs-slate-700` | `#334155` | Text thường |
 | `--rs-slate-500` | `#64748B` | Text phụ / placeholder |
-| `--rs-slate-300` | `#CBD5E1` | Border |
+| `--rs-slate-300` | `#CBD5E1` | Border đậm (border-strong) |
+| `--rs-slate-200` | `#E2E8F0` | Border mặc định (mảnh, dịu) |
 | `--rs-slate-100` | `#F1F5F9` | Surface nhạt |
 | `--rs-slate-50` | `#F8FAFC` | App background (light) |
 | `--rs-white` | `#FFFFFF` | Surface |
@@ -67,7 +68,9 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-bg` | `var(--rs-slate-50)` | Nền tổng app workspace |
 | `--rs-color-surface` | `var(--rs-white)` | Nền pane/card/panel |
 | `--rs-color-surface-muted` | `var(--rs-slate-100)` | Nền phụ (gutter editor, header panel) |
-| `--rs-color-border` | `var(--rs-slate-300)` | Đường viền pane, input |
+| `--rs-color-border` | `var(--rs-slate-200)` | Đường viền pane, input (mặc định) |
+| `--rs-color-border-strong` | `var(--rs-slate-300)` | Viền cần tách bạch mạnh (divider kéo, input focus nền muted) |
+| `--rs-color-surface-hover` | `var(--rs-slate-100)` | Nền hover cho item/nút ghost |
 | `--rs-color-text` | `var(--rs-slate-900)` | Chữ chính UI |
 | `--rs-color-text-muted` | `var(--rs-slate-500)` | Chữ phụ, placeholder, meta |
 | `--rs-color-primary` | `var(--rs-blue-600)` | Nút chính, link, active tab |
@@ -155,8 +158,20 @@ Shared helpers in `src/app/globals.css` (`.rs-state-active`, `.rs-state-disabled
 | `--rs-color-error-bg` | `var(--rs-dark-red-bg)` | Nền error block |
 | `--rs-color-focus-ring` | `var(--rs-dark-primary)` | Viền focus |
 | `--rs-color-primary-bg` | `var(--rs-dark-primary-bg)` | Nền primary nhạt tối |
+| `--rs-color-border` | `#1E293B` | Viền mặc định tối (dịu hơn border-strong) |
+| `--rs-color-border-strong` | `var(--rs-dark-border)` | Viền đậm tối |
+| `--rs-color-surface-hover` | `var(--rs-dark-surface-muted)` | Nền hover tối |
+| `--rs-color-status-draft` | `#475569` | Dot trạng thái "Nháp" tối |
 
 > 🔒 Severity background **bắt buộc** override ở dark mode: nếu giữ nguyên nền sáng `#FEF2F2`/`#FFFBEB`/`#F0F9FF`, row issue sẽ chói lóa giữa UI tối. Báo cáo (`--rs-report-*`) thì ngược lại — **không** override, luôn nền trắng chữ đen kể cả khi app đang dark.
+
+### 2.6. Section status tokens (dot trạng thái mục lục)
+
+| Token | Light | Vai trò |
+| :--- | :--- | :--- |
+| `--rs-color-status-draft` | `var(--rs-slate-300)` | Mục "Nháp" |
+| `--rs-color-status-review` | `var(--rs-amber-500)` | Mục "Đang review" |
+| `--rs-color-status-done` | `var(--rs-green-600)` | Mục "Hoàn thành" |
 
 ---
 
@@ -168,15 +183,17 @@ Shared helpers in `src/app/globals.css` (`.rs-state-active`, `.rs-state-disabled
 
 | Token | Giá trị | Dùng ở |
 | :--- | :--- | :--- |
-| `--rs-font-family-ui` | `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif` | Toàn bộ UI |
-| `--rs-font-family-mono` | `ui-monospace, "Cascadia Code", Consolas, monospace` | Editor `<textarea>`/CodeMirror, code inline UI |
+| `--rs-font-family-ui` | `var(--font-ui), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif` | Toàn bộ UI. `--font-ui` = **Inter** self-host qua `next/font` (subset `vietnamese`), khai báo ở `src/app/layout.tsx` |
+| `--rs-font-family-mono` | `var(--font-mono), ui-monospace, "Cascadia Code", Consolas, monospace` | Editor CodeMirror, code inline UI. `--font-mono` = **JetBrains Mono** self-host qua `next/font` |
 | `--rs-font-size-xs` | `12px` | Caption, meta, line number |
 | `--rs-font-size-sm` | `13px` | Label form, badge |
 | `--rs-font-size-md` | `14px` | Body UI mặc định |
 | `--rs-font-size-lg` | `16px` | Tiêu đề panel |
 | `--rs-font-size-xl` | `20px` | Tiêu đề màn / dialog |
+| `--rs-font-size-xxl` | `24px` | Hero heading (màn khởi tạo) |
 | `--rs-font-weight-regular` | `400` | |
 | `--rs-font-weight-medium` | `500` | Label, tab active |
+| `--rs-font-weight-semibold` | `600` | Tiêu đề item, giá trị nhấn |
 | `--rs-font-weight-bold` | `700` | Heading panel |
 | `--rs-font-lh-ui` | `1.45` | Line-height UI |
 
@@ -240,9 +257,10 @@ Shared helpers in `src/app/globals.css` (`.rs-state-active`, `.rs-state-disabled
 | Token | Giá trị | Dùng ở |
 | :--- | :--- | :--- |
 | `--rs-elevation-0` | `none` | Pane phẳng |
-| `--rs-elevation-1` | `0 1px 2px rgba(15,23,42,.08)` | Card, template tile |
-| `--rs-elevation-2` | `0 4px 12px rgba(15,23,42,.12)` | Dropdown asset menu, popover |
-| `--rs-elevation-3` | `0 12px 32px rgba(15,23,42,.18)` | Modal, dialog |
+| `--rs-elevation-1` | `0 1px 2px rgba(15,23,42,.05)` | Card, template tile |
+| `--rs-elevation-2` | `0 1px 2px rgba(15,23,42,.05), 0 4px 12px rgba(15,23,42,.08)` | Dropdown asset menu, popover |
+| `--rs-elevation-3` | `0 4px 8px rgba(15,23,42,.08), 0 16px 40px rgba(15,23,42,.16)` | Modal, dialog |
+| `--rs-elevation-page` | `0 0 0 1px rgba(15,23,42,.04), 0 2px 6px rgba(15,23,42,.06), 0 16px 40px rgba(15,23,42,.10)` | **Riêng tờ A4 preview** — ẩn dụ "tờ giấy trên bàn slate". Chỉ trên màn hình, không vào PDF |
 
 ### 4.4. Z-index (thang bậc cố định, tránh chiến tranh z-index)
 

@@ -244,7 +244,7 @@ export function ProjectInitializer({
               if (!isReady) {
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-6) var(--rs-space-4)", alignItems: "center", textAlign: "center" }}>
-                    <div style={{ padding: "var(--rs-space-3)", borderRadius: "50%", backgroundColor: "var(--rs-color-warning-light, #fef3c7)", color: "var(--rs-color-warning)" }}>
+                    <div style={{ padding: "var(--rs-space-3)", borderRadius: "50%", backgroundColor: "var(--rs-color-severity-warning-bg, #fef3c7)", color: "var(--rs-color-severity-warning)" }}>
                       <AlertTriangle size={24} />
                     </div>
                     <p style={{ color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-sm)", margin: 0, maxWidth: "340px", lineHeight: 1.5 }}>
@@ -307,7 +307,7 @@ export function ProjectInitializer({
                       </div>
 
                       {aiError && (
-                        <div style={{ display: "flex", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "var(--rs-radius-md)", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--rs-color-danger)", fontSize: "var(--rs-font-size-sm)" }}>
+                        <div style={{ display: "flex", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "var(--rs-radius-md)", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--rs-color-severity-error)", fontSize: "var(--rs-font-size-sm)" }}>
                           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
                           <span>{aiError}</span>
                         </div>
@@ -373,7 +373,7 @@ export function ProjectInitializer({
               {importedMarkdown && (
                 <>
                   <p style={helperStyle}>
-                    <Lightbulb size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px", color: "var(--rs-color-warning)" }} />
+                    <Lightbulb size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px", color: "var(--rs-color-severity-warning)" }} />
                     <span style={{ verticalAlign: "middle" }}>File Markdown của bạn sẽ được tự động phân tích thành các mục báo cáo tương ứng.</span>
                   </p>
                   <Button
