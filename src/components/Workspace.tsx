@@ -10,7 +10,7 @@ import { SnapshotHistory } from "@/components/SnapshotHistory";
 import { ReportHealthBadge } from "@/components/ReportHealthBadge";
 import { IssuesPanel } from "@/components/IssuesPanel";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
-import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2, Save } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
 import {
   createProjectFromTemplate,
@@ -990,43 +990,47 @@ export function Workspace() {
   );
 
   const primaryAction = (
-    <div style={{ display: "flex", gap: "var(--rs-space-2)", alignItems: "center" }}>
+    <div className="ws-topbar-actions">
       {reportHealth && (
         <ReportHealthBadge
           health={reportHealth}
           onOpenDetails={handleOpenReportHealth}
         />
       )}
-      <Button
-        variant={focusMode ? "primary" : "ghost"}
-        size="sm"
-        onClick={handleToggleFocusMode}
-        aria-pressed={focusMode}
-        title="Bật/tắt Focus (Ctrl+Shift+F)"
-        style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}
-      >
-        {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />} Focus
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsAiSettingsOpen(true)}
-        title="Cài đặt Trợ lý AI"
-        style={{ display: "inline-flex", alignItems: "center", gap: "var(--rs-space-1)" }}
-      >
-        <Sparkles size={14} style={{ color: "var(--rs-color-primary)" }} /> Cài đặt AI
-      </Button>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => handleManualSave()}
-        title="Lưu bản thảo hiện tại (Ctrl+S)"
-      >
-        Lưu bản thảo
-      </Button>
+      <div className="ws-topbar-icon-group">
+        <Button
+          variant={focusMode ? "primary" : "ghost"}
+          size="sm"
+          iconOnly
+          leadingIcon={focusMode ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+          onClick={handleToggleFocusMode}
+          aria-pressed={focusMode}
+          aria-label="Bật/tắt chế độ Focus"
+          title="Bật/tắt Focus (Ctrl+Shift+F)"
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          leadingIcon={<Sparkles size={15} />}
+          onClick={() => setIsAiSettingsOpen(true)}
+          aria-label="Cài đặt Trợ lý AI"
+          title="Cài đặt Trợ lý AI"
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          leadingIcon={<Save size={15} />}
+          onClick={() => handleManualSave()}
+          aria-label="Lưu bản thảo"
+          title="Lưu bản thảo hiện tại (Ctrl+S)"
+        />
+      </div>
       <Button
         variant="primary"
         size="sm"
+        leadingIcon={<FileUp size={15} />}
         onClick={() => runExport("pdf", bundle)}
       >
         Xuất bản để nộp

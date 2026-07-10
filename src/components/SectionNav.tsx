@@ -140,8 +140,8 @@ function SortableSectionNavItem({
           <button
             type="button"
             className="ws-section-nav-drag-handle"
-            aria-label={`Keo sap xep muc ${index + 1}: ${section.title}`}
-            title="Keo sap xep muc"
+            aria-label={`Kéo sắp xếp mục ${index + 1}: ${section.title}`}
+            title="Kéo sắp xếp mục"
             {...attributes}
             {...listeners}
           >
@@ -163,7 +163,7 @@ function SortableSectionNavItem({
             }}
             onClick={(e) => e.stopPropagation()}
             maxLength={100}
-            aria-label="Nhap tieu de muc moi"
+            aria-label="Nhập tiêu đề mục mới"
           />
         ) : (
           <button
@@ -193,8 +193,8 @@ function SortableSectionNavItem({
                     onMoveSection(section.id, "up");
                   }}
                   disabled={index === 0}
-                  aria-label="Di chuyen len"
-                  title="Di chuyen len"
+                  aria-label="Di chuyển lên"
+                  title="Di chuyển lên"
                 >
                   <ChevronUp size={12} />
                 </button>
@@ -205,8 +205,8 @@ function SortableSectionNavItem({
                     onMoveSection(section.id, "down");
                   }}
                   disabled={index === sectionCount - 1}
-                  aria-label="Di chuyen xuong"
-                  title="Di chuyen xuong"
+                  aria-label="Di chuyển xuống"
+                  title="Di chuyển xuống"
                 >
                   <ChevronDown size={12} />
                 </button>
@@ -219,8 +219,8 @@ function SortableSectionNavItem({
                   e.stopPropagation();
                   onStartRename(section.id, section.title);
                 }}
-                aria-label="Doi ten muc"
-                title="Doi ten muc"
+                aria-label="Đổi tên mục"
+                title="Đổi tên mục"
               >
                 <Pencil size={12} />
               </button>
@@ -232,8 +232,8 @@ function SortableSectionNavItem({
                   e.stopPropagation();
                   onDeleteSection(section.id);
                 }}
-                aria-label="Xoa muc"
-                title="Xoa muc"
+                aria-label="Xóa mục"
+                title="Xóa mục"
               >
                 <Trash size={12} />
               </button>
@@ -325,15 +325,15 @@ export function SectionNav({
   return (
     <div className="ws-section-nav-content">
       <div className="ws-section-nav-header">
-        <span className="ws-section-nav-title">Muc luc</span>
-        <div style={{ display: "flex", gap: "var(--rs-space-1)", alignItems: "center" }}>
+        <span className="ws-section-nav-title">Mục lục</span>
+        <div className="ws-section-nav-header-actions">
           {onAddSection && (
             <button
               type="button"
               className="ws-section-nav-action-btn"
               onClick={onAddSection}
-              aria-label="Them muc moi"
-              title="Them muc moi"
+              aria-label="Thêm mục mới"
+              title="Thêm mục mới"
             >
               <Plus size={14} />
             </button>
@@ -343,7 +343,7 @@ export function SectionNav({
               type="button"
               className="ws-column-toggle-btn"
               onClick={onCollapse}
-              aria-label="Thu gon muc luc"
+              aria-label="Thu gọn mục lục"
             >
               <ChevronLeft size={16} />
             </button>
