@@ -78,3 +78,9 @@
     --rs-color-success-bg: var(--rs-dark-green-bg);
     --rs-color-error-bg: var(--rs-dark-red-bg);
     --rs-color-focus-ring: var(--rs-dark-primary);
+    --rs-color-focus-ring-soft: rgba(59, 130, 246, 0.35);
+    --rs-color-primary-bg: var(--rs-dark-primary-bg);
+    --rs-color-editor-active-line: var(--rs-dark-surface-muted);
+    --rs-color-editor-selection: rgba(59, 130, 246, 0.3);
+  }
+}
