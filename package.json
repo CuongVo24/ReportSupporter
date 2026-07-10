@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:samples": "vitest run --config scripts/vitest.config.ts",
-    "postinstall": "node scripts/copy-pdf-worker.js"
+    "copy-ocr-assets": "node scripts/copy-ocr-assets.js",
+    "postinstall": "node scripts/copy-pdf-worker.js && node scripts/copy-ocr-assets.js"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",
@@ -52,6 +53,7 @@
     "remark-parse": "11.0.0",
     "remark-rehype": "11.1.2",
     "remark-stringify": "11.0.0",
+    "tesseract.js": "5.1.0",
     "unified": "11.0.5",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "4.4.3"

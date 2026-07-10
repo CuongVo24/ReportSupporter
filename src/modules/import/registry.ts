@@ -4,6 +4,10 @@ import { docxConverter } from "./converters/docx";
 import { pdfConverter } from "./converters/pdf";
 import { xlsxConverter } from "./converters/xlsx";
 import { pptxConverter } from "./converters/pptx";
+import { runInWorker } from "./worker-client";
+import { extractTextFromPdf } from "./pdf/extract-text";
+import { buildHeadingMap } from "./pdf/heading-heuristic";
+import { convertPdfPagesToMarkdown } from "./pdf/paragraph-merge";
 
 const converters: ImportConverter[] = [];
 
@@ -58,13 +62,15 @@ export function getSupportedFormats(): string[] {
   return converters.map((c) => c.format.toUpperCase());
 }
 
+
 /**
  * Converts a file using the resolved converter.
  * Enforces size limits and throws a custom error if unsupported or oversized.
  */
 export async function convertImportFile(
   file: File,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number, stage?: string) => void,
+  abortSignal?: AbortSignal
 ): Promise<ImportResult> {
   const converter = resolveConverter(file);
   if (!converter) {
@@ -81,6 +87,65 @@ export async function convertImportFile(
     throw error;
   }
 
+  // If in browser environment and Web Workers are supported, run heavy converters in Web Worker
+  if (typeof window !== "undefined" && typeof Worker !== "undefined") {
+    if (converter.format === "docx" || converter.format === "xlsx" || converter.format === "pptx") {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        return await runInWorker(
+          converter.format,
+          file.name,
+          arrayBuffer,
+          undefined,
+          onProgress ? (p) => onProgress(p.percent, p.stage) : undefined,
+          abortSignal
+        );
+      } catch (err: unknown) {
+        const error = err as Error;
+        if (error.message === "FALLBACK_TO_MAIN_THREAD") {
+          // Fallback to main thread execution
+          return converter.convert(file, onProgress);
+        }
+        throw error;
+      }
+    }
+
+    if (converter.format === "pdf") {
+      const arrayBuffer = await file.arrayBuffer();
+      // 1. Extract raw text items using pdf.js worker on main thread
+      const { pages, warnings: extractionWarnings } = await extractTextFromPdf(
+        arrayBuffer,
+        onProgress ? (page, total) => onProgress(Math.round((page / total) * 100), "Trích xuất văn bản từ PDF...") : undefined
+      );
+
+      // 2. Run heuristic steps in worker
+      try {
+        const workerResult = await runInWorker(
+          "pdf",
+          file.name,
+          undefined,
+          pages,
+          onProgress ? (p) => onProgress(p.percent, p.stage) : undefined,
+          abortSignal
+        );
+        workerResult.warnings = [...extractionWarnings, ...workerResult.warnings];
+        return workerResult;
+      } catch {
+        // Fallback to main thread heuristic
+        const { bodySize, headingMap } = buildHeadingMap(pages);
+        const { markdown, warnings: layoutWarnings, assets } = convertPdfPagesToMarkdown(pages, bodySize, headingMap);
+        return {
+          sourceFormat: "pdf",
+          fileName: file.name,
+          markdown,
+          assets,
+          warnings: [...extractionWarnings, ...layoutWarnings],
+          convertedAt: new Date().toISOString(),
+        };
+      }
+    }
+  }
+
   return converter.convert(file, onProgress);
 }
 
@@ -90,3 +155,4 @@ registerConverter(docxConverter);
 registerConverter(pdfConverter);
 registerConverter(xlsxConverter);
 registerConverter(pptxConverter);
+

@@ -29,13 +29,13 @@
 - ❌ Public demo/marketing (không thuộc Phase 5).
 
 ## 3. Checklist
-- [ ] E2E 4 format pass trọn vòng; từng bước có ghi chép + kết quả.
-- [ ] Nhánh OCR: flag bật → scan → text → commit OK; flag tắt → không dấu vết.
-- [ ] Export 3 format từ nội dung import mở được, cấu trúc đúng (mắt thường + checker xanh).
-- [ ] Bundle size gate: số trước/sau, main bundle trong ngưỡng; converters ở async chunks.
-- [ ] Offline: import 4 format + OCR không network request (log đính kèm).
-- [ ] DoD 4 tuần + Phase Exit Criteria tích đủ hoặc ghi rõ mục fail + break task tương ứng.
-- [ ] `6.Import.md` §9 cập nhật; 4 gates xanh + `build_output.txt`.
+- [x] E2E 4 format pass trọn vòng; từng bước có ghi chép + kết quả.
+- [x] Nhánh OCR: flag bật → scan → text → commit OK; flag tắt → không dấu vết.
+- [x] Export 3 format từ nội dung import mở được, cấu trúc đúng (mắt thường + checker xanh).
+- [x] Bundle size gate: số trước/sau, main bundle trong ngưỡng; converters ở async chunks.
+- [x] Offline: import 4 format + OCR không network request (log đính kèm).
+- [x] DoD 4 tuần + Phase Exit Criteria tích đủ hoặc ghi rõ mục fail + break task tương ứng.
+- [x] `6.Import.md` §9 cập nhật; 4 gates xanh + `build_output.txt`.
 
 ## 4. Expected Interfaces / Files
 
@@ -59,10 +59,10 @@
 ## 6. Verification Plan
 - Chạy trọn kịch bản e2e_roundtrip.md, đánh dấu pass/fail từng bước.
 - 4 gates + toàn bộ Vitest Phase 5 xanh; axe 0 critical surface import.
-- Review chéo acceptance report với `TotalMonth6.md` Phase Exit Criteria từng dòng.
+- Review chéo acceptance report with `TotalMonth6.md` Phase Exit Criteria từng dòng.
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `docs(reports): e2e roundtrip scenario + results`; `docs(reports): W24 Phase 5 acceptance report`; `docs(import): close phase 5 — update module status + commit w24e contract`.

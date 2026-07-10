@@ -27,8 +27,11 @@ type FileProgress = {
   id: string;
   name: string;
   status: "processing" | "success" | "error";
+  percent?: number;
+  stage?: string;
   error?: string;
   draft?: ImportDraft;
+  abortController?: AbortController;
 };
 
 export function UniversalImportDropzone({
@@ -85,17 +88,42 @@ export function UniversalImportDropzone({
     setError("");
 
     // Initialize progress state for each document
-    const initialProgress: FileProgress[] = docFiles.map((f) => ({
-      id: crypto.randomUUID(),
-      name: f.name,
-      status: "processing",
-    }));
+    const initialProgress: FileProgress[] = docFiles.map((f) => {
+      const abortController = new AbortController();
+      return {
+        id: crypto.randomUUID(),
+        name: f.name,
+        status: "processing",
+        percent: 0,
+        stage: "Chuẩn bị...",
+        abortController,
+      };
+    });
     setBatchFiles(initialProgress);
 
     const promises = docFiles.map(async (docFile, index) => {
+      const progressItem = initialProgress[index];
+      const abortSignal = progressItem.abortController?.signal;
+
       try {
         // 1. Run Registry-based file conversion (includes maxBytes size gate check)
-        const result = await convertImportFile(docFile);
+        const result = await convertImportFile(
+          docFile,
+          (percent, stage) => {
+            setBatchFiles((prev) =>
+              prev.map((p) =>
+                p.id === progressItem.id
+                  ? {
+                      ...p,
+                      percent,
+                      stage: stage || p.stage,
+                    }
+                  : p
+              )
+            );
+          },
+          abortSignal
+        );
 
         // 2. Ingest assets/evidence into the markdown content
         const ingestResult = await ingestAssetsAndEvidence(result.markdown, otherFiles);
@@ -110,9 +138,10 @@ export function UniversalImportDropzone({
           result.sourceFormat
         );
 
+        finalDraft.file = docFile;
         setBatchFiles((prev) =>
-          prev.map((p, idx) =>
-            idx === index
+          prev.map((p) =>
+            p.id === progressItem.id
               ? {
                   ...p,
                   status: "success",
@@ -124,12 +153,18 @@ export function UniversalImportDropzone({
 
         setAnnouncement(`Xử lý tệp ${docFile.name} thành công.`);
         return finalDraft;
-      } catch (err) {
-        const errorObj = err as Error;
-        const errMsg = errorObj.message || "Có lỗi xảy ra trong quá trình xử lý.";
+      } catch (err: unknown) {
+        const error = err as Error;
+        if (error.message === "Import cancelled") {
+          // If cancelled, remove from batchFiles list
+          setBatchFiles((prev) => prev.filter((p) => p.id !== progressItem.id));
+          throw error;
+        }
+
+        const errMsg = error.message || "Có lỗi xảy ra trong quá trình xử lý.";
         setBatchFiles((prev) =>
-          prev.map((p, idx) =>
-            idx === index
+          prev.map((p) =>
+            p.id === progressItem.id
               ? {
                   ...p,
                   status: "error",
@@ -159,6 +194,14 @@ export function UniversalImportDropzone({
         setError(rejected[0].reason.message || "Không có tệp nào được nhập thành công.");
       }
     }
+  };
+
+  const handleCancelFile = (fileId: string) => {
+    const fileProgress = batchFiles.find((f) => f.id === fileId);
+    if (fileProgress && fileProgress.abortController) {
+      fileProgress.abortController.abort();
+    }
+    setBatchFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
@@ -280,25 +323,62 @@ export function UniversalImportDropzone({
           
           {batchFiles.map((file) => (
             <div key={file.id} style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "6px", border: "1px solid var(--rs-color-border)", backgroundColor: "var(--rs-color-bg-muted)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "13px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--rs-space-2)", fontSize: "13px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
+                  {file.status === "processing" && (
+                    <Loader2 className="animate-spin" size={14} style={{ color: "var(--rs-color-primary)" }} aria-label="Đang xử lý" role="status" />
+                  )}
+                  {file.status === "success" && (
+                    <CheckCircle2 size={14} style={{ color: "var(--rs-color-success, #10b981)" }} />
+                  )}
+                  {file.status === "error" && (
+                    <AlertCircle size={14} style={{ color: "var(--rs-color-danger, #ef4444)" }} />
+                  )}
+                  <strong style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                    {file.name}
+                  </strong>
+                  {file.status === "success" && file.draft && (
+                    <span style={{ fontSize: "11px", color: "var(--rs-color-text-muted)" }}>
+                      ({file.draft.sections.length} mục)
+                    </span>
+                  )}
+                </div>
+
                 {file.status === "processing" && (
-                  <Loader2 className="animate-spin" size={14} style={{ color: "var(--rs-color-primary)" }} aria-label="Đang xử lý" role="status" />
-                )}
-                {file.status === "success" && (
-                  <CheckCircle2 size={14} style={{ color: "var(--rs-color-success, #10b981)" }} />
-                )}
-                {file.status === "error" && (
-                  <AlertCircle size={14} style={{ color: "var(--rs-color-danger, #ef4444)" }} />
-                )}
-                <strong style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                  {file.name}
-                </strong>
-                {file.status === "success" && file.draft && (
-                  <span style={{ fontSize: "11px", color: "var(--rs-color-text-muted)" }}>
-                    ({file.draft.sections.length} mục)
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCancelFile(file.id)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--rs-color-text-danger)",
+                      cursor: "pointer",
+                      fontSize: "11px",
+                      fontWeight: 600
+                    }}
+                  >
+                    Hủy
+                  </button>
                 )}
               </div>
+
+              {file.status === "processing" && (
+                <div style={{ paddingLeft: "22px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div style={{ fontSize: "11px", color: "var(--rs-color-text-muted)" }}>
+                    {file.stage} {file.percent !== undefined ? `(${file.percent}%)` : ""}
+                  </div>
+                  <div style={{ height: "4px", width: "100%", backgroundColor: "var(--rs-color-border)", borderRadius: "2px", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${file.percent || 0}%`,
+                        backgroundColor: "var(--rs-color-primary)",
+                        transition: "width 0.2s ease"
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {file.status === "error" && (
                 <div style={{ fontSize: "12px", color: "var(--rs-color-danger, #ef4444)", paddingLeft: "22px" }}>
