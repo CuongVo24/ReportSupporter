@@ -30,7 +30,7 @@ export {
   takeSnapshot,
 } from "./snapshots";
 export type { ReportSnapshot, SnapshotStore } from "./snapshots";
-export { createEditorState } from "./editor-setup";
+export { createEditorState, syncAnnotation } from "./editor-setup";
 export {
   buildImageMarkdownDraft,
   buildLinkMarkdownDraft,

@@ -6,6 +6,31 @@ type MermaidRendererProps = {
   code: string;
 };
 
+interface MermaidApiShape {
+  initialize: (config: Record<string, unknown>) => void;
+  render: (id: string, text: string) => Promise<{ svg: string }>;
+}
+
+// Module-level cache for Mermaid instance and initialization state
+let mermaidPromise: Promise<unknown> | null = null;
+let isMermaidInitialized = false;
+
+async function getMermaid(): Promise<MermaidApiShape> {
+  if (!mermaidPromise) {
+    mermaidPromise = import("mermaid").then((m) => m.default);
+  }
+  const mermaid = (await mermaidPromise) as MermaidApiShape;
+  if (!isMermaidInitialized) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+    isMermaidInitialized = true;
+  }
+  return mermaid;
+}
+
 export function MermaidRenderer({ code }: MermaidRendererProps) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -16,14 +41,8 @@ export function MermaidRenderer({ code }: MermaidRendererProps) {
 
     const renderDiagram = async () => {
       try {
-        const mermaid = (await import("mermaid")).default;
+        const mermaid = await getMermaid();
         
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: "default",
-          securityLevel: "loose",
-        });
-
         // Generate a unique ID for each mermaid rendering container
         const id = `mermaid-svg-${Math.random().toString(36).substring(2, 9)}`;
         const { svg: svgHtml } = await mermaid.render(id, code);

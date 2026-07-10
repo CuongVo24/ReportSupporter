@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Info } from "lucide-react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
@@ -135,6 +135,32 @@ export function PreviewPane({
     }
     return finalMarkdown.split(/(```mermaid[\s\S]*?```)/g);
   }, [finalMarkdown, hasContent]);
+
+  // Cache for parsed ASTs of content parts
+  const partAstCacheRef = useRef<Map<string, unknown>>(new Map());
+
+  const parsedParts = useMemo(() => {
+    const newCache = new Map<string, unknown>();
+    const oldCache = partAstCacheRef.current;
+    
+    const parts = contentParts.map((part) => {
+      const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
+      if (isMermaid) {
+        return { isMermaid, content: part, ast: null };
+      }
+      
+      let ast = oldCache.get(part);
+      if (!ast) {
+        const resolvedMarkdown = resolveAssetRefs(part, assets);
+        ast = parseMarkdown(resolvedMarkdown);
+      }
+      newCache.set(part, ast);
+      return { isMermaid, content: part, ast };
+    });
+    
+    partAstCacheRef.current = newCache;
+    return parts;
+  }, [contentParts, assets]);
 
   // Parse ASTs of all sections once for consistent headings and captions numbering
   const parsedSections = useMemo(() => {
@@ -351,25 +377,20 @@ export function PreviewPane({
       {formatSettings?.includeToc && <TocBlock toc={tocData} />}
       {formatSettings?.includeListOfFigures && <LofBlock lof={lofData} />}
       {formatSettings?.includeListOfTables && <LotBlock lot={lotData} />}
-      {contentParts.map((part, index) => {
-        const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
-
-        if (isMermaid) {
+      {parsedParts.map((part, index) => {
+        if (part.isMermaid) {
           // Extract the mermaid code content (strip block fences)
-          const code = part
+          const code = part.content
             .replace(/^```mermaid\s*/, "")
             .replace(/\s*```$/, "");
 
-          return <MermaidRenderer key={index} code={code} />;
+          return <MermaidRenderer key={`mermaid-${index}`} code={code} />;
         } else {
-          // Resolve offline asset references asset:<id> -> base64 data URLs on the markdown first
-          const resolvedMarkdown = resolveAssetRefs(part, assets);
-          
-          // Parse resolved markdown text into AST
-          const ast = parseMarkdown(resolvedMarkdown);
+          // Clone AST to avoid mutating cached AST across renders
+          const clonedAst = JSON.parse(JSON.stringify(part.ast));
           
           // Inject correct heading prefix numbers
-          const numberedAst = injectHeadingNumbers(ast, globalNumberedHeadings, renderState);
+          const numberedAst = injectHeadingNumbers(clonedAst, globalNumberedHeadings, renderState);
 
           // Normalize captions using registry and rendering state
           const activeRegistry = captionRegistry.filter((e) => e.sectionId === (activeSectionId || "default"));
@@ -383,7 +404,7 @@ export function PreviewPane({
 
           return (
             <div
-              key={index}
+              key={`html-${index}`}
               className="ws-preview-html-section"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
             />

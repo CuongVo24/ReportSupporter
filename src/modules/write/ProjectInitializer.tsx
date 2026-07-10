@@ -125,6 +125,20 @@ export function ProjectInitializer({
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+
+      const orderedFields = ["title", ...activeTemplate.metadataFields.map((f) => f.key)];
+      const firstErrorKey = orderedFields.find((key) => validationErrors[key]);
+
+      if (firstErrorKey) {
+        const elementId = firstErrorKey === "title" ? "meta-title" : `meta-${firstErrorKey}`;
+        setTimeout(() => {
+          const element = document.getElementById(elementId);
+          if (element) {
+            element.focus();
+            element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 50);
+      }
       return;
     }
 

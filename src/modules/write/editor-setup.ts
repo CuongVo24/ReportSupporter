@@ -1,4 +1,4 @@
-import { EditorState } from "@codemirror/state";
+import { EditorState, Annotation } from "@codemirror/state";
 import { EditorView, lineNumbers, highlightActiveLine, drawSelection, dropCursor, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
@@ -26,6 +26,8 @@ export const markdownHighlightStyle = HighlightStyle.define([
   { tag: t.processingInstruction, color: "var(--rs-color-text-muted)" },
 ]);
 
+export const syncAnnotation = Annotation.define<boolean>();
+
 /**
  * Creates an EditorState configured for Markdown editing.
  * Binds an update listener to sync editor content changes with the React state.
@@ -37,7 +39,7 @@ export function createEditorState(opts: {
   onSave?: (v: string) => void;
 }): EditorState {
   const updateListener = EditorView.updateListener.of((update) => {
-    if (update.docChanged) {
+    if (update.docChanged && !update.transactions.some((tr) => tr.annotation(syncAnnotation))) {
       opts.onChange(update.state.doc.toString());
     }
   });

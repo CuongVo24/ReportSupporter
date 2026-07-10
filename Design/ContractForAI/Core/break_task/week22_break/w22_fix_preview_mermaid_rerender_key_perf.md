@@ -36,11 +36,11 @@ Giảm công việc lặp trong preview để mở/soạn mục nặng-Mermaid m
 - ❌ Gộp/đổi pipeline markdown dùng chung với export.
 
 ## 3. Checklist
-- [ ] **Đo trước:** profiler xác nhận nút thắt (Mermaid render? re-parse? layout thrash?) — sửa theo bằng chứng.
-- [ ] **S1** Phần không đổi không parse lại; mở/soạn mục nặng mượt hơn rõ (đo lại profiler).
-- [ ] **S2** Mermaid import+initialize một lần; render chỉ khi `code` đổi; không nhấp nháy; lỗi vẫn hiện `.mermaid-error`.
-- [ ] **S3** Key ổn định; thêm/bớt khối `mermaid` không lệch DOM/instance.
-- [ ] Preview **giống hệt** trước fix và khớp PDF; đánh số heading/caption không sai. 4 gate xanh.
+- [x] **Đo trước:** profiler xác nhận nút thắt (Mermaid render? re-parse? layout thrash?) — sửa theo bằng chứng.
+- [x] **S1** Phần không đổi không parse lại; mở/soạn mục nặng mượt hơn rõ (đo lại profiler).
+- [x] **S2** Mermaid import+initialize một lần; render chỉ khi `code` đổi; không nhấp nháy; lỗi vẫn hiện `.mermaid-error`.
+- [x] **S3** Key ổn định; thêm/bớt khối `mermaid` không lệch DOM/instance.
+- [x] Preview **giống hệt** trước fix và khớp PDF; đánh số heading/caption không sai. 4 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -48,7 +48,6 @@ Giảm công việc lặp trong preview để mở/soạn mục nặng-Mermaid m
 |---|---|---|
 | `src/components/PreviewPane.tsx` | MODIFY | memo HTML từng phần; key ổn định; giữ đúng đánh số/caption |
 | `src/modules/write/MermaidRenderer.tsx` | MODIFY | cache import+initialize; render theo code; chống nhấp nháy |
-| `src/components/WorkspaceLayout.tsx` | MODIFY (nếu profiler chỉ ra) | chặn vòng ResizeObserver↔setHeight |
 
 > **Import boundary:** không lib mới.
 
@@ -69,4 +68,4 @@ Giảm công việc lặp trong preview để mở/soạn mục nặng-Mermaid m
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Table, Code2, Sigma, GitBranch, Quote, Image as ImageIcon } from "lucide-react";
 import { EditorView } from "@codemirror/view";
-import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile } from "@/modules/write";
+import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile, syncAnnotation } from "@/modules/write";
 import type { WritingStats } from "@/modules/write";
 import type { SnippetKind, ReportAsset } from "@/types";
 
@@ -32,6 +32,18 @@ export function EditorPanel({
   const viewRef = useRef<EditorView | null>(null);
   const [fileError, setFileError] = useState("");
 
+  const onChangeRef = useRef(onChange);
+  const onSaveRef = useRef(onSave);
+
+  // Keep refs updated with latest callbacks
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
   // Sync external value modifications (like switching sections) with the editor
   useEffect(() => {
     const view = viewRef.current;
@@ -41,6 +53,7 @@ export function EditorPanel({
     if (value !== currentDoc) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: value },
+        annotations: syncAnnotation.of(true),
       });
     }
   }, [value]);
@@ -51,8 +64,12 @@ export function EditorPanel({
 
     const state = createEditorState({
       doc: value,
-      onChange,
-      onSave,
+      onChange: (v) => {
+        onChangeRef.current(v);
+      },
+      onSave: (v) => {
+        onSaveRef.current?.(v);
+      },
       ariaLabel,
     });
 

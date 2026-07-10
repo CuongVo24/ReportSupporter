@@ -36,10 +36,10 @@ Bảo đảm bấm "Tạo báo cáo" **luôn** cho phản hồi rõ: hoặc tạ
 - ❌ Thêm validation realtime mới (chỉ đảm bảo phản hồi lúc submit + blur sẵn có).
 
 ## 3. Checklist
-- [ ] **S0** Đã chốt nhánh (a) hay (b) bằng re-test sạch; ghi rõ trong PR.
-- [ ] **S1** Submit thiếu trường: lỗi hiển thị (`role="alert"`), input `aria-invalid`, **cuộn + focus** field lỗi đầu tiên.
-- [ ] **S2** (nếu b) init thất bại có toast rõ; không câm.
-- [ ] Điền đủ trường → tạo báo cáo thành công như cũ (không hồi quy). 4 gate xanh.
+- [x] **S0** Đã chốt nhánh (a) hay (b) bằng re-test sạch; ghi rõ trong PR.
+- [x] **S1** Submit thiếu trường: lỗi hiển thị (`role="alert"`), input `aria-invalid`, **cuộn + focus** field lỗi đầu tiên.
+- [x] **S2** (nếu b) init thất bại có toast rõ; không câm.
+- [x] Điền đủ trường → tạo báo cáo thành công như cũ (không hồi quy). 4 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -67,4 +67,4 @@ Bảo đảm bấm "Tạo báo cáo" **luôn** cho phản hồi rõ: hoặc tạ
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`

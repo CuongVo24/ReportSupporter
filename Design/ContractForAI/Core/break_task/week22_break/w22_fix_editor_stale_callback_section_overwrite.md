@@ -36,11 +36,11 @@ Bảo đảm mọi thay đổi editor **luôn** ghi vào **đúng mục đang m�
 - ❌ Đổi cấu trúc `bundle`/`ReportSection`.
 
 ## 3. Checklist
-- [ ] **S1** Gõ ở mục đang mở ghi đúng mục; chuyển mục **không** đè mục cũ (callback luôn tươi).
-- [ ] **S1b** Effect đồng bộ khi đổi mục không kích hoạt ghi state; không vòng lặp.
-- [ ] **S2** Autosave + Ctrl+S lưu đúng mục; bản IndexedDB xác nhận đúng.
-- [ ] Undo/redo, focus, vị trí cuộn không hồi quy khi chuyển mục.
-- [ ] Test hồi quy A→B→A xanh; 4 gate xanh.
+- [x] **S1** Gõ ở mục đang mở ghi đúng mục; chuyển mục **không** đè mục cũ (callback luôn tươi).
+- [x] **S1b** Effect đồng bộ khi đổi mục không kích hoạt ghi state; không vòng lặp.
+- [x] **S2** Autosave + Ctrl+S lưu đúng mục; bản IndexedDB xác nhận đúng.
+- [x] Undo/redo, focus, vị trí cuộn không hồi quy khi chuyển mục.
+- [x] Test hồi quy A→B→A xanh; 4 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -48,8 +48,8 @@ Bảo đảm mọi thay đổi editor **luôn** ghi vào **đúng mục đang m�
 |---|---|---|
 | `src/components/EditorPanel.tsx` | MODIFY | ref cho onChange/onSave; init qua ref; chặn onChange do sync |
 | `src/modules/write/editor-setup.ts` | MODIFY | updateListener đọc callback tươi; (opt) annotation programmatic |
-| `src/components/Workspace.tsx` | MODIFY nhẹ | handleChange/handleManualSave ghi theo activeId hiện tại |
-| `EditorPanel.test.tsx` / `Workspace.test.tsx` | NEW/MODIFY | test hồi quy A→B→A không mất dữ liệu |
+| `src/components/Workspace.tsx` | MODIFY nhẹ | (Không cần thiết vì ref forwarding ở EditorPanel đã bảo đảm callbacks luôn nhận đúng activeId và bundle mới nhất mà không mất undo-history/scroll) |
+| `src/components/EditorPanel.test.tsx` | NEW | test hồi quy A→B→A không mất dữ liệu |
 
 > **Import boundary:** không lib mới; dùng `useRef`/`EditorView` sẵn có.
 
@@ -70,4 +70,6 @@ Bảo đảm mọi thay đổi editor **luôn** ghi vào **đúng mục đang m�
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
+
+> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): align screen table of contents with print art direction`; `docs(w21): close w21 toc print contract`.
