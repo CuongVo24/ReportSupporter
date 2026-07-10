@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PPTX Import Flow Snapshot and Verification > should process defense-gslides.pptx successfully and match equivalent output content 1`] = `
+"## Slide 1
+
+- Tiêu đề Slide 1
+- Ý 1 cấp 0
+  - Ý 1.1 cấp 1
+    - Ý 1.1.1 cấp 2
+
+> Ghi chú slide 1 - Mở đầu"
+`;
+
+exports[`PPTX Import Flow Snapshot and Verification > should process defense-ppt.pptx successfully and verify slide headings, nested lists, and notes 1`] = `
+"## Slide 1
+
+- Tiêu đề Slide 1
+- Ý 1 cấp 0
+  - Ý 1.1 cấp 1
+    - Ý 1.1.1 cấp 2
+
+> Ghi chú slide 1 - Mở đầu"
+`;

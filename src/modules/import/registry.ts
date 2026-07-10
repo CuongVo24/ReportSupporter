@@ -3,6 +3,7 @@ import { markdownConverter } from "./converters/markdown";
 import { docxConverter } from "./converters/docx";
 import { pdfConverter } from "./converters/pdf";
 import { xlsxConverter } from "./converters/xlsx";
+import { pptxConverter } from "./converters/pptx";
 
 const converters: ImportConverter[] = [];
 
@@ -88,3 +89,4 @@ registerConverter(markdownConverter);
 registerConverter(docxConverter);
 registerConverter(pdfConverter);
 registerConverter(xlsxConverter);
+registerConverter(pptxConverter);
