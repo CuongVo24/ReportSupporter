@@ -39,6 +39,7 @@ export function UniversalImportDropzone({
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
   const [batchFiles, setBatchFiles] = useState<FileProgress[]>([]);
+  const [announcement, setAnnouncement] = useState("");
 
   // Dynamically build accept extensions list from registered converters
   const acceptExtensions = getSupportedExtensions();
@@ -50,6 +51,7 @@ export function UniversalImportDropzone({
 
   const processFiles = async (fileList: File[]) => {
     if (fileList.length === 0) return;
+    setAnnouncement("Bắt đầu xử lý danh sách tệp tin...");
 
     let allFiles: File[] = [];
     
@@ -120,6 +122,7 @@ export function UniversalImportDropzone({
           )
         );
 
+        setAnnouncement(`Xử lý tệp ${docFile.name} thành công.`);
         return finalDraft;
       } catch (err) {
         const errorObj = err as Error;
@@ -135,6 +138,7 @@ export function UniversalImportDropzone({
               : p
           )
         );
+        setAnnouncement(`Lỗi khi xử lý tệp ${docFile.name}: ${errMsg}`);
         throw err;
       }
     });
@@ -221,6 +225,7 @@ export function UniversalImportDropzone({
     <section
       className={`ws-md-import ${isDragging ? "ws-md-import-dragging" : ""}`}
       aria-label="Nhập file tài liệu"
+      aria-busy={batchFiles.some((f) => f.status === "processing")}
       onDragOver={(event) => {
         event.preventDefault();
         setIsDragging(true);
@@ -232,6 +237,7 @@ export function UniversalImportDropzone({
         ref={inputRef}
         className="ws-visually-hidden"
         type="file"
+        aria-label="Chọn tệp tin để nhập"
         multiple
         accept={acceptString}
         onChange={(event) => {
@@ -276,7 +282,7 @@ export function UniversalImportDropzone({
             <div key={file.id} style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "6px", border: "1px solid var(--rs-color-border)", backgroundColor: "var(--rs-color-bg-muted)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "13px" }}>
                 {file.status === "processing" && (
-                  <Loader2 className="animate-spin" size={14} style={{ color: "var(--rs-color-primary)" }} />
+                  <Loader2 className="animate-spin" size={14} style={{ color: "var(--rs-color-primary)" }} aria-label="Đang xử lý" role="status" />
                 )}
                 {file.status === "success" && (
                   <CheckCircle2 size={14} style={{ color: "var(--rs-color-success, #10b981)" }} />
@@ -342,6 +348,10 @@ export function UniversalImportDropzone({
           <span>{error}</span>
         </div>
       )}
+
+      <div className="ws-visually-hidden" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
     </section>
   );
 }

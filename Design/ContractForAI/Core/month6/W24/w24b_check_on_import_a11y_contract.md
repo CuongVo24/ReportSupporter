@@ -61,6 +61,6 @@ Hai việc: (1) **Check-on-import** — chạy Check engine trên `ImportDraft` 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): run check engine on import draft (non-blocking)`; `fix(a11y): dropzone/preview states + axe 0 critical`; `docs(import): commit w24b contract`.
+> Commit: `feat(import): run check engine on import draft (non-blocking)`; `fix(a11y): dropzone/preview states + axe 0 critical`; `docs(import): commit w24b contract`.
