@@ -29,12 +29,12 @@ Hoàn tất PPTX: **media** `ppt/media/*` → `ReportAsset` (map qua `slideN.xml
 - ❌ Sửa registry core/dropzone; fixtures thật/QA (Group E).
 
 ## 3. Checklist
-- [ ] Ảnh đúng slide (map rels, không theo tên file); ≥2 slide có ảnh test phân bổ đúng.
-- [ ] emf/wmf → `image-skipped`, import tiếp tục.
-- [ ] SmartArt/chart/OLE → `unsupported-element` đúng slide; import không dừng.
-- [ ] `.pptx` resolve đúng; `.ppt` reject thông báo riêng.
-- [ ] Diff không chạm registry core/dropzone (ngoài bootstrap entry).
-- [ ] 4 gates xanh.
+- [x] Ảnh đúng slide (map rels, không theo tên file); ≥2 slide có ảnh test phân bổ đúng.
+- [x] emf/wmf → `image-skipped`, import tiếp tục.
+- [x] SmartArt/chart/OLE → `unsupported-element` đúng slide; import không dừng.
+- [x] `.pptx` resolve đúng; `.ppt` reject thông báo riêng.
+- [x] Diff không chạm registry core/dropzone (ngoài bootstrap entry).
+- [x] 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -56,11 +56,11 @@ Hoàn tất PPTX: **media** `ppt/media/*` → `ReportAsset` (map qua `slideN.xml
 
 ## 6. Verification Plan
 - Vitest rels map + unsupported detection xanh; 4 gates xanh.
-- Manual: pptx thật có ảnh + chart → ảnh vào asset đúng slide, chart thành warning, import trọn vẹn.
+- Manual: pptx thật có ảnh + chart → ảnh vào asset đúng slide, chart thành warning, import trọn vaim.
 - `git diff --stat` xác nhận core không đổi.
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): pptx media to ReportAsset via rels mapping`; `feat(import): pptx unsupported-element warnings + registry entry`; `docs(import): commit w23d contract`.
