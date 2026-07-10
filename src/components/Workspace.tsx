@@ -53,6 +53,7 @@ import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
 import { ImportPreviewDialog } from "@/modules/import/ImportPreviewDialog";
+import { checkDraft } from "@/modules/import/check-draft";
 import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection, ImportDraft } from "@/types";
 
 const emptyCheckResult: CheckResult = {
@@ -1247,7 +1248,15 @@ export function Workspace() {
           <UniversalImportDropzone
             imported={importDrafts}
             onImported={(drafts) => {
-              setImportDrafts(drafts);
+              if (bundle) {
+                const draftsWithIssues = drafts.map((draft) => ({
+                  ...draft,
+                  issues: checkDraft(draft, bundle),
+                }));
+                setImportDrafts(draftsWithIssues);
+              } else {
+                setImportDrafts(drafts);
+              }
               setIsImportDialogOpen(false);
               setIsPreviewDialogOpen(true);
             }}

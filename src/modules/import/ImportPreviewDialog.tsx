@@ -5,6 +5,7 @@ import { Dialog, Tabs, TabsList, TabsTrigger, TabsContent, Button } from "@/comp
 import { PreviewPane } from "@/components/PreviewPane";
 import { SectionControls } from "./preview/SectionControls";
 import { WarningsPanel } from "./preview/WarningsPanel";
+import { IssuesPanel } from "./preview/IssuesPanel";
 import { remapMarkdownHeadings } from "./remap-heading";
 import type { ImportDraft, ReportSection } from "@/types";
 import "./ImportPreviewDialog.css";
@@ -66,10 +67,20 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
   const activeDeltaMap = deltaMaps[activeFileName] || {};
   const activeMode = modes[activeFileName] || "append";
 
-  // Check if active draft has warnings
+  // Check if active draft has warnings and issues
   const activeWarnings = activeDraft.result.warnings || [];
   const activeIssues = activeDraft.issues || [];
-  const warningCount = activeWarnings.length + activeIssues.length;
+  
+  const errorCount = activeIssues.filter((i) => i.severity === "error").length;
+  const warningCount = activeWarnings.length + activeIssues.filter((i) => i.severity === "warning").length;
+
+  const commitButtonLabel = (() => {
+    if (errorCount === 0 && warningCount === 0) return "Commit nhanh (1 click)";
+    const parts = [];
+    if (errorCount > 0) parts.push(`${errorCount} lỗi`);
+    if (warningCount > 0) parts.push(`${warningCount} cảnh báo`);
+    return `Nhập báo cáo (${parts.join(", ")})`;
+  })();
 
   // Compute final Markdown for preview based on active exclusions and heading deltas
   const keptSections = activeDraft.sections.filter((sec) => !activeExcludedMap[sec.id]);
@@ -272,6 +283,30 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
               />
             </div>
 
+            {/* Checker Issues panel */}
+            <div className="ws-warnings-panel-section" style={{ minHeight: "150px" }}>
+              <div className="ws-section-panel-title">
+                Lỗi chất lượng báo cáo
+                {activeIssues.length > 0 && (
+                  <span
+                    className="ws-section-guessed-badge"
+                    style={{
+                      marginLeft: "var(--rs-space-2)",
+                      backgroundColor: "rgba(239, 68, 68, 0.08)",
+                      borderColor: "rgba(239, 68, 68, 0.2)",
+                      color: "var(--rs-color-text-danger)",
+                    }}
+                  >
+                    {activeIssues.length}
+                  </span>
+                )}
+              </div>
+              <IssuesPanel
+                issues={activeIssues}
+                onNavigateToSection={handleNavigateToSection}
+              />
+            </div>
+
             {/* Warnings detail panel */}
             <div className="ws-warnings-panel-section">
               <div className="ws-section-panel-title">
@@ -302,7 +337,7 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
             </Button>
           )}
           <Button variant="primary" onClick={handleCommitActive}>
-            {warningCount === 0 ? "Commit nhanh (1 click)" : "Nhập báo cáo"}
+            {commitButtonLabel}
           </Button>
         </div>
       </div>
