@@ -8,6 +8,8 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { SectionNav } from "./SectionNav";
 import { MobileDrawer } from "./MobileDrawer";
@@ -326,24 +328,14 @@ export function WorkspaceLayout({
                   {onDarkPreviewToggle && (
                     <button
                       type="button"
-                      className={`ws-preview-dark-toggle ${darkPreview ? "active" : ""}`}
+                      className={`ws-preview-dark-toggle ${darkPreview ? "ws-preview-dark-toggle-active" : ""}`}
                       onClick={onDarkPreviewToggle}
+                      aria-pressed={darkPreview}
+                      aria-label="Bật/tắt nền xem tối"
                       title="Bật/Tắt chế độ xem tối"
-                      style={{
-                        marginLeft: "var(--rs-space-2)",
-                        padding: "4px 8px",
-                        fontSize: "12px",
-                        borderRadius: "var(--rs-radius-sm)",
-                        border: "1px solid var(--rs-color-border)",
-                        backgroundColor: darkPreview ? "var(--rs-color-surface-hover)" : "var(--rs-color-surface)",
-                        color: darkPreview ? "var(--rs-color-primary)" : "var(--rs-color-text-muted)",
-                        cursor: "pointer",
-                        height: "28px",
-                        display: "inline-flex",
-                        alignItems: "center"
-                      }}
                     >
-                      {darkPreview ? "Nền tối" : "Nền sáng"}
+                      {darkPreview ? <Moon size={14} aria-hidden="true" /> : <Sun size={14} aria-hidden="true" />}
+                      <span>{darkPreview ? "Nền tối" : "Nền sáng"}</span>
                     </button>
                   )}
                 </div>

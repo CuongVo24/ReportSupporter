@@ -619,13 +619,15 @@ body {
   border-radius: var(--rs-radius-md);
   overflow: hidden;
   background: var(--rs-color-surface);
+  box-shadow: var(--rs-elevation-1);
 }
 
 .ws-editor-toolbar {
   display: flex;
-  gap: var(--rs-space-2);
-  padding: var(--rs-space-2);
-  background: var(--rs-color-surface-muted);
+  align-items: center;
+  gap: 2px;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  background: var(--rs-color-surface);
   border-bottom: 1px solid var(--rs-color-border);
   overflow-x: auto;
   position: sticky;
@@ -634,22 +636,32 @@ body {
 }
 
 .ws-editor-toolbar-btn {
-  padding: var(--rs-space-1) var(--rs-space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  height: 28px;
+  padding: 0 var(--rs-space-2);
+  font-family: var(--rs-font-family-ui);
   font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
-  color: var(--rs-color-text);
-  background: var(--rs-color-surface);
-  border: 1px solid var(--rs-color-border);
+  color: var(--rs-color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--rs-radius-sm);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: background-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default),
+    color var(--rs-motion-duration-micro) var(--rs-motion-easing-default);
 }
 
 .ws-editor-toolbar-btn:hover {
-  background: var(--rs-color-surface-muted);
+  background: var(--rs-color-surface-hover);
   color: var(--rs-color-text);
-  border-color: var(--rs-color-text-muted);
+}
+
+.ws-editor-toolbar-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: -2px;
 }
 
 .ws-editor-cm-parent {
@@ -725,19 +737,23 @@ body {
 }
 
 /* PreviewPane extracted styles */
+/* Dải chrome preview full-bleed dính mép trên tờ A4 — negative margin triệt tiêu
+   padding lề trang để chrome UI không lẫn vào vùng nội dung báo cáo */
 .ws-preview-header-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--rs-space-3);
-  padding: var(--rs-space-2) var(--rs-space-3);
+  padding: var(--rs-space-2) var(--rs-space-4);
   background-color: var(--rs-color-surface-muted);
-  border: 1px solid var(--rs-color-border);
-  border-radius: var(--rs-radius-sm);
-  margin-bottom: var(--rs-space-2);
+  border-bottom: 1px solid var(--rs-color-border);
+  border-radius: 2px 2px 0 0;
+  margin: calc(-1 * var(--rs-preview-margin-top, var(--rs-report-margin-top, 25mm)))
+    calc(-1 * var(--rs-preview-margin-right, var(--rs-report-margin-right, 20mm))) var(--rs-space-6)
+    calc(-1 * var(--rs-preview-margin-left, var(--rs-report-margin-left, 30mm)));
+  font-family: var(--rs-font-family-ui);
   font-size: var(--rs-font-size-xs);
   color: var(--rs-color-text-muted);
-  width: 100%;
   box-sizing: border-box;
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Table, Code2, Sigma, GitBranch, Quote, Image as ImageIcon } from "lucide-react";
 import { EditorView } from "@codemirror/view";
 import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile } from "@/modules/write";
 import type { WritingStats } from "@/modules/write";
@@ -204,12 +205,30 @@ export function EditorPanel({
     >
       {/* Minimal Formatting Toolbar */}
       <div className="ws-editor-toolbar">
-        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn" title="Chèn bảng (Ctrl+Shift+T)" aria-keyshortcuts="Control+Shift+T">Bảng</button>
-        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn" title="Chèn khối code (Ctrl+Shift+C)" aria-keyshortcuts="Control+Shift+C">Code</button>
-        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn" title="Chèn công thức (Ctrl+Shift+M)" aria-keyshortcuts="Control+Shift+M">Công thức</button>
-        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn" title="Chèn sơ đồ Mermaid">Mermaid</button>
-        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn" title="Chèn chú thích (Ctrl+Shift+Q)" aria-keyshortcuts="Control+Shift+Q">Chú thích</button>
-        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn" title="Chèn ảnh (Ctrl+Shift+I)" aria-keyshortcuts="Control+Shift+I">Ảnh</button>
+        <button type="button" onClick={() => handleInsert("table")} className="ws-editor-toolbar-btn" title="Chèn bảng (Ctrl+Shift+T)" aria-keyshortcuts="Control+Shift+T">
+          <Table size={14} aria-hidden="true" />
+          <span>Bảng</span>
+        </button>
+        <button type="button" onClick={() => handleInsert("code")} className="ws-editor-toolbar-btn" title="Chèn khối code (Ctrl+Shift+C)" aria-keyshortcuts="Control+Shift+C">
+          <Code2 size={14} aria-hidden="true" />
+          <span>Code</span>
+        </button>
+        <button type="button" onClick={() => handleInsert("math")} className="ws-editor-toolbar-btn" title="Chèn công thức (Ctrl+Shift+M)" aria-keyshortcuts="Control+Shift+M">
+          <Sigma size={14} aria-hidden="true" />
+          <span>Công thức</span>
+        </button>
+        <button type="button" onClick={() => handleInsert("mermaid")} className="ws-editor-toolbar-btn" title="Chèn sơ đồ Mermaid">
+          <GitBranch size={14} aria-hidden="true" />
+          <span>Mermaid</span>
+        </button>
+        <button type="button" onClick={() => handleInsert("callout")} className="ws-editor-toolbar-btn" title="Chèn chú thích (Ctrl+Shift+Q)" aria-keyshortcuts="Control+Shift+Q">
+          <Quote size={14} aria-hidden="true" />
+          <span>Chú thích</span>
+        </button>
+        <button type="button" onClick={() => handleInsert("image")} className="ws-editor-toolbar-btn" title="Chèn ảnh (Ctrl+Shift+I)" aria-keyshortcuts="Control+Shift+I">
+          <ImageIcon size={14} aria-hidden="true" />
+          <span>Ảnh</span>
+        </button>
       </div>
 
       {/* CodeMirror DOM Parent */}

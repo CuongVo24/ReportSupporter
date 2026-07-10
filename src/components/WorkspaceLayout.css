@@ -681,7 +681,8 @@
   font-family: var(--rs-report-font-family, "Times New Roman", Times, serif);
   font-size: var(--rs-report-font-size-body, 13pt);
   line-height: var(--rs-report-line-height, 1.5);
-  box-shadow: var(--rs-elevation-2); /* Metaphor: sheet on slate table shadow */
+  box-shadow: var(--rs-elevation-page); /* Metaphor: sheet on slate table shadow */
+  border-radius: 2px;
   box-sizing: border-box;
   text-align: justify;
 }
@@ -793,8 +794,44 @@
   font-family: var(--rs-font-family-ui);
   font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
+  font-variant-numeric: tabular-nums;
   color: var(--rs-color-text-muted);
   white-space: nowrap;
+}
+
+/* Nút bật/tắt nền tối cho khu preview */
+.ws-preview-dark-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  height: 28px;
+  margin-left: var(--rs-space-2);
+  padding: 0 var(--rs-space-2);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default),
+    color var(--rs-motion-duration-micro) var(--rs-motion-easing-default);
+}
+
+.ws-preview-dark-toggle:hover {
+  background-color: var(--rs-color-surface-hover);
+  color: var(--rs-color-text);
+}
+
+.ws-preview-dark-toggle:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: -2px;
+}
+
+.ws-preview-dark-toggle-active {
+  background-color: var(--rs-color-primary-bg);
+  color: var(--rs-color-primary);
 }
 
 /* Hide zoom widget on mobile/tablet viewports */
