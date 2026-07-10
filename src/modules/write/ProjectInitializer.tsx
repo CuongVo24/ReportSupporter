@@ -81,7 +81,9 @@ export function ProjectInitializer({
     }
   };
 
-  const handleMarkdownImported = (draft: ImportDraft) => {
+  const handleMarkdownImported = (drafts: ImportDraft[]) => {
+    if (drafts.length === 0) return;
+    const draft = drafts[0];
     setImportedMarkdown(draft);
     if (readmeTemplate) {
       setSelectedTemplateId(readmeTemplate.id);
@@ -229,7 +231,7 @@ export function ProjectInitializer({
             {initMode === "import" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-4)", padding: "var(--rs-space-2) 0", flex: 1 }}>
                 <UniversalImportDropzone
-                  imported={importedMarkdown}
+                  imported={importedMarkdown ? [importedMarkdown] : []}
                   onImported={handleMarkdownImported}
                 />
               </div>
