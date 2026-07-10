@@ -161,7 +161,7 @@ export const SectionControls: React.FC<SectionControlsProps> = ({
                       flexDirection: "column",
                       gap: "var(--rs-space-1)",
                       width: "100%",
-                      backgroundColor: "var(--rs-color-bg-muted)",
+                      backgroundColor: "var(--rs-color-surface-muted)",
                       padding: "var(--rs-space-2)",
                       borderRadius: "4px",
                       border: "1px dashed var(--rs-color-border)"
@@ -178,7 +178,7 @@ export const SectionControls: React.FC<SectionControlsProps> = ({
                         style={{
                           background: "none",
                           border: "none",
-                          color: "var(--rs-color-text-danger)",
+                          color: "var(--rs-color-severity-error)",
                           cursor: "pointer",
                           fontWeight: "bold",
                           fontSize: "11px"

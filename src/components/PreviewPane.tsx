@@ -283,6 +283,9 @@ export function PreviewPane({
           padding-right: ${right} !important;
           padding-bottom: ${bottom} !important;
           padding-left: ${left} !important;
+          --rs-preview-margin-top: ${top};
+          --rs-preview-margin-right: ${right};
+          --rs-preview-margin-left: ${left};
         }
         .ws-preview-page p, .ws-preview-page li {
           text-align: ${align} !important;

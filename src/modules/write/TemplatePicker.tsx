@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
+import { FileText } from "lucide-react";
 import type { TemplateSchema } from "@/types";
-import { Select } from "@/components/ui";
 
 type TemplatePickerProps = {
   templates: TemplateSchema[];
@@ -11,23 +11,31 @@ type TemplatePickerProps = {
 };
 
 export function TemplatePicker({ templates, value, onSelect }: TemplatePickerProps) {
-  const selectOptions = templates.map((tpl) => ({
-    value: tpl.id,
-    label: tpl.name,
-  }));
-
-  const activeTemplate = templates.find((t) => t.id === value);
-
   return (
     <div className="ws-template-picker-container">
-      <Select
-        id="template-select"
-        label="Mẫu tài liệu (Template)"
-        options={selectOptions}
-        value={value}
-        onValueChange={onSelect}
-        helperText={activeTemplate?.description}
-      />
+      <span className="ws-template-picker-label" id="template-picker-label">
+        Mẫu tài liệu (Template)
+      </span>
+      <div className="ws-template-grid" role="group" aria-labelledby="template-picker-label">
+        {templates.map((tpl) => {
+          const isActive = tpl.id === value;
+          return (
+            <button
+              type="button"
+              key={tpl.id}
+              className={`ws-template-card ${isActive ? "ws-template-card-active" : ""}`}
+              aria-pressed={isActive}
+              onClick={() => onSelect(tpl.id)}
+            >
+              <span className="ws-template-card-head">
+                <FileText size={15} aria-hidden="true" />
+                <span className="ws-template-card-name">{tpl.name}</span>
+              </span>
+              {tpl.description && <span className="ws-template-card-desc">{tpl.description}</span>}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

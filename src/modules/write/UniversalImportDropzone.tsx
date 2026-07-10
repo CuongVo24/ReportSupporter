@@ -317,12 +317,12 @@ export function UniversalImportDropzone({
 
       {batchFiles.length > 0 && (
         <div className="ws-md-import-status-container" style={{ marginTop: "var(--rs-space-4)", display: "flex", flexDirection: "column", gap: "var(--rs-space-3)" }}>
-          <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "var(--rs-color-text-secondary)" }}>
+          <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "var(--rs-color-text-muted)" }}>
             Trạng thái xử lý danh sách tệp:
           </h4>
           
           {batchFiles.map((file) => (
-            <div key={file.id} style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "6px", border: "1px solid var(--rs-color-border)", backgroundColor: "var(--rs-color-bg-muted)" }}>
+            <div key={file.id} style={{ display: "flex", flexDirection: "column", gap: "var(--rs-space-2)", padding: "var(--rs-space-3)", borderRadius: "6px", border: "1px solid var(--rs-color-border)", backgroundColor: "var(--rs-color-surface-muted)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--rs-space-2)", fontSize: "13px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
                   {file.status === "processing" && (
@@ -332,7 +332,7 @@ export function UniversalImportDropzone({
                     <CheckCircle2 size={14} style={{ color: "var(--rs-color-success, #10b981)" }} />
                   )}
                   {file.status === "error" && (
-                    <AlertCircle size={14} style={{ color: "var(--rs-color-danger, #ef4444)" }} />
+                    <AlertCircle size={14} style={{ color: "var(--rs-color-severity-error, #ef4444)" }} />
                   )}
                   <strong style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
                     {file.name}
@@ -351,7 +351,7 @@ export function UniversalImportDropzone({
                     style={{
                       background: "none",
                       border: "none",
-                      color: "var(--rs-color-text-danger)",
+                      color: "var(--rs-color-severity-error)",
                       cursor: "pointer",
                       fontSize: "11px",
                       fontWeight: 600
@@ -381,7 +381,7 @@ export function UniversalImportDropzone({
               )}
 
               {file.status === "error" && (
-                <div style={{ fontSize: "12px", color: "var(--rs-color-danger, #ef4444)", paddingLeft: "22px" }}>
+                <div style={{ fontSize: "12px", color: "var(--rs-color-severity-error, #ef4444)", paddingLeft: "22px" }}>
                   {file.error}
                 </div>
               )}
@@ -394,10 +394,10 @@ export function UniversalImportDropzone({
                   
                   {file.draft.summary.missingCount > 0 && (
                     <div style={{ marginTop: "4px" }}>
-                      <span style={{ color: "var(--rs-color-warning, #f59e0b)" }}>
+                      <span style={{ color: "var(--rs-color-severity-warning, #f59e0b)" }}>
                         ⚠ Thiếu {file.draft.summary.missingCount} tệp ảnh (giữ nguyên đường dẫn tương đối):
                       </span>
-                      <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px", listStyleType: "circle", color: "var(--rs-color-text-secondary)", fontFamily: "monospace", fontSize: "11px" }}>
+                      <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px", listStyleType: "circle", color: "var(--rs-color-text-muted)", fontFamily: "monospace", fontSize: "11px" }}>
                         {file.draft.summary.missingList.map((path, idx) => (
                           <li key={idx}>{path}</li>
                         ))}
@@ -407,8 +407,8 @@ export function UniversalImportDropzone({
 
                   {file.draft.summary.warnings.length > 0 && (
                     <div style={{ marginTop: "4px" }}>
-                      <span style={{ color: "var(--rs-color-danger, #ef4444)", fontWeight: 500 }}>Cảnh báo:</span>
-                      <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px", listStyleType: "circle", color: "var(--rs-color-text-secondary)" }}>
+                      <span style={{ color: "var(--rs-color-severity-error, #ef4444)", fontWeight: 500 }}>Cảnh báo:</span>
+                      <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px", listStyleType: "circle", color: "var(--rs-color-text-muted)" }}>
                         {file.draft.summary.warnings.map((warn, idx) => (
                           <li key={idx}>{warn}</li>
                         ))}

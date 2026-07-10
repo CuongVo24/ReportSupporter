@@ -407,7 +407,7 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
               )}
 
               <div style={{ marginTop: "var(--rs-space-3)", paddingTop: "var(--rs-space-3)", borderTop: "1px solid var(--rs-color-border)" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "13px", cursor: "pointer", fontWeight: 5, color: "var(--rs-color-text-primary)" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "var(--rs-space-2)", fontSize: "13px", cursor: "pointer", fontWeight: 5, color: "var(--rs-color-text)" }}>
                   <input
                     type="checkbox"
                     checked={ocrEnabled}
@@ -447,7 +447,7 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
                       marginLeft: "var(--rs-space-2)",
                       backgroundColor: "rgba(239, 68, 68, 0.08)",
                       borderColor: "rgba(239, 68, 68, 0.2)",
-                      color: "var(--rs-color-text-danger)",
+                      color: "var(--rs-color-severity-error)",
                     }}
                   >
                     {activeIssues.length}

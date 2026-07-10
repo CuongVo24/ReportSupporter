@@ -27,6 +27,7 @@
   background-color: var(--rs-color-primary);
   color: var(--rs-white);
   border-color: transparent;
+  box-shadow: var(--rs-elevation-1);
 }
 
 .ws-btn-primary:hover:not(:disabled) {
@@ -34,21 +35,25 @@
 }
 
 .ws-btn-primary:active:not(:disabled) {
-  opacity: 0.85;
+  background-color: var(--rs-color-primary-hover);
+  box-shadow: none;
 }
 
 .ws-btn-secondary {
   background-color: var(--rs-color-surface);
   color: var(--rs-color-text);
   border-color: var(--rs-color-border);
+  box-shadow: var(--rs-elevation-1);
 }
 
 .ws-btn-secondary:hover:not(:disabled) {
-  background-color: var(--rs-color-surface-muted);
+  background-color: var(--rs-color-surface-hover);
+  border-color: var(--rs-color-border-strong);
 }
 
 .ws-btn-secondary:active:not(:disabled) {
-  background-color: var(--rs-color-border);
+  background-color: var(--rs-color-surface-muted);
+  box-shadow: none;
 }
 
 .ws-btn-ghost {
@@ -58,11 +63,11 @@
 }
 
 .ws-btn-ghost:hover:not(:disabled) {
-  background-color: var(--rs-color-surface-muted);
+  background-color: var(--rs-color-surface-hover);
 }
 
 .ws-btn-ghost:active:not(:disabled) {
-  background-color: var(--rs-color-border);
+  background-color: var(--rs-color-surface-muted);
 }
 
 .ws-btn-danger {
