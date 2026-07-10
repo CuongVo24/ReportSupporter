@@ -1,4 +1,3 @@
-import * as pdfjs from "pdfjs-dist";
 import type { ImportWarning } from "@/types";
 import { extractPageImages, type ImageItem } from "./extract-images";
 
@@ -76,11 +75,13 @@ export function mergeAdjacentTextItems(items: TextItem[]): TextItem[] {
 /**
  * Extracts plain text items with font and coordinate metadata from a PDF file.
  * Returns plain serializable objects for offline/worker compatibility.
+ * Dynamically imports pdfjs-dist to keep it out of the main bundle.
  */
 export async function extractTextFromPdf(
   arrayBuffer: ArrayBuffer,
   onProgress?: (pageNum: number, totalPages: number) => void
 ): Promise<{ pages: ExtractedPage[]; warnings: ImportWarning[] }> {
+  const pdfjs = await import("pdfjs-dist");
   // Ensure worker is configured locally
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
     pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.mjs";

@@ -1,10 +1,11 @@
 import type { OcrProgress } from "@/types";
-import * as pdfjs from "pdfjs-dist";
 
 /**
  * Renders a specific page of a PDF File to an HTMLCanvasElement.
+ * Dynamically imports pdfjs-dist to keep it out of the main bundle.
  */
 export async function renderPdfPageToCanvas(file: File, pageNumber: number): Promise<HTMLCanvasElement> {
+  const pdfjs = await import("pdfjs-dist");
   const arrayBuffer = await file.arrayBuffer();
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
     pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.mjs";
