@@ -1,0 +1,25 @@
+    --rs-color-focus-ring-soft: rgba(59, 130, 246, 0.35);
+    --rs-color-primary-bg: var(--rs-dark-primary-bg);
+    --rs-color-editor-active-line: var(--rs-dark-surface-muted);
+    --rs-color-editor-selection: rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Prefers-reduced-motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: scroll !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+
+  .ws-state-spinner,
+  .ws-export-spinner {
+    animation: none !important;
+    opacity: 0.7;
+  }
+}

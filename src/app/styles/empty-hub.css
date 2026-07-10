@@ -1,0 +1,111 @@
+.ws-empty-hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80%;
+  padding: var(--rs-space-8) var(--rs-space-6);
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ws-empty-hub-header {
+  margin-bottom: var(--rs-space-8);
+}
+
+.ws-empty-hub-title {
+  font-size: var(--rs-font-size-xxl);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-empty-hub-subtitle {
+  font-size: var(--rs-font-size-md);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-empty-hub-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--rs-space-4);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .ws-empty-hub-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.ws-empty-hub-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--rs-space-6);
+  background: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  font-family: inherit;
+}
+
+.ws-empty-hub-card:hover,
+.ws-empty-hub-card:focus-visible {
+  border-color: var(--rs-color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--rs-elevation-2);
+}
+
+.ws-empty-hub-card:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-empty-hub-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--rs-radius-full);
+  margin-bottom: var(--rs-space-4);
+}
+
+.ws-empty-hub-icon-wrapper.ws-color-primary {
+  background: var(--rs-color-primary-bg);
+  color: var(--rs-color-primary);
+}
+
+.ws-empty-hub-icon-wrapper.ws-color-success {
+  background: var(--rs-color-success-bg);
+  color: var(--rs-color-success);
+}
+
+.ws-empty-hub-icon-wrapper.ws-color-info {
+  background: var(--rs-color-severity-info-bg);
+  color: var(--rs-color-severity-info);
+}
+
+.ws-empty-hub-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-empty-hub-card-title {
+  font-size: var(--rs-font-size-lg);
+  font-weight: var(--rs-font-weight-semibold);
+  color: var(--rs-color-text);
+}
+
+.ws-empty-hub-card-desc {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  line-height: 1.4;
+}
+

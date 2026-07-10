@@ -1,0 +1,12 @@
+/* Workspace extracted styles */
+.ws-reset-btn {
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  cursor: pointer;
+  margin-bottom: var(--rs-space-3);
+  width: 100%;
+}

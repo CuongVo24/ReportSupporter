@@ -1,0 +1,6 @@
+/* Custom Table Overflow strategy to prevent A4 preview page horizontal breakout */
+.ws-preview-page table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}

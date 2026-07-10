@@ -10,6 +10,7 @@ import { SnapshotHistory } from "@/components/SnapshotHistory";
 import { ReportHealthBadge } from "@/components/ReportHealthBadge";
 import { IssuesPanel } from "@/components/IssuesPanel";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from "@/components/ui";
+import { ThemeToggle } from "./ThemeToggle";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2, Save } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
 import {
@@ -1017,6 +1018,7 @@ export function Workspace() {
           aria-label="Cài đặt Trợ lý AI"
           title="Cài đặt Trợ lý AI"
         />
+        <ThemeToggle />
         <Button
           variant="ghost"
           size="sm"

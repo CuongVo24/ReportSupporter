@@ -91,12 +91,18 @@ export function createEditorState(opts: {
           borderRight: "none",
         },
         ".cm-activeLine": {
-          backgroundColor: "var(--rs-color-primary-bg)",
+          backgroundColor: "var(--rs-color-editor-active-line)",
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "var(--rs-color-primary-bg)",
-          color: "var(--rs-color-primary)",
-          fontWeight: "bold",
+          backgroundColor: "var(--rs-color-editor-active-line)",
+          color: "var(--rs-color-text)",
+          fontWeight: "normal",
+        },
+        ".cm-selectionBackground": {
+          backgroundColor: "var(--rs-color-editor-selection) !important",
+        },
+        "&.cm-focused .cm-selectionBackground": {
+          backgroundColor: "var(--rs-color-editor-selection) !important",
         },
         ".cm-gutterElement": {
           padding: "0 var(--rs-space-3)",

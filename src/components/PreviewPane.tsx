@@ -324,7 +324,10 @@ export function PreviewPane({
           color: var(--rs-dark-text) !important;
         }
         .ws-preview-page.ws-preview-page--dark .ws-toc-number {
-          color: var(--rs-color-primary) !important;
+          color: var(--rs-dark-text) !important;
+        }
+        .ws-preview-page.ws-preview-page--dark .ws-toc-page {
+          color: var(--rs-dark-text) !important;
         }
         .ws-preview-page.ws-preview-page--dark h1,
         .ws-preview-page.ws-preview-page--dark h2,

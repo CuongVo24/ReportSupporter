@@ -1,0 +1,97 @@
+/* TOC (Table of Contents) block styles - Module 2, W3 Group B */
+.ws-toc-container {
+  padding: var(--rs-space-4);
+  background-color: transparent;
+  border-bottom: 1px solid var(--rs-report-color-text, #000000);
+  margin-bottom: var(--rs-space-4);
+}
+
+.ws-toc-title {
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-report-color-text, #000000);
+  margin-bottom: var(--rs-space-4);
+  border-bottom: 2px solid var(--rs-report-color-text, #000000);
+  padding-bottom: var(--rs-space-1);
+  text-align: center;
+}
+
+.ws-toc-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-toc-item {
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-toc-link {
+  text-decoration: none;
+  color: var(--rs-report-color-text, #000000);
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.ws-toc-link:hover {
+  text-decoration: underline;
+}
+
+.ws-toc-left {
+  display: flex;
+  gap: 5pt;
+  flex-shrink: 0;
+  max-width: 85%;
+}
+
+.ws-toc-number {
+  font-weight: bold;
+  color: var(--rs-report-color-text, #000000);
+}
+
+.ws-toc-text {
+  color: var(--rs-report-color-text, #000000);
+}
+
+.ws-toc-leader {
+  flex-grow: 1;
+  border-bottom: 1px dotted var(--rs-report-color-text, #000000);
+  margin: 0 5pt 3pt;
+  min-width: 15px;
+}
+
+.ws-toc-page {
+  flex-shrink: 0;
+  min-width: 25px;
+  text-align: right;
+  color: var(--rs-report-color-text, #000000);
+}
+
+/* Indentation levels for hierarchical TOC */
+.ws-toc-level-1 {
+  padding-left: 0;
+}
+
+.ws-toc-level-2 {
+  padding-left: var(--rs-space-4);
+}
+
+.ws-toc-level-3 {
+  padding-left: calc(var(--rs-space-4) * 2);
+}
+
+.ws-toc-level-4 {
+  padding-left: calc(var(--rs-space-4) * 3);
+}
+
+.ws-toc-level-5 {
+  padding-left: calc(var(--rs-space-4) * 4);
+}
+
+.ws-toc-level-6 {
+  padding-left: calc(var(--rs-space-4) * 5);
+}

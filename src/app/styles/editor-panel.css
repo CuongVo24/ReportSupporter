@@ -1,0 +1,125 @@
+/* EditorPanel extracted styles */
+.ws-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  overflow: hidden;
+  background: var(--rs-color-surface);
+  box-shadow: var(--rs-elevation-1);
+}
+
+.ws-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  background: var(--rs-color-surface);
+  border-bottom: 1px solid var(--rs-color-border);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.ws-editor-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  height: 28px;
+  padding: 0 var(--rs-space-2);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default),
+    color var(--rs-motion-duration-micro) var(--rs-motion-easing-default);
+}
+
+.ws-editor-toolbar-btn:hover {
+  background: var(--rs-color-surface-hover);
+  color: var(--rs-color-text);
+}
+
+.ws-editor-toolbar-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: -2px;
+}
+
+.ws-editor-cm-parent {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ws-editor-file-error {
+  display: flex;
+  align-items: center;
+  padding: var(--rs-space-2) var(--rs-space-3);
+  color: var(--rs-color-severity-error);
+  background-color: var(--rs-color-severity-error-bg);
+  border-top: 1px solid var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-editor-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border-top: 1px solid var(--rs-color-border);
+  background: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-editor-statusbar-focus {
+  color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  color: var(--rs-color-text);
+  background: var(--rs-color-surface-muted);
+  border-bottom: 1px solid var(--rs-color-border);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search input {
+  min-height: var(--rs-control-height-sm);
+  padding: 0 var(--rs-space-2);
+  color: var(--rs-color-text);
+  background: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search button {
+  min-height: var(--rs-control-height-sm);
+  padding: 0 var(--rs-space-2);
+  color: var(--rs-color-text);
+  background: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+
+.ws-editor-cm-parent .cm-panel.cm-search button:hover {
+  background: var(--rs-color-surface-muted);
+  border-color: var(--rs-color-text-muted);
+}

@@ -1,0 +1,1177 @@
+/* ==========================================================================
+   Module 5: Present Panel Styles
+   ========================================================================== */
+.ws-present {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-3) 0;
+}
+
+.ws-present-panel-title {
+  font-size: var(--rs-font-size-lg);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin: 0 0 var(--rs-space-2) 0;
+}
+
+.ws-present-empty {
+  color: var(--rs-color-text-muted);
+  font-style: italic;
+  font-size: var(--rs-font-size-sm);
+  padding: var(--rs-space-4);
+  text-align: center;
+  background-color: var(--rs-color-surface-muted);
+  border-radius: var(--rs-radius-md);
+  border: 1px dashed var(--rs-color-border);
+}
+
+.ws-present-timeline-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+}
+
+.ws-present-duration {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text);
+}
+
+.ws-present-limit-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+}
+
+.ws-present-limit-label {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
+}
+
+.ws-present-limit-input {
+  width: 70px;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-sm);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  transition: border-color 0.15s ease;
+}
+
+.ws-present-limit-input:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-timeline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  border-radius: var(--rs-radius-sm);
+  width: max-content;
+}
+
+.ws-present-timeline-badge.overlimit {
+  background-color: var(--rs-color-severity-warning-bg);
+  color: var(--rs-color-severity-warning);
+  border: 1px dashed var(--rs-color-severity-warning);
+}
+
+.ws-present-slides-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  margin-top: var(--rs-space-2);
+}
+
+.ws-present-slide-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-1);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.ws-present-slide-card:hover {
+  box-shadow: var(--rs-elevation-2);
+}
+
+.ws-present-slide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-slide-title {
+  margin: 0;
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-present-slide-speaker {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-speaker-label {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  white-space: nowrap;
+}
+
+.ws-present-speaker-select {
+  padding: 2px var(--rs-space-1);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-xs);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  cursor: pointer;
+  max-width: 120px;
+}
+
+.ws-present-speaker-select:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-evidence-refs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--rs-space-1);
+  margin-top: calc(-1 * var(--rs-space-1));
+}
+
+.ws-present-evidence-label {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-evidence-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--rs-space-1);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  color: var(--rs-slate-700);
+  font-size: 10px;
+  font-weight: var(--rs-font-weight-semibold);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-mock-defense {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-header,
+.ws-mock-defense-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-note,
+.ws-mock-defense-progress {
+  margin: var(--rs-space-1) 0 0;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-warning,
+.ws-mock-defense-error {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-md);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-warning {
+  border: 1px dashed var(--rs-color-severity-warning);
+  background: var(--rs-color-severity-warning-bg);
+  color: var(--rs-color-text);
+}
+
+.ws-mock-defense-error {
+  border: 1px solid var(--rs-color-severity-error);
+  background: var(--rs-color-severity-error-bg);
+  color: var(--rs-color-severity-error);
+}
+
+.ws-mock-defense-session,
+.ws-mock-defense-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-mock-defense-card,
+.ws-mock-defense-verdict,
+.ws-mock-defense-scorecard {
+  padding: var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+}
+
+.ws-mock-defense-persona {
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  text-transform: uppercase;
+}
+
+.ws-mock-defense-question {
+  margin: var(--rs-space-2) 0;
+  color: var(--rs-color-text);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-mock-defense-excerpt {
+  margin: 0;
+  padding: var(--rs-space-2);
+  border-left: 3px solid var(--rs-color-primary);
+  color: var(--rs-color-text-muted);
+  background: var(--rs-color-surface-muted);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-mock-defense-answer-label {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+.ws-mock-defense-answer {
+  width: 100%;
+  resize: vertical;
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  font: inherit;
+}
+
+.ws-mock-defense-answer:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-mock-defense-verdict {
+  border-left: 4px solid var(--rs-color-border);
+}
+
+.ws-mock-defense-verdict.verdict-answered {
+  border-left-color: var(--rs-color-success);
+}
+
+.ws-mock-defense-verdict.verdict-evaded {
+  border-left-color: var(--rs-color-severity-warning);
+}
+
+.ws-mock-defense-verdict.verdict-incorrect {
+  border-left-color: var(--rs-color-severity-error);
+}
+
+.ws-mock-defense-verdict p {
+  margin: var(--rs-space-1) 0;
+  color: var(--rs-color-text);
+}
+
+.ws-mock-defense-verdict small {
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-bullets-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-bullet-row {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-bullet-dot {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-md);
+  user-select: none;
+}
+
+.ws-present-bullet-input {
+  flex: 1;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-xs);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  transition: border-color 0.15s ease;
+}
+
+.ws-present-bullet-input:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-bullet-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--rs-radius-sm);
+  background-color: transparent;
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-present-bullet-remove-btn:hover {
+  background-color: var(--rs-color-severity-error-bg);
+  color: var(--rs-color-severity-error);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.ws-present-bullet-remove-btn:focus-visible {
+  outline: 2px solid var(--rs-color-severity-error);
+}
+
+.ws-present-add-bullet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rs-space-1);
+  align-self: flex-start;
+  margin-top: var(--rs-space-1);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  border: 1px dashed var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-present-add-bullet-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+  border-color: var(--rs-color-primary);
+}
+
+.ws-present-add-bullet-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 1px;
+}
+
+.ws-present-slide-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  margin-top: var(--rs-space-1);
+  padding: var(--rs-space-2);
+  background-color: var(--rs-color-severity-warning-bg);
+  border: 1px dashed rgba(245, 158, 11, 0.2);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-present-slide-warning-item {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-severity-warning);
+}
+
+.ws-present-slide-warning-icon {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Module 5: Presentation Day-4 Sub-views Styles
+   ========================================================================== */
+.ws-present-tabs {
+  display: flex;
+  gap: var(--rs-space-2);
+  border-bottom: 1px solid var(--rs-color-border);
+  margin-bottom: var(--rs-space-3);
+}
+
+.ws-present-tab-btn {
+  padding: var(--rs-space-2) var(--rs-space-3);
+  border: none;
+  background: transparent;
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  outline: none;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+}
+
+.ws-present-tab-btn:hover {
+  color: var(--rs-color-text);
+}
+
+.ws-present-tab-btn.active {
+  color: var(--rs-color-text);
+  border-bottom-color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-present-tab-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-present-badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--rs-space-1);
+  border-radius: var(--rs-radius-full);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  margin-left: var(--rs-space-1);
+  background-color: var(--rs-color-severity-warning);
+  color: var(--rs-white);
+}
+
+.ws-present-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-script-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-view-title {
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  margin: 0;
+}
+
+.ws-present-script-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-script-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-1);
+}
+
+.ws-present-script-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--rs-space-2);
+  border-bottom: 1px solid var(--rs-color-border);
+  padding-bottom: var(--rs-space-2);
+}
+
+span.ws-present-slide-speaker {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  background-color: var(--rs-color-surface-muted);
+  padding: 2px var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-border);
+}
+
+.ws-present-script-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-script-label {
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-script-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-sm);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.ws-present-script-textarea:focus-visible {
+  border-color: var(--rs-color-focus-ring);
+  outline: 2px solid var(--rs-color-focus-ring);
+}
+
+.ws-present-ai-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-ai-btn,
+.ws-present-qa-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  border: 1px dashed var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  opacity: 0.75;
+  cursor: not-allowed;
+  transition: all 0.15s ease;
+}
+
+.ws-present-script-cues {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  margin-top: var(--rs-space-1);
+  padding-top: var(--rs-space-2);
+  border-top: 1px dashed var(--rs-color-border);
+}
+
+.ws-present-cues-title {
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-cues-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-cue-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--rs-space-1) var(--rs-space-2);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-xs);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-present-qa-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-qa-empty {
+  color: var(--rs-color-text-muted);
+  font-style: italic;
+  font-size: var(--rs-font-size-sm);
+  text-align: center;
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border-radius: var(--rs-radius-md);
+  border: 1px dashed var(--rs-color-border);
+}
+
+.ws-present-qa-topics-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-4);
+}
+
+.ws-present-qa-topic-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-present-qa-topic-header {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-primary);
+  margin: 0;
+  padding-bottom: var(--rs-space-1);
+  border-bottom: 1px solid var(--rs-color-border);
+}
+
+.ws-present-qa-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-present-qa-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-1);
+}
+
+.ws-present-qa-question {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+  color: var(--rs-color-text);
+}
+
+.ws-present-qa-answer {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text);
+  background-color: var(--rs-color-surface-muted);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  border-left: 3px solid var(--rs-color-primary);
+}
+
+.ws-present-qa-answer-text {
+  margin: var(--rs-space-1) 0 0 0;
+  color: var(--rs-color-text-muted);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-present-qa-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-1);
+  padding-top: var(--rs-space-2);
+  border-top: 1px dashed var(--rs-color-border);
+}
+
+.ws-present-qa-section-link {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-hints-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-hints-empty {
+  color: var(--rs-color-success);
+  font-style: italic;
+  font-size: var(--rs-font-size-sm);
+  text-align: center;
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-success-bg);
+  border-radius: var(--rs-radius-md);
+  border: 1px dashed var(--rs-color-success);
+}
+
+.ws-present-hints-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-present-hint-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  box-shadow: var(--rs-elevation-1);
+}
+
+.ws-present-hint-item.severity-error {
+  border-left: 4px solid var(--rs-color-severity-error);
+  background-color: var(--rs-color-severity-error-bg);
+}
+
+.ws-present-hint-item.severity-warning {
+  border-left: 4px solid var(--rs-color-severity-warning);
+  background-color: var(--rs-color-severity-warning-bg);
+}
+
+.ws-present-hint-item.severity-info {
+  border-left: 4px solid var(--rs-color-severity-info);
+  background-color: var(--rs-color-severity-info-bg);
+}
+
+.ws-present-hint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--rs-space-2);
+  border-bottom: 1px solid var(--rs-color-border);
+  padding-bottom: var(--rs-space-1);
+}
+
+.ws-present-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-semibold);
+  border-radius: var(--rs-radius-sm);
+}
+
+.ws-present-hint-badge.severity-error {
+  background-color: var(--rs-color-severity-error);
+  color: var(--rs-white);
+}
+
+.ws-present-hint-badge.severity-warning {
+  background-color: var(--rs-color-severity-warning);
+  color: var(--rs-white);
+}
+
+.ws-present-hint-badge.severity-info {
+  background-color: var(--rs-color-severity-info);
+  color: var(--rs-white);
+}
+
+.ws-present-hint-slide-link {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-hint-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-present-hint-reason {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text);
+}
+
+.ws-present-hint-suggestion {
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text);
+  background-color: var(--rs-color-surface);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-border);
+  margin-top: var(--rs-space-1);
+}
+
+/* ==========================================================================
+   AI Assistant UI Components
+   ========================================================================== */
+
+/* AiOutlineButton */
+.ws-present-ai-outline-btn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--rs-space-1);
+  margin-block: var(--rs-space-3);
+}
+
+.ws-present-ai-outline-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  cursor: pointer;
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  outline: none;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.ws-present-ai-outline-action:disabled {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  cursor: not-allowed;
+}
+
+.ws-present-ai-note {
+  font-size: var(--rs-font-size-xs);
+}
+
+/* UserControlBar */
+.ws-user-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--rs-space-2) var(--rs-space-3);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  margin-block: var(--rs-space-2);
+  font-size: var(--rs-font-size-xs);
+  flex-wrap: wrap;
+  gap: var(--rs-space-2);
+}
+
+.ws-user-control-bar-left,
+.ws-user-control-bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-3);
+  flex-wrap: wrap;
+}
+
+.ws-user-control-bar-undo-btn {
+  background-color: var(--rs-color-surface);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-2);
+  cursor: pointer;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+.ws-user-control-bar-undo-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+}
+
+.ws-user-control-bar-diff-btn {
+  background-color: transparent;
+  border: none;
+  color: var(--rs-color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: var(--rs-font-weight-bold);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  padding: 0;
+  font-size: var(--rs-font-size-xs);
+  outline: none;
+}
+
+.ws-user-control-bar-diff-btn:hover {
+  color: var(--rs-color-primary-hover);
+}
+
+/* SuggestionDiff */
+.ws-suggestion-diff-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-4);
+  background-color: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  margin-block: var(--rs-space-3);
+}
+
+.ws-suggestion-diff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--rs-color-border);
+  padding-bottom: var(--rs-space-2);
+}
+
+.ws-suggestion-diff-title {
+  margin: 0;
+  font-size: var(--rs-font-size-md);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-primary);
+}
+
+.ws-suggestion-diff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rs-space-3);
+}
+
+.ws-suggestion-diff-column-original {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-severity-error);
+  background-color: var(--rs-color-error-bg);
+}
+
+.ws-suggestion-diff-column-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+  padding: var(--rs-space-3);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-success);
+  background-color: var(--rs-color-success-bg);
+}
+
+.ws-suggestion-diff-column-title-original {
+  margin: 0;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-severity-error);
+}
+
+.ws-suggestion-diff-column-title-suggestion {
+  margin: 0;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-success);
+}
+
+.ws-suggestion-diff-text {
+  margin: 0;
+  font-size: var(--rs-font-size-sm);
+  font-family: var(--rs-font-family-ui);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--rs-color-text);
+  line-height: var(--rs-font-lh-ui);
+}
+
+.ws-suggestion-diff-actions {
+  display: flex;
+  gap: var(--rs-space-2);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-suggestion-diff-accept-btn {
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: none;
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.ws-suggestion-diff-accept-btn:disabled {
+  background-color: var(--rs-color-surface-muted);
+  color: var(--rs-color-text-muted);
+  border: 1px solid var(--rs-color-border);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.ws-suggestion-diff-reject-btn {
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  font-size: var(--rs-font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ws-suggestion-diff-reject-btn:hover {
+  background-color: var(--rs-color-surface-muted);
+}
+
+/* UserControlBar Label Classes */
+.ws-user-control-bar-label {
+  color: var(--rs-color-text-muted);
+}
+
+.ws-user-control-bar-suggestion-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+/* PresentPanel AI Suggestions Box */
+.ws-present-ai-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-3);
+  flex-wrap: wrap;
+}
+
+.ws-present-ai-error {
+  color: var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-present-ai-suggestion-box {
+  border: 1px solid var(--rs-color-primary);
+  border-radius: var(--rs-radius-md);
+  padding: var(--rs-space-3);
+  background-color: var(--rs-color-primary-bg);
+  margin-block: var(--rs-space-3);
+}
+
+.ws-present-ai-suggestion-title {
+  margin: 0;
+  color: var(--rs-color-primary);
+  font-size: var(--rs-font-size-md);
+}
+
+.ws-present-ai-suggestion-desc {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  margin-block: var(--rs-space-1);
+}
+
+.ws-present-ai-suggestion-actions {
+  display: flex;
+  gap: var(--rs-space-2);
+  margin-block: var(--rs-space-2);
+}
+
+.ws-present-ai-accept-btn {
+  background-color: var(--rs-color-primary);
+  color: var(--rs-white);
+  border: none;
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-bold);
+  cursor: pointer;
+}
+
+.ws-present-ai-reject-btn {
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  padding: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-xs);
+  cursor: pointer;
+}
+
+.ws-present-ai-suggestion-preview-list {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--rs-color-surface);
+  padding: var(--rs-space-2);
+  border-radius: var(--rs-radius-sm);
+  border: 1px solid var(--rs-color-border);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-present-ai-suggestion-preview-item {
+  padding-bottom: var(--rs-space-2);
+  margin-bottom: var(--rs-space-2);
+}
+
+.ws-present-ai-suggestion-preview-item:not(:last-child) {
+  border-bottom: 1px solid var(--rs-color-surface-muted);
+}
+
+.ws-present-ai-suggestion-preview-item-title {
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-present-ai-suggestion-preview-item-original-title {
+  text-decoration: line-through;
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-ai-suggestion-preview-item-new-title {
+  color: var(--rs-color-primary);
+}
+
+.ws-present-ai-suggestion-bullets-container {
+  padding-left: var(--rs-space-3);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-ai-suggestion-bullets-diff {
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-present-ai-suggestion-bullets-label-original {
+  color: var(--rs-color-text-muted);
+}
+
+.ws-present-ai-suggestion-bullets-list-original {
+  margin: 0;
+  padding-left: var(--rs-space-3);
+}
+
+.ws-present-ai-suggestion-bullets-label-new {
+  color: var(--rs-color-primary);
+  margin-top: var(--rs-space-1);
+}
+
+.ws-present-ai-suggestion-bullets-list-new {
+  margin: 0;
+  padding-left: var(--rs-space-3);
+}
+
+.ws-present-ai-suggestion-bullets-list-same {
+  margin: 0;
+  padding-left: var(--rs-space-3);
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+}

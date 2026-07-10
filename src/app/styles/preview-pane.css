@@ -1,0 +1,55 @@
+/* PreviewPane extracted styles */
+/* Dải chrome preview full-bleed dính mép trên tờ A4 — negative margin triệt tiêu
+   padding lề trang để chrome UI không lẫn vào vùng nội dung báo cáo */
+.ws-preview-header-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rs-space-3);
+  padding: var(--rs-space-2) var(--rs-space-4);
+  background-color: var(--rs-color-surface-muted);
+  border-bottom: 1px solid var(--rs-color-border);
+  border-radius: 2px 2px 0 0;
+  margin: calc(-1 * var(--rs-preview-margin-top, var(--rs-report-margin-top, 25mm)))
+    calc(-1 * var(--rs-preview-margin-right, var(--rs-report-margin-right, 20mm))) var(--rs-space-6)
+    calc(-1 * var(--rs-preview-margin-left, var(--rs-report-margin-left, 30mm)));
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  box-sizing: border-box;
+}
+
+.ws-preview-scope-label {
+  font-weight: var(--rs-font-weight-bold);
+  color: var(--rs-color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-preview-heading-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-preview-empty {
+  color: var(--rs-color-text-muted);
+  font-style: italic;
+  padding: var(--rs-space-2);
+}
+
+.ws-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+  font-family: var(--rs-font-family-ui);
+  font-size: var(--rs-font-size-md);
+  line-height: 1.6;
+  color: var(--rs-report-color-text, #000000);
+  background-color: transparent;
+}
+
+.ws-preview-html-section {
+  display: contents;
+}

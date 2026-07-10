@@ -34,10 +34,10 @@ Token hoá theme CodeMirror để editor hoà nền cả sáng lẫn tối — a
 - ❌ Bật toggle dark toàn cục — đó là contract D; C chỉ chuẩn bị để D ra mắt sạch.
 
 ## 3. Checklist
-- [ ] **S1** Active line/gutter dùng token theme-aware; ở dark, dòng active là nền trung tính nhạt, không chói xanh.
-- [ ] **S2** Gutter/selection/highlight cú pháp đủ tương phản ở cả light & dark; không token "ma".
-- [ ] Light mode không hồi quy (trước/sau nhìn như cũ).
-- [ ] Token editor mới (nếu có) khai báo đủ light+dark trong hệ token. 3 gate xanh.
+- [x] **S1** Active line/gutter dùng token theme-aware; ở dark, dòng active là nền trung tính nhạt, không chói xanh.
+- [x] **S2** Gutter/selection/highlight cú pháp đủ tương phản ở cả light & dark; không token "ma".
+- [x] Light mode không hồi quy (trước/sau nhìn như cũ).
+- [x] Token editor mới (nếu có) khai báo đủ light+dark trong hệ token. 3 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -45,7 +45,7 @@ Token hoá theme CodeMirror để editor hoà nền cả sáng lẫn tối — a
 |---|---|---|
 | `src/modules/write/editor-setup.ts` | MODIFY | theme active line/gutter/selection theo token |
 | `src/app/globals.css` | MODIFY | token editor light+dark (nếu thêm) |
-| `DesignSystem_Tokens.md` | MODIFY | ghi token editor mới |
+| `Design/Modules/Other/DesignSystem_Tokens.md` | MODIFY | ghi token editor mới |
 
 > **Import boundary:** không lib mới; dùng `EditorView.theme` sẵn có.
 
@@ -64,4 +64,6 @@ Token hoá theme CodeMirror để editor hoà nền cả sáng lẫn tối — a
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
+
+> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): align screen table of contents with print art direction`; `docs(w21): close w21 toc print contract`.

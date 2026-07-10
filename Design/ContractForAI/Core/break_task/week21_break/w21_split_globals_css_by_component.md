@@ -35,10 +35,10 @@ Tách `globals.css` thành nhiều file theo component/khu vực, **không đổ
 - ❌ Đụng `print-css.ts` (CSS in sinh runtime, không phải `globals.css`).
 
 ## 3. Checklist
-- [ ] **S1** Mỗi khu → một file trong `src/app/styles/`; `globals.css` chỉ còn token + reset + `@import`.
-- [ ] **S2** Thứ tự `@import` = thứ tự khối gốc; token/dark/print/reduced-motion đúng vị trí.
-- [ ] Không đổi giá trị CSS nào (diff chỉ là di chuyển dòng).
-- [ ] Pixel-parity: màn hình chính trước/sau khớp (diff ảnh). Build/lint xanh. 4 gate xanh.
+- [x] **S1** Mỗi khu → một file trong `src/app/styles/`; `globals.css` chỉ còn token + reset + `@import`.
+- [x] **S2** Thứ tự `@import` = thứ tự khối gốc; token/dark/print/reduced-motion đúng vị trí.
+- [x] Không đổi giá trị CSS nào (diff chỉ là di chuyển dòng).
+- [x] Pixel-parity: màn hình chính trước/sau khớp (diff ảnh). Build/lint xanh. 4 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -67,4 +67,6 @@ Tách `globals.css` thành nhiều file theo component/khu vực, **không đổ
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
+
+> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): align screen table of contents with print art direction`; `docs(w21): close w21 toc print contract`.

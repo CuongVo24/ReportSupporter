@@ -1,0 +1,109 @@
+/* Report health */
+.ws-report-health {
+  position: relative;
+  display: inline-flex;
+}
+
+.ws-report-health-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  min-height: 34px;
+  max-width: 260px;
+  padding: var(--rs-space-1) var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.ws-report-health-button:hover,
+.ws-report-health-button:focus-visible {
+  border-color: currentColor;
+}
+
+.ws-report-health-button:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-report-health-green {
+  color: var(--rs-color-success);
+  background: var(--rs-color-success-bg);
+}
+
+.ws-report-health-yellow {
+  color: var(--rs-color-severity-warning);
+  background: var(--rs-color-severity-warning-bg);
+}
+
+.ws-report-health-red {
+  color: var(--rs-color-severity-error);
+  background: var(--rs-color-severity-error-bg);
+}
+
+.ws-report-health-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.ws-report-health-label {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+}
+
+.ws-report-health-score {
+  color: var(--rs-color-text);
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-bold);
+}
+
+.ws-report-health-status {
+  color: currentColor;
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.ws-report-health-tooltip {
+  position: absolute;
+  top: calc(100% + var(--rs-space-2));
+  right: 0;
+  z-index: 20;
+  display: none;
+  width: min(320px, 80vw);
+  padding: var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-surface);
+  box-shadow: var(--rs-elevation-2);
+  color: var(--rs-color-text);
+}
+
+.ws-report-health:hover .ws-report-health-tooltip,
+.ws-report-health:focus-within .ws-report-health-tooltip {
+  display: grid;
+  gap: var(--rs-space-2);
+}
+
+.ws-report-health-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--rs-space-1) var(--rs-space-3);
+  font-size: var(--rs-font-size-sm);
+}
+
+.ws-report-health-row strong {
+  color: var(--rs-color-text);
+}
+
+.ws-report-health-row small {
+  grid-column: 1 / -1;
+  color: var(--rs-color-text-muted);
+}
+
+/* Snapshot history */

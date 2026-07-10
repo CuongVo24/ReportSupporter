@@ -1,0 +1,51 @@
+/* MetadataForm extracted styles */
+.ws-meta-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-3);
+}
+
+.ws-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+}
+
+.ws-form-label {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-slate-700);
+}
+
+.ws-form-label-required {
+  color: var(--rs-color-severity-error);
+}
+
+.ws-form-input {
+  padding: var(--rs-space-2);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-sm);
+  font-size: var(--rs-font-size-sm);
+  outline: none;
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+}
+
+.ws-form-textarea {
+  min-height: 150px;
+  font-family: var(--rs-font-family-mono), monospace;
+  width: 100%;
+  resize: vertical;
+}
+
+.ws-form-input-list-hint {
+  color: var(--rs-color-text-muted);
+  font-size: var(--rs-font-size-xs);
+  margin-top: 2px;
+}
+
+.ws-form-error {
+  color: var(--rs-color-severity-error);
+  font-size: var(--rs-font-size-xs);
+  margin-top: 2px;
+}

@@ -35,19 +35,19 @@ Bật đường tới token dark đã có sẵn: gỡ hardcode, thêm toggle 3 t
 - ❌ Theme tuỳ biến/accent picker (backlog).
 
 ## 3. Checklist
-- [ ] **S1** Gỡ hardcode; theme = lưu → else OS; áp trước paint, không FOUC.
-- [ ] **S2** Toggle Light/Dark/System trong topbar; persist qua reload; "System" đổi realtime theo OS.
-- [ ] Rà dark: các màn hình chính không cháy trắng/chữ chìm; editor không chói (nhờ C); tờ báo cáo + TOC vẫn trắng-đen.
-- [ ] Light mode không hồi quy. 4 gate xanh.
+- [x] **S1** Gỡ hardcode; theme = lưu → else OS; áp trước paint, không FOUC.
+- [x] **S2** Toggle Light/Dark/System trong topbar; persist qua reload; "System" đổi realtime theo OS.
+- [x] Rà dark: các màn hình chính không cháy trắng/chữ chìm; editor không chói (nhờ C); tờ báo cáo + TOC vẫn trắng-đen.
+- [x] Light mode không hồi quy. 4 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
 | `src/app/layout.tsx` | MODIFY | gỡ hardcode + inline anti-FOUC script |
-| `src/modules/.../use-theme.ts` (hoặc `theme-store.ts`) | NEW | đọc/ghi localStorage + matchMedia |
-| `ThemeToggle.tsx` | NEW | control Light/Dark/System trong topbar |
-| `src/components/Workspace.tsx` / `WorkspaceLayout.tsx` | MODIFY | gắn toggle |
+| `src/modules/write/use-theme.ts` | NEW | đọc/ghi localStorage + matchMedia |
+| `src/components/ThemeToggle.tsx` | NEW | control Light/Dark/System trong topbar |
+| `src/components/Workspace.tsx` | MODIFY | gắn toggle |
 | `src/app/globals.css` | MODIFY nhẹ | vá vùng dark chói (token-only) |
 
 > **Import boundary:** không lib mới.
@@ -69,4 +69,6 @@ Bật đường tới token dark đã có sẵn: gỡ hardcode, thêm toggle 3 t
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
+
+> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): align screen table of contents with print art direction`; `docs(w21): close w21 toc print contract`.

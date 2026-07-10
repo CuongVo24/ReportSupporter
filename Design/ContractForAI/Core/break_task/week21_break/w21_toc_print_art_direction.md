@@ -34,10 +34,10 @@
 - ❌ Đổi engine in hay `print-css.ts` (nó là **nguồn đúng**, chỉ tham chiếu).
 
 ## 3. Checklist
-- [ ] **S1** TOC preview: nền trắng, chữ/số/link màu đen `--rs-report-color-text`; không còn `--rs-blue-*`/`--rs-slate-*` trong khối.
-- [ ] **S2** TOC preview có dot leader + số trang, khớp cấu trúc `print-css.ts`; markup dùng chung một hàm render.
-- [ ] TOC vẫn đen-trên-trắng khi bật dark mode (không nhuộm theo UI).
-- [ ] Diff ảnh preview↔PDF ở khối TOC: gần khớp. 3 gate xanh.
+- [x] **S1** TOC preview: nền trắng, chữ/số/link màu đen `--rs-report-color-text`; không còn `--rs-blue-*`/`--rs-slate-*` trong khối.
+- [x] **S2** TOC preview có dot leader + số trang, khớp cấu trúc `print-css.ts`; markup dùng chung một hàm render.
+- [x] TOC vẫn đen-trên-trắng khi bật dark mode (không nhuộm theo UI).
+- [x] Diff ảnh preview↔PDF ở khối TOC: gần khớp. 3 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -52,7 +52,7 @@
 ## 5. Risks & Mitigations
 
 | Risk | Level | Mitigation |
-|---|---:|---|
+|---|---|---|
 | Đổi `renderTocToHtml` phá parity test | Low | Cập nhật `parity.test.ts`/`print-preview.test.ts`; một markup dùng chung. |
 | Dark mode nhuộm TOC | Med | Ép `--rs-report-*` (đen/trắng) trong khối; verify ở `[data-theme="dark"]`. |
 | LOF/LOT dùng chung class bị ảnh hưởng | Low | Kiểm tra `.ws-lof-*`/`.ws-lot-*`; giữ đồng bộ art direction. |
@@ -65,4 +65,6 @@
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`COMPLETED`
+
+> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): align screen table of contents with print art direction`; `docs(w21): close w21 toc print contract`.

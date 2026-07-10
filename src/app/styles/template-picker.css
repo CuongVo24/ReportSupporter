@@ -1,0 +1,77 @@
+/* TemplatePicker extracted styles — lưới card chọn mẫu */
+.ws-template-picker-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-2);
+}
+
+.ws-template-picker-label {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-medium);
+  color: var(--rs-color-text);
+}
+
+.ws-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--rs-space-2);
+}
+
+.ws-template-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-1);
+  padding: var(--rs-space-3);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background-color: var(--rs-color-surface);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--rs-font-family-ui);
+  transition: border-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default),
+    background-color var(--rs-motion-duration-micro) var(--rs-motion-easing-default),
+    box-shadow var(--rs-motion-duration-micro) var(--rs-motion-easing-default);
+}
+
+.ws-template-card:hover {
+  border-color: var(--rs-color-border-strong);
+  box-shadow: var(--rs-elevation-1);
+}
+
+.ws-template-card:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ws-template-card-active {
+  border-color: var(--rs-color-primary);
+  background-color: var(--rs-color-primary-bg);
+  box-shadow: inset 0 0 0 1px var(--rs-color-primary);
+}
+
+.ws-template-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-2);
+  color: var(--rs-color-text-muted);
+}
+
+.ws-template-card-active .ws-template-card-head {
+  color: var(--rs-color-primary);
+}
+
+.ws-template-card-name {
+  font-size: var(--rs-font-size-sm);
+  font-weight: var(--rs-font-weight-semibold);
+  color: var(--rs-color-text);
+}
+
+.ws-template-card-active .ws-template-card-name {
+  color: var(--rs-color-primary);
+}
+
+.ws-template-card-desc {
+  font-size: var(--rs-font-size-xs);
+  color: var(--rs-color-text-muted);
+  line-height: var(--rs-font-lh-ui);
+}

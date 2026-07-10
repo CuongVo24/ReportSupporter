@@ -1,0 +1,80 @@
+/* ===== Custom Focus Rings for Keyboard Accessibility (W12 Day 4) ===== */
+
+.ws-form-input:focus-visible,
+.ws-template-picker-select:focus-visible,
+.ws-ai-rewrite-btn:focus-visible,
+.ws-ai-tone-btn:focus-visible,
+.ws-ai-translate-btn:focus-visible,
+.ws-ai-terminology-btn:focus-visible,
+.ws-ai-whole-action:focus-visible,
+.ws-ai-whole-settings:focus-visible,
+.ws-present-ai-outline-action:focus-visible,
+.ws-user-control-bar-undo-btn:focus-visible,
+.ws-user-control-bar-diff-btn:focus-visible,
+.ws-state-cta-btn:focus-visible {
+  outline: 2px solid var(--rs-color-focus-ring) !important;
+  outline-offset: 2px;
+}
+
+/* State wrappers spacing & padding utilities */
+.ws-state-block {
+  margin-top: var(--rs-space-4);
+}
+
+.ws-state-block-sm {
+  margin-top: var(--rs-space-2);
+}
+
+.ws-preview-container-empty {
+  padding: var(--rs-space-4);
+}
+
+[data-theme="dark"] {
+  --rs-color-bg: var(--rs-dark-bg);
+  --rs-color-surface: var(--rs-dark-surface);
+  --rs-color-surface-muted: var(--rs-dark-surface-muted);
+  --rs-color-surface-hover: var(--rs-dark-surface-muted);
+  --rs-color-border: #1e293b;
+  --rs-color-border-strong: var(--rs-dark-border);
+  --rs-color-status-draft: #475569;
+  --rs-color-text: var(--rs-dark-text);
+  --rs-color-text-muted: var(--rs-dark-text-muted);
+  --rs-color-primary: var(--rs-dark-primary);
+  --rs-color-severity-error: var(--rs-dark-red);
+  --rs-color-severity-warning: var(--rs-dark-amber);
+  --rs-color-severity-info: var(--rs-dark-sky);
+  --rs-color-severity-error-bg: var(--rs-dark-red-bg);
+  --rs-color-severity-warning-bg: var(--rs-dark-amber-bg);
+  --rs-color-severity-info-bg: var(--rs-dark-sky-bg);
+  --rs-color-success: var(--rs-dark-green);
+  --rs-color-success-bg: var(--rs-dark-green-bg);
+  --rs-color-error-bg: var(--rs-dark-red-bg);
+  --rs-color-focus-ring: var(--rs-dark-primary);
+  --rs-color-focus-ring-soft: rgba(59, 130, 246, 0.35);
+  --rs-color-primary-bg: var(--rs-dark-primary-bg);
+  --rs-color-editor-active-line: var(--rs-dark-surface-muted);
+  --rs-color-editor-selection: rgba(59, 130, 246, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rs-color-bg: var(--rs-dark-bg);
+    --rs-color-surface: var(--rs-dark-surface);
+    --rs-color-surface-muted: var(--rs-dark-surface-muted);
+    --rs-color-surface-hover: var(--rs-dark-surface-muted);
+    --rs-color-border: #1e293b;
+    --rs-color-border-strong: var(--rs-dark-border);
+    --rs-color-status-draft: #475569;
+    --rs-color-text: var(--rs-dark-text);
+    --rs-color-text-muted: var(--rs-dark-text-muted);
+    --rs-color-primary: var(--rs-dark-primary);
+    --rs-color-severity-error: var(--rs-dark-red);
+    --rs-color-severity-warning: var(--rs-dark-amber);
+    --rs-color-severity-info: var(--rs-dark-sky);
+    --rs-color-severity-error-bg: var(--rs-dark-red-bg);
+    --rs-color-severity-warning-bg: var(--rs-dark-amber-bg);
+    --rs-color-severity-info-bg: var(--rs-dark-sky-bg);
+    --rs-color-success: var(--rs-dark-green);
+    --rs-color-success-bg: var(--rs-dark-green-bg);
+    --rs-color-error-bg: var(--rs-dark-red-bg);
+    --rs-color-focus-ring: var(--rs-dark-primary);

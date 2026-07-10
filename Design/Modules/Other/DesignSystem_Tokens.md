@@ -346,6 +346,8 @@ Shared helpers in `src/app/globals.css` (`.rs-state-active`, `.rs-state-disabled
 | `--rs-editor-line-height` | `1.6` |
 | `--rs-editor-gutter-bg` | `var(--rs-color-surface-muted)` |
 | `--rs-editor-padding` | `var(--rs-space-4)` |
+| `--rs-color-editor-active-line` | `var(--rs-color-surface-muted)` (light) / `var(--rs-dark-surface-muted)` (dark) |
+| `--rs-color-editor-selection` | `rgba(37,99,235,.2)` (light) / `rgba(59,130,246,.3)` (dark) |
 
 ### 6.2. Preview pane (Module 1 + Module 2)
 
