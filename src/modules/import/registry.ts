@@ -1,6 +1,7 @@
 import type { ImportConverter, ImportResult } from "@/types";
 import { markdownConverter } from "./converters/markdown";
 import { docxConverter } from "./converters/docx";
+import { pdfConverter } from "./converters/pdf";
 
 const converters: ImportConverter[] = [];
 
@@ -59,7 +60,10 @@ export function getSupportedFormats(): string[] {
  * Converts a file using the resolved converter.
  * Enforces size limits and throws a custom error if unsupported or oversized.
  */
-export async function convertImportFile(file: File): Promise<ImportResult> {
+export async function convertImportFile(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<ImportResult> {
   const converter = resolveConverter(file);
   if (!converter) {
     const supportedList = getSupportedFormats().join(", ");
@@ -75,9 +79,10 @@ export async function convertImportFile(file: File): Promise<ImportResult> {
     throw error;
   }
 
-  return converter.convert(file);
+  return converter.convert(file, onProgress);
 }
 
 // Bootstrap registry with the baseline Markdown and DOCX converters
 registerConverter(markdownConverter);
 registerConverter(docxConverter);
+registerConverter(pdfConverter);

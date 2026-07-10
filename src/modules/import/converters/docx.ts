@@ -24,6 +24,7 @@ export const docxConverter: ImportConverter = {
     // 3. Define style mapping options for Mammoth
     const options = {
       styleMap: [
+        "p[style-name='Title'] => h1:fresh",
         "p[style-name='Heading 1'] => h1:fresh",
         "p[style-name='Heading 2'] => h2:fresh",
         "p[style-name='Heading 3'] => h3:fresh",
@@ -34,7 +35,11 @@ export const docxConverter: ImportConverter = {
     };
 
     // 4. Convert using Mammoth
-    const convertResult = await mammoth.convertToHtml({ arrayBuffer }, options);
+    const convertInput: { arrayBuffer: ArrayBuffer; buffer?: Buffer } = { arrayBuffer };
+    if (typeof Buffer !== "undefined") {
+      convertInput.buffer = Buffer.from(arrayBuffer);
+    }
+    const convertResult = await mammoth.convertToHtml(convertInput, options);
 
     // 5. Convert generated HTML into safe Markdown
     let markdown = await htmlToMarkdown(convertResult.value);

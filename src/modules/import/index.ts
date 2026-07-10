@@ -7,3 +7,4 @@ export {
   getSupportedExtensions,
   getSupportedFormats,
 } from "./registry";
+export { extractEmbeddedAssets } from "./extract-assets";

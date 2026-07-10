@@ -15,7 +15,7 @@ export {
   appendSections,
   replaceSections,
 } from "./markdown-import";
-export type { MarkdownFileReadResult, MarkdownImportDraft } from "./markdown-import";
+export type { MarkdownFileReadResult } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
 export { computeWritingStats } from "./writing-stats";
 export type { WritingStats } from "./writing-stats";

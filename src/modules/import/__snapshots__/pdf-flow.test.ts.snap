@@ -1,0 +1,111 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PDF Import Flow Snapshot and Verification > should process paper-latex.pdf successfully with 2-column layout warning > paper_latex_pdf_markdown 1`] = `
+"# LaTeX Research Paper Title
+
+Left column paragraph line 1	Right column paragraph line 1
+
+Left column paragraph line 2	Right column paragraph line 2
+
+Left column paragraph line 3	Right column paragraph line 3
+"
+`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process paper-latex.pdf successfully with 2-column layout warning > paper_latex_pdf_sections 1`] = `
+[
+  {
+    "id": "import-sec-0",
+    "markdown": "# LaTeX Research Paper Title
+
+Left column paragraph line 1	Right column paragraph line 1
+
+Left column paragraph line 2	Right column paragraph line 2
+
+Left column paragraph line 3	Right column paragraph line 3
+",
+    "order": 0,
+    "status": "draft",
+    "title": "LaTeX Research Paper Title",
+  },
+]
+`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process paper-latex.pdf successfully with 2-column layout warning > paper_latex_pdf_warnings 1`] = `[]`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process report-word.pdf successfully with headings, lists, and tables > report_word_pdf_markdown 1`] = `
+"# Bao Cao Ket Qua
+
+## Gioi Thieu Chung
+
+Day la doan van thu nhat cua tai lieu bao cao. Noi dung tiep theo nam o dong thu hai.
+
+- Danh sach muc 1
+
+- Danh sach muc 2
+
+R1 C1	R1 C2
+
+R2 C1	R2 C2
+
+R3 C1	R3 C2
+"
+`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process report-word.pdf successfully with headings, lists, and tables > report_word_pdf_sections 1`] = `
+[
+  {
+    "id": "import-sec-0",
+    "markdown": "# Bao Cao Ket Qua
+",
+    "order": 0,
+    "status": "draft",
+    "title": "Bao Cao Ket Qua",
+  },
+  {
+    "id": "import-sec-1",
+    "markdown": "## Gioi Thieu Chung
+
+Day la doan van thu nhat cua tai lieu bao cao. Noi dung tiep theo nam o dong thu hai.
+
+- Danh sach muc 1
+
+- Danh sach muc 2
+
+R1 C1	R1 C2
+
+R2 C1	R2 C2
+
+R3 C1	R3 C2
+",
+    "order": 1,
+    "status": "draft",
+    "title": "Gioi Thieu Chung",
+  },
+]
+`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process report-word.pdf successfully with headings, lists, and tables > report_word_pdf_warnings 1`] = `[]`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process scan-vn.pdf and trigger scanned-page warnings + placeholders > scan_vn_pdf_markdown 1`] = `
+"> [Trang 1: bản scan — chưa trích được chữ. Thử OCR (experimental) ở bản W24.]
+
+> [Trang 2: bản scan — chưa trích được chữ. Thử OCR (experimental) ở bản W24.]
+"
+`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process scan-vn.pdf and trigger scanned-page warnings + placeholders > scan_vn_pdf_sections 1`] = `
+[
+  {
+    "id": "import-sec-0",
+    "markdown": "> [Trang 1: bản scan — chưa trích được chữ. Thử OCR (experimental) ở bản W24.]
+
+> [Trang 2: bản scan — chưa trích được chữ. Thử OCR (experimental) ở bản W24.]
+",
+    "order": 0,
+    "status": "draft",
+    "title": "Scan vn",
+  },
+]
+`;
+
+exports[`PDF Import Flow Snapshot and Verification > should process scan-vn.pdf and trigger scanned-page warnings + placeholders > scan_vn_pdf_warnings 1`] = `[]`;

@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import type { TemplateSchema, ReportSection } from "@/types";
+import type { TemplateSchema, ReportSection, ImportDraft } from "@/types";
 import { TemplatePicker } from "./TemplatePicker";
 import { MetadataForm } from "./MetadataForm";
 import { UniversalImportDropzone } from "./UniversalImportDropzone";
-import type { MarkdownImportDraft } from "./markdown-import";
 import { validateMetadata } from "./generate-skeleton";
 import { Button } from "@/components/ui";
 import { Lightbulb, AlertTriangle } from "lucide-react";
 import { getGatewayState, requestSuggestion } from "./ai/ai-gateway";
 import { generateOutline } from "./ai/generate-outline";
+import { inferMarkdownTitle } from "./markdown-import";
 
 type ProjectInitializerProps = {
   templates: TemplateSchema[];
@@ -18,7 +18,7 @@ type ProjectInitializerProps = {
   initialMetadata?: Record<string, string | string[]>;
   onInitialize: (template: TemplateSchema, title: string, metadata: Record<string, string | string[]>) => void;
   onStartBlank: () => void;
-  onImportMarkdown: (draft: MarkdownImportDraft) => void;
+  onImportMarkdown: (draft: ImportDraft) => void;
   onApplyAiOutline?: (sections: ReportSection[], title: string) => void;
   onOpenAiSettings?: () => void;
 };
@@ -49,7 +49,7 @@ export function ProjectInitializer({
     return initialValues;
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [importedMarkdown, setImportedMarkdown] = useState<MarkdownImportDraft | null>(null);
+  const [importedMarkdown, setImportedMarkdown] = useState<ImportDraft | null>(null);
 
   const activeTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0];
   const readmeTemplate = templates.find((t) => t.id === "readme-report");
@@ -61,11 +61,11 @@ export function ProjectInitializer({
       setValues((prev) => {
         const nextValues: Record<string, string | string[]> = {
           ...prev,
-          title: id === "readme-report" && importedMarkdown ? importedMarkdown.title : nextTemplate.name,
+          title: id === "readme-report" && importedMarkdown ? inferMarkdownTitle(importedMarkdown.result.markdown, importedMarkdown.result.fileName) : nextTemplate.name,
         };
 
         if (id === "readme-report" && importedMarkdown) {
-          nextValues.readmeContent = importedMarkdown.markdown;
+          nextValues.readmeContent = importedMarkdown.result.markdown;
         }
 
         if (id !== "readme-report") {
@@ -81,15 +81,16 @@ export function ProjectInitializer({
     }
   };
 
-  const handleMarkdownImported = (draft: MarkdownImportDraft) => {
+  const handleMarkdownImported = (draft: ImportDraft) => {
     setImportedMarkdown(draft);
     if (readmeTemplate) {
       setSelectedTemplateId(readmeTemplate.id);
     }
+    const title = inferMarkdownTitle(draft.result.markdown, draft.result.fileName);
     setValues((prev) => ({
       ...prev,
-      title: draft.title,
-      readmeContent: draft.markdown,
+      title,
+      readmeContent: draft.result.markdown,
     }));
     setErrors((prev) => {
       const next = { ...prev };

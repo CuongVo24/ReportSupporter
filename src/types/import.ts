@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { reportAssetSchema, reportSectionSchema } from "./schemas";
-import type { ReportAsset, ReportSection, ReportIssue } from "./report";
+import { reportAssetSchema, reportSectionSchema, evidenceItemSchema } from "./schemas";
+import type { ReportAsset, ReportSection, ReportIssue, EvidenceItem } from "@/types";
 
 /** Source formats the universal import accepts. "markdown" là đường .md hiện có, refactor vào registry ở W21. */
 export const importSourceFormatSchema = z.enum(["markdown", "docx", "pdf", "xlsx", "pptx"]);
@@ -50,7 +50,7 @@ export type ImportConverter = {
   extensions: string[];    // [".docx"]
   mimeTypes: string[];
   maxBytes: number;        // per-format cap (mặc định 50MB — MAX_MARKDOWN_IMPORT_BYTES)
-  convert: (file: File) => Promise<ImportResult>;
+  convert: (file: File, onProgress?: (progress: number) => void) => Promise<ImportResult>;
 };
 
 // Zod schema for ReportIssue used inside ImportDraft
@@ -73,6 +73,14 @@ export const importDraftSchema = z.object({
   sections: z.array(reportSectionSchema),  // đề xuất split theo heading; id sinh lại khi commit
   mode: z.enum(["append", "replace"]),
   issues: z.array(reportIssueSchema).optional(),     // Check engine chạy trên draft (module: "import") — W24
+  summary: z.object({
+    totalScanned: z.number(),
+    embeddedCount: z.number(),
+    missingCount: z.number(),
+    missingList: z.array(z.string()),
+    warnings: z.array(z.string()),
+  }).optional(),
+  evidence: z.array(evidenceItemSchema).optional(),
 });
 
 export type ImportDraft = {
@@ -80,4 +88,12 @@ export type ImportDraft = {
   sections: ReportSection[];
   mode: "append" | "replace";
   issues?: ReportIssue[];
+  summary?: {
+    totalScanned: number;
+    embeddedCount: number;
+    missingCount: number;
+    missingList: string[];
+    warnings: string[];
+  };
+  evidence?: EvidenceItem[];
 };

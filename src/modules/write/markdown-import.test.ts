@@ -36,15 +36,15 @@ describe("markdown import helpers", () => {
     );
   });
 
-  it("builds an import draft with parsed section count", () => {
-    const draft = buildMarkdownImportDraft(
+  it("builds an import draft with parsed section count", async () => {
+    const draft = await buildMarkdownImportDraft(
       "project.md",
       "# Tổng quan\n\nNội dung.\n\n## Cài đặt\n\nnpm install",
     );
 
-    expect(draft.title).toBe("Tổng quan");
-    expect(draft.markdown.endsWith("\n")).toBe(true);
-    expect(draft.sectionCount).toBe(2);
+    expect(draft.sections[0].title).toBe("Tổng quan");
+    expect(draft.result.markdown.endsWith("\n")).toBe(true);
+    expect(draft.sections.length).toBe(2);
   });
 
   it("reads Markdown files into import drafts and rejects files above 50MB", async () => {
@@ -59,8 +59,8 @@ describe("markdown import helpers", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.markdown).toContain("# Tóm tắt");
-      expect(result.draft.title).toBe("Tóm tắt");
-      expect(result.draft.sectionCount).toBe(1);
+      expect(result.draft.sections[0].title).toBe("Tóm tắt");
+      expect(result.draft.sections.length).toBe(1);
     }
 
     const atLimit = await readMarkdownFile({ ...file, size: 50 * 1024 * 1024 } as File);

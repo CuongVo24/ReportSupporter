@@ -5,7 +5,6 @@ import { AlertCircle, CheckCircle2, FileUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
   buildMarkdownImportDraft,
-  type MarkdownImportDraft,
 } from "./markdown-import";
 import {
   unzipFiles,
@@ -17,10 +16,11 @@ import {
   getSupportedExtensions,
   getSupportedFormats,
 } from "@/modules/import";
+import type { ImportDraft } from "@/types";
 
 type UniversalImportDropzoneProps = {
-  imported: MarkdownImportDraft | null;
-  onImported: (draft: MarkdownImportDraft) => void;
+  imported: ImportDraft | null;
+  onImported: (draft: ImportDraft) => void;
 };
 
 type FileProgress = {
@@ -28,7 +28,7 @@ type FileProgress = {
   name: string;
   status: "processing" | "success" | "error";
   error?: string;
-  draft?: MarkdownImportDraft;
+  draft?: ImportDraft;
 };
 
 export function UniversalImportDropzone({
@@ -99,12 +99,13 @@ export function UniversalImportDropzone({
         const ingestResult = await ingestAssetsAndEvidence(result.markdown, otherFiles);
 
         // 3. Construct the draft
-        const finalDraft = buildMarkdownImportDraft(
+        const finalDraft = await buildMarkdownImportDraft(
           docFile.name,
           ingestResult.markdown,
           ingestResult.assets,
           ingestResult.evidence,
-          ingestResult.summary
+          ingestResult.summary,
+          result.sourceFormat
         );
 
         setBatchFiles((prev) =>
@@ -140,7 +141,7 @@ export function UniversalImportDropzone({
 
     const results = await Promise.allSettled(promises);
     const successful = results.filter(
-      (r): r is PromiseFulfilledResult<MarkdownImportDraft> => r.status === "fulfilled"
+      (r): r is PromiseFulfilledResult<ImportDraft> => r.status === "fulfilled"
     );
 
     if (successful.length > 0) {
@@ -288,7 +289,7 @@ export function UniversalImportDropzone({
                 </strong>
                 {file.status === "success" && file.draft && (
                   <span style={{ fontSize: "11px", color: "var(--rs-color-text-muted)" }}>
-                    ({file.draft.sectionCount} mục)
+                    ({file.draft.sections.length} mục)
                   </span>
                 )}
               </div>
