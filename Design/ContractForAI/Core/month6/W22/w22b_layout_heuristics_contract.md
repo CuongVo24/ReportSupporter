@@ -61,6 +61,6 @@ Dựng tầng **heuristic layout** dạng **pure functions** trên `TextItem[]`:
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): pdf heading heuristic via font-size clustering`; `feat(import): pdf paragraph merge + list detection`; `docs(import): commit w22b contract`.
+> Commit: `feat(import): pdf heading heuristic via font-size clustering`; `feat(import): pdf paragraph merge + list detection`; `docs(import): commit w22b contract`.

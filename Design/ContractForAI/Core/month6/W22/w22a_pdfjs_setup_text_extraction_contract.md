@@ -60,6 +60,6 @@ Cài `pdfjs-dist` (runtime, exact pin) với **worker bundle local** (không CDN
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. ⚠️ Approve bao gồm cài `pdfjs-dist` **runtime** exact pin. Đề xuất commit: `feat(import): pdfjs-dist with local worker, offline-safe`; `feat(import): pdf text extraction with font/position metadata`; `docs(import): commit w22a contract`.
+> Commit: `feat(import): pdfjs-dist with local worker, offline-safe`; `feat(import): pdf text extraction with font/position metadata`; `docs(import): commit w22a contract`.

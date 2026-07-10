@@ -59,6 +59,6 @@ Hai việc: (1) **trích ảnh nhúng** trong PDF → `ReportAsset` base64 (qua 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): extract embedded pdf images to ReportAsset`; `feat(import): scanned-page detection with placeholder + warning`; `docs(import): commit w22c contract`.
+> Commit: `feat(import): extract embedded pdf images to ReportAsset`; `feat(import): scanned-page detection with placeholder + warning`; `docs(import): commit w22c contract`.

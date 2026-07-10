@@ -61,6 +61,6 @@ Khoá W22 bằng **fixtures 3 nguồn** (PDF-từ-Word, PDF-từ-LaTeX, PDF-scan
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `test(import): pdf fixtures (word/latex/scan) + flow snapshots`; `docs(reports): W22 QA report with heading accuracy table`; `docs(import): commit w22e contract`.
+> Commit: `test(import): pdf fixtures (word/latex/scan) + flow snapshots`; `docs(reports): W22 QA report with heading accuracy table`; `docs(import): commit w22e contract`.
