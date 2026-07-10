@@ -1505,12 +1505,12 @@ body {
 
 .ws-validation-item-error {
   border-color: var(--rs-color-severity-error);
-  background-color: rgba(220, 38, 38, 0.05);
+  background-color: var(--rs-color-severity-error-bg);
 }
 
 .ws-validation-item-warning {
   border-color: var(--rs-color-severity-warning);
-  background-color: rgba(217, 119, 6, 0.05);
+  background-color: var(--rs-color-severity-warning-bg);
 }
 
 .ws-validation-icon {
@@ -1848,7 +1848,7 @@ body {
   line-height: var(--rs-font-lh-ui);
   margin-bottom: var(--rs-space-2);
   padding: var(--rs-space-2);
-  background-color: rgba(245, 158, 11, 0.08);
+  background-color: var(--rs-color-severity-warning-bg);
   border: 1px dashed var(--rs-color-severity-warning);
   border-radius: var(--rs-radius-sm);
 }
@@ -1949,7 +1949,7 @@ body {
 }
 
 .ws-present-timeline-badge.overlimit {
-  background-color: rgba(245, 158, 11, 0.08);
+  background-color: var(--rs-color-severity-warning-bg);
   color: var(--rs-color-severity-warning);
   border: 1px dashed var(--rs-color-severity-warning);
 }
@@ -2227,7 +2227,7 @@ body {
 }
 
 .ws-present-bullet-remove-btn:hover {
-  background-color: rgba(220, 38, 38, 0.1);
+  background-color: var(--rs-color-severity-error-bg);
   color: var(--rs-color-severity-error);
   border-color: rgba(220, 38, 38, 0.2);
 }
@@ -2270,7 +2270,7 @@ body {
   gap: var(--rs-space-1);
   margin-top: var(--rs-space-1);
   padding: var(--rs-space-2);
-  background-color: rgba(245, 158, 11, 0.05);
+  background-color: var(--rs-color-severity-warning-bg);
   border: 1px dashed rgba(245, 158, 11, 0.2);
   border-radius: var(--rs-radius-sm);
 }
@@ -2589,7 +2589,7 @@ span.ws-present-slide-speaker {
   font-size: var(--rs-font-size-sm);
   text-align: center;
   padding: var(--rs-space-3);
-  background-color: rgba(22, 163, 74, 0.05);
+  background-color: var(--rs-color-success-bg);
   border-radius: var(--rs-radius-md);
   border: 1px dashed var(--rs-color-success);
 }
