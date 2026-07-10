@@ -19,8 +19,8 @@ import {
 import type { ImportDraft } from "@/types";
 
 type UniversalImportDropzoneProps = {
-  imported: ImportDraft | null;
-  onImported: (draft: ImportDraft) => void;
+  imported: ImportDraft[];
+  onImported: (drafts: ImportDraft[]) => void;
 };
 
 type FileProgress = {
@@ -145,8 +145,8 @@ export function UniversalImportDropzone({
     );
 
     if (successful.length > 0) {
-      // Pass the first successfully converted document draft to parent component
-      onImported(successful[0].value);
+      // Pass all successfully converted document drafts to parent component
+      onImported(successful.map((s) => s.value));
     } else {
       const rejected = results.filter(
         (r): r is PromiseRejectedResult => r.status === "rejected"
@@ -262,7 +262,7 @@ export function UniversalImportDropzone({
           onClick={() => inputRef.current?.click()}
           leadingIcon={<FileUp size={14} />}
         >
-          {imported ? "Đổi tệp" : "Chọn tệp"}
+          {imported.length > 0 ? "Chọn tệp khác" : "Chọn tệp"}
         </Button>
       </div>
 

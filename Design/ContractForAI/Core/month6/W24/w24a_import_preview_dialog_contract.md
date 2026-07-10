@@ -65,6 +65,6 @@ Dựng **ImportPreviewDialog** — trạm kiểm soát trước commit: render M
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): import preview dialog with warnings + section controls`; `feat(import): heading remap with cascade`; `docs(import): commit w24a contract`.
+> Commit: `feat(import): import preview dialog with warnings + section controls`; `feat(import): heading remap with cascade`; `docs(import): commit w24a contract`.
