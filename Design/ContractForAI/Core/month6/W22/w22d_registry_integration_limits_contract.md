@@ -61,6 +61,6 @@ Lắp trọn **PdfConverter**: extract (A) → heuristic (B) → ảnh/scan (C) 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): complete pdf converter pipeline + registry`; `feat(import): pdf limits, column/table flatten with warnings`; `docs(import): commit w22d contract`.
+> Commit: `feat(import): complete pdf converter pipeline + registry`; `feat(import): pdf limits, column/table flatten with warnings`; `docs(import): commit w22d contract`.

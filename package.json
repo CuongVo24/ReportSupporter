@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "gen:samples": "vitest run --config scripts/vitest.config.ts"
+    "gen:samples": "vitest run --config scripts/vitest.config.ts",
+    "postinstall": "node scripts/copy-pdf-worker.js"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",
@@ -35,6 +36,7 @@
     "mammoth": "1.9.0",
     "mermaid": "11.15.0",
     "next": "15.5.19",
+    "pdfjs-dist": "4.4.168",
     "pptxgenjs": "^3.12.0",
     "qrcode": "1.5.4",
     "react": "19.2.7",
