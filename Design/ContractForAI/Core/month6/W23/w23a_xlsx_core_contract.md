@@ -62,6 +62,6 @@ Cài `xlsx` (SheetJS) từ **dist chính thức cdn.sheetjs.com tarball** (npm r
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. ⚠️ Approve bao gồm cài `xlsx` **runtime** từ tarball chính thức (pinned). Đề xuất commit: `chore(import): add sheetjs from official dist (pinned)`; `feat(import): xlsx converter — sheets to GFM tables`; `docs(import): commit w23a contract`.
+> Commit: `chore(import): add sheetjs from official dist (pinned)`; `feat(import): xlsx converter — sheets to GFM tables`; `docs(import): commit w23a contract`.

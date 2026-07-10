@@ -58,6 +58,6 @@ Khoá W23: **fixtures pptx 2 nguồn** (PowerPoint + Google Slides export — sl
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `test(import): pptx fixtures (powerpoint + gslides) + flow snapshots`; `docs(reports): W23 QA report with diff gate evidence`; `docs(import): commit w23e contract`.
+> Commit: `test(import): pptx fixtures (powerpoint + gslides) + flow snapshots`; `docs(reports): W23 QA report with diff gate evidence`; `docs(import): commit w23e contract`.

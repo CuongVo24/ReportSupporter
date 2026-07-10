@@ -1,0 +1,165 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_anh_nhung_report.docx successfully and capture warning on skipped images > vn_anh_nhung_report_markdown 1`] = `
+"# BÁO CÁO KẾT QUẢ PHÂN TÍCH ĐỒ THỊ
+
+# I. Kết quả đo đạc trực quan
+
+Hình ảnh dưới đây biểu diễn một điểm chấm đỏ tượng trưng cho kết quả phân tích:
+
+![](data:null;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==)
+"
+`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_anh_nhung_report.docx successfully and capture warning on skipped images > vn_anh_nhung_report_sections 1`] = `
+[
+  {
+    "id": "import-sec-0",
+    "markdown": "# BÁO CÁO KẾT QUẢ PHÂN TÍCH ĐỒ THỊ
+",
+    "order": 0,
+    "status": "draft",
+    "title": "BÁO CÁO KẾT QUẢ PHÂN TÍCH ĐỒ THỊ",
+  },
+  {
+    "id": "import-sec-1",
+    "markdown": "# I. Kết quả đo đạc trực quan
+
+Hình ảnh dưới đây biểu diễn một điểm chấm đỏ tượng trưng cho kết quả phân tích:
+
+![](data:null;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==)
+",
+    "order": 1,
+    "status": "draft",
+    "title": "I. Kết quả đo đạc trực quan",
+  },
+]
+`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_anh_nhung_report.docx successfully and capture warning on skipped images > vn_anh_nhung_report_warnings 1`] = `[]`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_mon_hoc_report.docx successfully with multi-level headings, lists, and tables > vn_mon_hoc_report_markdown 1`] = `
+"# BÁO CÁO MÔN HỌC KIỂM THỬ PHẦN MỀM
+
+# I. Giới thiệu chung
+
+Đây là báo cáo tổng quan về quá trình xây dựng hệ thống kiểm thử tự động phục vụ cho các dự án phần mềm doanh nghiệp.
+
+## Cơ sở lý thuyết
+
+Chúng tôi áp dụng các chuẩn mực kiểm thử hiện đại như kiểm thử đơn vị, kiểm thử tích hợp và kiểm thử giao diện tự động hóa.
+
+### Mục tiêu kiểm thử
+
+Đảm bảo các mục tiêu chất lượng sau đây:
+
+* \\- Tăng độ bao phủ mã nguồn (code coverage) trên 80%.
+* \\- Tự động hóa hoàn toàn các kịch bản kiểm thử hồi quy.
+
+Dưới đây là bảng thống kê kết quả kiểm thử:
+
+|     |                    |           |
+| --- | ------------------ | --------- |
+| STT | Tên ca kiểm thử    | Kết quả   |
+| 1   | Kiểm tra Đăng nhập | Đạt       |
+| 2   | Tải tài liệu lên   | Không đạt |
+"
+`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_mon_hoc_report.docx successfully with multi-level headings, lists, and tables > vn_mon_hoc_report_sections 1`] = `
+[
+  {
+    "id": "import-sec-0",
+    "markdown": "# BÁO CÁO MÔN HỌC KIỂM THỬ PHẦN MỀM
+",
+    "order": 0,
+    "status": "draft",
+    "title": "BÁO CÁO MÔN HỌC KIỂM THỬ PHẦN MỀM",
+  },
+  {
+    "id": "import-sec-1",
+    "markdown": "# I. Giới thiệu chung
+
+Đây là báo cáo tổng quan về quá trình xây dựng hệ thống kiểm thử tự động phục vụ cho các dự án phần mềm doanh nghiệp.
+",
+    "order": 1,
+    "status": "draft",
+    "title": "I. Giới thiệu chung",
+  },
+  {
+    "id": "import-sec-2",
+    "markdown": "## Cơ sở lý thuyết
+
+Chúng tôi áp dụng các chuẩn mực kiểm thử hiện đại như kiểm thử đơn vị, kiểm thử tích hợp và kiểm thử giao diện tự động hóa.
+
+### Mục tiêu kiểm thử
+
+Đảm bảo các mục tiêu chất lượng sau đây:
+
+* \\- Tăng độ bao phủ mã nguồn (code coverage) trên 80%.
+* \\- Tự động hóa hoàn toàn các kịch bản kiểm thử hồi quy.
+
+Dưới đây là bảng thống kê kết quả kiểm thử:
+
+|     |                    |           |
+| --- | ------------------ | --------- |
+| STT | Tên ca kiểm thử    | Kết quả   |
+| 1   | Kiểm tra Đăng nhập | Đạt       |
+| 2   | Tải tài liệu lên   | Không đạt |
+",
+    "order": 2,
+    "status": "draft",
+    "title": "Cơ sở lý thuyết",
+  },
+]
+`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_mon_hoc_report.docx successfully with multi-level headings, lists, and tables > vn_mon_hoc_report_warnings 1`] = `[]`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_track_changes_report.docx successfully with hardcoded numbered headings and edits > vn_track_changes_report_markdown 1`] = `
+"# BÁO CÁO THAY ĐỔI CẤU TRÚC HỆ THỐNG
+
+# Giới thiệu tổng quan
+
+Tài liệu này theo dõi các chỉnh sửa lớn của nhóm phát triển.
+
+## Kết quả đạt được sau chỉnh sửa
+
+Đoạn văn bản gốc ban đầu. Phần nội dung được thêm mới bởi tác giả A.
+"
+`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_track_changes_report.docx successfully with hardcoded numbered headings and edits > vn_track_changes_report_sections 1`] = `
+[
+  {
+    "id": "import-sec-0",
+    "markdown": "# BÁO CÁO THAY ĐỔI CẤU TRÚC HỆ THỐNG
+",
+    "order": 0,
+    "status": "draft",
+    "title": "BÁO CÁO THAY ĐỔI CẤU TRÚC HỆ THỐNG",
+  },
+  {
+    "id": "import-sec-1",
+    "markdown": "# Giới thiệu tổng quan
+
+Tài liệu này theo dõi các chỉnh sửa lớn của nhóm phát triển.
+",
+    "order": 1,
+    "status": "draft",
+    "title": "Giới thiệu tổng quan",
+  },
+  {
+    "id": "import-sec-2",
+    "markdown": "## Kết quả đạt được sau chỉnh sửa
+
+Đoạn văn bản gốc ban đầu. Phần nội dung được thêm mới bởi tác giả A.
+",
+    "order": 2,
+    "status": "draft",
+    "title": "Kết quả đạt được sau chỉnh sửa",
+  },
+]
+`;
+
+exports[`DOCX Import Flow Snapshot and Verification > should process vn_track_changes_report.docx successfully with hardcoded numbered headings and edits > vn_track_changes_report_warnings 1`] = `[]`;

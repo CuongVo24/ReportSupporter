@@ -4,7 +4,7 @@ export { softwareProjectTemplate } from "./templates/software-project";
 export { readmeReportTemplate } from "./templates/readme-report";
 export { ALL_TEMPLATES, getTemplate } from "./templates";
 export { importReadme } from "./readme-import";
-export { MarkdownImportDropzone } from "./MarkdownImportDropzone";
+export { UniversalImportDropzone } from "./UniversalImportDropzone";
 export {
   buildMarkdownImportDraft,
   inferMarkdownTitle,
@@ -15,7 +15,7 @@ export {
   appendSections,
   replaceSections,
 } from "./markdown-import";
-export type { MarkdownFileReadResult, MarkdownImportDraft } from "./markdown-import";
+export type { MarkdownFileReadResult } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
 export { computeWritingStats } from "./writing-stats";
 export type { WritingStats } from "./writing-stats";

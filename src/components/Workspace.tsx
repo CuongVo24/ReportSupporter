@@ -25,9 +25,7 @@ import {
   AiAssistBar,
   appendSections,
   replaceSections,
-  MarkdownImportDropzone,
-  importReadme,
-  type MarkdownImportDraft,
+  UniversalImportDropzone,
   addSection,
   duplicateSection,
   renameSection,
@@ -37,6 +35,7 @@ import {
   createImageAsset,
   isMarkdownFile,
   readMarkdownFile,
+  importReadme,
   AiSettingsDialog,
   AiWholeReportPanel,
   registerAdapter,
@@ -53,7 +52,9 @@ import { computeReportHealth, runChecker, type ReportHealth } from "@/modules/ch
 import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
 import { EvidencePanel } from "@/modules/evidence";
 import { PresentPanel } from "@/modules/present";
-import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection } from "@/types";
+import { ImportPreviewDialog } from "@/modules/import/ImportPreviewDialog";
+import { checkDraft } from "@/modules/import/check-draft";
+import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection, ImportDraft } from "@/types";
 
 const emptyCheckResult: CheckResult = {
   issues: [],
@@ -86,9 +87,8 @@ export function Workspace() {
   const [toastMessage, setToastMessage] = useState("");
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [importDraft, setImportDraft] = useState<MarkdownImportDraft | null>(null);
-  const [importMode, setImportMode] = useState<"append" | "replace">("append");
-  const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
+  const [importDrafts, setImportDrafts] = useState<ImportDraft[]>([]);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [sectionToDeleteId, setSectionToDeleteId] = useState<string | null>(null);
   const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
@@ -413,7 +413,7 @@ export function Workspace() {
 
     const parsedSections = importReadme(result.markdown);
     const markdownToInsert = parsedSections.length > 0
-      ? parsedSections.map((section) => section.markdown).join("\n\n")
+      ? parsedSections.map((section: ReportSection) => section.markdown).join("\n\n")
       : result.markdown;
     const sections = bundle.project.sections.map((section) =>
       section.id === sectionId
@@ -518,8 +518,7 @@ export function Workspace() {
   }, [requestSidePanelOpen]);
 
   const handleOpenMarkdownImport = useCallback(() => {
-    setImportDraft(null);
-    setImportMode("append");
+    setImportDrafts([]);
     setIsImportDialogOpen(true);
   }, []);
 
@@ -593,16 +592,20 @@ export function Workspace() {
     setIsInitializing(false);
   }, [bundle]);
 
-  const handleImportMarkdown = useCallback((draft: MarkdownImportDraft) => {
+  const handleImportMarkdown = useCallback((draft: ImportDraft) => {
     if (!bundle) return;
-    const parsedSections = importReadme(draft.markdown);
+    const parsedSections = draft.sections;
     
-    const replaced = replaceSections(bundle, parsedSections);
+    const replaced = replaceSections(bundle, parsedSections, draft.result.assets, draft.evidence || []);
+    const titleVal = draft.result.fileName 
+      ? draft.result.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") 
+      : "Báo cáo chưa đặt tên";
+    const title = titleVal.charAt(0).toUpperCase() + titleVal.slice(1);
     const next: ReportProjectBundle = {
       ...replaced,
       project: {
         ...replaced.project,
-        title: draft.title || "Báo cáo chưa đặt tên",
+        title,
       },
     };
 
@@ -645,95 +648,58 @@ export function Workspace() {
     setIsResetConfirmOpen(false);
   }, [snapshotBefore]);
 
-  const handleAppendImport = useCallback(() => {
-    if (!bundle || !importDraft) return;
-    const parsedSections = importReadme(importDraft.markdown);
-    if (parsedSections.length === 0) {
-      setIsImportDialogOpen(false);
-      setImportDraft(null);
-      return;
+  const handleCommitImport = useCallback(async (draft: ImportDraft) => {
+    if (!bundle) return;
+    const parsedSections = draft.sections;
+    if (parsedSections.length === 0) return;
+
+    let next: ReportProjectBundle;
+    if (draft.mode === "replace") {
+      await snapshotBefore("Trước khi ghi đè báo cáo bằng tệp tin");
+      const replaced = replaceSections(
+        bundle,
+        parsedSections,
+        draft.result.assets,
+        draft.evidence
+      );
+      const titleVal = draft.result.fileName
+        ? draft.result.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ")
+        : replaced.project.title;
+      const title = titleVal.charAt(0).toUpperCase() + titleVal.slice(1);
+      next = {
+        ...replaced,
+        project: {
+          ...replaced.project,
+          title,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+      setBundle(next);
+      setActiveId(next.project.sections[0]?.id ?? null);
+      setToastMessage("Đã ghi đè nội dung báo cáo thành công.");
+    } else {
+      next = appendSections(
+        bundle,
+        parsedSections,
+        draft.result.assets,
+        draft.evidence
+      );
+      const oldLength = bundle.project.sections.length;
+      const firstNewSection = next.project.sections[oldLength];
+      setBundle(next);
+      if (firstNewSection) {
+        setActiveId(firstNewSection.id);
+        setActiveView("editor");
+        focusEditorOnNextFrame();
+      }
+      setToastMessage("Đã chèn thêm các mục báo cáo thành công.");
     }
 
-    const replaced = appendSections(bundle, parsedSections);
-    
-    // Merge new assets without duplicating IDs
-    const newAssets = (importDraft.assets || []).filter(
-      (newAsset) => !replaced.assets.some((existing) => existing.id === newAsset.id)
-    );
-    // Merge new evidence without duplicating IDs
-    const newEvidence = (importDraft.evidence || []).filter(
-      (newEv) => !replaced.evidence.some((existing) => existing.id === newEv.id)
-    );
-
-    const next: ReportProjectBundle = {
-      ...replaced,
-      assets: [...replaced.assets, ...newAssets],
-      evidence: [...replaced.evidence, ...newEvidence],
-    };
-
-    const oldLength = bundle.project.sections.length;
-    const firstNewSection = next.project.sections[oldLength];
-
-    setBundle(next);
-    if (firstNewSection) {
-      setActiveId(firstNewSection.id);
-      setActiveView("editor");
-      focusEditorOnNextFrame();
-    }
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(next);
-
-    setIsImportDialogOpen(false);
-    setImportDraft(null);
-    setToastMessage("Đã chèn thêm các mục báo cáo thành công.");
     setToastOpen(true);
-  }, [bundle, importDraft]);
-
-  const handleReplaceImport = useCallback(async () => {
-    if (!bundle || !importDraft) return;
-    const parsedSections = importReadme(importDraft.markdown);
-    if (parsedSections.length === 0) {
-      setIsReplaceConfirmOpen(false);
-      setIsImportDialogOpen(false);
-      setImportDraft(null);
-      return;
-    }
-
-    await snapshotBefore("Trước khi ghi đè báo cáo bằng Markdown");
-    const replaced = replaceSections(bundle, parsedSections);
-    
-    // Merge new assets without duplicating IDs
-    const newAssets = (importDraft.assets || []).filter(
-      (newAsset) => !replaced.assets.some((existing) => existing.id === newAsset.id)
-    );
-    // Merge new evidence without duplicating IDs
-    const newEvidence = (importDraft.evidence || []).filter(
-      (newEv) => !replaced.evidence.some((existing) => existing.id === newEv.id)
-    );
-
-    const next: ReportProjectBundle = {
-      ...replaced,
-      project: {
-        ...replaced.project,
-        title: importDraft.title || replaced.project.title,
-      },
-      assets: [...replaced.assets, ...newAssets],
-      evidence: [...replaced.evidence, ...newEvidence],
-    };
-    setBundle(next);
-    setActiveId(next.project.sections[0]?.id ?? null);
-    setActiveView("editor");
-    setCheckResult(null);
-    setHasRun(false);
-    void saveBundle(next);
-
-    setIsReplaceConfirmOpen(false);
-    setIsImportDialogOpen(false);
-    setImportDraft(null);
-    setToastMessage("Đã nhập mới báo cáo thành công.");
-    setToastOpen(true);
-  }, [bundle, importDraft, snapshotBefore]);
+  }, [bundle, snapshotBefore]);
 
   const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
     setBundle((prev) => {
@@ -1068,7 +1034,6 @@ export function Workspace() {
     </div>
   );
 
-  const hasReportContent = bundle.project.sections.some((section) => section.markdown.trim() !== "");
 
   const sidePanel = (
     <div className="ws-side-inner">
@@ -1272,102 +1237,42 @@ export function Workspace() {
         onOpenChange={(open) => {
           setIsImportDialogOpen(open);
           if (!open) {
-            setImportDraft(null);
-            setImportMode("append");
+            setImportDrafts([]);
           }
         }}
-        title="Nhập báo cáo từ file Markdown"
-        description="Chọn file Markdown để nhập nội dung vào báo cáo hiện tại."
+        title="Nhập báo cáo từ file"
+        description="Kéo thả hoặc chọn tệp tin tài liệu (Markdown, Word, PDF, Excel, PowerPoint) để chuẩn bị nhập."
         variant="modal"
-        footer={
-          <div className="ws-dialog-footer-actions">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setIsImportDialogOpen(false);
-                setImportDraft(null);
-              }}
-            >
-              Hủy
-            </Button>
-            <Button
-              variant="primary"
-              disabled={!importDraft}
-              onClick={() => {
-                if (importMode === "replace") {
-                  if (hasReportContent) {
-                    setIsReplaceConfirmOpen(true);
-                  } else {
-                    handleReplaceImport();
-                  }
-                } else {
-                  handleAppendImport();
-                }
-              }}
-            >
-              Nhập báo cáo
-            </Button>
-          </div>
-        }
       >
         <div className="ws-import-dialog-body">
-          <MarkdownImportDropzone
-            imported={importDraft}
-            onImported={setImportDraft}
+          <UniversalImportDropzone
+            imported={importDrafts}
+            onImported={(drafts) => {
+              if (bundle) {
+                const draftsWithIssues = drafts.map((draft) => ({
+                  ...draft,
+                  issues: checkDraft(draft, bundle),
+                }));
+                setImportDrafts(draftsWithIssues);
+              } else {
+                setImportDrafts(drafts);
+              }
+              setIsImportDialogOpen(false);
+              setIsPreviewDialogOpen(true);
+            }}
           />
-          
-          {importDraft && (
-            <div className="ws-import-mode">
-              <span className="ws-import-mode-label">Chế độ nhập</span>
-              <div className="ws-import-mode-options">
-                <label className="ws-import-mode-option">
-                  <input
-                    type="radio"
-                    name="importMode"
-                    value="append"
-                    checked={importMode === "append"}
-                    onChange={() => setImportMode("append")}
-                  />
-                  <span>Chèn thêm vào cuối báo cáo hiện tại</span>
-                </label>
-                <label className="ws-import-mode-option">
-                  <input
-                    type="radio"
-                    name="importMode"
-                    value="replace"
-                    checked={importMode === "replace"}
-                    onChange={() => setImportMode("replace")}
-                  />
-                  <span>Thay thế toàn bộ báo cáo hiện tại</span>
-                </label>
-              </div>
-              
-              {importMode === "replace" && hasReportContent && (
-                <div className="ws-import-warning" role="alert">
-                  <AlertTriangle size={14} aria-hidden="true" />
-                  <span>Chú ý: Hành động này sẽ xóa toàn bộ nội dung báo cáo hiện tại!</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </Dialog>
-      <Dialog
-        isOpen={isReplaceConfirmOpen}
-        onOpenChange={setIsReplaceConfirmOpen}
-        title="Ghi đè báo cáo hiện tại?"
-        description="Toàn bộ nội dung báo cáo hiện tại sẽ bị xóa và thay thế bằng file Markdown mới. Hành động này không thể hoàn tác."
-        variant="confirm"
-        footer={
-          <div className="ws-dialog-footer-actions">
-            <Button variant="ghost" onClick={() => setIsReplaceConfirmOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="danger" onClick={handleReplaceImport}>
-              Ghi đè và Nhập mới
-            </Button>
-          </div>
-        }
+
+      <ImportPreviewDialog
+        isOpen={isPreviewDialogOpen}
+        onOpenChange={setIsPreviewDialogOpen}
+        drafts={importDrafts}
+        onCommit={handleCommitImport}
+        onCancel={() => {
+          setIsPreviewDialogOpen(false);
+          setImportDrafts([]);
+        }}
       />
       <Dialog
         isOpen={isDeleteConfirmOpen}

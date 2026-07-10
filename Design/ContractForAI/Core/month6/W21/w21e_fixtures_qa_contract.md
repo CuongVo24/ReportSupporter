@@ -61,6 +61,6 @@ Khoá W21 bằng **fixtures thật + QA report**: bộ `.docx` tiếng Việt th
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `test(import): docx fixtures + full-flow snapshots + module boundary gate`; `docs(reports): W21 QA report`; `docs(import): commit w21e contract`.
+> Commit: `test(import): docx fixtures + full-flow snapshots + module boundary gate`; `docs(reports): W21 QA report`; `docs(import): commit w21e contract`.

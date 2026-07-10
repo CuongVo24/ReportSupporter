@@ -30,13 +30,13 @@ Thêm **OCR experimental** cho trang scan: `tesseract.js` **lazy dynamic import 
 - ❌ Cải thiện chất lượng OCR (đây là experimental — chất lượng ghi nhận, không cam kết).
 
 ## 3. Checklist
-- [ ] Flag OFF mặc định: không nút, không tải tesseract byte nào (network tab sạch).
-- [ ] Bật flag + bấm nút → tesseract tải local (không CDN), progress hiển thị, cancel dừng thật (worker terminate).
-- [ ] Kết quả vie+eng vào draft thay placeholder; heading đoán có `heading-guessed`; commit mới ghi vào project.
-- [ ] Fail (ảnh hỏng/timeout) → toast + placeholder giữ, không crash.
-- [ ] Label "experimental" hiển thị rõ tại nút và kết quả.
-- [ ] Bundle chính không đổi size (tesseract async chunk + public assets).
-- [ ] 4 gates xanh.
+- [x] Flag OFF mặc định: không nút, không tải tesseract byte nào (network tab sạch).
+- [x] Bật flag + bấm nút → tesseract tải local (không CDN), progress hiển thị, cancel dừng thật (worker terminate).
+- [x] Kết quả vie+eng vào draft thay placeholder; heading đoán có `heading-guessed`; commit mới ghi vào project.
+- [x] Fail (ảnh hỏng/timeout) → toast + placeholder giữ, không crash.
+- [x] Label "experimental" hiển thị rõ tại nút và kết quả.
+- [x] Bundle chính không đổi size (tesseract async chunk + public assets).
+- [x] 4 gates xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -66,6 +66,7 @@ Thêm **OCR experimental** cho trang scan: `tesseract.js` **lazy dynamic import 
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
 > ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. ⚠️ Approve bao gồm cài `tesseract.js` **runtime** exact pin + tự host assets vie+eng. Đề xuất commit: `feat(import): experimental OCR via tesseract.js (flag OFF, on-click, local assets)`; `docs(import): commit w24c contract`.
+

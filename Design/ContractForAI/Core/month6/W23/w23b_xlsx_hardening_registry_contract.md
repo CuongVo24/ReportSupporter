@@ -60,6 +60,6 @@ Hardening XLSX cho file thật: **merged cells** flatten (giá trị ở ô đ�
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): xlsx hardening — merges, caps, hidden sheets`; `test(import): xlsx fixtures + flow snapshots`; `docs(import): commit w23b contract`.
+> Commit: `feat(import): xlsx hardening — merges, caps, hidden sheets`; `test(import): xlsx fixtures + flow snapshots`; `docs(import): commit w23b contract`.

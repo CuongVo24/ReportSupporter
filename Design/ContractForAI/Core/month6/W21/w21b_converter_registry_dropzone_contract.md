@@ -65,6 +65,6 @@ Dựng **converter registry** (`resolve(file)` theo extension + MIME, `maxBytes`
 
 ## 7. Status
 
-`WAITING_FOR_APPROVAL`
+`COMPLETED`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(import): converter registry with size gate + typed rejection`; `refactor(import): universal dropzone, .md as first converter`; `docs(import): commit w21b contract`.
+> Commit (trên `feature/W21-import-foundation`): `feat(import): converter registry with size gate + typed rejection`, `refactor(import): universal dropzone, .md as first converter`, `docs(import): commit w21b contract`.

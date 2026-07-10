@@ -35,7 +35,7 @@ export type ReportIssueSeverity = "error" | "warning" | "info";
 export type ReportIssue = {
   id: string; // checker rule id (user-visible prefix)
   severity: ReportIssueSeverity;
-  module: "write" | "format" | "check" | "export";
+  module: "write" | "format" | "check" | "export" | "import";
   message: string;
   suggestion: string;
   sectionId?: string;
