@@ -59,9 +59,8 @@
 }
 
 .ws-tabs-trigger-underline[data-state="active"] {
-  background-color: var(--rs-color-primary-bg);
   color: var(--rs-color-primary);
-  font-weight: var(--rs-font-weight-bold);
+  font-weight: var(--rs-font-weight-semibold);
 }
 
 .ws-tabs-trigger-underline[data-state="active"]::after {
@@ -110,9 +109,9 @@
 }
 
 .ws-tabs-trigger-segmented[data-state="active"] {
-  background-color: var(--rs-color-primary-bg);
-  color: var(--rs-color-primary);
-  font-weight: var(--rs-font-weight-bold);
+  background-color: var(--rs-color-surface);
+  color: var(--rs-color-text);
+  font-weight: var(--rs-font-weight-semibold);
   box-shadow: var(--rs-elevation-1);
 }
 

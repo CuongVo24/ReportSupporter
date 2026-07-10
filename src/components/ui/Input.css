@@ -38,7 +38,7 @@
 
 .ws-field-container:focus-within:not(.ws-field-container-disabled):not(.ws-field-container-readonly) {
   border-color: var(--rs-field-border-focus);
-  box-shadow: 0 0 0 2px var(--rs-color-focus-ring);
+  box-shadow: 0 0 0 3px var(--rs-color-focus-ring-soft);
   outline: none;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .ws-field-container-invalid:focus-within {
-  box-shadow: 0 0 0 2px var(--rs-color-severity-error) !important;
+  box-shadow: 0 0 0 3px var(--rs-color-severity-error-bg) !important;
 }
 
 /* Disabled State */

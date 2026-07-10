@@ -76,6 +76,7 @@ Tất cả token là **CSS Custom Properties** (`--rs-*`), không phải biến 
 | `--rs-color-primary` | `var(--rs-blue-600)` | Nút chính, link, active tab |
 | `--rs-color-primary-hover` | `var(--rs-blue-700)` | Hover nút chính |
 | `--rs-color-focus-ring` | `var(--rs-blue-600)` | Outline focus (a11y) |
+| `--rs-color-focus-ring-soft` | `rgba(37,99,235,.22)` | Vòng focus mềm 3px cho input/field (dark: `rgba(59,130,246,.35)`) |
 | `--rs-color-success` | `var(--rs-green-600)` | Check passed, autosave thành công |
 | `--rs-color-primary-bg` | `var(--rs-blue-100)` | Nền primary nhạt (AI suggestions box, highlight) |
 

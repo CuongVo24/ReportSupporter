@@ -30,6 +30,7 @@
   --rs-color-primary: var(--rs-blue-600);
   --rs-color-primary-hover: var(--rs-blue-700);
   --rs-color-focus-ring: var(--rs-blue-600);
+  --rs-color-focus-ring-soft: rgba(37, 99, 235, 0.22);
   --rs-color-success: var(--rs-green-600);
   --rs-color-primary-bg: var(--rs-blue-100);
 
@@ -3307,6 +3308,7 @@ span.ws-present-slide-speaker {
   --rs-color-success-bg: var(--rs-dark-green-bg);
   --rs-color-error-bg: var(--rs-dark-red-bg);
   --rs-color-focus-ring: var(--rs-dark-primary);
+  --rs-color-focus-ring-soft: rgba(59, 130, 246, 0.35);
   --rs-color-primary-bg: var(--rs-dark-primary-bg);
 }
 
@@ -3332,6 +3334,7 @@ span.ws-present-slide-speaker {
     --rs-color-success-bg: var(--rs-dark-green-bg);
     --rs-color-error-bg: var(--rs-dark-red-bg);
     --rs-color-focus-ring: var(--rs-dark-primary);
+    --rs-color-focus-ring-soft: rgba(59, 130, 246, 0.35);
     --rs-color-primary-bg: var(--rs-dark-primary-bg);
   }
 }
