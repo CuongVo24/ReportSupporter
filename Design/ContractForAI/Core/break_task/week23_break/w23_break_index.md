@@ -46,7 +46,7 @@ W22 tập trung **vòng dữ liệu editor↔state↔preview** (stale callback, 
 | 13 | Tooltip AI "bật AI trong Cài đặt" cả khi đã bật nhưng thiếu API key | 🟢 | `w23_polish_microcopy_diacritics_internal_labels_dialogs` |
 | 14 | Hydration mismatch Radix Select (zoom) — 2 error mỗi load | 🟢 | `w23_fix_zoom_select_hydration_mismatch` |
 | 15 | Bảng điều khiển che nội dung ở 1024–1439px; Present chật trong drawer | 🟢 | `w23_ux_assistant_panel_breakpoint_present_density` |
-| 16 | Import làm phẳng phân cấp heading (H2 thành mục top-level 10., 11.) | 🟢 | `w23_decide_import_heading_hierarchy_flatten` (chốt nhánh trước) |
+| 16 | Import làm phẳng phân cấp heading (H2 thành mục top-level 10., 11.) | 🟢 | `w23_decide_import_heading_hierarchy_flatten` (Đã quyết định chọn Nhánh A: xem [Quyết định Thiết kế](file:///e:/ReportSupporter/Design/Decisions/w23_import_heading_hierarchy_decision.md)) |
 
 ## Phát hiện đã điều tra và **loại** (dương tính giả — không viết contract)
 
@@ -66,7 +66,7 @@ Ghi lại để không tái điều tra:
 6. `w23_polish_microcopy_diacritics_internal_labels_dialogs` — **F.** Gom microcopy; theo `VoiceAndContent.md §7`.
 7. `w23_fix_zoom_select_hydration_mismatch` — **G.** Kỹ thuật, độc lập.
 8. `w23_ux_assistant_panel_breakpoint_present_density` — **H.** IA/design, cần cân nhắc breakpoint kỹ.
-9. `w23_decide_import_heading_hierarchy_flatten` — **quyết định trước**, chưa sửa: xác nhận flat-section là chủ ý hay cần giữ phân cấp.
+9. `w23_decide_import_heading_hierarchy_flatten` — **Đã hoàn thành quyết định thiết kế (chọn Nhánh A):** xem [Quyết định Thiết kế](file:///e:/ReportSupporter/Design/Decisions/w23_import_heading_hierarchy_decision.md).
 
 ## Locked dùng chung mọi contract
 - 🔒 **Thi công trên `main`** (redesign đã gộp); mỗi contract = 1 commit logic riêng. Docs contract commit trước phần `src/`.
