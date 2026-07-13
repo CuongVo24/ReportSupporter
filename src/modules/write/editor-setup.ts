@@ -1,4 +1,5 @@
-import { EditorState, Annotation } from "@codemirror/state";
+import { EditorState, Annotation, Compartment } from "@codemirror/state";
+import type { ReportAsset } from "@/types";
 import { EditorView, lineNumbers, highlightActiveLine, drawSelection, dropCursor, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
@@ -27,6 +28,7 @@ export const markdownHighlightStyle = HighlightStyle.define([
 ]);
 
 export const syncAnnotation = Annotation.define<boolean>();
+export const ariaLabelCompartment = new Compartment();
 
 /**
  * Creates an EditorState configured for Markdown editing.
@@ -37,6 +39,7 @@ export function createEditorState(opts: {
   onChange: (v: string) => void;
   ariaLabel?: string;
   onSave?: (v: string) => void;
+  onImageInserted?: (asset: ReportAsset, ref: string) => void;
 }): EditorState {
   const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged && !update.transactions.some((tr) => tr.annotation(syncAnnotation))) {
@@ -57,14 +60,14 @@ export function createEditorState(opts: {
       drawSelection(),
       dropCursor(),
       keymap.of([
-        ...createMarkdownShortcutKeymap({ onSave: opts.onSave }),
+        ...createMarkdownShortcutKeymap({ onSave: opts.onSave, onImageInserted: opts.onImageInserted }),
         ...searchKeymap,
         ...historyKeymap,
         indentWithTab,
         ...defaultKeymap,
       ]),
       updateListener,
-      EditorView.contentAttributes.of({ "aria-label": opts.ariaLabel || "Editor" }),
+      ariaLabelCompartment.of(EditorView.contentAttributes.of({ "aria-label": opts.ariaLabel || "Editor" })),
       EditorView.theme({
         "&": {
           height: "100%",

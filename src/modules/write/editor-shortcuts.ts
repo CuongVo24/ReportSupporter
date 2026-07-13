@@ -2,7 +2,9 @@ import { EditorSelection } from "@codemirror/state";
 import type { Command, EditorView, KeyBinding } from "@codemirror/view";
 import { openSearchPanel } from "@codemirror/search";
 import { insertSnippet } from "./insert-snippet";
-import type { SnippetKind } from "@/types";
+import type { SnippetKind, ReportAsset } from "@/types";
+import { syntaxTree } from "@codemirror/language";
+import { createImageAsset } from "./use-image-insert";
 
 export type MarkdownReplacementDraft = {
   text: string;
@@ -92,7 +94,23 @@ function insertSnippetCommand(kind: SnippetKind): Command {
   return (view) => {
     const { from, to } = view.state.selection.main;
     const doc = view.state.doc.toString();
-    const result = insertSnippet(doc, from, to, kind);
+
+    let blockEndPos: number | undefined;
+    if (kind !== "image") {
+      try {
+        const tree = syntaxTree(view.state);
+        let node: any = tree.resolveInner(from, -1);
+        while (node) {
+          if (node.name === "FencedCode" || node.name === "CodeBlock" || node.name === "Table") {
+            blockEndPos = node.to;
+            break;
+          }
+          node = node.parent;
+        }
+      } catch (e) {}
+    }
+
+    const result = insertSnippet(doc, from, to, kind, blockEndPos);
 
     view.dispatch({
       changes: { from: 0, to: doc.length, insert: result.text },
@@ -127,6 +145,7 @@ function setHeadingLevel(level: 1 | 2 | 3): Command {
 
 export function createMarkdownShortcutKeymap(opts: {
   onSave?: (doc: string) => void;
+  onImageInserted?: (asset: ReportAsset, ref: string) => void;
 } = {}): KeyBinding[] {
   const saveCommand: Command = (view) => {
     opts.onSave?.(view.state.doc.toString());
@@ -159,7 +178,32 @@ export function createMarkdownShortcutKeymap(opts: {
     },
     {
       key: "Shift-Mod-i",
-      run: (view) => replaceSelectionWithDraft(view, buildImageMarkdownDraft),
+      run: (view) => {
+        if (opts.onImageInserted) {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+          input.onchange = async () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            const result = await createImageAsset(file, 5 * 1024 * 1024);
+            if (result.ok) {
+              const { from, to } = view.state.selection.main;
+              view.dispatch({
+                changes: { from, to, insert: result.ref },
+                selection: { anchor: from + result.ref.length },
+              });
+              view.focus();
+              opts.onImageInserted?.(result.asset, result.ref);
+            } else {
+              alert(result.error);
+            }
+          };
+          input.click();
+          return true;
+        }
+        return replaceSelectionWithDraft(view, buildImageMarkdownDraft);
+      },
     },
     {
       key: "Mod-`",

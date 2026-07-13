@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Table, Code2, Sigma, GitBranch, Quote, Image as ImageIcon } from "lucide-react";
 import { EditorView } from "@codemirror/view";
-import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile, syncAnnotation } from "@/modules/write";
+import { syntaxTree } from "@codemirror/language";
+import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile, syncAnnotation, ariaLabelCompartment } from "@/modules/write";
 import type { WritingStats } from "@/modules/write";
 import type { SnippetKind, ReportAsset } from "@/types";
 
@@ -71,6 +72,9 @@ export function EditorPanel({
         onSaveRef.current?.(v);
       },
       ariaLabel,
+      onImageInserted: (asset, ref) => {
+        if (onImageInserted) onImageInserted(asset, ref);
+      },
     });
 
     const view = new EditorView({
@@ -87,14 +91,64 @@ export function EditorPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update aria-label dynamically without recreating editor state/view
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: ariaLabelCompartment.reconfigure(
+        EditorView.contentAttributes.of({ "aria-label": ariaLabel })
+      ),
+    });
+  }, [ariaLabel]);
+
   const handleInsert = (kind: SnippetKind) => {
     const view = viewRef.current;
     if (!view) return;
 
+    if (kind === "image") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const result = await createImageAsset(file, 5 * 1024 * 1024); // max size 5MB
+        if (result.ok) {
+          const { from, to } = view.state.selection.main;
+          view.dispatch({
+            changes: { from, to, insert: result.ref },
+            selection: { anchor: from + result.ref.length },
+          });
+          view.focus();
+          if (onImageInserted) {
+            onImageInserted(result.asset, result.ref);
+          }
+        } else {
+          alert(result.error);
+        }
+      };
+      input.click();
+      return;
+    }
+
     const { from, to } = view.state.selection.main;
     const doc = view.state.doc.toString();
     
-    const result = insertSnippet(doc, from, to, kind);
+    let blockEndPos: number | undefined;
+    try {
+      const tree = syntaxTree(view.state);
+      let node: any = tree.resolveInner(from, -1);
+      while (node) {
+        if (node.name === "FencedCode" || node.name === "CodeBlock" || node.name === "Table") {
+          blockEndPos = node.to;
+          break;
+        }
+        node = node.parent;
+      }
+    } catch (e) {}
+
+    const result = insertSnippet(doc, from, to, kind, blockEndPos);
     
     // Dispatch document change and select new cursor position
     view.dispatch({

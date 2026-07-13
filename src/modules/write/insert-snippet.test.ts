@@ -66,4 +66,35 @@ describe("insertSnippet", () => {
     // Should insert double newlines: \n + \n```text...
     expect(result.text).toBe("Hello\n\n```text\n\n```\n");
   });
+
+  it("escapes fenced code block when inserting code snippet inside one", () => {
+    const docWithCode = "```text\ninside code block\n```";
+    // Place cursor inside: index 15 (after "inside ")
+    const result = insertSnippet(docWithCode, 15, 15, "code");
+    // Code block should be inserted after the existing block, separated by blank line
+    expect(result.text).toBe("```text\ninside code block\n```\n\n```text\n\n```\n");
+  });
+
+  it("escapes table when inserting math snippet inside one", () => {
+    const docWithTable = "| Cột 1 |\n| --- |\n| dữ liệu |";
+    // Place cursor in table: index 18 (inside "dữ liệu")
+    const result = insertSnippet(docWithTable, 18, 18, "math");
+    // Math block should be inserted after the table, separated by blank line
+    expect(result.text).toBe("| Cột 1 |\n| --- |\n| dữ liệu |\n\n$$\n\n$$\n");
+  });
+
+  it("does not escape block for inline image snippet", () => {
+    const docWithCode = "```text\ninside code block\n```";
+    const result = insertSnippet(docWithCode, 15, 15, "image");
+    // Image should be inserted exactly at cursor position, with single prepended newline (since previous char is not newline)
+    expect(result.text).toBe("```text\ninside \n![Mô tả ảnh](image:asset_id)code block\n```");
+  });
+
+  it("uses blockEndPos to escape block when provided", () => {
+    const docWithCode = "```text\ninside code block\n```";
+    // Custom blockEndPos: 20
+    const result = insertSnippet(docWithCode, 15, 15, "code", 20);
+    // Should insert code snippet at index 20
+    expect(result.text.slice(20, 20 + 2)).toBe("\n\n");
+  });
 });
