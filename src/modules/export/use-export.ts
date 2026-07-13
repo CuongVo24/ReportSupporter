@@ -7,6 +7,7 @@ import { toQrDataUrl } from "@/modules/evidence";
 import { recordExport } from "./export-history";
 
 import { runChecker } from "@/modules/check/run-checker";
+import { slugify } from "@/lib/slugify";
 
 async function executeExport(
   target: ExportTarget,
@@ -123,7 +124,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
     }
   ) => {
     const id = Math.random().toString(36).substring(2, 11);
-    const safeTitle = bundle.project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "report";
+    const safeTitle = slugify(bundle.project.title) || "report";
     const ext = target === "pdf" ? "pdf" : target === "docx" ? "docx" : target === "pptx" ? "pptx" : "html";
     const fileName = `${safeTitle}.${ext}`;
 

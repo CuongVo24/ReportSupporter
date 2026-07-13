@@ -304,4 +304,37 @@ describe("useExport hook logic", () => {
     expect(jobsArray[0].error?.stage).toBe("parse");
     expect(jobsArray[0].error?.message).toContain("lỗi nghiêm trọng (P0)");
   });
+
+  it("should transliterate Vietnamese diacritics in export filename and fallback to 'report' when empty", async () => {
+    const vnBundle: ReportProjectBundle = {
+      ...mockBundle,
+      project: {
+        ...mockBundle.project,
+        title: "Báo cáo đồ án phần mềm tốt nghiệp 2026",
+      },
+    };
+
+    const mockBlob = new Blob(["html content"], { type: "text/html" });
+    vi.mocked(exportHtml).mockReturnValue({ ok: true, blob: mockBlob });
+
+    const { runExport } = useExport();
+
+    // 1. Test Vietnamese title transliteration
+    await runExport("html", vnBundle);
+    expect(jobsArray).toHaveLength(1);
+    expect(jobsArray[0].fileName).toBe("bao-cao-do-an-phan-mem-tot-nghiep-2026.html");
+
+    // 2. Test empty / special characters only title fallback
+    const emptyBundle: ReportProjectBundle = {
+      ...mockBundle,
+      project: {
+        ...mockBundle.project,
+        title: "   *&^%$#@!   ",
+      },
+    };
+    jobsArray.length = 0;
+    await runExport("html", emptyBundle);
+    expect(jobsArray).toHaveLength(1);
+    expect(jobsArray[0].fileName).toBe("report.html");
+  });
 });

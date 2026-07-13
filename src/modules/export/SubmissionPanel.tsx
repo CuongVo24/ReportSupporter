@@ -9,6 +9,7 @@ import { clearExportHistory, loadExportHistory } from "./export-history";
 import { Button, Dialog } from "@/components/ui";
 import { validateExport, type ExportIssue } from "./validate-export";
 import { runChecker } from "@/modules/check/run-checker";
+import { slugify } from "@/lib/slugify";
 
 export interface PreflightIssue {
   severity: "error" | "warning";
@@ -127,7 +128,7 @@ export function SubmissionPanel({
         evidenceAppendixMarkdown,
       });
 
-      const safeTitle = bundle.project?.title?.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "report";
+      const safeTitle = slugify(bundle.project?.title || "") || "report";
       const fileName = `${safeTitle}-evidence.zip`;
 
       const url = URL.createObjectURL(pkg.blob);
