@@ -139,8 +139,10 @@ export function useExport(currentBundle?: ReportProjectBundle) {
 
     setJobs((prev) => [newJob, ...prev]);
 
+    let currentPhase: ExportJob["phase"] = undefined;
     try {
       const blob = await executeExport(target, bundle, extraParams, (phase) => {
+        currentPhase = phase;
         setJobs((prev) =>
           prev.map((job) =>
             job.id === id
@@ -161,20 +163,12 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         URL.revokeObjectURL(url);
       }
 
-      let finishedJob: ExportJob | null = null;
       setExportedBlobs((prev) => ({ ...prev, [target]: blob }));
+      const finishedJob: ExportJob = { ...newJob, phase: currentPhase, status: "done", finishedAt: new Date().toISOString() };
+      await recordExport(finishedJob);
       setJobs((prev) =>
-        prev.map((job) => {
-          if (job.id === id) {
-            finishedJob = { ...job, status: "done", finishedAt: new Date().toISOString() };
-            return finishedJob;
-          }
-          return job;
-        })
+        prev.map((job) => (job.id === id ? finishedJob : job))
       );
-      if (finishedJob) {
-        recordExport(finishedJob);
-      }
     } catch (error: unknown) {
       const exportError: ExportError =
         error && typeof error === "object" && "stage" in error && "message" in error
@@ -185,19 +179,11 @@ export function useExport(currentBundle?: ReportProjectBundle) {
               recoverable: true,
             };
 
-      let failedJob: ExportJob | null = null;
+      const failedJob: ExportJob = { ...newJob, phase: currentPhase, status: "error", error: exportError, finishedAt: new Date().toISOString() };
+      await recordExport(failedJob);
       setJobs((prev) =>
-        prev.map((job) => {
-          if (job.id === id) {
-            failedJob = { ...job, status: "error", error: exportError, finishedAt: new Date().toISOString() };
-            return failedJob;
-          }
-          return job;
-        })
+        prev.map((job) => (job.id === id ? failedJob : job))
       );
-      if (failedJob) {
-        recordExport(failedJob);
-      }
     }
   }, []);
 
@@ -231,8 +217,14 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         )
       );
 
+      let currentPhase: ExportJob["phase"] = undefined;
       try {
-        const blob = await executeExport(job.target, activeBundle, extraParams);
+        const blob = await executeExport(job.target, activeBundle, extraParams, (phase) => {
+          currentPhase = phase;
+          setJobs((prev) =>
+            prev.map((j) => (j.id === jobId ? { ...j, phase } : j))
+          );
+        });
 
         if (job.target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
           const url = URL.createObjectURL(blob);
@@ -245,20 +237,18 @@ export function useExport(currentBundle?: ReportProjectBundle) {
           URL.revokeObjectURL(url);
         }
 
-        let finishedJob: ExportJob | undefined;
+        const targetJob = jobs.find((j) => j.id === jobId);
+        const finishedJob: ExportJob = {
+          ...(targetJob || job),
+          phase: currentPhase || targetJob?.phase || job.phase,
+          status: "done",
+          finishedAt: new Date().toISOString()
+        };
         setExportedBlobs((prev) => ({ ...prev, [job.target]: blob }));
+        await recordExport(finishedJob);
         setJobs((prev) =>
-          prev.map((j) => {
-            if (j.id === jobId) {
-              finishedJob = { ...j, status: "done", finishedAt: new Date().toISOString() };
-              return finishedJob;
-            }
-            return j;
-          })
+          prev.map((j) => (j.id === jobId ? finishedJob : j))
         );
-        if (finishedJob) {
-          recordExport(finishedJob);
-        }
       } catch (error: unknown) {
         const exportError: ExportError =
           error && typeof error === "object" && "stage" in error && "message" in error
@@ -269,19 +259,18 @@ export function useExport(currentBundle?: ReportProjectBundle) {
                 recoverable: true,
               };
 
-        let failedJob: ExportJob | undefined;
+        const targetJob = jobs.find((j) => j.id === jobId);
+        const failedJob: ExportJob = {
+          ...(targetJob || job),
+          phase: currentPhase || targetJob?.phase || job.phase,
+          status: "error",
+          error: exportError,
+          finishedAt: new Date().toISOString()
+        };
+        await recordExport(failedJob);
         setJobs((prev) =>
-          prev.map((j) => {
-            if (j.id === jobId) {
-              failedJob = { ...j, status: "error", error: exportError, finishedAt: new Date().toISOString() };
-              return failedJob;
-            }
-            return j;
-          })
+          prev.map((j) => (j.id === jobId ? failedJob : j))
         );
-        if (failedJob) {
-          recordExport(failedJob);
-        }
       }
     },
     [jobs, currentBundle]

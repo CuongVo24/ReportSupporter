@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 import { EmptyState, ErrorState } from "@/components/states";
 import { Button, Dialog, Toast } from "@/components/ui";
-import { validateExport, type ExportIssue } from "./validate-export";
+import { validateExport } from "./validate-export";
 import { runChecker } from "@/modules/check/run-checker";
 
 export interface PreflightIssue {

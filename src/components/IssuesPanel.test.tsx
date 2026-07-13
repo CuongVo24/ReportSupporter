@@ -38,6 +38,7 @@ describe("IssuesPanel section titles mapping", () => {
         line: 10,
       }
     ],
+    grouped: { error: [], warning: [], info: [] },
     readinessScore: 70,
     ranAt: "2026-07-13T10:00:00Z"
   };

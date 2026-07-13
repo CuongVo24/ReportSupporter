@@ -99,7 +99,7 @@ function insertSnippetCommand(kind: SnippetKind): Command {
     if (kind !== "image") {
       try {
         const tree = syntaxTree(view.state);
-        let node: any = tree.resolveInner(from, -1);
+        let node: ReturnType<typeof tree.resolveInner> = tree.resolveInner(from, -1);
         while (node) {
           if (node.name === "FencedCode" || node.name === "CodeBlock" || node.name === "Table") {
             blockEndPos = node.to;
@@ -107,7 +107,7 @@ function insertSnippetCommand(kind: SnippetKind): Command {
           }
           node = node.parent;
         }
-      } catch (e) {}
+      } catch {}
     }
 
     const result = insertSnippet(doc, from, to, kind, blockEndPos);

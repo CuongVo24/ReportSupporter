@@ -138,7 +138,7 @@ export function EditorPanel({
     let blockEndPos: number | undefined;
     try {
       const tree = syntaxTree(view.state);
-      let node: any = tree.resolveInner(from, -1);
+       let node: ReturnType<typeof tree.resolveInner> = tree.resolveInner(from, -1);
       while (node) {
         if (node.name === "FencedCode" || node.name === "CodeBlock" || node.name === "Table") {
           blockEndPos = node.to;
@@ -146,7 +146,7 @@ export function EditorPanel({
         }
         node = node.parent;
       }
-    } catch (e) {}
+    } catch {}
 
     const result = insertSnippet(doc, from, to, kind, blockEndPos);
     

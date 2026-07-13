@@ -6,8 +6,8 @@ import { generateReadme } from "./generate-readme";
 import { buildEvidenceAppendix } from "@/modules/evidence";
 import { verifyDocxLayout } from "./docx-layout-checklist";
 import { clearExportHistory, loadExportHistory } from "./export-history";
-import { Button, Dialog } from "@/components/ui";
-import { validateExport, type ExportIssue } from "./validate-export";
+import { Button, Dialog, Toast } from "@/components/ui";
+import { validateExport } from "./validate-export";
 import { runChecker } from "@/modules/check/run-checker";
 import { slugify } from "@/lib/slugify";
 
@@ -36,6 +36,18 @@ export function SubmissionPanel({
   const [history, setHistory] = useState<ExportJob[]>([]);
   const [packaging, setPackaging] = useState(false);
   const [isValidationOpen, setIsValidationOpen] = useState(false);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    title: string;
+    variant: "success" | "info" | "error";
+    description?: string;
+  }>({
+    open: false,
+    title: "",
+    variant: "info",
+    description: "",
+  });
+
   const [preflightResult, setPreflightResult] = useState<{
     ok: boolean;
     hasP0: boolean;
@@ -139,8 +151,20 @@ export function SubmissionPanel({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      setToast({
+        open: true,
+        title: "Đã tạo gói nộp bài thành công",
+        variant: "success",
+        description: `Tệp ${fileName} đã được tải xuống.`,
+      });
     } catch (err) {
-      console.error("Failed to build submission package:", err);
+      setToast({
+        open: true,
+        title: "Không thể tạo gói nộp bài",
+        variant: "error",
+        description: err instanceof Error ? err.message : "Đóng gói zip thất bại.",
+      });
     } finally {
       setPackaging(false);
     }
@@ -321,6 +345,14 @@ export function SubmissionPanel({
           ))}
         </div>
       </Dialog>
+
+      <Toast
+        open={toast.open}
+        onOpenChange={(open) => setToast((t) => ({ ...t, open }))}
+        title={toast.title}
+        variant={toast.variant}
+        description={toast.description}
+      />
     </div>
   );
 }

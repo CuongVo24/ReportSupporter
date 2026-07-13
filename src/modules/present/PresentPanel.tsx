@@ -13,7 +13,7 @@ import { getGatewayState, requestSuggestion } from "@/modules/write";
 import { assistOutline } from "./ai/assist-outline";
 import { AiOutlineButton } from "./ai/AiOutlineButton";
 import { EmptyState, SuccessState } from "@/components/states";
-import { Button, Badge } from "@/components/ui";
+import { Button, Badge, Toast } from "@/components/ui";
 import { List, Mic, HelpCircle, AlertTriangle, Sparkles, Loader2, ShieldQuestion } from "lucide-react";
 import { useExport } from "@/modules/export";
 
@@ -35,6 +35,19 @@ export interface PresentPanelProps {
 
 export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSettings }: PresentPanelProps) {
   const [activeTab, setActiveTab] = useState<"outline" | "script" | "qa" | "mock" | "hints">("outline");
+  const [toast, setToast] = useState<{
+    open: boolean;
+    title: string;
+    variant: "success" | "info" | "error";
+    description?: string;
+  }>({
+    open: false,
+    title: "",
+    variant: "info",
+    description: "",
+  });
+
+  const [prevPptxStatus, setPrevPptxStatus] = useState<string | null>(null);
 
   const {
     slides,
@@ -57,6 +70,37 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSet
   const activeRunExport = runExport || localExport.runExport;
   const activeJobs = jobs || localExport.jobs;
   const isPptxExporting = activeJobs.some((j) => j.target === "pptx" && j.status === "running");
+
+  React.useEffect(() => {
+    const currentJob = activeJobs.find((j) => j.target === "pptx");
+    const currentStatus = currentJob ? currentJob.status : null;
+
+    if (currentStatus !== prevPptxStatus) {
+      if (currentStatus === "running") {
+        setToast({
+          open: true,
+          title: "Đang xuất PowerPoint...",
+          variant: "info",
+          description: "Vui lòng chờ trong khi hệ thống khởi tạo và vẽ slide PowerPoint.",
+        });
+      } else if (currentStatus === "done") {
+        setToast({
+          open: true,
+          title: "Xuất PPTX thành công",
+          variant: "success",
+          description: `Tệp ${currentJob?.fileName || "presentation.pptx"} đã được tải xuống.`,
+        });
+      } else if (currentStatus === "error") {
+        setToast({
+          open: true,
+          title: "Xuất PPTX thất bại",
+          variant: "error",
+          description: currentJob?.error?.message || "Có lỗi xảy ra khi tạo tệp PowerPoint.",
+        });
+      }
+      setPrevPptxStatus(currentStatus);
+    }
+  }, [activeJobs, prevPptxStatus]);
 
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<SlideOutline[] | null>(null);
@@ -394,6 +438,13 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSet
           </div>
         </div>
       )}
+      <Toast
+        open={toast.open}
+        onOpenChange={(open) => setToast((t) => ({ ...t, open }))}
+        title={toast.title}
+        variant={toast.variant}
+        description={toast.description}
+      />
     </div>
   );
 }
