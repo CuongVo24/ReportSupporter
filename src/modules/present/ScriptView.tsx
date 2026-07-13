@@ -48,10 +48,10 @@ export function ScriptView({ scripts, slides, speakers, onScriptChange }: Script
                   <button
                     disabled
                     className="ws-present-ai-btn"
-                    title="Tính năng tự động tối ưu bằng AI sẽ khả dụng ở tuần 11"
+                    title="Tính năng tự động tối ưu bằng AI đang được phát triển"
                   >
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      <Sparkles size={12} /> Tối ưu kịch bản bằng AI (W11)
+                      <Sparkles size={12} /> Tối ưu kịch bản bằng AI
                     </span>
                   </button>
                 </div>

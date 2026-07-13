@@ -30,18 +30,18 @@ export type CommandHandlers = {
 };
 
 export const commandGroupLabels: Record<CommandGroup, string> = {
-  write: "Viet bao cao",
-  review: "Kiem tra",
-  view: "Hien thi",
-  export: "Xuat ban",
-  setup: "Thiet lap",
+  write: "Viết báo cáo",
+  review: "Kiểm tra",
+  view: "Hiển thị",
+  export: "Xuất bản",
+  setup: "Thiết lập",
 };
 
 export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
   return [
     {
       id: "create-section",
-      label: "Them muc moi",
+      label: "Thêm mục mới",
       group: "write",
       hint: "Ctrl+Shift+N",
       keywords: ["new", "section", "muc"],
@@ -49,7 +49,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "duplicate-section",
-      label: "Nhan doi muc hien tai",
+      label: "Nhân đôi mục hiện tại",
       group: "write",
       hint: "Ctrl+Shift+D",
       keywords: ["copy", "duplicate", "section"],
@@ -57,7 +57,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "move-section-up",
-      label: "Chuyen muc len tren",
+      label: "Chuyển mục lên trên",
       group: "write",
       hint: "Alt+Up",
       keywords: ["move", "up", "len"],
@@ -65,7 +65,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "move-section-down",
-      label: "Chuyen muc xuong duoi",
+      label: "Chuyển mục xuống dưới",
       group: "write",
       hint: "Alt+Down",
       keywords: ["move", "down", "xuong"],
@@ -73,7 +73,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "save-draft",
-      label: "Luu nhap",
+      label: "Lưu nháp",
       group: "write",
       hint: "Ctrl+S",
       keywords: ["save", "draft", "luu"],
@@ -81,21 +81,21 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "import-markdown",
-      label: "Nhap Markdown",
+      label: "Nhập Markdown",
       group: "write",
       keywords: ["markdown", "import", "readme"],
       run: handlers.openMarkdownImport,
     },
     {
       id: "create-report",
-      label: "Tao bao cao moi",
+      label: "Tạo báo cáo mới",
       group: "write",
       keywords: ["reset", "new", "template"],
       run: handlers.createReport,
     },
     {
       id: "run-check",
-      label: "Soat loi bao cao",
+      label: "Soát lỗi báo cáo",
       group: "review",
       hint: "Ctrl+Enter",
       keywords: ["check", "lint", "kiem tra"],
@@ -103,7 +103,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "open-preview",
-      label: "Mo ban xem truoc",
+      label: "Mở bản xem trước",
       group: "view",
       hint: "Ctrl+P",
       keywords: ["preview", "xem truoc"],
@@ -111,7 +111,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "toggle-focus-mode",
-      label: "Bat/tat che do Focus",
+      label: "Bật/tắt chế độ Focus",
       group: "view",
       hint: "Ctrl+Shift+F",
       keywords: ["focus", "zen", "tap trung"],
@@ -119,7 +119,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "open-export",
-      label: "Mo bang xuat ban",
+      label: "Mở bảng xuất bản",
       group: "export",
       hint: "Ctrl+Shift+E",
       keywords: ["export", "pdf", "docx", "nop bai"],
@@ -127,7 +127,7 @@ export function buildWorkspaceCommands(handlers: CommandHandlers): Command[] {
     },
     {
       id: "open-ai-settings",
-      label: "Cai dat Tro ly AI",
+      label: "Cài đặt Trợ lý AI",
       group: "setup",
       keywords: ["ai", "settings", "config"],
       run: handlers.openAiSettings,

@@ -98,7 +98,6 @@ export function IssuesPanel({ result, onRun, onJump, hasRun, sections }: IssuesP
             >
               <AlertCircle size={12} aria-hidden="true" />
               <span>Broken assets: {brokenAssetCount}</span>
-              <span style={{ fontSize: "10px", opacity: 0.7 }}>(dev)</span>
             </div>
           )}
 

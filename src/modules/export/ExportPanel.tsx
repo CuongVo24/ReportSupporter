@@ -250,7 +250,7 @@ export function ExportPanel({
       )}
 
       <div className="ws-export-targets">
-        <div className="ws-export-targets-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "var(--rs-space-3)" }}>
+        <div className="ws-export-targets-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--rs-space-3)" }}>
           <Button
             variant="secondary"
             loading={jobs.some((j) => j.target === "html" && j.status === "running")}
@@ -295,24 +295,7 @@ export function ExportPanel({
           >
             Xuất DOCX
           </Button>
-
-          <Button
-            disabled
-            variant="secondary"
-            leadingIcon={
-              <svg className="ws-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "16px", height: "16px" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            }
-            aria-label="Xuất PowerPoint (PPTX) - Tạm hoãn"
-            fullWidth
-          >
-            Xuất PPTX (Phase 3)
-          </Button>
         </div>
-        <p style={{ fontSize: "var(--rs-font-size-xs)", color: "var(--rs-color-text-muted)", marginTop: "var(--rs-space-2)", fontStyle: "italic" }}>
-          * Tính năng xuất PowerPoint (PPTX) hiện tại đang tạm hoãn (cần bật Phase 3).
-        </p>
       </div>
 
       <div className="ws-export-jobs-container">

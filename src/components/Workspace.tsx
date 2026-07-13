@@ -393,14 +393,14 @@ export function Workspace() {
       setCheckResult(null);
       setHasRun(false);
       void saveBundle(next);
-      setToastMessage("Da chen anh vao muc da tha.");
+      setToastMessage("Đã chèn ảnh vào mục đã thả.");
       setToastOpen(true);
       return;
     }
 
     const markdownFile = files.find((file) => isMarkdownFile(file));
     if (!markdownFile) {
-      setToastMessage("Chi ho tro tha anh hoac file Markdown vao muc luc.");
+      setToastMessage("Chỉ hỗ trợ thả ảnh hoặc file Markdown vào mục lục.");
       setToastOpen(true);
       return;
     }
@@ -436,7 +436,7 @@ export function Workspace() {
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(next);
-    setToastMessage("Da chen noi dung Markdown vao muc da tha.");
+    setToastMessage("Đã chèn nội dung Markdown vào mục đã thả.");
     setToastOpen(true);
   }, [bundle]);
 
@@ -1284,8 +1284,20 @@ export function Workspace() {
       <Dialog
         isOpen={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
-        title="Xóa mục báo cáo này?"
-        description="Mục báo cáo hiện tại đang chứa nội dung. Hành động xóa sẽ không thể hoàn tác."
+        title={
+          (() => {
+            const sec = bundle?.project.sections.find((s) => s.id === sectionToDeleteId);
+            return !sec || !sec.markdown.trim() ? "Xóa mục trống này?" : "Xóa mục báo cáo này?";
+          })()
+        }
+        description={
+          (() => {
+            const sec = bundle?.project.sections.find((s) => s.id === sectionToDeleteId);
+            return !sec || !sec.markdown.trim()
+              ? "Mục báo cáo này hiện rỗng. Bạn có thể khôi phục lại mục này từ Lịch sử phiên bản."
+              : "Mục báo cáo này đang chứa nội dung. Bạn có thể khôi phục lại mục này từ Lịch sử phiên bản.";
+          })()
+        }
         variant="confirm"
         footer={
           <div className="ws-dialog-footer-actions">

@@ -138,7 +138,7 @@ export function EditorPanel({
     let blockEndPos: number | undefined;
     try {
       const tree = syntaxTree(view.state);
-       let node: ReturnType<typeof tree.resolveInner> = tree.resolveInner(from, -1);
+       let node: ReturnType<typeof tree.resolveInner> | null = tree.resolveInner(from, -1);
       while (node) {
         if (node.name === "FencedCode" || node.name === "CodeBlock" || node.name === "Table") {
           blockEndPos = node.to;

@@ -51,6 +51,10 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
 
   const state = getGatewayState();
   const isDisabled = state === "disabled" || state === "unconfigured";
+  const tooltipMessage = state === "disabled"
+    ? "Vui lòng bật AI trong Cài đặt để sử dụng"
+    : "AI đã bật — thêm khóa API trong Cài đặt để sử dụng";
+  const buttonText = state === "disabled" ? "Bật AI trong Cài đặt" : "Cài đặt khóa API";
 
   const gateway = {
     requestSuggestion,
@@ -164,7 +168,7 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
             disabled={isDisabled || isAiLoading}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="ws-ai-dropdown-trigger"
-            title={isDisabled ? "Vui lòng bật AI trong Cài đặt để sử dụng" : "Mở các tác vụ Trợ lý AI"}
+            title={isDisabled ? tooltipMessage : "Mở các tác vụ Trợ lý AI"}
             aria-haspopup="listbox"
             aria-expanded={isDropdownOpen}
           >
@@ -228,7 +232,7 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
             type="button"
             className="ws-ai-assist-note rs-state-warning-btn"
             onClick={onOpenSettings}
-            title="Vui lòng bật AI trong Cài đặt để sử dụng"
+            title={tooltipMessage}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -244,7 +248,7 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
               textDecoration: "underline",
             }}
           >
-            <AlertTriangle size={12} aria-hidden="true" /> Bật AI trong Cài đặt
+            <AlertTriangle size={12} aria-hidden="true" /> {buttonText}
           </button>
         )}
 

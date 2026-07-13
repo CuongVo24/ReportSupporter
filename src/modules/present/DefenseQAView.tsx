@@ -64,10 +64,10 @@ export function DefenseQAView({ qas, sections }: DefenseQAViewProps) {
                         <button
                           disabled
                           className="ws-present-qa-ai-btn"
-                          title="Tính năng tối ưu bằng AI sẽ khả dụng ở tuần 11"
+                          title="Tính năng tối ưu bằng AI đang được phát triển"
                         >
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <Sparkles size={12} /> Cải thiện câu trả lời bằng AI (W11)
+                            <Sparkles size={12} /> Cải thiện câu trả lời bằng AI
                           </span>
                         </button>
                       </div>
