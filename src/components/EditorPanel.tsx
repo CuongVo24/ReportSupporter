@@ -7,6 +7,7 @@ import { syntaxTree } from "@codemirror/language";
 import { createEditorState, insertSnippet, createImageAsset, isMarkdownFile, readMarkdownFile, syncAnnotation, ariaLabelCompartment } from "@/modules/write";
 import type { WritingStats } from "@/modules/write";
 import type { SnippetKind, ReportAsset } from "@/types";
+import { Toast } from "@/components/ui";
 
 type EditorPanelProps = {
   value: string;
@@ -32,9 +33,13 @@ export function EditorPanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const [fileError, setFileError] = useState("");
+  const [imageErrorToast, setImageErrorToast] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
+
+  const showImageError = (message: string) => setImageErrorToast({ open: true, message });
 
   const onChangeRef = useRef(onChange);
   const onSaveRef = useRef(onSave);
+  const onImageInsertedRef = useRef(onImageInserted);
 
   // Keep refs updated with latest callbacks
   useEffect(() => {
@@ -44,6 +49,10 @@ export function EditorPanel({
   useEffect(() => {
     onSaveRef.current = onSave;
   }, [onSave]);
+
+  useEffect(() => {
+    onImageInsertedRef.current = onImageInserted;
+  }, [onImageInserted]);
 
   // Sync external value modifications (like switching sections) with the editor
   useEffect(() => {
@@ -73,8 +82,9 @@ export function EditorPanel({
       },
       ariaLabel,
       onImageInserted: (asset, ref) => {
-        if (onImageInserted) onImageInserted(asset, ref);
+        onImageInsertedRef.current?.(asset, ref);
       },
+      onImageError: (message) => showImageError(message),
     });
 
     const view = new EditorView({
@@ -125,7 +135,7 @@ export function EditorPanel({
             onImageInserted(result.asset, result.ref);
           }
         } else {
-          alert(result.error);
+          showImageError(result.error);
         }
       };
       input.click();
@@ -208,7 +218,7 @@ export function EditorPanel({
         }
         onImageInserted(result.asset, result.ref);
       } else {
-        alert(result.error);
+        showImageError(result.error);
       }
       return;
     }
@@ -241,7 +251,7 @@ export function EditorPanel({
         insertTextAtDropPosition(result.ref, e.clientX, e.clientY);
         onImageInserted(result.asset, result.ref);
       } else {
-        alert(result.error);
+        showImageError(result.error);
       }
       return;
     }
@@ -330,6 +340,14 @@ export function EditorPanel({
           {focusMode && <span className="ws-editor-statusbar-focus">Focus</span>}
         </div>
       )}
+
+      <Toast
+        open={imageErrorToast.open}
+        onOpenChange={(open) => setImageErrorToast((t) => ({ ...t, open }))}
+        variant="error"
+        title="Không thể chèn ảnh"
+        description={imageErrorToast.message}
+      />
     </div>
   );
 }

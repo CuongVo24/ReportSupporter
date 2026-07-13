@@ -33,10 +33,10 @@ Mọi tham chiếu mục trong panel Soát lỗi/Issues hiển thị **tên mụ
 - ❌ Đổi logic `onJump` (vẫn nhận id).
 
 ## 3. Checklist
-- [ ] **S1** `IssuesPanel` hiển thị tên mục thay UUID; fallback "Mục đã xoá".
-- [ ] **S2** aria-label "Xem"/jump ở IssuesPanel + CheckerPanel dùng tên mục.
-- [ ] Danh sách P0 trong dialog xuất bản (contract A) cũng hưởng tên mục nếu dùng chung helper.
-- [ ] 4 gate xanh.
+- [x] **S1** `IssuesPanel` hiển thị tên mục thay UUID; fallback "Mục đã xoá".
+- [x] **S2** aria-label "Xem"/jump ở IssuesPanel + CheckerPanel dùng tên mục.
+- [x] Danh sách P0 trong dialog xuất bản (contract A) cũng hiển thị tên mục (map `sectionId→title` từ `bundle.project.sections`).
+- [x] 4 gate xanh (test 617/617, tsc sạch).
 
 ## 4. Expected Interfaces / Files
 
@@ -63,6 +63,6 @@ Mọi tham chiếu mục trong panel Soát lỗi/Issues hiển thị **tên mụ
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit b792b9b)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(check): show section title instead of raw UUID in issues panel`.
+> Thi công: `getSectionTitle` ở `IssuesPanel`+`CheckerPanel`; `Workspace` truyền `sections`. Gate xanh (test 617/617, tsc sạch).

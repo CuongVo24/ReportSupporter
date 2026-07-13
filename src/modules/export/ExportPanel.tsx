@@ -2,16 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 import { EmptyState, ErrorState } from "@/components/states";
 import { Button, Dialog, Toast } from "@/components/ui";
-import { validateExport } from "./validate-export";
-import { runChecker } from "@/modules/check/run-checker";
-
-export interface PreflightIssue {
-  severity: "error" | "warning";
-  code: string;
-  message: string;
-  sectionId?: string;
-  guidance?: string;
-}
+import { buildPreflightResult } from "./preflight";
 
 export function ExportPanel({
   bundle,
@@ -28,14 +19,9 @@ export function ExportPanel({
   retry: (jobId: string, overrideBundle?: ReportProjectBundle) => Promise<void>;
   exportedBlobs?: Partial<Record<ExportTarget, Blob>>;
 }) {
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingTarget, setPendingTarget] = useState<ExportTarget | null>(null);
   const [isValidationOpen, setIsValidationOpen] = useState(false);
-  const [preflightResult, setPreflightResult] = useState<{
-    ok: boolean;
-    hasP0: boolean;
-    issues: PreflightIssue[];
-  } | null>(null);
+  const [preflightResult, setPreflightResult] = useState<ReturnType<typeof buildPreflightResult> | null>(null);
 
   // Toast states
   const [toastOpen, setToastOpen] = useState(false);
@@ -44,38 +30,6 @@ export function ExportPanel({
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
 
   const errorsCount = check?.grouped?.error?.length ?? 0;
-
-  // --- Preflight: merge validateExport + runChecker into a unified result ---
-  const buildPreflightResult = (b: ReportProjectBundle) => {
-    const valResult = validateExport(b);
-    const checkResult = runChecker(b);
-    const p0Issues = checkResult.issues.filter((i) => i.severity === "error");
-
-    // Map checker P0 issues into PreflightIssue format
-    const checkerPreflightIssues: PreflightIssue[] = p0Issues.map((ci) => ({
-      severity: "error" as const,
-      code: "CHECKER_P0" as const,
-      message: ci.message,
-      sectionId: ci.sectionId,
-      guidance: ci.suggestion,
-    }));
-
-    // Map validateExport issues (keep as-is)
-    const valPreflightIssues: PreflightIssue[] = valResult.issues.map((vi) => ({
-      ...vi,
-      guidance: undefined,
-    }));
-
-    // P0 errors first, then warnings
-    const allIssues = [...checkerPreflightIssues, ...valPreflightIssues];
-    const hasP0 = checkerPreflightIssues.length > 0;
-
-    return {
-      ok: !hasP0 && valResult.ok,
-      hasP0,
-      issues: allIssues,
-    };
-  };
 
   const prevJobsRef = useRef<ExportJob[]>([]);
 
@@ -125,14 +79,6 @@ export function ExportPanel({
       // No issues at all — direct export
       void runExport(target, bundle);
     }
-  };
-
-  const handleConfirmExport = () => {
-    if (pendingTarget) {
-      void runExport(pendingTarget, bundle);
-      setPendingTarget(null);
-    }
-    setIsConfirmOpen(false);
   };
 
   const handleConfirmValidationExport = () => {
@@ -202,30 +148,20 @@ export function ExportPanel({
     }
   };
 
-  const dialogFooter = (
-    <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
-      <Button variant="ghost" onClick={() => { setIsConfirmOpen(false); setPendingTarget(null); }}>
-        Hủy
-      </Button>
-      <Button variant="primary" onClick={handleConfirmExport}>
-        Vẫn xuất
-      </Button>
-    </div>
-  );
-
   const validationDialogFooter = (
     <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
       <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setPreflightResult(null); setPendingTarget(null); }}>
         {preflightResult?.hasP0 ? "Đóng" : "Hủy"}
       </Button>
-      {!preflightResult?.hasP0 && (
-        <Button
-          variant={preflightResult?.ok ? "primary" : "secondary"}
-          onClick={handleConfirmValidationExport}
-        >
-          Vẫn xuất bản
-        </Button>
-      )}
+      <Button
+        variant={preflightResult?.ok ? "primary" : "secondary"}
+        disabled={preflightResult?.hasP0}
+        aria-disabled={preflightResult?.hasP0 || undefined}
+        title={preflightResult?.hasP0 ? "Còn lỗi bắt buộc — hãy sửa trước khi xuất bản" : undefined}
+        onClick={handleConfirmValidationExport}
+      >
+        Vẫn xuất bản
+      </Button>
     </div>
   );
 
@@ -335,19 +271,6 @@ export function ExportPanel({
           </ul>
         )}
       </div>
-
-      {/* Confirmation Dialog */}
-      <Dialog
-        isOpen={isConfirmOpen}
-        onOpenChange={(open) => {
-          setIsConfirmOpen(open);
-          if (!open) setPendingTarget(null);
-        }}
-        title="Vẫn xuất dù còn lỗi?"
-        description={`Báo cáo còn ${errorsCount} lỗi chặn. Nên sửa trước khi nộp.`}
-        variant="confirm"
-        footer={dialogFooter}
-      />
 
       {/* Unified Preflight Dialog (P0 blocking + warnings) */}
       <Dialog

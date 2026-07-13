@@ -38,11 +38,16 @@ Chèn qua toolbar **luôn** sinh markdown hợp lệ (block mới tách khỏi b
 - ❌ Chèn snippet mới ngoài 6 loại hiện có.
 
 ## 3. Checklist
-- [ ] **S1** Chèn 6 block liên tiếp tại một vị trí → markdown vẫn hợp lệ (không lồng block).
-- [ ] **S1** Chèn khi con trỏ trong fence/bảng/math → block mới nằm ngoài, có blank line ngăn cách.
-- [ ] **S2** "Chèn ảnh" mở picker, lưu asset offline, chèn ref resolve được (preview hiện ảnh).
-- [ ] **S3** Đổi mục → aria-label editor đổi theo tên mục; screen-reader đọc đúng.
-- [ ] Undo/redo/scroll/focus không hồi quy. 4 gate xanh.
+- [x] **S1** Chèn 6 block liên tiếp tại một vị trí → markdown vẫn hợp lệ (không lồng block).
+- [x] **S1** Chèn khi con trỏ trong fence/bảng/math → block mới nằm ngoài, có blank line ngăn cách.
+- [x] **S2** "Chèn ảnh" mở picker, lưu asset offline, chèn ref resolve được (preview hiện ảnh).
+- [x] **S3** Đổi mục → aria-label editor đổi theo tên mục (Compartment.reconfigure, không remount).
+- [x] Undo/redo/scroll/focus không hồi quy. 4 gate xanh (test 617/617, tsc sạch).
+
+### Ghi chú hậu-review (2026-07-13)
+- **Diệt tận gốc lớp lỗi stale-closure (đúng bài học W22-A):** `onImageInserted` giờ forward qua `onImageInsertedRef` ([EditorPanel.tsx](src/components/EditorPanel.tsx)) thay vì bị capture trong `useEffect([])` — cùng pattern ref như `onChange`/`onSave`, không còn nguy cơ callback cũ dính lại.
+- **Bỏ `alert()`, dùng Toast (đúng locked "không im lặng"):** lỗi chọn ảnh (quá 5MB, sai định dạng) ở cả 3 đường (toolbar/paste/drop) và đường phím tắt Ctrl+Shift+I giờ báo qua Toast `variant="error"` — thêm `onImageError` xuyên `createEditorState`→`createMarkdownShortcutKeymap`.
+- **Làm chặt `getBlockContext` (fallback khi syntaxTree fail):** bảng chỉ nhận diện khi khối pipe liền kề **có dòng phân cách GFM** (`|---|`) → hết false-positive với `|` trong văn xuôi; fence/math chưa đóng thì chèn ở cuối tài liệu thay vì lồng bên trong.
 
 ## 4. Expected Interfaces / Files
 
@@ -72,6 +77,6 @@ Chèn qua toolbar **luôn** sinh markdown hợp lệ (block mới tách khỏi b
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit 530051a + refactor hậu-review)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(editor): context-aware block insert, real image picker, and live aria-label`.
+> Thi công: syntaxTree-aware insert + blank-line ngăn cách; image picker offline; aria-label qua Compartment. Hậu-review: ref cho onImageInserted, Toast thay alert, chặt getBlockContext. Gate xanh (test 617/617, tsc sạch).

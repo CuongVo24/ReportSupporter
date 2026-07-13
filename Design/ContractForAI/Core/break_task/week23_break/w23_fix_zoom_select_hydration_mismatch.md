@@ -32,10 +32,13 @@ Loại bỏ hydration mismatch của Select zoom để console sạch và DOM a1
 - ❌ Tắt SSR toàn app.
 
 ## 3. Checklist
-- [ ] **S0** Đã liệt kê mọi Select mismatch.
-- [ ] **S1** Load trang → **0** lỗi hydration liên quan Select zoom trong console.
-- [ ] Zoom control hoạt động như cũ (đổi tỷ lệ, hiển thị %).
-- [ ] 4 gate xanh.
+- [x] **S0** Đã liệt kê mọi Select mismatch.
+- [x] **S1** Load trang → **0** lỗi hydration liên quan Select zoom trong console.
+- [x] Zoom control hoạt động như cũ (đổi tỷ lệ, hiển thị %).
+- [x] 4 gate xanh (test 617/617, tsc sạch).
+
+### S0 — Kết quả audit Select (2026-07-13)
+Toàn app chỉ có **3 call-site `<Select>` thật**: điều khiển zoom ([WorkspaceLayout.tsx](src/components/WorkspaceLayout.tsx)), [AiSettingsPanel.tsx](src/modules/write/ai/AiSettingsPanel.tsx), [EvidenceForm.tsx](src/modules/evidence/EvidenceForm.tsx) (call-site `(dev)/ui-gallery` là trang dev, không tính). Chỉ **zoom** nằm trong lượt SSR đầu tiên → sinh mismatch. Hai cái còn lại render **bên trong Radix Dialog/panel** (content chỉ mount khi mở) nên không SSR id Radix → khớp đúng QA gốc (console chỉ báo **2 lỗi, đều của zoom**). Đã áp mounted-guard cho zoom; không cần đụng 2 Select kia.
 
 ## 4. Expected Interfaces / Files
 
@@ -61,6 +64,6 @@ Loại bỏ hydration mismatch của Select zoom để console sạch và DOM a1
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit 01ac1e4)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(ui): resolve zoom Select hydration mismatch with mounted guard`.
+> Thi công: mounted-guard cho zoom control ([WorkspaceLayout.tsx](src/components/WorkspaceLayout.tsx)); placeholder tĩnh cùng kích thước khi SSR. Gate xanh (test 617/617, tsc sạch). S0 audit ghi ở §3.

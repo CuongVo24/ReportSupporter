@@ -26,7 +26,9 @@ function getBlockContext(doc: string, pos: number): { inside: boolean; endPos: n
     }
   }
   if (oddFences) {
-    let endLineIdx = cursorLineIdx;
+    // Unclosed fence: treat the rest of the document as inside the block so the new
+    // snippet lands after it rather than nested within.
+    let endLineIdx = lines.length - 1;
     for (let i = cursorLineIdx + 1; i < lines.length; i++) {
       if (lines[i].trim().startsWith("```")) {
         endLineIdx = i;
@@ -45,7 +47,7 @@ function getBlockContext(doc: string, pos: number): { inside: boolean; endPos: n
     }
   }
   if (oddMath) {
-    let endLineIdx = cursorLineIdx;
+    let endLineIdx = lines.length - 1;
     for (let i = cursorLineIdx + 1; i < lines.length; i++) {
       if (lines[i].trim() === "$$") {
         endLineIdx = i;
@@ -56,18 +58,30 @@ function getBlockContext(doc: string, pos: number): { inside: boolean; endPos: n
     return { inside: true, endPos };
   }
 
-  // 3. Check Table block:
-  if (lines[cursorLineIdx] && lines[cursorLineIdx].includes("|")) {
+  // 3. Check Table block. Require the contiguous run of pipe-bearing lines around the
+  // cursor to contain a GFM delimiter row (| --- | :--: |) so a stray inline "|" in
+  // prose is not mistaken for a table.
+  const isPipeRow = (ln: string | undefined) => !!ln && ln.includes("|");
+  const isDelimiterRow = (ln: string | undefined) =>
+    !!ln && /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)*\|?\s*$/.test(ln.trim());
+  if (isPipeRow(lines[cursorLineIdx])) {
+    let start = cursorLineIdx;
+    while (start > 0 && isPipeRow(lines[start - 1])) start--;
     let endLineIdx = cursorLineIdx;
-    for (let i = cursorLineIdx + 1; i < lines.length; i++) {
-      if (!lines[i].includes("|")) {
-        endLineIdx = i - 1;
+    while (endLineIdx < lines.length - 1 && isPipeRow(lines[endLineIdx + 1])) endLineIdx++;
+
+    let hasDelimiter = false;
+    for (let i = start; i <= endLineIdx; i++) {
+      if (isDelimiterRow(lines[i])) {
+        hasDelimiter = true;
         break;
       }
-      endLineIdx = i;
     }
-    const endPos = lineOffsets[endLineIdx] + lines[endLineIdx].length;
-    return { inside: true, endPos };
+
+    if (hasDelimiter) {
+      const endPos = lineOffsets[endLineIdx] + lines[endLineIdx].length;
+      return { inside: true, endPos };
+    }
   }
 
   return { inside: false, endPos: pos };

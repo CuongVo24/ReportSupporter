@@ -40,6 +40,7 @@ export function createEditorState(opts: {
   ariaLabel?: string;
   onSave?: (v: string) => void;
   onImageInserted?: (asset: ReportAsset, ref: string) => void;
+  onImageError?: (message: string) => void;
 }): EditorState {
   const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged && !update.transactions.some((tr) => tr.annotation(syncAnnotation))) {
@@ -60,7 +61,7 @@ export function createEditorState(opts: {
       drawSelection(),
       dropCursor(),
       keymap.of([
-        ...createMarkdownShortcutKeymap({ onSave: opts.onSave, onImageInserted: opts.onImageInserted }),
+        ...createMarkdownShortcutKeymap({ onSave: opts.onSave, onImageInserted: opts.onImageInserted, onImageError: opts.onImageError }),
         ...searchKeymap,
         ...historyKeymap,
         indentWithTab,

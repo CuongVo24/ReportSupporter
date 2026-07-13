@@ -37,11 +37,16 @@ Bảo đảm dialog tiền-kiểm và gate thực thi **cùng một sự thật*
 - ❌ Tên file (thuộc [[w23_fix_export_filename_diacritics_slug]]).
 
 ## 3. Checklist
-- [ ] **S1** Dialog tiền-kiểm chạy cùng nguồn checker; phân loại P0 vs warning đúng.
-- [ ] **S2** Có P0 → thông điệp "phải sửa", liệt kê lỗi + tên mục + lối dẫn, **disable** "Vẫn xuất bản".
-- [ ] **S2** Chỉ warning → cho phép "Vẫn xuất bản" như cũ; xuất thành công.
-- [ ] **S3** `SubmissionPanel` đồng bộ phân loại; không đóng gói khi còn P0 mà không báo.
-- [ ] Không còn cảnh "bấm xuất → job Lỗi P0 không báo trước". 4 gate xanh.
+- [x] **S1** Dialog tiền-kiểm chạy cùng nguồn checker; phân loại P0 vs warning đúng.
+- [x] **S2** Có P0 → thông điệp "phải sửa", liệt kê lỗi + tên mục + lối dẫn, **disable** "Vẫn xuất bản" (nút hiển thị + `disabled` + `aria-disabled`, không ẩn).
+- [x] **S2** Chỉ warning → cho phép "Vẫn xuất bản" như cũ; xuất thành công.
+- [x] **S3** `SubmissionPanel` đồng bộ phân loại; không đóng gói khi còn P0 mà không báo.
+- [x] Không còn cảnh "bấm xuất → job Lỗi P0 không báo trước". 4 gate xanh (test 617/617, tsc sạch).
+
+### Ghi chú hậu-review (2026-07-13)
+- **Một nguồn preflight dùng chung:** tách `buildPreflightResult` + type `PreflightIssue`/`PreflightResult` ra [preflight.ts](src/modules/export/preflight.ts); `ExportPanel` và `SubmissionPanel` cùng import — hết bản sao trùng lặp ở 2 panel.
+- **Đúng chữ contract "disable":** nút "Vẫn xuất bản"/"Vẫn tải xuống" khi P0 giờ **hiển thị nhưng disabled** (native `disabled` + `aria-disabled` + tooltip lý do) thay vì bị ẩn — screen-reader vẫn thấy nút và biết vì sao bị chặn. Test cập nhật khẳng định `disabled===true`.
+- **Gỡ dead code:** xóa dialog `isConfirmOpen`/`handleConfirmExport`/`dialogFooter` (không còn ai mở sau khi hợp nhất luồng).
 
 ## 4. Expected Interfaces / Files
 
@@ -71,6 +76,6 @@ Bảo đảm dialog tiền-kiểm và gate thực thi **cùng một sự thật*
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit d2ad82f + refactor hậu-review)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(export): surface P0 blocking issues in pre-flight dialog and gate publish button`.
+> Thi công: hợp nhất `validateExport`+`runChecker` qua [preflight.ts](src/modules/export/preflight.ts); dialog phân loại P0/warning; nút xuất disabled khi P0. Gate xanh (test 617/617, tsc sạch).

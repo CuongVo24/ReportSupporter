@@ -16,3 +16,4 @@ export { generateReadme } from "./generate-readme";
 export { buildSubmissionChecklist } from "./submission-checklist";
 export { recordExport, loadExportHistory, clearExportHistory } from "./export-history";
 export { SubmissionPanel } from "./SubmissionPanel";
+export { buildPreflightResult, type PreflightIssue, type PreflightResult } from "./preflight";

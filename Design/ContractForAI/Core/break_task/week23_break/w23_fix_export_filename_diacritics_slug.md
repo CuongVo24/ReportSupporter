@@ -35,10 +35,10 @@ Mọi tên file xuất (`.html`/`.pdf`/`.docx`/`-evidence.zip`) **chuyển tự 
 - ❌ i18n tên file (chỉ chuyển tự, không dịch).
 
 ## 3. Checklist
-- [ ] **S1** `use-export.ts` + `SubmissionPanel.tsx` dùng `slugify`; bỏ regex `[^a-z0-9]+`.
-- [ ] **S2** Fallback `"report"` khi slug rỗng; kết quả an toàn tên file.
-- [ ] Title "Báo cáo đồ án phần mềm" → `bao-cao-do-an-phan-mem.*`. Test xanh.
-- [ ] 4 gate xanh.
+- [x] **S1** `use-export.ts` + `SubmissionPanel.tsx` dùng `slugify`; bỏ regex `[^a-z0-9]+`.
+- [x] **S2** Fallback `"report"` khi slug rỗng; kết quả an toàn tên file.
+- [x] Title "Báo cáo đồ án phần mềm" → `bao-cao-do-an-phan-mem.*`. Test xanh.
+- [x] 4 gate xanh (test 617/617, tsc sạch). Xác nhận không còn regex `[^a-z0-9]+` slug thứ hai trong `src/` (chỉ còn trong `lib/slugify`).
 
 ## 4. Expected Interfaces / Files
 
@@ -65,6 +65,6 @@ Mọi tên file xuất (`.html`/`.pdf`/`.docx`/`-evidence.zip`) **chuyển tự 
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit be6abd1)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(export): reuse slugify for filenames so Vietnamese titles transliterate`.
+> Thi công: cả 2 call-site (`use-export.ts`, `SubmissionPanel.tsx`) dùng `slugify` + fallback `"report"`. Gate xanh (test 617/617, tsc sạch).

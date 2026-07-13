@@ -39,11 +39,15 @@ Mọi hành động sinh tệp (zip, pptx, export) **luôn** cho phản hồi r�
 - ❌ Thêm hàng đợi export mới.
 
 ## 3. Checklist
-- [ ] **S0** Đã xác nhận nhánh race lịch sử; ghi vào PR.
-- [ ] **S1** Zip: toast thành công + toast lỗi; không `console.error` câm.
-- [ ] **S2** PPTX (Present): toast thành công/lỗi; kết thúc luôn hữu hình.
-- [ ] **S3** Lịch sử nộp bài = lịch sử xuất bản (không thiếu bản thành công) sau nhiều lần xuất.
-- [ ] 4 gate xanh.
+- [x] **S0** Xác nhận race: `recordExport` fire-and-forget đua với `refreshHistory([jobs])`.
+- [x] **S1** Zip: toast thành công + toast lỗi; bỏ `console.error` câm.
+- [x] **S2** PPTX (Present): toast running/done/error; kết thúc luôn hữu hình.
+- [x] **S3** `await recordExport` **trước** `setJobs` → lịch sử nộp bài khớp lịch sử xuất bản.
+- [x] 4 gate xanh (test 617/617, tsc sạch).
+
+### Ghi chú hậu-review (2026-07-13) — vá bug do chính S2 sinh ra
+- **Toast PPTX replay khi remount tab:** `PresentPanel` nằm trong Radix `TabsContent` nên **unmount lúc đổi tab**, còn `jobs` sống ở `Workspace`. Bản S2 cũ khởi tạo `prevPptxStatus=null` rồi so với status hiện tại ⇒ mỗi lần quay lại tab Present sau khi đã xuất PPTX, toast "thành công/thất bại" cũ **bắn lại**.
+- **Fix:** thay `prevPptxStatus` bằng **signal `${job.id}:${job.status}`** chốt **baseline tại mount** qua `useRef` ([PresentPanel.tsx](src/modules/present/PresentPanel.tsx)) — chỉ bắn toast khi signal đổi thật (export mới = id mới, hoặc chuyển trạng thái running→done/error), remount với job cũ **không** replay.
 
 ## 4. Expected Interfaces / Files
 
@@ -74,6 +78,6 @@ Mọi hành động sinh tệp (zip, pptx, export) **luôn** cho phản hồi r�
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit 4da955e + vá bug toast replay hậu-review)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `fix(export): add feedback for zip/pptx and sync submission history`.
+> Thi công: toast zip/pptx; `await recordExport` trước refresh để hết race lịch sử. Hậu-review: vá toast PPTX replay khi remount tab (signal id:status + baseline ref). Gate xanh (test 617/617, tsc sạch).

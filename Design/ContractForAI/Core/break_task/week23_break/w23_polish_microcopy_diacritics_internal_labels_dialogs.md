@@ -42,11 +42,11 @@ Toàn bộ chuỗi hiển thị cho người dùng cuối **đủ dấu tiếng 
 - ❌ Redesign dialog/tooltip (chỉ đổi chữ).
 
 ## 3. Checklist
-- [ ] **S1** Command palette + toast đủ dấu; tìm kiếm bỏ dấu vẫn chạy.
-- [ ] **S2** Không còn `(dev)`/`(W11)`/`(Phase 3)` trên UI; PPTX nhất quán.
-- [ ] **S3** Dialog xóa: mục rỗng vs có nội dung khác nhau; nêu khôi phục được (không "không thể hoàn tác" nếu có snapshot).
-- [ ] **S4** Tooltip AI: `unconfigured` báo "thêm khóa API", không "bật AI".
-- [ ] grep nhãn nội bộ = rỗng. 4 gate xanh.
+- [x] **S1** Command palette + toast đủ dấu; tìm kiếm bỏ dấu vẫn chạy (keywords/normalize giữ nguyên).
+- [x] **S2** Không còn `(dev)`/`(W11)`/`(Phase 3)` trên UI; PPTX nhất quán (bỏ nút "Phase 3" ở ExportPanel, giữ nút Present đang chạy).
+- [x] **S3** Dialog xóa: mục rỗng vs có nội dung khác nhau; nêu khôi phục từ Lịch sử phiên bản.
+- [x] **S4** Tooltip AI: `unconfigured` báo "thêm khóa API", không "bật AI".
+- [x] grep nhãn nội bộ = rỗng (đã xác nhận `(dev)|(W\d+)|Phase \d|tuần \d+` = 0 hit trong `*.tsx`). 4 gate xanh (test 617/617, tsc sạch).
 
 ## 4. Expected Interfaces / Files
 
@@ -78,6 +78,6 @@ Toàn bộ chuỗi hiển thị cho người dùng cuối **đủ dấu tiếng 
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit 13dd92d)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `polish(copy): restore diacritics, hide internal labels, fix delete/AI messages`.
+> Thi công: đủ dấu command palette+toast; bỏ `(dev)`/`(W11)`/`Phase 3`; dialog xóa theo ngữ cảnh; tooltip AI phân biệt `disabled`/`unconfigured`. Gate xanh (test 617/617, tsc sạch).

@@ -109,9 +109,10 @@ describe("ExportPanel Preflight Integration", () => {
     expect(screen.getByText(/Thiếu minh chứng link github bắt buộc/i)).toBeDefined();
     expect(screen.getByText(/Thêm github link vào Evidence Kit/i)).toBeDefined();
 
-    // The "Vẫn xuất bản" button should NOT exist
-    const stillExportBtn = screen.queryByRole("button", { name: /Vẫn xuất bản/i });
-    expect(stillExportBtn).toBeNull();
+    // The "Vẫn xuất bản" button should be present but disabled (blocked by P0)
+    const stillExportBtn = screen.getByRole("button", { name: /Vẫn xuất bản/i }) as HTMLButtonElement;
+    expect(stillExportBtn.disabled).toBe(true);
+    expect(stillExportBtn.getAttribute("aria-disabled")).toBe("true");
 
     // The cancel button should read "Đóng"
     const closeBtn = screen.getByText("Đóng");

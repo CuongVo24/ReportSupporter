@@ -104,9 +104,10 @@ describe("SubmissionPanel Preflight Integration", () => {
     expect(screen.getByText(/Thiếu link deploy bắt buộc/i)).toBeDefined();
     expect(screen.getByText(/Thêm link deploy vào Evidence Kit/i)).toBeDefined();
 
-    // The "Vẫn tải xuống" button should NOT exist
-    const stillDownloadBtn = screen.queryByRole("button", { name: /Vẫn tải xuống/i });
-    expect(stillDownloadBtn).toBeNull();
+    // The "Vẫn tải xuống" button should be present but disabled (blocked by P0)
+    const stillDownloadBtn = screen.getByRole("button", { name: /Vẫn tải xuống/i }) as HTMLButtonElement;
+    expect(stillDownloadBtn.disabled).toBe(true);
+    expect(stillDownloadBtn.getAttribute("aria-disabled")).toBe("true");
 
     // The cancel button should read "Đóng"
     const closeBtn = screen.getByText("Đóng");

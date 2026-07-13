@@ -146,6 +146,7 @@ function setHeadingLevel(level: 1 | 2 | 3): Command {
 export function createMarkdownShortcutKeymap(opts: {
   onSave?: (doc: string) => void;
   onImageInserted?: (asset: ReportAsset, ref: string) => void;
+  onImageError?: (message: string) => void;
 } = {}): KeyBinding[] {
   const saveCommand: Command = (view) => {
     opts.onSave?.(view.state.doc.toString());
@@ -195,6 +196,8 @@ export function createMarkdownShortcutKeymap(opts: {
               });
               view.focus();
               opts.onImageInserted?.(result.asset, result.ref);
+            } else if (opts.onImageError) {
+              opts.onImageError(result.error);
             } else {
               alert(result.error);
             }

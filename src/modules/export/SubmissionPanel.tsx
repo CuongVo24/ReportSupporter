@@ -7,17 +7,8 @@ import { buildEvidenceAppendix } from "@/modules/evidence";
 import { verifyDocxLayout } from "./docx-layout-checklist";
 import { clearExportHistory, loadExportHistory } from "./export-history";
 import { Button, Dialog, Toast } from "@/components/ui";
-import { validateExport } from "./validate-export";
-import { runChecker } from "@/modules/check/run-checker";
+import { buildPreflightResult } from "./preflight";
 import { slugify } from "@/lib/slugify";
-
-export interface PreflightIssue {
-  severity: "error" | "warning";
-  code: string;
-  message: string;
-  sectionId?: string;
-  guidance?: string;
-}
 
 /**
  * Panel to manage final submission packaging, checklist validation, and local export history.
@@ -48,43 +39,7 @@ export function SubmissionPanel({
     description: "",
   });
 
-  const [preflightResult, setPreflightResult] = useState<{
-    ok: boolean;
-    hasP0: boolean;
-    issues: PreflightIssue[];
-  } | null>(null);
-
-  // --- Preflight: merge validateExport + runChecker into a unified result ---
-  const buildPreflightResult = (b: ReportProjectBundle) => {
-    const valResult = validateExport(b);
-    const checkResult = runChecker(b);
-    const p0Issues = checkResult.issues.filter((i) => i.severity === "error");
-
-    // Map checker P0 issues into PreflightIssue format
-    const checkerPreflightIssues: PreflightIssue[] = p0Issues.map((ci) => ({
-      severity: "error" as const,
-      code: "CHECKER_P0" as const,
-      message: ci.message,
-      sectionId: ci.sectionId,
-      guidance: ci.suggestion,
-    }));
-
-    // Map validateExport issues (keep as-is)
-    const valPreflightIssues: PreflightIssue[] = valResult.issues.map((vi) => ({
-      ...vi,
-      guidance: undefined,
-    }));
-
-    // P0 errors first, then warnings
-    const allIssues = [...checkerPreflightIssues, ...valPreflightIssues];
-    const hasP0 = checkerPreflightIssues.length > 0;
-
-    return {
-      ok: !hasP0 && valResult.ok,
-      hasP0,
-      issues: allIssues,
-    };
-  };
+  const [preflightResult, setPreflightResult] = useState<ReturnType<typeof buildPreflightResult> | null>(null);
 
   const refreshHistory = useCallback(async () => {
     const list = await loadExportHistory();
@@ -310,14 +265,15 @@ export function SubmissionPanel({
             <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setPreflightResult(null); }}>
               {preflightResult?.hasP0 ? "Đóng" : "Hủy"}
             </Button>
-            {!preflightResult?.hasP0 && (
-              <Button
-                variant={preflightResult?.ok ? "primary" : "secondary"}
-                onClick={handleConfirmValidationDownload}
-              >
-                Vẫn tải xuống
-              </Button>
-            )}
+            <Button
+              variant={preflightResult?.ok ? "primary" : "secondary"}
+              disabled={preflightResult?.hasP0}
+              aria-disabled={preflightResult?.hasP0 || undefined}
+              title={preflightResult?.hasP0 ? "Còn lỗi bắt buộc — hãy sửa trước khi đóng gói" : undefined}
+              onClick={handleConfirmValidationDownload}
+            >
+              Vẫn tải xuống
+            </Button>
           </div>
         }
       >

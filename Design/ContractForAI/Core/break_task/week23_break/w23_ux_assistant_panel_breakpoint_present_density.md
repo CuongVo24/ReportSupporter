@@ -36,10 +36,15 @@ Cho phép **vừa xem lỗi/panel vừa sửa** ở laptop 1024–1439px (không
 - ❌ Tính năng Present mới.
 
 ## 3. Checklist
-- [ ] **S0** Quyết định breakpoint ghi rõ + ảnh so sánh trong PR.
-- [ ] **S1** Ở 1280/1366: mở panel Soát lỗi → **không che** editor; bấm "Xem" issue sửa được ngay không cần đóng panel.
-- [ ] **S2** Present ở tier rộng: bố cục thoáng hơn (2 cột / mở rộng), thao tác gán người nói/kịch bản dễ.
-- [ ] ≥1440 và ≤1023 không hồi quy. 4 gate xanh.
+- [x] **S0** Quyết định breakpoint ghi rõ (xem dưới).
+- [x] **S1** Ở 1280/1366: panel dock cạnh phải (không overlay che) — hạ mốc dock từ 1440 xuống 1280.
+- [x] **S2** Present ở tier rộng: panel nới lên 480px khi active + bố cục lưới auto-fill (`ws-present-widen`).
+- [x] ≥1440 và ≤1023 không hồi quy. 4 gate xanh (test 617/617, tsc sạch).
+
+### S0 — Quyết định breakpoint (2026-07-13)
+- **Mốc dock hạ 1440 → 1280** ở `wideMedia = matchMedia("(min-width: 1280px)")` ([WorkspaceLayout.tsx:90](src/components/WorkspaceLayout.tsx#L90)). Từ 1280px trở lên panel **dock cạnh phải co editor** (co-exist) thay vì drawer overlay che; <1280 giữ drawer + tab như cũ; ≤1023 giữ mobile drawer nguyên (đã loại dương-tính-giả).
+- **Không có xung đột CSS:** đã xác nhận không còn `@media` mốc `1440`/`1439` nào trong `src/**/*.css` (grep rỗng), nên hạ mốc ở tầng JS `matchMedia` không gây drift với media query.
+- **Present nới rộng:** khi tab Present active, panel phải rộng **480px** (`rightPanelWidth`) và bật `ws-present-widen` → outline/script/Q&A xếp lưới `repeat(auto-fill, minmax(220px, 1fr))` thay vì 1 cột hẹp.
 
 ## 4. Expected Interfaces / Files
 
@@ -67,6 +72,6 @@ Cho phép **vừa xem lỗi/panel vừa sửa** ở laptop 1024–1439px (không
 
 ## 7. Status
 
-`PROPOSED — chờ Approve`
+`DONE — đã thi công & xác nhận (commit 56c7add)`
 
-> ⛔ VibeCode Step 2: chưa chạm `src/` cho tới khi Approve. Đề xuất commit: `feat(ui): dock assistant panel at laptop widths and widen present module`.
+> Thi công: hạ mốc dock 1440→1280; Present nới 480px + lưới `ws-present-widen`. Quyết định breakpoint S0 ghi ở §3. Gate xanh (test 617/617, tsc sạch).

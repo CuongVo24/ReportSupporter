@@ -88,4 +88,20 @@ Ghi lại để không tái điều tra:
 - **H là design, không "sửa mù":** đo lại các breakpoint tier (đã có `1024`/`1440`) trước khi hạ mốc dock; cân nhắc cho panel dock-thu-hẹp-editor ở ≥1280 thay vì che. Present nên có lối "mở rộng toàn màn hình" thay vì nới drawer.
 - **Decide (import) chốt chủ ý trước:** flat-section có thể là **chủ đích** (app là danh sách mục phẳng). Không sửa cho tới khi quyết: giữ phẳng (và giải thích nhãn "H+0") hay dựng phân cấp con trong mục.
 
-> Tất cả contract đang ở trạng thái `PROPOSED — chờ Approve`. Chưa chạm `src/` cho tới khi Approve từng contract.
+## Trạng thái thi công (cập nhật 2026-07-13)
+
+Tất cả 8 contract code + quyết định import đã **DONE** (mỗi contract 1 commit logic riêng, xem cột commit). Gate cuối: **`npm test` 617/617 pass (130 files)**, **`tsc --noEmit` sạch**.
+
+| Contract | Commit | Trạng thái |
+|---|---|---|
+| A — Publish gate P0 | `d2ad82f` (+refactor) | ✅ DONE |
+| B — Slug tên file | `be6abd1` | ✅ DONE |
+| C — Editor insert/ảnh/aria | `530051a` (+refactor) | ✅ DONE |
+| D — UUID → tên mục | `b792b9b` | ✅ DONE |
+| E — Silent actions/history | `4da955e` (+vá bug toast) | ✅ DONE |
+| F — Microcopy | `13dd92d` | ✅ DONE |
+| G — Hydration Select | `01ac1e4` | ✅ DONE |
+| H — Dock panel 1280 | `56c7add` | ✅ DONE |
+| Decide — import heading | `47a789b` | ✅ Đã quyết định (Nhánh A) |
+
+**Sửa hậu-review (không nằm trong 8 commit gốc):** tách `preflight.ts` dùng chung (A); disable-thay-vì-ẩn nút xuất (A); gỡ dead code `isConfirmOpen` (A); forward `onImageInserted` qua ref + Toast thay `alert()` + chặt `getBlockContext` (C); **vá bug toast PPTX replay khi remount tab** (E). Xem §Status từng contract.

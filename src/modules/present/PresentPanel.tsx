@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import type { ReportProjectBundle, CheckResult, SlideOutline, ExportJob, ExportTarget, Speaker, SpeakerScript } from "@/types";
 import { slideOutlineSchema } from "@/types";
@@ -48,8 +48,6 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSet
     description: "",
   });
 
-  const [prevPptxStatus, setPrevPptxStatus] = useState<string | null>(null);
-
   const {
     slides,
     speakers,
@@ -72,36 +70,44 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSet
   const activeJobs = jobs || localExport.jobs;
   const isPptxExporting = activeJobs.some((j) => j.target === "pptx" && j.status === "running");
 
-  React.useEffect(() => {
+  // Signal for the latest pptx job identity+status. Keyed by job id so a NEW export
+  // or a real status transition fires a toast, but remounting this panel (e.g. switching
+  // tabs) with an already-finished job does not replay a stale success/error toast.
+  const pptxJob = activeJobs.find((j) => j.target === "pptx");
+  const pptxSignal = pptxJob ? `${pptxJob.id}:${pptxJob.status}` : null;
+  // Baseline captured at mount so pre-existing job state is not announced on remount.
+  const seenPptxSignalRef = useRef<string | null>(pptxSignal);
+
+  useEffect(() => {
+    if (pptxSignal === seenPptxSignalRef.current) return;
+    seenPptxSignalRef.current = pptxSignal;
+
     const currentJob = activeJobs.find((j) => j.target === "pptx");
     const currentStatus = currentJob ? currentJob.status : null;
 
-    if (currentStatus !== prevPptxStatus) {
-      if (currentStatus === "running") {
-        setToast({
-          open: true,
-          title: "Đang xuất PowerPoint...",
-          variant: "info",
-          description: "Vui lòng chờ trong khi hệ thống khởi tạo và vẽ slide PowerPoint.",
-        });
-      } else if (currentStatus === "done") {
-        setToast({
-          open: true,
-          title: "Xuất PPTX thành công",
-          variant: "success",
-          description: `Tệp ${currentJob?.fileName || "presentation.pptx"} đã được tải xuống.`,
-        });
-      } else if (currentStatus === "error") {
-        setToast({
-          open: true,
-          title: "Xuất PPTX thất bại",
-          variant: "error",
-          description: currentJob?.error?.message || "Có lỗi xảy ra khi tạo tệp PowerPoint.",
-        });
-      }
-      setPrevPptxStatus(currentStatus);
+    if (currentStatus === "running") {
+      setToast({
+        open: true,
+        title: "Đang xuất PowerPoint...",
+        variant: "info",
+        description: "Vui lòng chờ trong khi hệ thống khởi tạo và vẽ slide PowerPoint.",
+      });
+    } else if (currentStatus === "done") {
+      setToast({
+        open: true,
+        title: "Xuất PPTX thành công",
+        variant: "success",
+        description: `Tệp ${currentJob?.fileName || "presentation.pptx"} đã được tải xuống.`,
+      });
+    } else if (currentStatus === "error") {
+      setToast({
+        open: true,
+        title: "Xuất PPTX thất bại",
+        variant: "error",
+        description: currentJob?.error?.message || "Có lỗi xảy ra khi tạo tệp PowerPoint.",
+      });
     }
-  }, [activeJobs, prevPptxStatus]);
+  }, [pptxSignal, activeJobs]);
 
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<SlideOutline[] | null>(null);
