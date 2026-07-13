@@ -3,6 +3,15 @@ import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "
 import { EmptyState, ErrorState } from "@/components/states";
 import { Button, Dialog, Toast } from "@/components/ui";
 import { validateExport, type ExportIssue } from "./validate-export";
+import { runChecker } from "@/modules/check/run-checker";
+
+export interface PreflightIssue {
+  severity: "error" | "warning";
+  code: string;
+  message: string;
+  sectionId?: string;
+  guidance?: string;
+}
 
 export function ExportPanel({
   bundle,
@@ -22,7 +31,11 @@ export function ExportPanel({
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingTarget, setPendingTarget] = useState<ExportTarget | null>(null);
   const [isValidationOpen, setIsValidationOpen] = useState(false);
-  const [validationResult, setValidationResult] = useState<{ ok: boolean; issues: ExportIssue[] } | null>(null);
+  const [preflightResult, setPreflightResult] = useState<{
+    ok: boolean;
+    hasP0: boolean;
+    issues: PreflightIssue[];
+  } | null>(null);
 
   // Toast states
   const [toastOpen, setToastOpen] = useState(false);
@@ -31,6 +44,38 @@ export function ExportPanel({
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
 
   const errorsCount = check?.grouped?.error?.length ?? 0;
+
+  // --- Preflight: merge validateExport + runChecker into a unified result ---
+  const buildPreflightResult = (b: ReportProjectBundle) => {
+    const valResult = validateExport(b);
+    const checkResult = runChecker(b);
+    const p0Issues = checkResult.issues.filter((i) => i.severity === "error");
+
+    // Map checker P0 issues into PreflightIssue format
+    const checkerPreflightIssues: PreflightIssue[] = p0Issues.map((ci) => ({
+      severity: "error" as const,
+      code: "CHECKER_P0" as const,
+      message: ci.message,
+      sectionId: ci.sectionId,
+      guidance: ci.suggestion,
+    }));
+
+    // Map validateExport issues (keep as-is)
+    const valPreflightIssues: PreflightIssue[] = valResult.issues.map((vi) => ({
+      ...vi,
+      guidance: undefined,
+    }));
+
+    // P0 errors first, then warnings
+    const allIssues = [...checkerPreflightIssues, ...valPreflightIssues];
+    const hasP0 = checkerPreflightIssues.length > 0;
+
+    return {
+      ok: !hasP0 && valResult.ok,
+      hasP0,
+      issues: allIssues,
+    };
+  };
 
   const prevJobsRef = useRef<ExportJob[]>([]);
 
@@ -70,15 +115,14 @@ export function ExportPanel({
   }, [jobs, exportedBlobs]);
 
   const handleExportClick = (target: ExportTarget) => {
-    const valResult = validateExport(bundle);
-    if (valResult.issues.length > 0) {
-      setValidationResult(valResult);
+    const preflight = buildPreflightResult(bundle);
+    if (preflight.issues.length > 0) {
+      // Always show the unified preflight dialog when there are any issues
+      setPreflightResult(preflight);
       setPendingTarget(target);
       setIsValidationOpen(true);
-    } else if (errorsCount > 0) {
-      setPendingTarget(target);
-      setIsConfirmOpen(true);
     } else {
+      // No issues at all — direct export
       void runExport(target, bundle);
     }
   };
@@ -92,17 +136,14 @@ export function ExportPanel({
   };
 
   const handleConfirmValidationExport = () => {
+    // Only allow export when there are no P0 issues (button should be disabled, but defense-in-depth)
+    if (preflightResult?.hasP0) return;
     setIsValidationOpen(false);
-    setValidationResult(null);
+    setPreflightResult(null);
     if (pendingTarget) {
       const target = pendingTarget;
       setPendingTarget(null);
-      if (errorsCount > 0) {
-        setPendingTarget(target);
-        setIsConfirmOpen(true);
-      } else {
-        void runExport(target, bundle);
-      }
+      void runExport(target, bundle);
     }
   };
 
@@ -174,15 +215,17 @@ export function ExportPanel({
 
   const validationDialogFooter = (
     <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
-      <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setValidationResult(null); setPendingTarget(null); }}>
-        Hủy
+      <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setPreflightResult(null); setPendingTarget(null); }}>
+        {preflightResult?.hasP0 ? "Đóng" : "Hủy"}
       </Button>
-      <Button
-        variant={validationResult?.ok ? "primary" : "secondary"}
-        onClick={handleConfirmValidationExport}
-      >
-        Vẫn xuất bản
-      </Button>
+      {!preflightResult?.hasP0 && (
+        <Button
+          variant={preflightResult?.ok ? "primary" : "secondary"}
+          onClick={handleConfirmValidationExport}
+        >
+          Vẫn xuất bản
+        </Button>
+      )}
     </div>
   );
 
@@ -323,33 +366,39 @@ export function ExportPanel({
         footer={dialogFooter}
       />
 
-      {/* Validation Dialog */}
+      {/* Unified Preflight Dialog (P0 blocking + warnings) */}
       <Dialog
         isOpen={isValidationOpen}
         onOpenChange={(open) => {
           setIsValidationOpen(open);
           if (!open) {
-            setValidationResult(null);
+            setPreflightResult(null);
             setPendingTarget(null);
           }
         }}
-        title="Kiểm tra chất lượng báo cáo"
+        title={
+          preflightResult?.hasP0
+            ? "Không thể xuất bản — còn lỗi bắt buộc"
+            : "Kiểm tra chất lượng báo cáo"
+        }
         description={
-          validationResult?.ok
-            ? "Báo cáo có một số cảnh báo định dạng nhẹ. Bạn vẫn có thể xuất bản."
-            : "Phát hiện lỗi nghiêm trọng (ví dụ: ảnh chưa được nhúng). Tệp tin xuất ra (PDF/Word) có thể bị lỗi hình ảnh hoặc hiển thị."
+          preflightResult?.hasP0
+            ? `Còn ${preflightResult.issues.filter((i) => i.severity === "error").length} lỗi bắt buộc phải sửa trước khi xuất bản.`
+            : preflightResult?.ok
+              ? "Báo cáo có một số cảnh báo định dạng nhẹ. Bạn vẫn có thể xuất bản."
+              : "Phát hiện lỗi nghiêm trọng (ví dụ: ảnh chưa được nhúng). Tệp tin xuất ra (PDF/Word) có thể bị lỗi hình ảnh hoặc hiển thị."
         }
         variant="confirm"
         footer={validationDialogFooter}
       >
         <div className="ws-validation-list">
-          {validationResult?.issues.map((issue, idx) => (
+          {preflightResult?.issues.map((issue, idx) => (
             <div
               key={idx}
               className={`ws-validation-item ws-validation-item-${issue.severity}`}
             >
               <span className="ws-validation-icon">
-                {issue.severity === "error" ? "❌" : "⚠️"}
+                {issue.severity === "error" ? "🚫" : "⚠️"}
               </span>
               <div className="ws-validation-msg">
                 {issue.sectionId && (
@@ -358,6 +407,9 @@ export function ExportPanel({
                   </span>
                 )}
                 {issue.message}
+                {issue.guidance && (
+                  <span className="ws-validation-guidance"> — {issue.guidance}</span>
+                )}
               </div>
             </div>
           ))}

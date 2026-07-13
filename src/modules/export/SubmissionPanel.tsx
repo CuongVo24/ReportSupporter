@@ -8,6 +8,15 @@ import { verifyDocxLayout } from "./docx-layout-checklist";
 import { clearExportHistory, loadExportHistory } from "./export-history";
 import { Button, Dialog } from "@/components/ui";
 import { validateExport, type ExportIssue } from "./validate-export";
+import { runChecker } from "@/modules/check/run-checker";
+
+export interface PreflightIssue {
+  severity: "error" | "warning";
+  code: string;
+  message: string;
+  sectionId?: string;
+  guidance?: string;
+}
 
 /**
  * Panel to manage final submission packaging, checklist validation, and local export history.
@@ -26,7 +35,43 @@ export function SubmissionPanel({
   const [history, setHistory] = useState<ExportJob[]>([]);
   const [packaging, setPackaging] = useState(false);
   const [isValidationOpen, setIsValidationOpen] = useState(false);
-  const [validationResult, setValidationResult] = useState<{ ok: boolean; issues: ExportIssue[] } | null>(null);
+  const [preflightResult, setPreflightResult] = useState<{
+    ok: boolean;
+    hasP0: boolean;
+    issues: PreflightIssue[];
+  } | null>(null);
+
+  // --- Preflight: merge validateExport + runChecker into a unified result ---
+  const buildPreflightResult = (b: ReportProjectBundle) => {
+    const valResult = validateExport(b);
+    const checkResult = runChecker(b);
+    const p0Issues = checkResult.issues.filter((i) => i.severity === "error");
+
+    // Map checker P0 issues into PreflightIssue format
+    const checkerPreflightIssues: PreflightIssue[] = p0Issues.map((ci) => ({
+      severity: "error" as const,
+      code: "CHECKER_P0" as const,
+      message: ci.message,
+      sectionId: ci.sectionId,
+      guidance: ci.suggestion,
+    }));
+
+    // Map validateExport issues (keep as-is)
+    const valPreflightIssues: PreflightIssue[] = valResult.issues.map((vi) => ({
+      ...vi,
+      guidance: undefined,
+    }));
+
+    // P0 errors first, then warnings
+    const allIssues = [...checkerPreflightIssues, ...valPreflightIssues];
+    const hasP0 = checkerPreflightIssues.length > 0;
+
+    return {
+      ok: !hasP0 && valResult.ok,
+      hasP0,
+      issues: allIssues,
+    };
+  };
 
   const refreshHistory = useCallback(async () => {
     const list = await loadExportHistory();
@@ -101,9 +146,9 @@ export function SubmissionPanel({
   };
 
   const handleDownloadPackage = async () => {
-    const valResult = validateExport(bundle);
-    if (valResult.issues.length > 0) {
-      setValidationResult(valResult);
+    const preflight = buildPreflightResult(bundle);
+    if (preflight.issues.length > 0) {
+      setPreflightResult(preflight);
       setIsValidationOpen(true);
     } else {
       await executeDownloadPackage();
@@ -111,8 +156,9 @@ export function SubmissionPanel({
   };
 
   const handleConfirmValidationDownload = async () => {
+    if (preflightResult?.hasP0) return;
     setIsValidationOpen(false);
-    setValidationResult(null);
+    setPreflightResult(null);
     await executeDownloadPackage();
   };
 
@@ -212,44 +258,52 @@ export function SubmissionPanel({
           </ul>
         </div>
       )}
-      {/* Validation Dialog */}
+      {/* Unified Preflight Dialog (P0 blocking + warnings) */}
       <Dialog
         isOpen={isValidationOpen}
         onOpenChange={(open) => {
           setIsValidationOpen(open);
           if (!open) {
-            setValidationResult(null);
+            setPreflightResult(null);
           }
         }}
-        title="Kiểm tra chất lượng báo cáo trước khi nộp"
+        title={
+          preflightResult?.hasP0
+            ? "Không thể đóng gói — còn lỗi bắt buộc"
+            : "Kiểm tra chất lượng báo cáo trước khi nộp"
+        }
         description={
-          validationResult?.ok
-            ? "Báo cáo đạt chất lượng cơ bản, chỉ có cảnh báo định dạng nhẹ. Bạn có thể tiếp tục đóng gói."
-            : "Cảnh báo lỗi nghiêm trọng (ảnh chưa nhúng). Tệp tin trong bộ nộp bài có thể bị lỗi hình ảnh hoặc hiển thị."
+          preflightResult?.hasP0
+            ? `Còn ${preflightResult.issues.filter((i) => i.severity === "error").length} lỗi bắt buộc phải sửa trước khi tải gói nộp bài.`
+            : preflightResult?.ok
+              ? "Báo cáo đạt chất lượng cơ bản, chỉ có cảnh báo định dạng nhẹ. Bạn có thể tiếp tục đóng gói."
+              : "Cảnh báo lỗi nghiêm trọng (ảnh chưa nhúng). Tệp tin trong bộ nộp bài có thể bị lỗi hình ảnh hoặc hiển thị."
         }
         variant="confirm"
         footer={
           <div style={{ display: "flex", gap: "var(--rs-space-2)", justifyContent: "flex-end", width: "100%" }}>
-            <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setValidationResult(null); }}>
-              Hủy
+            <Button variant="ghost" onClick={() => { setIsValidationOpen(false); setPreflightResult(null); }}>
+              {preflightResult?.hasP0 ? "Đóng" : "Hủy"}
             </Button>
-            <Button
-              variant={validationResult?.ok ? "primary" : "secondary"}
-              onClick={handleConfirmValidationDownload}
-            >
-              Vẫn tải xuống
-            </Button>
+            {!preflightResult?.hasP0 && (
+              <Button
+                variant={preflightResult?.ok ? "primary" : "secondary"}
+                onClick={handleConfirmValidationDownload}
+              >
+                Vẫn tải xuống
+              </Button>
+            )}
           </div>
         }
       >
         <div className="ws-validation-list">
-          {validationResult?.issues.map((issue, idx) => (
+          {preflightResult?.issues.map((issue, idx) => (
             <div
               key={idx}
               className={`ws-validation-item ws-validation-item-${issue.severity}`}
             >
               <span className="ws-validation-icon">
-                {issue.severity === "error" ? "❌" : "⚠️"}
+                {issue.severity === "error" ? "🚫" : "⚠️"}
               </span>
               <div className="ws-validation-msg">
                 {issue.sectionId && (
@@ -258,6 +312,9 @@ export function SubmissionPanel({
                   </span>
                 )}
                 {issue.message}
+                {issue.guidance && (
+                  <span className="ws-validation-guidance"> — {issue.guidance}</span>
+                )}
               </div>
             </div>
           ))}
