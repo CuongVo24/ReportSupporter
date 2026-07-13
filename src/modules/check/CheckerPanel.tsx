@@ -1,6 +1,6 @@
 // Checker panel — displays readiness badge, groups issues by severity, and offers jump-to-issue.
 // A11y: severity carries an icon + text label, not color alone; keyboard-reachable jump triggers.
-import type { CheckResult, ReportIssueSeverity } from "@/types";
+import type { CheckResult, ReportIssueSeverity, ReportSection } from "@/types";
 import { ReadinessBadge } from "./ReadinessBadge";
 import { EmptyState, SuccessState } from "@/components/states";
 import { Button, Badge } from "@/components/ui";
@@ -10,6 +10,7 @@ type CheckerPanelProps = {
   onRun: () => void;
   onJump: (sectionId?: string, line?: number) => void;
   hasRun: boolean;
+  sections?: ReportSection[];
 };
 
 const ORDER: ReportIssueSeverity[] = ["error", "warning", "info"];
@@ -19,7 +20,13 @@ const LABEL: Record<ReportIssueSeverity, string> = {
   info: "Gợi ý",
 };
 
-export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProps) {
+export function CheckerPanel({ result, onRun, onJump, hasRun, sections }: CheckerPanelProps) {
+  const getSectionTitle = (sectionId?: string) => {
+    if (!sectionId) return "";
+    if (!sections) return sectionId;
+    const found = sections.find((s) => s.id === sectionId);
+    return found ? found.title : "Mục đã xoá";
+  };
   const issues = result.issues || [];
 
   return (
@@ -90,7 +97,7 @@ export function CheckerPanel({ result, onRun, onJump, hasRun }: CheckerPanelProp
                           onJump(issue.sectionId, issue.line);
                         }
                       }}
-                      aria-label={`Đi tới phần ${issue.sectionId}${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
+                      aria-label={`Đi tới phần "${getSectionTitle(issue.sectionId)}"${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
                     >
                       Xem
                     </Button>

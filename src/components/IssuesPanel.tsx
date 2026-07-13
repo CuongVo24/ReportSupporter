@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { CheckResult, ReportIssueSeverity } from "@/types";
+import type { CheckResult, ReportIssueSeverity, ReportSection } from "@/types";
 import { ReadinessBadge } from "@/modules/check/ReadinessBadge";
 import { EmptyState, SuccessState } from "@/components/states";
 import { Button } from "@/components/ui";
@@ -10,9 +10,16 @@ type IssuesPanelProps = {
   onRun: () => void;
   onJump: (sectionId?: string, line?: number) => void;
   hasRun: boolean;
+  sections?: ReportSection[];
 };
 
-export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps) {
+export function IssuesPanel({ result, onRun, onJump, hasRun, sections }: IssuesPanelProps) {
+  const getSectionTitle = (sectionId?: string) => {
+    if (!sectionId) return "";
+    if (!sections) return sectionId;
+    const found = sections.find((s) => s.id === sectionId);
+    return found ? found.title : "Mục đã xoá";
+  };
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | ReportIssueSeverity>("all");
 
@@ -251,7 +258,7 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                           <div style={{ display: "flex", gap: "var(--rs-space-2)", marginTop: "var(--rs-space-2)", flexWrap: "wrap" }}>
                             {issue.sectionId && (
                               <span style={{ fontSize: "10px", padding: "2px 6px", background: "var(--rs-color-surface-muted)", borderRadius: "4px", color: "var(--rs-color-text-muted)" }}>
-                                Mục: {issue.sectionId}
+                                Mục: {getSectionTitle(issue.sectionId)}
                               </span>
                             )}
                             {issue.line !== undefined && (
@@ -277,7 +284,7 @@ export function IssuesPanel({ result, onRun, onJump, hasRun }: IssuesPanelProps)
                             gap: "2px",
                             color: "var(--rs-color-primary)",
                           }}
-                          aria-label={`Đi tới phần ${issue.sectionId}${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
+                          aria-label={`Đi tới phần "${getSectionTitle(issue.sectionId)}"${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
                         >
                           Xem <ArrowRight size={12} />
                         </Button>

@@ -1120,6 +1120,7 @@ export function Workspace() {
               onRun={handleCheck}
               onJump={handleJump}
               hasRun={hasRun}
+              sections={bundle.project.sections}
             />
           </TabsContent>
           <TabsContent value="export" className="ws-side-tabs-content">
