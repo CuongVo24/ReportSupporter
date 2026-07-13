@@ -1154,6 +1154,7 @@ export function Workspace() {
             runExport={runExport}
             jobs={jobs}
             onOpenAiSettings={() => setIsAiSettingsOpen(true)}
+            widen={sideTab === "present"}
           />
           </TabsContent>
         </div>
@@ -1164,6 +1165,7 @@ export function Workspace() {
   return (
     <>
       <WorkspaceLayout
+        rightPanelWidth={sideTab === "present" ? "480px" : undefined}
       editor={
         <div className="ws-editor-stack">
           <AiAssistBar

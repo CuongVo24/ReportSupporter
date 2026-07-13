@@ -1175,3 +1175,22 @@ span.ws-present-slide-speaker {
   color: var(--rs-color-text-muted);
   font-size: var(--rs-font-size-xs);
 }
+
+/* Widen mode for helper panels */
+.ws-present-widen .ws-present-slides-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--rs-space-3);
+}
+
+.ws-present-widen .ws-present-script-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--rs-space-3);
+}
+
+.ws-present-widen .ws-present-qa-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--rs-space-3);
+}

@@ -31,9 +31,10 @@ export interface PresentPanelProps {
   ) => Promise<void>;
   jobs?: ExportJob[];
   onOpenAiSettings?: () => void;
+  widen?: boolean;
 }
 
-export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSettings }: PresentPanelProps) {
+export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSettings, widen = false }: PresentPanelProps) {
   const [activeTab, setActiveTab] = useState<"outline" | "script" | "qa" | "mock" | "hints">("outline");
   const [toast, setToast] = useState<{
     open: boolean;
@@ -152,7 +153,7 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSet
 
   if (slides.length === 0) {
     return (
-      <div className="ws-present" aria-label="Thuyết trình">
+      <div className={`ws-present ${widen ? "ws-present-widen" : ""}`} aria-label="Thuyết trình">
         <h3 className="ws-present-panel-title">Thuyết trình</h3>
         <div className="ws-state-block">
           <EmptyState
@@ -165,7 +166,7 @@ export function PresentPanel({ bundle, checkResult, runExport, jobs, onOpenAiSet
   }
 
   return (
-    <div className="ws-present" aria-label="Thuyết trình">
+    <div className={`ws-present ${widen ? "ws-present-widen" : ""}`} aria-label="Thuyết trình">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--rs-space-4)", gap: "var(--rs-space-2)" }}>
         <h3 className="ws-present-panel-title" style={{ margin: 0 }}>Thuyết trình</h3>
         <Button

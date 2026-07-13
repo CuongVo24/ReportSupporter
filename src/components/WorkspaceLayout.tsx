@@ -38,6 +38,7 @@ type WorkspaceLayoutProps = {
   focusMode?: boolean;
   darkPreview?: boolean;
   onDarkPreviewToggle?: () => void;
+  rightPanelWidth?: string;
 };
 
 export function WorkspaceLayout({
@@ -62,6 +63,7 @@ export function WorkspaceLayout({
   focusMode = false,
   darkPreview = false,
   onDarkPreviewToggle,
+  rightPanelWidth,
 }: WorkspaceLayoutProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isWide, setIsWide] = useState(true);
@@ -88,7 +90,7 @@ export function WorkspaceLayout({
   useEffect(() => {
     setMounted(true);
     const desktopMedia = window.matchMedia("(min-width: 1024px)");
-    const wideMedia = window.matchMedia("(min-width: 1440px)");
+    const wideMedia = window.matchMedia("(min-width: 1280px)");
     setIsDesktop(desktopMedia.matches);
     setIsWide(wideMedia.matches);
 
@@ -375,7 +377,11 @@ export function WorkspaceLayout({
         </section>
 
         {isDesktop && isWide && !focusMode && (
-          <aside className={`ws-side-column ws-side-column-right ${isRightCollapsed ? "ws-side-column-right--collapsed" : "ws-side-column-right--expanded"}`} aria-label="Bảng điều khiển">
+          <aside
+            className={`ws-side-column ws-side-column-right ${isRightCollapsed ? "ws-side-column-right--collapsed" : "ws-side-column-right--expanded"}`}
+            aria-label="Bảng điều khiển"
+            style={!isRightCollapsed && rightPanelWidth ? { width: rightPanelWidth } : undefined}
+          >
             {isRightCollapsed ? (
               <div className="ws-collapsed-rail-list">
                 <button type="button" className="ws-column-toggle-btn" onClick={() => setIsRightCollapsed(false)} aria-label="Mở rộng bảng điều khiển">
