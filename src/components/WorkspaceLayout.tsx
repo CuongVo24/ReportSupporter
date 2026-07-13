@@ -78,6 +78,7 @@ export function WorkspaceLayout({
   const [scale, setScale] = useState(1);
   const [height, setHeight] = useState<number | undefined>(undefined);
   const [zoomMode, setZoomMode] = useState<string>("fit");
+  const [mounted, setMounted] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -85,6 +86,7 @@ export function WorkspaceLayout({
   const lastOpenSidePanelSignalRef = useRef(openSidePanelSignal);
 
   useEffect(() => {
+    setMounted(true);
     const desktopMedia = window.matchMedia("(min-width: 1024px)");
     const wideMedia = window.matchMedia("(min-width: 1440px)");
     setIsDesktop(desktopMedia.matches);
@@ -310,21 +312,34 @@ export function WorkspaceLayout({
               {!focusMode && <div className="ws-split-pane-preview ws-preview" ref={viewportRef} style={{ width: `${100 - splitWidth}%` }}>
                 <div className="ws-preview-zoom-control">
                   <span className="ws-preview-zoom-label">Zoom: {Math.round(scale * 100)}%</span>
-                  <Select
-                    value={zoomMode}
-                    onValueChange={setZoomMode}
-                    ariaLabel="Chọn tỷ lệ zoom"
-                    options={[
-                      { value: "fit", label: "Tự động" },
-                      { value: "50", label: "50%" },
-                      { value: "75", label: "75%" },
-                      { value: "100", label: "100%" },
-                      { value: "125", label: "125%" },
-                      { value: "actual", label: "Kích thước thực" },
-                    ]}
-                    size="sm"
-                    fullWidth={false}
-                  />
+                  {mounted ? (
+                    <Select
+                      value={zoomMode}
+                      onValueChange={setZoomMode}
+                      ariaLabel="Chọn tỷ lệ zoom"
+                      options={[
+                        { value: "fit", label: "Tự động" },
+                        { value: "50", label: "50%" },
+                        { value: "75", label: "75%" },
+                        { value: "100", label: "100%" },
+                        { value: "125", label: "125%" },
+                        { value: "actual", label: "Kích thước thực" },
+                      ]}
+                      size="sm"
+                      fullWidth={false}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="ws-select-trigger ws-select-trigger-sm"
+                      aria-label="Chọn tỷ lệ zoom"
+                      style={{ width: "95px", display: "inline-flex", justifyContent: "space-between" }}
+                    >
+                      <span>{zoomMode === "fit" ? "Tự động" : zoomMode === "actual" ? "Kích thước thực" : `${zoomMode}%`}</span>
+                      <ChevronDown size={14} className="ws-select-chevron" aria-hidden="true" />
+                    </button>
+                  )}
                   {onDarkPreviewToggle && (
                     <button
                       type="button"
