@@ -26,13 +26,26 @@ import {
   Plus,
   Trash,
 } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
-
 type SectionNavSection = {
   id: string;
   title: string;
   status: "draft" | "review" | "done";
 };
+
+const STATUS_LABELS: Record<SectionNavSection["status"], string> = {
+  draft: "Nháp",
+  review: "Xét duyệt",
+  done: "Hoàn thành",
+};
+
+/**
+ * True when a title already begins with its own hierarchical number
+ * (e.g. "2.4. Quy trình", "3) Luồng"). In that case we suppress the injected
+ * list index so the TOC doesn't read as a confusing double number ("13. 2.4.").
+ */
+function titleHasOwnNumber(title: string): boolean {
+  return /^\d+([.)]\d+)*[.)]?\s/.test(title.trim());
+}
 
 type SectionNavProps = {
   sections: SectionNavSection[];
@@ -175,10 +188,19 @@ function SortableSectionNavItem({
             title={`${index + 1}. ${section.title}`}
           >
             <span className="ws-section-nav-item-text">
-              <span className="ws-section-nav-item-index" aria-hidden="true">{index + 1}.</span>
+              {!titleHasOwnNumber(section.title) && (
+                <span className="ws-section-nav-item-index" aria-hidden="true">{index + 1}.</span>
+              )}
               <span className="ws-section-nav-item-title">{section.title}</span>
             </span>
-            {!isActive && <Badge group="status" value={section.status} />}
+            {!isActive && (
+              <span
+                className={`ws-section-nav-status-dot ws-status-dot-${section.status}`}
+                title={STATUS_LABELS[section.status]}
+                aria-label={STATUS_LABELS[section.status]}
+                role="img"
+              />
+            )}
           </button>
         )}
 

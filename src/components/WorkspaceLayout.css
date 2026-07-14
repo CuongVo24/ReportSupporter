@@ -326,6 +326,37 @@
   gap: var(--rs-space-1);
 }
 
+/* Side-panel tabs read as clear buttons, not text links. The default underline
+   variant looked like plain links; here we give each trigger a pill with a
+   filled active state so the current view is obvious. */
+.ws-side-tabs .ws-side-tab-group-triggers .ws-tabs-trigger {
+  padding: var(--rs-space-1) var(--rs-space-3);
+  min-height: var(--rs-control-height-sm);
+  font-size: var(--rs-font-size-sm);
+  color: var(--rs-color-text-muted);
+  background: var(--rs-color-surface-muted);
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  white-space: nowrap;
+}
+
+.ws-side-tabs .ws-side-tab-group-triggers .ws-tabs-trigger:hover:not(:disabled) {
+  color: var(--rs-color-text);
+  border-color: var(--rs-color-text-muted);
+}
+
+.ws-side-tabs .ws-side-tab-group-triggers .ws-tabs-trigger[data-state="active"] {
+  color: var(--rs-white);
+  background: var(--rs-color-primary);
+  border-color: var(--rs-color-primary);
+  font-weight: var(--rs-font-weight-semibold);
+}
+
+/* The underline pseudo-element from the base variant is redundant here. */
+.ws-side-tabs .ws-side-tab-group-triggers .ws-tabs-trigger[data-state="active"]::after {
+  display: none;
+}
+
 .ws-side-tabs-content-scroll {
   flex: 1;
   overflow-y: auto;
@@ -449,7 +480,7 @@
 
 .ws-section-nav-item-text {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: var(--rs-space-2);
   min-width: 0;
   margin-right: var(--rs-space-2);
@@ -468,16 +499,45 @@
   font-family: var(--rs-font-family-ui);
   font-size: var(--rs-font-size-sm);
   font-weight: var(--rs-font-weight-regular);
+  line-height: 1.35;
   color: var(--rs-color-text);
+  /* Wrap to at most two lines instead of hard-truncating to a few characters. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .ws-section-nav-item-active .ws-section-nav-item-index,
 .ws-section-nav-item-active .ws-section-nav-item-title {
   color: var(--rs-color-primary);
   font-weight: var(--rs-font-weight-semibold);
+}
+
+/* Compact status indicator: a colored dot replaces the repeated "Nháp" text
+   that previously appeared on every item, cutting visual noise in the TOC. */
+.ws-section-nav-status-dot {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--rs-radius-full);
+  background: var(--rs-color-status-draft);
+}
+
+.ws-status-dot-draft {
+  background: var(--rs-color-status-draft);
+}
+
+.ws-status-dot-review {
+  background: var(--rs-color-status-review);
+}
+
+.ws-status-dot-done {
+  background: var(--rs-color-status-done);
 }
 
 /* Collapsed rail icons list */
