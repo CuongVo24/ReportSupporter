@@ -40,6 +40,31 @@ function contentCoverage(bundle: ReportProjectBundle) {
   return clampScore((filled / sections.length) * 100);
 }
 
+/**
+ * Readiness sub-score for the *health* indicator, derived from issue counts
+ * normalized by report size.
+ *
+ * The raw `readinessScore` (readiness-score.ts) applies flat penalties per issue
+ * and is used as a hard submission threshold. Reusing it for the health badge
+ * meant any large report collapsed to 0% — a 90-section report accumulates
+ * hundreds of minor notes and the flat penalty floors instantly, which is
+ * alarming and uninformative. Here errors stay blocking (they gate publishing
+ * regardless of size), while warnings/info are measured as density per section
+ * and saturate, so minor notes across a big report don't zero out the score.
+ */
+function readinessFromIssueDensity(checkResult: CheckResult, sectionCount: number) {
+  const errors = checkResult.issues.filter((issue) => issue.severity === "error").length;
+  const warnings = checkResult.issues.filter((issue) => issue.severity === "warning").length;
+  const infos = checkResult.issues.filter((issue) => issue.severity === "info").length;
+  const sections = Math.max(1, sectionCount);
+
+  const errorPenalty = Math.min(60, errors * 12);
+  const warningPenalty = Math.min(25, (warnings / sections) * 25);
+  const infoPenalty = Math.min(15, (infos / sections) * 10);
+
+  return clampScore(100 - errorPenalty - warningPenalty - infoPenalty);
+}
+
 function buildOutlineFromSections(bundle: ReportProjectBundle): SlideOutline[] {
   return bundle.project.sections.map((section, index) => ({
     id: `health-slide-${section.id}`,
@@ -116,7 +141,9 @@ export function computeReportHealth(
   bundle: ReportProjectBundle,
   checkResult?: CheckResult | null,
 ): ReportHealth {
-  const readinessScore = clampScore(checkResult?.readinessScore ?? contentCoverage(bundle));
+  const readinessScore = checkResult
+    ? readinessFromIssueDensity(checkResult, bundle.project.sections.length)
+    : contentCoverage(bundle);
   const weak = computeWeakSectionScore(bundle, checkResult ?? undefined);
   const evidence = computeEvidenceScore(bundle);
 

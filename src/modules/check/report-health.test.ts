@@ -79,7 +79,9 @@ describe("computeReportHealth", () => {
     ]);
     expect(health.breakdown.find((item) => item.id === "weak-sections")?.score).toBe(50);
     expect(health.breakdown.find((item) => item.id === "evidence")?.score).toBe(50);
-    expect(health.score).toBe(68);
+    // Readiness is now density-based: 1 warning across 2 sections -> ~88, so
+    // 88*0.6 + 50*0.25 + 50*0.15 = 73.
+    expect(health.score).toBe(73);
     expect(health.weakestSectionId).toBe("section-2");
   });
 
