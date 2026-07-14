@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Info } from "lucide-react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
 import { resolveAssetRefs, transformUnembeddedImages, MermaidRenderer } from "@/modules/write";
@@ -19,6 +19,7 @@ type PreviewPaneProps = {
   activeSectionId?: string;
   evidence?: EvidenceItem[];
   darkPreview?: boolean;
+  onAttachImageRequest?: (sectionId: string, originalRef: string) => void;
 };
 
 function TocBlock({ toc }: { toc: TocNode[] }) {
@@ -92,6 +93,7 @@ export function PreviewPane({
   activeSectionId,
   evidence = [],
   darkPreview = false,
+  onAttachImageRequest,
 }: PreviewPaneProps) {
   const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
 
@@ -105,6 +107,17 @@ export function PreviewPane({
       clearTimeout(handler);
     };
   }, [markdown]);
+
+  const handlePreviewClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest(".ws-preview-image-missing-btn");
+    if (btn && onAttachImageRequest) {
+      const originalSrc = btn.getAttribute("data-original-src");
+      if (originalSrc) {
+        onAttachImageRequest(activeSectionId || "default", originalSrc);
+      }
+    }
+  }, [activeSectionId, onAttachImageRequest]);
 
   const lastSectionId = useMemo(() => {
     if (!sections || sections.length === 0) {
@@ -410,6 +423,7 @@ export function PreviewPane({
               key={`html-${index}`}
               className="ws-preview-html-section"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
+              onClick={handlePreviewClick}
             />
           );
         }

@@ -99,4 +99,48 @@ describe("IssuesPanel section titles mapping", () => {
     expect(screen.queryByText("Mục: sec2")).not.toBeNull();
     expect(screen.queryByText("Mục: sec_deleted")).not.toBeNull();
   });
+
+  it("renders 'Gắn ảnh...' button for broken-image issues and triggers onAttachImageRequest callback", () => {
+    const attachResult: CheckResult = {
+      issues: [
+        {
+          id: "broken-image",
+          severity: "error",
+          module: "check",
+          message: 'Ảnh sử dụng đường dẫn cục bộ chưa được nhúng: "images/fig-1.png".',
+          suggestion: "Nhúng ảnh",
+          sectionId: "sec1",
+          line: 2,
+        }
+      ],
+      grouped: { error: [], warning: [], info: [] },
+      readinessScore: 50,
+      ranAt: "2026-07-13T10:00:00Z"
+    };
+
+    let calledSectionId = "";
+    let calledRef = "";
+    const handleAttach = (secId: string, ref: string) => {
+      calledSectionId = secId;
+      calledRef = ref;
+    };
+
+    render(
+      <IssuesPanel
+        result={attachResult}
+        onRun={() => {}}
+        onJump={() => {}}
+        hasRun={true}
+        sections={mockSections}
+        onAttachImageRequest={handleAttach}
+      />
+    );
+
+    const attachBtn = screen.getByRole("button", { name: "Gắn ảnh..." });
+    expect(attachBtn).not.toBeNull();
+    
+    attachBtn.click();
+    expect(calledSectionId).toBe("sec1");
+    expect(calledRef).toBe("images/fig-1.png");
+  });
 });

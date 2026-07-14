@@ -11,9 +11,10 @@ type IssuesPanelProps = {
   onJump: (sectionId?: string, line?: number) => void;
   hasRun: boolean;
   sections?: ReportSection[];
+  onAttachImageRequest?: (sectionId: string, originalRef: string) => void;
 };
 
-export function IssuesPanel({ result, onRun, onJump, hasRun, sections }: IssuesPanelProps) {
+export function IssuesPanel({ result, onRun, onJump, hasRun, sections, onAttachImageRequest }: IssuesPanelProps) {
   const getSectionTitle = (sectionId?: string) => {
     if (!sectionId) return "";
     if (!sections) return sectionId;
@@ -269,25 +270,52 @@ export function IssuesPanel({ result, onRun, onJump, hasRun, sections }: IssuesP
                         </div>
                       </div>
 
-                      {issue.sectionId && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onJump(issue.sectionId, issue.line)}
-                          style={{
-                            padding: "4px 8px",
-                            height: "auto",
-                            fontSize: "11px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "2px",
-                            color: "var(--rs-color-primary)",
-                          }}
-                          aria-label={`Đi tới phần "${getSectionTitle(issue.sectionId)}"${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
-                        >
-                          Xem <ArrowRight size={12} />
-                        </Button>
-                      )}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-end" }}>
+                        {issue.sectionId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onJump(issue.sectionId, issue.line)}
+                            style={{
+                              padding: "4px 8px",
+                              height: "auto",
+                              fontSize: "11px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "2px",
+                              color: "var(--rs-color-primary)",
+                            }}
+                            aria-label={`Đi tới phần "${getSectionTitle(issue.sectionId)}"${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
+                          >
+                            Xem <ArrowRight size={12} />
+                          </Button>
+                        )}
+                        {issue.id === "broken-image" && issue.sectionId && onAttachImageRequest && (
+                          (() => {
+                            const match = /"([^"]+)"/.exec(issue.message);
+                            const originalRef = match ? match[1] : undefined;
+                            if (!originalRef) return null;
+                            return (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onAttachImageRequest(issue.sectionId!, originalRef)}
+                                style={{
+                                  padding: "4px 8px",
+                                  height: "auto",
+                                  fontSize: "11px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "2px",
+                                  color: "var(--rs-color-primary)",
+                                }}
+                              >
+                                Gắn ảnh...
+                              </Button>
+                            );
+                          })()
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

@@ -36,10 +36,10 @@ Cho người dùng **gắn ảnh vào đúng ref chưa nhúng** ngay tại chỗ
 - ❌ Trình quản lý asset toàn cục (ngoài phạm vi break_task).
 
 ## 3. Checklist
-- [ ] **S1** Placeholder có nút "Gắn ảnh" → chọn file → ảnh hiển thị thật, ref thành `asset:<id>` trong markdown đúng mục.
-- [ ] **S2** Issue ảnh vỡ ở Soát lỗi có "Gắn ảnh" → cùng kết quả; sau gắn, chạy lại checker thấy P0 ảnh đó biến mất.
-- [ ] **S3** Chỉ đúng 1 ref bị đổi; ref/nội dung khác nguyên vẹn; undo editor không hỏng (đổi qua state markdown mục).
-- [ ] Toast thành công + lỗi (kích thước/định dạng). 4 gate xanh.
+- [x] **S1** Placeholder có nút "Gắn ảnh" → chọn file → ảnh hiển thị thật, ref thành `asset:<id>` trong markdown đúng mục.
+- [x] **S2** Issue ảnh vỡ ở Soát lỗi có "Gắn ảnh" → cùng kết quả; sau gắn, chạy lại checker thấy P0 ảnh đó biến mất.
+- [x] **S3** Chỉ đúng 1 ref bị đổi; ref/nội dung khác nguyên vẹn; undo editor không hỏng (đổi qua state markdown mục).
+- [x] Toast thành công + lỗi (kích thước/định dạng). 4 gate xanh.
 
 ## 4. Expected Interfaces / Files
 
@@ -71,4 +71,4 @@ Cho người dùng **gắn ảnh vào đúng ref chưa nhúng** ngay tại chỗ
 
 ## 7. Status
 
-`PROPOSED — chờ Approve; docs commit trước, src/ sau. Thi công sau A (cần placeholder làm điểm neo).`
+`DONE`

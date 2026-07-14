@@ -40,6 +40,7 @@ export {
 export type { MarkdownReplacementDraft } from "./editor-shortcuts";
 export { insertSnippet } from "./insert-snippet";
 export { resolveAssetRefs, isUnembeddedImage, transformUnembeddedImages } from "./resolve-assets";
+export { rewriteMarkdownRefs } from "./import-assets";
 export { MermaidRenderer } from "./MermaidRenderer";
 export { generateSkeleton, validateMetadata } from "./generate-skeleton";
 export { TemplatePicker } from "./TemplatePicker";

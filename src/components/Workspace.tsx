@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
@@ -34,6 +34,7 @@ import {
   moveSection,
   moveSectionToIndex,
   createImageAsset,
+  rewriteMarkdownRefs,
   isMarkdownFile,
   readMarkdownFile,
   importReadme,
@@ -86,7 +87,85 @@ export function Workspace() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState<"success" | "error">("success");
+  const [pendingAttach, setPendingAttach] = useState<{ sectionId: string; originalRef: string } | null>(null);
+  const attachFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!toastOpen) {
+      const timer = setTimeout(() => setToastVariant("success"), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [toastOpen]);
+
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+
+  const handleAttachImageRequest = useCallback((sectionId: string, originalRef: string) => {
+    setPendingAttach({ sectionId, originalRef });
+    if (attachFileInputRef.current) {
+      attachFileInputRef.current.value = "";
+      attachFileInputRef.current.click();
+    }
+  }, []);
+
+  const handleAttachFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !pendingAttach || !bundle) return;
+
+    const { sectionId, originalRef } = pendingAttach;
+    setPendingAttach(null);
+
+    // Limit is 5MB
+    const maxBytes = 5 * 1024 * 1024;
+    const result = await createImageAsset(file, maxBytes);
+    if (!result.ok) {
+      setToastMessage(result.error);
+      setToastVariant("error");
+      setToastOpen(true);
+      return;
+    }
+
+    const { asset } = result;
+
+    // Rewrite originalRef in section markdown
+    const updatedSections = bundle.project.sections.map((sec) => {
+      if (sec.id === sectionId) {
+        const updatedMarkdown = rewriteMarkdownRefs(sec.markdown, [
+          { original: originalRef, assetId: asset.id }
+        ]);
+        return {
+          ...sec,
+          markdown: updatedMarkdown,
+        };
+      }
+      return sec;
+    });
+
+    const updatedAssets = bundle.assets.some((a) => a.id === asset.id)
+      ? bundle.assets
+      : [...bundle.assets, asset];
+
+    const nextBundle: ReportProjectBundle = {
+      ...bundle,
+      assets: updatedAssets,
+      project: {
+        ...bundle.project,
+        sections: updatedSections,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    setBundle(nextBundle);
+
+    if (hasRun) {
+      const checkRes = runChecker(nextBundle);
+      setCheckResult(checkRes);
+    }
+
+    setToastMessage("Nhúng ảnh thành công!");
+    setToastVariant("success");
+    setToastOpen(true);
+  };
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importDrafts, setImportDrafts] = useState<ImportDraft[]>([]);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
@@ -1121,6 +1200,7 @@ export function Workspace() {
               onJump={handleJump}
               hasRun={hasRun}
               sections={bundle.project.sections}
+              onAttachImageRequest={handleAttachImageRequest}
             />
           </TabsContent>
           <TabsContent value="export" className="ws-side-tabs-content">
@@ -1196,6 +1276,7 @@ export function Workspace() {
           activeSectionId={activeSection.id}
           evidence={bundle.evidence}
           darkPreview={darkPreview}
+          onAttachImageRequest={handleAttachImageRequest}
         />
       }
       sidePanel={sidePanel}
@@ -1223,7 +1304,14 @@ export function Workspace() {
         commands={commands}
         onOpenChange={handleCommandPaletteOpenChange}
       />
-      <Toast open={toastOpen} onOpenChange={setToastOpen} variant="success" title={toastMessage} />
+      <Toast open={toastOpen} onOpenChange={setToastOpen} variant={toastVariant} title={toastMessage} />
+      <input
+        type="file"
+        ref={attachFileInputRef}
+        style={{ display: "none" }}
+        accept="image/*"
+        onChange={handleAttachFileChange}
+      />
       <Dialog
         isOpen={isResetConfirmOpen}
         onOpenChange={setIsResetConfirmOpen}

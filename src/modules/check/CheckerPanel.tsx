@@ -11,6 +11,7 @@ type CheckerPanelProps = {
   onJump: (sectionId?: string, line?: number) => void;
   hasRun: boolean;
   sections?: ReportSection[];
+  onAttachImageRequest?: (sectionId: string, originalRef: string) => void;
 };
 
 const ORDER: ReportIssueSeverity[] = ["error", "warning", "info"];
@@ -20,7 +21,7 @@ const LABEL: Record<ReportIssueSeverity, string> = {
   info: "Gợi ý",
 };
 
-export function CheckerPanel({ result, onRun, onJump, hasRun, sections }: CheckerPanelProps) {
+export function CheckerPanel({ result, onRun, onJump, hasRun, sections, onAttachImageRequest }: CheckerPanelProps) {
   const getSectionTitle = (sectionId?: string) => {
     if (!sectionId) return "";
     if (!sections) return sectionId;
@@ -86,21 +87,40 @@ export function CheckerPanel({ result, onRun, onJump, hasRun, sections }: Checke
                     )}
                   </div>
                   {issue.sectionId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="ws-checker-jump"
-                      onClick={() => onJump(issue.sectionId, issue.line)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onJump(issue.sectionId, issue.line);
-                        }
-                      }}
-                      aria-label={`Đi tới phần "${getSectionTitle(issue.sectionId)}"${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
-                    >
-                      Xem
-                    </Button>
+                    <div style={{ display: "flex", gap: "var(--rs-space-1)" }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ws-checker-jump"
+                        onClick={() => onJump(issue.sectionId, issue.line)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onJump(issue.sectionId, issue.line);
+                          }
+                        }}
+                        aria-label={`Đi tới phần "${getSectionTitle(issue.sectionId)}"${issue.line !== undefined ? `, dòng ${issue.line}` : ""}`}
+                      >
+                        Xem
+                      </Button>
+                      {issue.id === "broken-image" && onAttachImageRequest && (
+                        (() => {
+                          const match = /"([^"]+)"/.exec(issue.message);
+                          const originalRef = match ? match[1] : undefined;
+                          if (!originalRef) return null;
+                          return (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ws-checker-attach"
+                              onClick={() => onAttachImageRequest(issue.sectionId!, originalRef)}
+                            >
+                              Gắn ảnh
+                            </Button>
+                          );
+                        })()
+                      )}
+                    </div>
                   )}
                 </li>
               ))}
