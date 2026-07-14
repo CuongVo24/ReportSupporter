@@ -81,7 +81,7 @@ Ghi lại để không tái điều tra:
 |---|---|---|
 | A — Preview ảnh chưa nhúng + chặn network | [w24-fix-a] | ✅ DONE |
 | B — Phục hồi/gắn lại ảnh sau import | [w24-fix-b] | ✅ DONE |
-| C — Đúng-phạm-vi gate pptx/slide | — | ⏳ PROPOSED |
+| C — Đúng-phạm-vi gate pptx/slide | [w24-fix-c] | ✅ DONE |
 | D — Lịch sử xuất bản bền ở ExportPanel | [w24-fix-d] | ✅ DONE |
 | E — Decide xuất bản nháp (watermark) | — | ⏳ PROPOSED (Decide) |
 

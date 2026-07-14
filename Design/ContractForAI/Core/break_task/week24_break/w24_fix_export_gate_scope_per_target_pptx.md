@@ -63,4 +63,4 @@
 
 ## 7. Status
 
-`PROPOSED — chờ Approve; docs commit trước, src/ sau.`
+`DONE`

@@ -19,17 +19,29 @@ async function executeExport(
   },
   onPhaseChange?: (phase: ExportJob["phase"]) => void
 ): Promise<Blob> {
-  // Gate export if there are any P0 (severity === "error") issues
-  const checkResult = runChecker(bundle);
-  const errorIssues = checkResult.issues.filter((i) => i.severity === "error");
-  if (errorIssues.length > 0) {
-    const errorMessages = errorIssues.map((i) => i.message).join("; ");
-    const exportError: ExportError = {
-      stage: "parse",
-      message: `Không thể xuất bản báo cáo do có lỗi nghiêm trọng (P0): ${errorMessages}`,
-      recoverable: false,
-    };
-    throw exportError;
+  if (target === "pptx") {
+    // PPTX has its own separate validation constraints (not blocked by body P0 errors)
+    if (!extraParams?.slides || extraParams.slides.length === 0) {
+      const exportError: ExportError = {
+        stage: "parse",
+        message: "Không thể xuất PowerPoint do chưa có nội dung slide. Vui lòng tạo slide trước.",
+        recoverable: false,
+      };
+      throw exportError;
+    }
+  } else {
+    // Gate report exports (html, pdf, docx) if there are any P0 (severity === "error") issues in the body
+    const checkResult = runChecker(bundle);
+    const errorIssues = checkResult.issues.filter((i) => i.severity === "error");
+    if (errorIssues.length > 0) {
+      const errorMessages = errorIssues.map((i) => i.message).join("; ");
+      const exportError: ExportError = {
+        stage: "parse",
+        message: `Không thể xuất bản báo cáo do có lỗi nghiêm trọng (P0): ${errorMessages}`,
+        recoverable: false,
+      };
+      throw exportError;
+    }
   }
 
   let blob: Blob;

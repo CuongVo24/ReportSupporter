@@ -42,6 +42,10 @@ vi.mock("./export-pdf", () => ({
   exportPdf: vi.fn(),
 }));
 
+vi.mock("@/modules/present/export-pptx", () => ({
+  buildPptx: vi.fn().mockResolvedValue(new Blob(["pptx content"])),
+}));
+
 vi.mock("./export-docx", () => ({
   exportDocx: vi.fn(),
   packDocx: vi.fn(),
@@ -336,5 +340,51 @@ describe("useExport hook logic", () => {
     await runExport("html", emptyBundle);
     expect(jobsArray).toHaveLength(1);
     expect(jobsArray[0].fileName).toBe("report.html");
+  });
+
+  it("should allow pptx export even when the bundle has a P0 error", async () => {
+    const badBundle: ReportProjectBundle = {
+      ...mockBundle,
+      project: {
+        ...mockBundle.project,
+        sections: [
+          {
+            id: "sec-bad",
+            order: 1,
+            title: "Bad Section",
+            markdown: "![Unembedded Image](relative/path.png)",
+            status: "draft",
+          },
+        ],
+      },
+    };
+
+    const mockSlides = [{
+      id: "slide-1",
+      fromSectionId: "sec-bad",
+      order: 1,
+      title: "Slide 1",
+      bullets: ["Bullet 1"],
+      evidenceRefs: [],
+    }];
+    const { runExport } = useExport();
+
+    jobsArray.length = 0;
+    await runExport("pptx", badBundle, { slides: mockSlides });
+
+    expect(jobsArray).toHaveLength(1);
+    expect(jobsArray[0].status).toBe("done");
+  });
+
+  it("should fail pptx export when slides outline data is missing or empty", async () => {
+    const { runExport } = useExport();
+
+    jobsArray.length = 0;
+    await runExport("pptx", mockBundle, { slides: [] });
+
+    expect(jobsArray).toHaveLength(1);
+    expect(jobsArray[0].status).toBe("error");
+    expect(jobsArray[0].error?.stage).toBe("parse");
+    expect(jobsArray[0].error?.message).toContain("chưa có nội dung slide");
   });
 });
