@@ -260,6 +260,21 @@ export function Workspace() {
     }
   }, [bundle, refreshSnapshots]);
 
+  const handleCreateSnapshot = useCallback(async () => {
+    if (!bundle) return;
+    try {
+      await takeSnapshot(bundle, "Bản lưu thủ công");
+      void refreshSnapshots(bundle.project.id);
+      setToastMessage("Đã tạo một bản lưu an toàn.");
+      setToastOpen(true);
+    } catch (error) {
+      console.warn("Unable to create manual snapshot", error);
+      setToastMessage("Không thể tạo bản lưu an toàn.");
+      setToastVariant("error");
+      setToastOpen(true);
+    }
+  }, [bundle, refreshSnapshots]);
+
   const activeSection = useMemo(
     () => bundle?.project.sections.find((sec) => sec.id === activeId) ?? null,
     [bundle, activeId],
@@ -1120,6 +1135,22 @@ export function Workspace() {
   );
 
 
+  // The "Soát lỗi" tab badge surfaces the actionable/blocking count rather than
+  // the raw total (which can reach the hundreds and reads as alarming). Errors
+  // (P0, block publishing) take priority; otherwise warnings; info-only reports
+  // show no badge since the full breakdown lives inside the panel.
+  const errorCount = checkResult?.grouped.error.length ?? 0;
+  const warningCount = checkResult?.grouped.warning.length ?? 0;
+  const issuesTabBadge: {
+    count: number | undefined;
+    variant: "error" | "warning" | "neutral";
+    ariaLabel: string | undefined;
+  } = errorCount > 0
+    ? { count: errorCount, variant: "error", ariaLabel: `${errorCount} lỗi bắt buộc` }
+    : warningCount > 0
+    ? { count: warningCount, variant: "warning", ariaLabel: `${warningCount} cảnh báo` }
+    : { count: undefined, variant: "neutral", ariaLabel: undefined };
+
   const sidePanel = (
     <div className="ws-side-inner">
       <div className="ws-side-panel-header">
@@ -1152,6 +1183,7 @@ export function Workspace() {
         isLoading={isSnapshotLoading}
         onRefresh={() => refreshSnapshots(bundle.project.id)}
         onRestore={setSnapshotToRestore}
+        onCreateSnapshot={handleCreateSnapshot}
       />
       <Tabs
         value={sideTab}
@@ -1164,14 +1196,9 @@ export function Workspace() {
             <div className="ws-side-tab-group-triggers" role="presentation">
               <TabsTrigger
                 value="check"
-                count={checkResult?.issues?.length}
-                countVariant={
-                  checkResult && checkResult.issues.some((i) => i.severity === "error")
-                    ? "error"
-                    : checkResult && checkResult.issues.some((i) => i.severity === "warning")
-                    ? "warning"
-                    : "neutral"
-                }
+                count={issuesTabBadge.count}
+                countVariant={issuesTabBadge.variant}
+                countAriaLabel={issuesTabBadge.ariaLabel}
               >
                 Soát lỗi
               </TabsTrigger>

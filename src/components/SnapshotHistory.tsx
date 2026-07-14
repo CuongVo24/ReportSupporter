@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, RotateCcw } from "lucide-react";
+import { RefreshCw, RotateCcw, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { ReportSnapshot } from "@/modules/write";
 
@@ -8,6 +8,7 @@ type SnapshotHistoryProps = {
   snapshots: ReportSnapshot[];
   onRefresh: () => void | Promise<void>;
   onRestore: (snapshot: ReportSnapshot) => void;
+  onCreateSnapshot?: () => void | Promise<void>;
   isLoading?: boolean;
 };
 
@@ -22,7 +23,7 @@ function formatSnapshotTime(value: string) {
   }).format(date);
 }
 
-export function SnapshotHistory({ snapshots, onRefresh, onRestore, isLoading = false }: SnapshotHistoryProps) {
+export function SnapshotHistory({ snapshots, onRefresh, onRestore, onCreateSnapshot, isLoading = false }: SnapshotHistoryProps) {
   return (
     <section className="ws-snapshot-panel" aria-labelledby="ws-snapshot-title">
       <div className="ws-snapshot-header">
@@ -30,21 +31,37 @@ export function SnapshotHistory({ snapshots, onRefresh, onRestore, isLoading = f
           <p id="ws-snapshot-title" className="ws-snapshot-title">
             Lịch sử phiên bản
           </p>
-          <p className="ws-snapshot-subtitle">{snapshots.length} bản gần nhất</p>
+          <p className="ws-snapshot-subtitle">{snapshots.length} bản đã lưu</p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void onRefresh()}
-          aria-label="Làm mới lịch sử phiên bản"
-          title="Làm mới"
-        >
-          <RefreshCw size={14} aria-hidden="true" />
-        </Button>
+        <div className="ws-snapshot-header-actions">
+          {onCreateSnapshot && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void onCreateSnapshot()}
+              leadingIcon={<BookmarkPlus size={14} aria-hidden="true" />}
+              title="Lưu một mốc để có thể khôi phục về sau"
+            >
+              Tạo bản lưu
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void onRefresh()}
+            aria-label="Làm mới lịch sử phiên bản"
+            title="Làm mới"
+          >
+            <RefreshCw size={14} aria-hidden="true" />
+          </Button>
+        </div>
       </div>
 
       {snapshots.length === 0 ? (
-        <p className="ws-snapshot-empty">Chưa có bản lưu an toàn.</p>
+        <p className="ws-snapshot-empty">
+          Bản thảo đang được tự động lưu. Nhấn “Tạo bản lưu” để đánh dấu một mốc
+          có thể khôi phục; hệ thống cũng tự tạo bản lưu trước mỗi thao tác rủi ro.
+        </p>
       ) : (
         <ul className="ws-snapshot-list" aria-busy={isLoading}>
           {snapshots.map((snapshot) => (

@@ -15,6 +15,17 @@
   gap: var(--rs-space-3);
 }
 
+.ws-snapshot-header-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--rs-space-1);
+}
+
+.ws-snapshot-empty {
+  line-height: 1.5;
+}
+
 .ws-snapshot-title {
   margin: 0;
   color: var(--rs-color-text);
