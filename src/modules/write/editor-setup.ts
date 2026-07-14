@@ -52,6 +52,9 @@ export function createEditorState(opts: {
     doc: opts.doc,
     extensions: [
       markdown(),
+      // Wrap long lines (e.g. wide Markdown table rows) instead of forcing a
+      // horizontal scrollbar, which was unusable in the narrow split editor.
+      EditorView.lineWrapping,
       syntaxHighlighting(markdownHighlightStyle),
       history({ minDepth: 200 }),
       search({ top: true }),
