@@ -15,6 +15,11 @@ vi.mock("./validate-export", () => ({
   validateExport: vi.fn(),
 }));
 
+vi.mock("./export-history", () => ({
+  loadExportHistory: vi.fn().mockResolvedValue([]),
+  clearExportHistory: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("ExportPanel Preflight Integration", () => {
   const mockBundle: ReportProjectBundle = {
     project: {
@@ -173,5 +178,39 @@ describe("ExportPanel Preflight Integration", () => {
 
     // runExport was triggered
     expect(runExportMock).toHaveBeenCalledWith("html", mockBundle);
+  });
+
+  it("loads and displays persistent export history from IndexedDB", async () => {
+    const mockHistory = [
+      {
+        id: "job-1",
+        target: "docx" as const,
+        projectId: "test-proj",
+        status: "done" as const,
+        startedAt: "2026-06-25T10:00:00.000Z",
+        finishedAt: "2026-06-25T10:01:00.000Z",
+        fileName: "bao-cao-tot-nghiep.docx",
+      },
+    ];
+
+    const { loadExportHistory } = await import("./export-history");
+    vi.mocked(loadExportHistory).mockResolvedValue(mockHistory);
+
+    render(
+      <ExportPanel
+        bundle={mockBundle}
+        check={mockCheck}
+        jobs={[]}
+        runExport={runExportMock}
+        retry={retryMock}
+        exportedBlobs={{}}
+      />
+    );
+
+    // Wait for history to load and render
+    const jobItem = await screen.findByText("bao-cao-tot-nghiep.docx");
+    expect(jobItem).toBeDefined();
+    expect(screen.getByText("Word (DOCX)")).toBeDefined();
+    expect(screen.getByText("Hoàn thành")).toBeDefined();
   });
 });

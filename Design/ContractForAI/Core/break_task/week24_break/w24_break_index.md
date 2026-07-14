@@ -82,7 +82,7 @@ Ghi lại để không tái điều tra:
 | A — Preview ảnh chưa nhúng + chặn network | [w24-fix-a] | ✅ DONE |
 | B — Phục hồi/gắn lại ảnh sau import | [w24-fix-b] | ✅ DONE |
 | C — Đúng-phạm-vi gate pptx/slide | — | ⏳ PROPOSED |
-| D — Lịch sử xuất bản bền ở ExportPanel | — | ⏳ PROPOSED |
+| D — Lịch sử xuất bản bền ở ExportPanel | [w24-fix-d] | ✅ DONE |
 | E — Decide xuất bản nháp (watermark) | — | ⏳ PROPOSED (Decide) |
 
 > Tất cả **PROPOSED** — chờ Approve từng contract; docs commit trước, `src/` sau. Gate cuối mỗi contract: `npm test` xanh + `tsc --noEmit` sạch (W23 baseline: 617/617).

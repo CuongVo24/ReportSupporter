@@ -65,4 +65,4 @@ ExportPanel và SubmissionPanel **đọc chung một nguồn lịch sử bền**
 
 ## 7. Status
 
-`PROPOSED — chờ Approve; docs commit trước, src/ sau.`
+`DONE`

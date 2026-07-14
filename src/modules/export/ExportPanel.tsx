@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { CheckResult, ReportProjectBundle, ExportJob, ExportTarget } from "@/types";
 import { EmptyState, ErrorState } from "@/components/states";
 import { Button, Dialog, Toast } from "@/components/ui";
 import { buildPreflightResult } from "./preflight";
+import { loadExportHistory, clearExportHistory } from "./export-history";
 
 export function ExportPanel({
   bundle,
@@ -22,6 +23,36 @@ export function ExportPanel({
   const [pendingTarget, setPendingTarget] = useState<ExportTarget | null>(null);
   const [isValidationOpen, setIsValidationOpen] = useState(false);
   const [preflightResult, setPreflightResult] = useState<ReturnType<typeof buildPreflightResult> | null>(null);
+
+  // Persistent history states
+  const [history, setHistory] = useState<ExportJob[]>([]);
+
+  const refreshHistory = useCallback(async () => {
+    const list = await loadExportHistory();
+    setHistory(list);
+  }, []);
+
+  useEffect(() => {
+    refreshHistory();
+  }, [refreshHistory, jobs]);
+
+  const handleClearHistory = async () => {
+    await clearExportHistory();
+    await refreshHistory();
+  };
+
+  const combinedJobs = useMemo(() => {
+    const map = new Map<string, ExportJob>();
+    for (const job of history) {
+      map.set(job.id, job);
+    }
+    for (const job of jobs) {
+      map.set(job.id, job);
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    );
+  }, [history, jobs]);
 
   // Toast states
   const [toastOpen, setToastOpen] = useState(false);
@@ -235,17 +266,29 @@ export function ExportPanel({
       </div>
 
       <div className="ws-export-jobs-container">
-        <h4 className="ws-export-section-subtitle">Lịch sử xuất bản</h4>
-        {jobs.length === 0 ? (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--rs-space-2)" }}>
+          <h4 className="ws-export-section-subtitle" style={{ margin: 0 }}>Lịch sử xuất bản</h4>
+          {combinedJobs.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearHistory}
+              style={{ fontSize: "11px", color: "var(--rs-color-text-muted)", height: "auto", padding: "2px 6px" }}
+            >
+              Xóa lịch sử
+            </Button>
+          )}
+        </div>
+        {combinedJobs.length === 0 ? (
           <div className="ws-state-block-sm">
             <EmptyState
               title="Chưa có lịch sử xuất bản"
-              message="Lịch sử các tệp tin đã xuất bản (HTML, PDF, DOCX) trong phiên này sẽ hiển thị ở đây."
+              message="Lịch sử các tệp tin đã xuất bản (HTML, PDF, DOCX) sẽ hiển thị ở đây."
             />
           </div>
         ) : (
           <ul className="ws-export-jobs-list">
-            {jobs.map((job) => (
+            {combinedJobs.map((job) => (
               <li key={job.id} className={`ws-export-job ws-export-job-${job.status}`}>
                 <div className="ws-export-job-header">
                   <span className="ws-export-job-target-badge">
