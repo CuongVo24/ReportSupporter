@@ -135,26 +135,34 @@
   flex-wrap: wrap;
 }
 
-.ws-ai-whole-action,
-.ws-ai-whole-settings {
+.ws-ai-whole-action {
   height: var(--rs-control-height-sm);
   padding: var(--rs-space-1) var(--rs-space-3);
   border-radius: var(--rs-radius-sm);
   font-size: var(--rs-font-size-xs);
   font-weight: var(--rs-font-weight-medium);
   cursor: pointer;
-}
-
-.ws-ai-whole-action {
   color: var(--rs-white);
   background-color: var(--rs-color-primary);
   border: 1px solid transparent;
 }
 
-.ws-ai-whole-settings {
-  color: var(--rs-color-primary);
-  background-color: var(--rs-color-primary-bg);
-  border: 1px solid var(--rs-color-primary);
+/* Single, consistent affordance to enable AI (mirrors the editor's AiAssistBar
+   note) so the panel no longer shows a separate "Bật AI" button alongside it. */
+.ws-ai-whole-enable-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-1);
+  margin-top: var(--rs-space-1);
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  border-radius: var(--rs-radius-sm);
+  color: var(--rs-color-severity-warning);
+  font-size: var(--rs-font-size-xs);
+  font-weight: var(--rs-font-weight-medium);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .ws-ai-whole-results {

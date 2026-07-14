@@ -126,16 +126,17 @@ export function AiWholeReportPanel({
         >
           {isRunning && runningAction === "terminology" ? "Đang chuẩn hóa..." : "Chuẩn thuật ngữ"}
         </button>
-        {isDisabled && (
-          <button
-            type="button"
-            className="ws-ai-whole-settings"
-            onClick={onOpenSettings}
-          >
-            Bật AI
-          </button>
-        )}
       </div>
+
+      {isDisabled && (
+        <button
+          type="button"
+          className="ws-ai-whole-enable-hint"
+          onClick={onOpenSettings}
+        >
+          <AlertTriangle size={12} aria-hidden="true" /> Bật AI trong Cài đặt để dùng các tác vụ này
+        </button>
+      )}
 
       {error && (
         <div className="ws-ai-whole-error" role="alert">
