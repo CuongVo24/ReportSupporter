@@ -278,6 +278,20 @@ export function SubmissionPanel({
         }
       >
         <div className="ws-validation-list">
+          {preflightResult?.hasP0 && (
+            <div style={{
+              marginBottom: "var(--rs-space-3)",
+              padding: "var(--rs-space-3)",
+              borderRadius: "var(--rs-radius-md)",
+              backgroundColor: "var(--rs-color-bg-subtle)",
+              borderLeft: "4px solid var(--rs-color-border)",
+              fontSize: "13px",
+              color: "var(--rs-color-text-muted)",
+              lineHeight: "1.5"
+            }}>
+              💡 <strong>Mẹo:</strong> Bạn vẫn có thể sử dụng khung xem trước (Preview) trực tiếp trong ứng dụng để kiểm tra bố cục trang in một cách nhanh chóng và chính xác mà không cần xuất bản tệp.
+            </div>
+          )}
           {preflightResult?.issues.map((issue, idx) => (
             <div
               key={idx}
