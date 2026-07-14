@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Info } from "lucide-react";
 import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
-import { resolveAssetRefs, MermaidRenderer } from "@/modules/write";
+import { resolveAssetRefs, transformUnembeddedImages, MermaidRenderer } from "@/modules/write";
 import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode, injectHeadingNumbers, renderTocToHtml } from "@/modules/format";
 import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as EvidenceUnistNode } from "@/modules/evidence";
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem, CaptionEntry } from "@/types";
@@ -153,6 +153,7 @@ export function PreviewPane({
       if (!ast) {
         const resolvedMarkdown = resolveAssetRefs(part, assets);
         ast = parseMarkdown(resolvedMarkdown);
+        transformUnembeddedImages(ast, assets);
       }
       newCache.set(part, ast);
       return { isMermaid, content: part, ast };
@@ -176,10 +177,12 @@ export function PreviewPane({
         }
         const resolvedMarkdown = resolveAssetRefs(content, assets);
         const ast = parseMarkdown(resolvedMarkdown);
+        transformUnembeddedImages(ast, assets);
         return { id: sec.id, ast };
       });
     } else {
       const ast = parseMarkdown(finalMarkdown);
+      transformUnembeddedImages(ast, assets);
       return [{ id: activeSectionId || "default", ast }];
     }
   }, [sections, activeSectionId, debouncedMarkdown, lastSectionId, appendixMarkdown, assets, finalMarkdown, hasContent]);

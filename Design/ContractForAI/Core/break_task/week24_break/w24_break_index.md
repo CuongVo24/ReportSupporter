@@ -79,7 +79,7 @@ Ghi lại để không tái điều tra:
 
 | Contract | Commit | Trạng thái |
 |---|---|---|
-| A — Preview ảnh chưa nhúng + chặn network | — | ⏳ PROPOSED |
+| A — Preview ảnh chưa nhúng + chặn network | [w24-fix-a] | ✅ DONE |
 | B — Phục hồi/gắn lại ảnh sau import | — | ⏳ PROPOSED |
 | C — Đúng-phạm-vi gate pptx/slide | — | ⏳ PROPOSED |
 | D — Lịch sử xuất bản bền ở ExportPanel | — | ⏳ PROPOSED |

@@ -40,11 +40,11 @@ Ref ảnh **không giải được** (đường dẫn cục bộ tương đối,
 - ❌ Đổi cơ chế nhúng ảnh hợp lệ (`createImageAsset`/`extract-assets`).
 
 ## 3. Checklist
-- [ ] **S1** Ref `asset:`/`image:` mồ côi → placeholder có nhãn (alt/caption), không `<img>` mất src.
-- [ ] **S2** Ref đường dẫn cục bộ → **0 request mạng**; đo bằng Network panel: không `GET /images/...`. Dev-server không còn compile `/_not-found` khi mở báo cáo ảnh vỡ.
-- [ ] **S3** prepare-export không phát `<img src="images/">`/`asset:` mồ côi vào HTML/PDF/DOCX; placeholder in được.
-- [ ] **S4** ImportPreviewDialog kế thừa hành vi (dùng chung PreviewPane) — không dội 404 lúc nhập.
-- [ ] Checker vẫn báo P0 ảnh vỡ (không đổi luật). 4 gate xanh (`npm test`, `tsc --noEmit`).
+- [x] **S1** Ref `asset:`/`image:` mồ côi → placeholder có nhãn (alt/caption), không `<img>` mất src.
+- [x] **S2** Ref đường dẫn cục bộ → **0 request mạng**; đo bằng Network panel: không `GET /images/...`. Dev-server không còn compile `/_not-found` khi mở báo cáo ảnh vỡ.
+- [x] **S3** prepare-export không phát `<img src="images/">`/`asset:` mồ côi vào HTML/PDF/DOCX; placeholder in được.
+- [x] **S4** ImportPreviewDialog kế thừa hành vi (dùng chung PreviewPane) — không dội 404 lúc nhập.
+- [x] Checker vẫn báo P0 ảnh vỡ (không đổi luật). 4 gate xanh (`npm test`, `tsc --noEmit`).
 
 ## 4. Expected Interfaces / Files
 
@@ -64,7 +64,7 @@ Ref ảnh **không giải được** (đường dẫn cục bộ tương đối,
 | Risk | Level | Mitigation |
 |---|---:|---|
 | Đổi `resolveAssetRefs` phá ảnh **hợp lệ** (data-URL) | High→mitigated | Test giữ: `asset:` khớp → vẫn data-URL nguyên vẹn; chỉ nhánh **không khớp** đổi hành vi. |
-| Placeholder lọt cả ảnh **remote http(s)** hợp lệ (bị nhầm là "chưa nhúng") | Med | Chỉ coi là "chưa nhúng" khi: `asset:`/`image:` không khớp **hoặc** đường dẫn tương đối cục bộ. `http(s)://` giữ nguyên (vẫn cho qua sanitizer). |
+| Placeholder lọt cả ảnh **remote http(s)** hợp lệ (bị nhầm là "chưa nhúng") | Med | Chỉ coi là "chúng" khi: `asset:`/`image:` không khớp **hoặc** đường dẫn tương đối cục bộ. `http(s)://` giữ nguyên (vẫn cho qua sanitizer). |
 | Regex img trong markdown/HTML bỏ sót biến thể (title, HTML `<img>`) | Med | Phủ cả 2 dạng như `extract-assets`/`scanImageReferences` đã làm; test cả `![]()` và `<img src>`. |
 | Bản in placeholder chiếm layout khác ảnh thật → lệch trang | Low | Khung placeholder cố định tỉ lệ hợp lý; chấp nhận khác — mục tiêu là **không vỡ/không 404**, không phải giả ảnh. |
 
@@ -77,4 +77,4 @@ Ref ảnh **không giải được** (đường dẫn cục bộ tương đối,
 
 ## 7. Status
 
-`PROPOSED — chờ Approve; docs commit trước, src/ sau.`
+`DONE`

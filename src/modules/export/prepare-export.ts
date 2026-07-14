@@ -1,7 +1,7 @@
 import type { ReportProjectBundle, FormattedReport } from "@/types";
 import { parseMarkdown, renderMdastToHast } from "@/lib/markdown-pipeline";
 import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, injectHeadingNumbers } from "@/modules/format";
-import { resolveAssetRefs } from "@/modules/write";
+import { resolveAssetRefs, transformUnembeddedImages } from "@/modules/write";
 import { buildEvidenceAppendix, injectQrImages, type UnistNode } from "@/modules/evidence";
 import type { Root as MdastRoot, Content as MdastContent } from "mdast";
 import type { CoverPageData, ExportInput } from "./types";
@@ -58,6 +58,7 @@ export function prepareExport(bundle: ReportProjectBundle, qrDataUrls: Record<st
       .replace(/\[(CHÈN|TODO)[^\]]*\]/gi, "")
       .replace(/\{\{[^\}]*\}\}/g, "");
     const ast = parseMarkdown(strippedMarkdown);
+    transformUnembeddedImages(ast, assets);
     return { sec, ast };
   });
 

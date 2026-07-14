@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveAssetRefs } from "./resolve-assets";
+import { resolveAssetRefs, isUnembeddedImage, transformUnembeddedImages } from "./resolve-assets";
 import type { ReportAsset } from "@/types";
 import { renderMarkdown } from "../../lib/markdown-pipeline";
 
@@ -54,5 +54,59 @@ describe("resolveAssetRefs", () => {
     const resolvedMd = resolveAssetRefs(mdInput, assets);
     expect(() => renderMarkdown(resolvedMd)).not.toThrow();
   });
+
+  describe("isUnembeddedImage", () => {
+    it("classifies empty/missing URLs as unembedded", () => {
+      expect(isUnembeddedImage("", assets)).toBe(true);
+      expect(isUnembeddedImage("   ", assets)).toBe(true);
+    });
+
+    it("classifies remote http/https/data URLs as valid (not unembedded)", () => {
+      expect(isUnembeddedImage("http://example.com/img.png", assets)).toBe(false);
+      expect(isUnembeddedImage("https://example.com/img.png", assets)).toBe(false);
+      expect(isUnembeddedImage("data:image/png;base64,123", assets)).toBe(false);
+    });
+
+    it("classifies resolved asset references as valid (not unembedded)", () => {
+      expect(isUnembeddedImage("asset:a1", assets)).toBe(false);
+      expect(isUnembeddedImage("image:a2", assets)).toBe(false);
+    });
+
+    it("classifies orphan asset references as unembedded", () => {
+      expect(isUnembeddedImage("asset:unknown", assets)).toBe(true);
+      expect(isUnembeddedImage("image:ghost", assets)).toBe(true);
+    });
+
+    it("classifies relative/local file paths as unembedded", () => {
+      expect(isUnembeddedImage("images/fig-1.png", assets)).toBe(true);
+      expect(isUnembeddedImage("../assets/logo.jpg", assets)).toBe(true);
+      expect(isUnembeddedImage("/absolute/local/path.png", assets)).toBe(true);
+    });
+  });
+
+  describe("transformUnembeddedImages AST transformation", () => {
+    it("transforms unembedded image node into custom placeholder", () => {
+      const ast = {
+        type: "root",
+        children: [
+          {
+            type: "image",
+            url: "images/local.png",
+            alt: "Ảnh minh họa",
+          },
+        ],
+      };
+      transformUnembeddedImages(ast, assets);
+
+      const transformedNode = ast.children[0] as any;
+      expect(transformedNode.type).toBe("paragraph");
+      expect(transformedNode.data.hName).toBe("div");
+      expect(transformedNode.data.hProperties.className).toBe("ws-preview-image-missing");
+      expect(transformedNode.data.hProperties["data-missing-image"]).toBe("true");
+      expect(transformedNode.data.hProperties["data-original-src"]).toBe("images/local.png");
+      expect(transformedNode.data.hProperties["data-alt"]).toBe("Ảnh minh họa");
+    });
+  });
 });
+
 

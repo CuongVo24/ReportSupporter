@@ -14,11 +14,14 @@ import type { Root as HastRoot } from "hast";
 // data: URIs are allowed for images (offline assets), style attributes are stripped.
 export const customSchema = {
   ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames || []), "button"],
   clobberPrefix: "",
   attributes: {
     ...defaultSchema.attributes,
     span: [...(defaultSchema.attributes?.span || []), "className", "data-url"],
-    div: [...(defaultSchema.attributes?.div || []), "className"],
+    div: [...(defaultSchema.attributes?.div || []), "className", "data-missing-image", "data-original-src", "data-alt"],
+    p: [...(defaultSchema.attributes?.p || []), "className", "data-missing-image", "data-original-src", "data-alt"],
+    button: [...(defaultSchema.attributes?.button || []), "className", "type", "data-action", "data-original-src", "data-alt"],
     code: [...(defaultSchema.attributes?.code || []), "className"],
     pre: [...(defaultSchema.attributes?.pre || []), "className"],
     h1: [...(defaultSchema.attributes?.h1 || []), "id"],
