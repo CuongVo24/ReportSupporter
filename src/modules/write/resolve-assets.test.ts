@@ -98,7 +98,13 @@ describe("resolveAssetRefs", () => {
       };
       transformUnembeddedImages(ast, assets);
 
-      const transformedNode = ast.children[0] as any;
+      const transformedNode = ast.children[0] as unknown as {
+        type: string;
+        data: {
+          hName: string;
+          hProperties: Record<string, string>;
+        };
+      };
       expect(transformedNode.type).toBe("paragraph");
       expect(transformedNode.data.hName).toBe("div");
       expect(transformedNode.data.hProperties.className).toBe("ws-preview-image-missing");
@@ -108,5 +114,4 @@ describe("resolveAssetRefs", () => {
     });
   });
 });
-
 

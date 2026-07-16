@@ -7,12 +7,14 @@ import {
   isAiUnconfigured,
   isAiDisabled,
   DEFAULT_AI_CONFIG,
+  clearAiSessionApiKey,
 } from "./ai-config";
 import type { AiConfig } from "@/types";
 
 describe("ai-config unit tests", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    clearAiSessionApiKey();
   });
 
   it("should have enabled=false in DEFAULT_AI_CONFIG", () => {
@@ -25,7 +27,7 @@ describe("ai-config unit tests", () => {
     expect(config).toEqual(DEFAULT_AI_CONFIG);
   });
 
-  it("should persist and load valid AI configuration", () => {
+  it("should keep the API key in tab memory while persisting only non-secret settings", () => {
     const validConfig: AiConfig = {
       enabled: true,
       provider: "openai",
@@ -36,6 +38,22 @@ describe("ai-config unit tests", () => {
     const loaded = loadAiConfig();
 
     expect(loaded).toEqual(validConfig);
+    expect(window.localStorage.getItem("rs:ai-config")).toBe(JSON.stringify({
+      enabled: true,
+      provider: "openai",
+    }));
+    expect(window.localStorage.getItem("rs:ai-config")).not.toContain("client-key");
+  });
+
+  it("migrates and scrubs a legacy localStorage API key", () => {
+    window.localStorage.setItem("rs:ai-config", JSON.stringify({
+      enabled: true,
+      provider: "gemini",
+      apiKey: "legacy-key",
+    }));
+
+    expect(loadAiConfig().apiKey).toBe("legacy-key");
+    expect(window.localStorage.getItem("rs:ai-config")).not.toContain("legacy-key");
   });
 
   it("should load DEFAULT_AI_CONFIG when localStorage has malformed config JSON", () => {

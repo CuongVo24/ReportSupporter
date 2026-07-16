@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { EditorPanel } from "@/components/EditorPanel";
 import { PreviewPane } from "@/components/PreviewPane";
@@ -13,6 +14,7 @@ import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Toast, Dialog } from 
 import { ThemeToggle } from "./ThemeToggle";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2, Save } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
+import { InvalidDraftRecovery } from "@/components/InvalidDraftRecovery";
 import {
   createProjectFromTemplate,
   loadBundle,
@@ -39,7 +41,6 @@ import {
   readMarkdownFile,
   importReadme,
   AiSettingsDialog,
-  AiWholeReportPanel,
   registerAdapter,
   httpAdapter,
   loadAiConfig,
@@ -51,12 +52,35 @@ import {
   type ReportSnapshot,
 } from "@/modules/write";
 import { computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
-import { ExportPanel, SubmissionPanel, useExport } from "@/modules/export";
-import { EvidencePanel } from "@/modules/evidence";
-import { PresentPanel } from "@/modules/present";
-import { ImportPreviewDialog } from "@/modules/import/ImportPreviewDialog";
+import { useExport } from "@/modules/export/use-export";
 import { checkDraft } from "@/modules/import/check-draft";
 import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection, ImportDraft } from "@/types";
+
+const panelLoading = () => <LoadingSkeleton variant="panel" />;
+const ExportPanel = dynamic(
+  () => import("@/modules/export/ExportPanel").then((module) => module.ExportPanel),
+  { ssr: false, loading: panelLoading },
+);
+const SubmissionPanel = dynamic(
+  () => import("@/modules/export/SubmissionPanel").then((module) => module.SubmissionPanel),
+  { ssr: false, loading: panelLoading },
+);
+const EvidencePanel = dynamic(
+  () => import("@/modules/evidence/EvidencePanel").then((module) => module.EvidencePanel),
+  { ssr: false, loading: panelLoading },
+);
+const PresentPanel = dynamic(
+  () => import("@/modules/present/PresentPanel").then((module) => module.PresentPanel),
+  { ssr: false, loading: panelLoading },
+);
+const ImportPreviewDialog = dynamic(
+  () => import("@/modules/import/ImportPreviewDialog").then((module) => module.ImportPreviewDialog),
+  { ssr: false },
+);
+const AiWholeReportPanel = dynamic(
+  () => import("@/modules/write/ai/AiWholeReportPanel").then((module) => module.AiWholeReportPanel),
+  { ssr: false, loading: panelLoading },
+);
 
 const emptyCheckResult: CheckResult = {
   issues: [],
@@ -81,6 +105,8 @@ function appendMarkdown(existing: string, addition: string) {
 
 export function Workspace() {
   const [bundle, setBundle] = useState<ReportProjectBundle | null>(null);
+  const [invalidDraft, setInvalidDraft] = useState<{ raw: unknown; issues: string[] } | null>(null);
+  const [draftLoadError, setDraftLoadError] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
   const [hasRun, setHasRun] = useState(false);
@@ -185,7 +211,7 @@ export function Workspace() {
   const [lastSavedTime, setLastSavedTime] = useState<string>("");
   const [isManualSaving, setIsManualSaving] = useState(false);
 
-  const { status, quotaFull } = useDraftAutosave(bundle);
+  const { status, quotaFull, error: autosaveError, retrySave } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
   const { jobs, runExport, retry, exportedBlobs } = useExport(bundle ?? undefined);
 
@@ -202,20 +228,52 @@ export function Workspace() {
   useEffect(() => {
     let active = true;
     void (async () => {
-      const existing = await loadBundle();
-      const next = existing ?? createProjectFromTemplate(softwareProjectTemplate);
-      if (!active) return;
-      setBundle(next);
-      setActiveId(next.project.sections[0]?.id ?? null);
-      setIsInitializing(!existing || (
-        next.project.title === softwareProjectTemplate.name &&
-        Object.keys(next.project.metadata).length === 0
-      ));
-      if (!existing) void saveBundle(next);
+      try {
+        const result = await loadBundle();
+        if (!active) return;
+        if (result.status === "invalid") {
+          setInvalidDraft({ raw: result.raw, issues: result.issues });
+          return;
+        }
+
+        const existing = result.status === "loaded" ? result.bundle : null;
+        const next = existing ?? createProjectFromTemplate(softwareProjectTemplate);
+        setBundle(next);
+        setActiveId(next.project.sections[0]?.id ?? null);
+        setIsInitializing(!existing || (
+          next.project.title === softwareProjectTemplate.name &&
+          Object.keys(next.project.metadata).length === 0
+        ));
+        if (!existing) {
+          try {
+            await saveBundle(next);
+          } catch (error: unknown) {
+            if (active) {
+              setToastVariant("error");
+              setToastMessage(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ lÆ°u báº£n tháº£o má»›i.");
+              setToastOpen(true);
+            }
+          }
+        }
+      } catch (error: unknown) {
+        if (active) {
+          setDraftLoadError(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ Ä‘á»c báº£n tháº£o tá»« trÃ¬nh duyá»‡t.");
+        }
+      }
     })();
     return () => {
       active = false;
     };
+  }, []);
+
+  const handleDiscardInvalidDraft = useCallback(async () => {
+    const next = createProjectFromTemplate(softwareProjectTemplate);
+    await saveBundle(next);
+    setInvalidDraft(null);
+    setDraftLoadError("");
+    setBundle(next);
+    setActiveId(next.project.sections[0]?.id ?? null);
+    setIsInitializing(true);
   }, []);
 
   useEffect(() => {
@@ -997,6 +1055,27 @@ export function Workspace() {
     isInitializing,
   ]);
 
+  if (invalidDraft) {
+    return (
+      <InvalidDraftRecovery
+        raw={invalidDraft.raw}
+        issues={invalidDraft.issues}
+        onReset={handleDiscardInvalidDraft}
+      />
+    );
+  }
+
+  if (draftLoadError) {
+    return (
+      <main className="ws-state-container" role="alert" style={{ maxWidth: 680, margin: "64px auto", padding: 32 }}>
+        <AlertTriangle size={36} aria-hidden="true" />
+        <h1>KhÃ´ng thá»ƒ má»Ÿ báº£n tháº£o</h1>
+        <p>{draftLoadError}</p>
+        <Button variant="secondary" onClick={() => window.location.reload()}>Thá»­ táº£i láº¡i</Button>
+      </main>
+    );
+  }
+
   if (!bundle) {
     return (
       <WorkspaceLayout
@@ -1053,10 +1132,11 @@ export function Workspace() {
 
   const saveStatus = (
     <p className="ws-save-status" aria-live="polite">
-      {quotaFull ? (
+      {quotaFull || status === "error" ? (
         <span className="ws-save-status-error">
           <AlertTriangle size={14} aria-hidden="true" />
-          Bộ nhớ đầy
+          {quotaFull ? "Bộ nhớ đầy" : (autosaveError || "Không thể tự động lưu")}
+          <button type="button" className="ws-link-button" onClick={retrySave}>Thử lại</button>
         </span>
       ) : isManualSaving ? (
         <span className="ws-save-status-saving">

@@ -89,9 +89,11 @@ describe("Worker Client Protocol & Fallbacks", () => {
 
   it("should support AbortSignal cancellation", async () => {
     const controller = new AbortController();
+    const removeListenerSpy = vi.spyOn(controller.signal, "removeEventListener");
     const promise = runInWorker("docx", "test.docx", new ArrayBuffer(8), undefined, undefined, controller.signal);
     controller.abort();
 
     await expect(promise).rejects.toThrow("Import cancelled");
+    expect(removeListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function));
   });
 });

@@ -105,7 +105,7 @@ export function AiSettingsDialog({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Nhập API Key của bạn..."
-              helperText="Chiến lược hiện tại dùng key-client: key lưu trong localStorage và gửi qua header x-api-key tới /api/ai."
+              helperText="API key chỉ được giữ trong bộ nhớ của tab hiện tại và gửi qua header x-api-key tới /api/ai. Bạn cần nhập lại sau khi tải lại trang."
             />
 
             {/* Model input (optional) */}
@@ -127,7 +127,7 @@ export function AiSettingsDialog({
             <div style={{ display: "flex", gap: "var(--rs-space-2)", color: "var(--rs-color-text-muted)", fontSize: "var(--rs-font-size-xs)", padding: "var(--rs-space-3)", border: "1px solid var(--rs-color-border)", borderRadius: "var(--rs-radius-md)" }}>
               <Shield size={16} style={{ flexShrink: 0, color: "var(--rs-color-primary)" }} aria-hidden="true" />
               <div>
-                <span style={{ fontWeight: "var(--rs-font-weight-medium)", color: "var(--rs-color-text)" }}>Cảnh báo bảo mật:</span> API key lưu trong localStorage nên có thể bị đọc nếu app gặp XSS. Route server không dùng key môi trường làm fallback; mỗi request AI cần key bạn nhập và nội dung section/báo cáo sẽ được gửi đến provider đã chọn.
+                <span style={{ fontWeight: "var(--rs-font-weight-medium)", color: "var(--rs-color-text)" }}>Cảnh báo bảo mật:</span> API key không được ghi xuống localStorage và sẽ mất khi tải lại trang. Mỗi request AI vẫn gửi key cùng nội dung section/báo cáo đến provider bạn đã chọn.
               </div>
             </div>
           </>

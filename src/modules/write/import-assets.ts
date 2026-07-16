@@ -3,6 +3,57 @@ import JSZip from "jszip";
 
 export const WARNING_ASSET_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 export const MAX_ASSET_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+export const MAX_ZIP_ARCHIVE_BYTES = 50 * 1024 * 1024;
+export const MAX_ZIP_ENTRIES = 200;
+export const MAX_ZIP_ENTRY_BYTES = 50 * 1024 * 1024;
+export const MAX_ZIP_EXPANDED_BYTES = 250 * 1024 * 1024;
+export const MAX_ZIP_COMPRESSION_RATIO = 100;
+
+type ZipEntryWithMetadata = JSZip.JSZipObject & {
+  unsafeOriginalName?: string;
+  _data?: {
+    compressedSize?: number;
+    uncompressedSize?: number;
+  };
+};
+
+function assertSafeZipPath(entry: ZipEntryWithMetadata): void {
+  const originalName = entry.unsafeOriginalName ?? entry.name;
+  const normalized = originalName.replace(/\\/g, "/");
+  if (
+    normalized.startsWith("/") ||
+    /^[a-z]:\//i.test(normalized) ||
+    normalized.split("/").some((segment) => segment === "..")
+  ) {
+    throw new Error(`Tá»‡p ZIP chá»©a Ä‘Æ°á»ng dáº«n khÃ´ng an toÃ n: ${originalName}`);
+  }
+}
+
+function assertSafeZipMetadata(entries: ZipEntryWithMetadata[]): void {
+  let knownExpandedBytes = 0;
+
+  for (const entry of entries) {
+    assertSafeZipPath(entry);
+    const compressedSize = entry._data?.compressedSize;
+    const uncompressedSize = entry._data?.uncompressedSize;
+    if (typeof uncompressedSize !== "number") continue;
+
+    if (uncompressedSize > MAX_ZIP_ENTRY_BYTES) {
+      throw new Error(`Tá»‡p "${entry.name}" vÆ°á»£t quÃ¡ giá»›i háº¡n giáº£i nÃ©n 50MB.`);
+    }
+    knownExpandedBytes += uncompressedSize;
+    if (knownExpandedBytes > MAX_ZIP_EXPANDED_BYTES) {
+      throw new Error("Tá»‡p ZIP vÆ°á»£t quÃ¡ giá»›i háº¡n 250MB sau khi giáº£i nÃ©n.");
+    }
+    if (
+      typeof compressedSize === "number" &&
+      uncompressedSize > 0 &&
+      (compressedSize === 0 || uncompressedSize / compressedSize > MAX_ZIP_COMPRESSION_RATIO)
+    ) {
+      throw new Error(`Tá»· lá»‡ nÃ©n cá»§a "${entry.name}" vÆ°á»£t quÃ¡ ngÆ°á»¡ng an toÃ n.`);
+    }
+  }
+}
 
 export type IngestResult = {
   markdown: string;
@@ -94,30 +145,43 @@ export function rewriteMarkdownRefs(
  * Processes a potential zip file and returns a list of File objects.
  */
 export async function unzipFiles(zipFile: File): Promise<File[]> {
-  const zip = await JSZip.loadAsync(zipFile);
+  if (zipFile.size > MAX_ZIP_ARCHIVE_BYTES) {
+    throw new Error("Tá»‡p ZIP vÆ°á»£t quÃ¡ giá»›i háº¡n dung lÆ°á»£ng 50MB.");
+  }
+
+  const zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
+  const entries = Object.values(zip.files).filter((entry) => !entry.dir) as ZipEntryWithMetadata[];
+  if (entries.length > MAX_ZIP_ENTRIES) {
+    throw new Error(`Tá»‡p ZIP chá»©a quÃ¡ nhiá»u tá»‡p (tá»‘i Ä‘a ${MAX_ZIP_ENTRIES}).`);
+  }
+  assertSafeZipMetadata(entries);
+
   const files: File[] = [];
-  const promises: Promise<void>[] = [];
+  let expandedBytes = 0;
 
-  zip.forEach((relativePath, zipEntry) => {
-    if (zipEntry.dir) return;
+  // Decompress sequentially to cap peak memory instead of inflating every
+  // archive entry at once with Promise.all.
+  for (const zipEntry of entries) {
+    const blob = await zipEntry.async("blob");
+    if (blob.size > MAX_ZIP_ENTRY_BYTES) {
+      throw new Error(`Tá»‡p "${zipEntry.name}" vÆ°á»£t quÃ¡ giá»›i háº¡n giáº£i nÃ©n 50MB.`);
+    }
+    expandedBytes += blob.size;
+    if (expandedBytes > MAX_ZIP_EXPANDED_BYTES) {
+      throw new Error("Tá»‡p ZIP vÆ°á»£t quÃ¡ giá»›i háº¡n 250MB sau khi giáº£i nÃ©n.");
+    }
 
-    const promise = zipEntry.async("blob").then((blob) => {
-      const name = zipEntry.name;
-      const ext = name.split(".").pop()?.toLowerCase() || "";
-      let type = "";
-      if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) {
-        type = `image/${ext === "jpg" ? "jpeg" : ext}`;
-      } else if (ext === "md" || ext === "markdown") {
-        type = "text/markdown";
-      }
+    const name = zipEntry.name;
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+    let type = "";
+    if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) {
+      type = `image/${ext === "jpg" ? "jpeg" : ext}`;
+    } else if (ext === "md" || ext === "markdown") {
+      type = "text/markdown";
+    }
+    files.push(new File([blob], name, { type }));
+  }
 
-      const file = new File([blob], name, { type });
-      files.push(file);
-    });
-    promises.push(promise);
-  });
-
-  await Promise.all(promises);
   return files;
 }
 

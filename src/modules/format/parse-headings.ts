@@ -7,8 +7,12 @@ export type HeadingNode = { depth: number; text: string; sectionId?: string };
 function getHeadingText(nodes: PhrasingContent[]): string {
   let text = "";
   for (const node of nodes) {
-    if ("value" in node && typeof node.value === "string") {
+    // Raw HTML nodes can occur in a parsed Markdown heading. Only consume node
+    // kinds whose value is display text so markup never reaches the TOC.
+    if ((node.type === "text" || node.type === "inlineCode") && "value" in node && typeof node.value === "string") {
       text += node.value;
+    } else if (node.type === "image" && typeof node.alt === "string") {
+      text += node.alt;
     } else if ("children" in node && Array.isArray(node.children)) {
       text += getHeadingText(node.children as PhrasingContent[]);
     }

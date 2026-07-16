@@ -1,5 +1,15 @@
 import type { ReportAsset } from "@/types";
 
+interface MutableMdastNode {
+  type: string;
+  value?: string;
+  url?: string;
+  alt?: string | null;
+  title?: string | null;
+  data?: unknown;
+  children?: MutableMdastNode[];
+}
+
 /**
  * Replaces offline asset references in the format `asset:<id>` or `image:asset_id`
  * with the corresponding base64 data URLs from the project assets.
@@ -43,7 +53,7 @@ export function isUnembeddedImage(url: string, assets: { id: string }[]): boolea
  * Recursively walks the MDAST (markdown AST) tree and replaces any unembedded/broken
  * image nodes with custom paragraph/div placeholders.
  */
-export function transformUnembeddedImages(node: any, assets: { id: string }[]) {
+export function transformUnembeddedImages(node: MutableMdastNode | null | undefined, assets: { id: string }[]): void {
   if (!node) return;
 
   if (node.type === "image") {
@@ -97,4 +107,3 @@ export function transformUnembeddedImages(node: any, assets: { id: string }[]) {
     }
   }
 }
-
