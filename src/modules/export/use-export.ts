@@ -1,9 +1,5 @@
 import { useState, useCallback } from "react";
 import type { ExportJob, ExportTarget, ReportProjectBundle, ExportError, SlideOutline, Speaker, SpeakerScript } from "@/types";
-import { exportHtml } from "./export-html";
-import { exportPdf } from "./export-pdf";
-import { exportDocx, packDocx } from "./export-docx";
-import { toQrDataUrl } from "@/modules/evidence";
 import { recordExport } from "./export-history";
 
 import { runChecker } from "@/modules/check/run-checker";
@@ -49,6 +45,7 @@ async function executeExport(
 
   const qrDataUrls: Record<string, string> = {};
   if (bundle.evidence && bundle.evidence.length > 0) {
+    const { toQrDataUrl } = await import("@/modules/evidence/evidence-qr");
     for (const item of bundle.evidence) {
       if (item.qrEnabled && item.url) {
         try {
@@ -64,6 +61,7 @@ async function executeExport(
   }
 
   if (target === "html") {
+    const { exportHtml } = await import("./export-html");
     const res = Object.keys(qrDataUrls).length > 0
       ? exportHtml(bundle, qrDataUrls)
       : exportHtml(bundle);
@@ -72,12 +70,14 @@ async function executeExport(
     }
     blob = res.blob;
   } else if (target === "pdf") {
+    const { exportPdf } = await import("./export-pdf");
     const res = await exportPdf(bundle, onPhaseChange);
     if (!res.ok) {
       throw res.error;
     }
     blob = res.blob;
   } else if (target === "docx") {
+    const { exportDocx, packDocx } = await import("./export-docx");
     const res = Object.keys(qrDataUrls).length > 0
       ? exportDocx(bundle, qrDataUrls)
       : exportDocx(bundle);
@@ -149,7 +149,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
       fileName,
     };
 
-    setJobs((prev) => [newJob, ...prev]);
+    setJobs((prev) => [newJob, ...prev].slice(0, 100));
 
     let currentPhase: ExportJob["phase"] = undefined;
     try {
@@ -172,7 +172,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        globalThis.setTimeout(() => URL.revokeObjectURL(url), 0);
       }
 
       setExportedBlobs((prev) => ({ ...prev, [target]: blob }));

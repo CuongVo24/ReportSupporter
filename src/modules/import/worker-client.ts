@@ -32,16 +32,37 @@ export function runInWorker(
     }
 
     const jobId = crypto.randomUUID();
+    let settled = false;
+
+    const cleanup = () => {
+      abortSignal?.removeEventListener("abort", onAbort);
+      worker.onmessage = null;
+      worker.onerror = null;
+      worker.terminate();
+    };
+
+    const resolveOnce = (result: ImportResult) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+
+    const rejectOnce = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+
+    const onAbort = () => rejectOnce(new Error("Import cancelled"));
 
     if (abortSignal) {
       if (abortSignal.aborted) {
-        worker.terminate();
-        return reject(new Error("Import cancelled"));
+        rejectOnce(new Error("Import cancelled"));
+        return;
       }
-      abortSignal.addEventListener("abort", () => {
-        worker.terminate();
-        reject(new Error("Import cancelled"));
-      });
+      abortSignal.addEventListener("abort", onAbort, { once: true });
     }
 
     worker.onmessage = (e) => {
@@ -53,21 +74,18 @@ export function runInWorker(
           onProgress(progress);
         }
       } else if (type === "success") {
-        worker.terminate();
-        resolve(result);
+        resolveOnce(result);
       } else if (type === "error") {
-        worker.terminate();
         if (error === "FALLBACK_TO_MAIN_THREAD") {
-          reject(new Error("FALLBACK_TO_MAIN_THREAD"));
+          rejectOnce(new Error("FALLBACK_TO_MAIN_THREAD"));
         } else {
-          reject(new Error(error || "Worker conversion error"));
+          rejectOnce(new Error(error || "Worker conversion error"));
         }
       }
     };
 
     worker.onerror = (err) => {
-      worker.terminate();
-      reject(err);
+      rejectOnce(err.error || new Error(err.message || "Worker conversion error"));
     };
 
     // Construct transferable array list

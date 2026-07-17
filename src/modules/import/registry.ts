@@ -11,6 +11,16 @@ import { convertPdfPagesToMarkdown } from "./pdf/paragraph-merge";
 
 const converters: ImportConverter[] = [];
 
+function throwIfImportCancelled(abortSignal?: AbortSignal): void {
+  if (abortSignal?.aborted) {
+    throw new Error("Import cancelled");
+  }
+}
+
+function isImportCancellation(error: unknown, abortSignal?: AbortSignal): boolean {
+  return abortSignal?.aborted === true || (error instanceof Error && error.message === "Import cancelled");
+}
+
 /**
  * Registers an import converter in the registry.
  */
@@ -72,6 +82,7 @@ export async function convertImportFile(
   onProgress?: (progress: number, stage?: string) => void,
   abortSignal?: AbortSignal
 ): Promise<ImportResult> {
+  throwIfImportCancelled(abortSignal);
   const converter = resolveConverter(file);
   if (!converter) {
     const supportedList = getSupportedFormats().join(", ");
@@ -92,6 +103,7 @@ export async function convertImportFile(
     if (converter.format === "docx" || converter.format === "xlsx" || converter.format === "pptx") {
       try {
         const arrayBuffer = await file.arrayBuffer();
+        throwIfImportCancelled(abortSignal);
         return await runInWorker(
           converter.format,
           file.name,
@@ -104,7 +116,10 @@ export async function convertImportFile(
         const error = err as Error;
         if (error.message === "FALLBACK_TO_MAIN_THREAD") {
           // Fallback to main thread execution
-          return converter.convert(file, onProgress);
+          throwIfImportCancelled(abortSignal);
+          const result = await converter.convert(file, onProgress, abortSignal);
+          throwIfImportCancelled(abortSignal);
+          return result;
         }
         throw error;
       }
@@ -112,11 +127,15 @@ export async function convertImportFile(
 
     if (converter.format === "pdf") {
       const arrayBuffer = await file.arrayBuffer();
+      throwIfImportCancelled(abortSignal);
       // 1. Extract raw text items using pdf.js worker on main thread
       const { pages, warnings: extractionWarnings } = await extractTextFromPdf(
         arrayBuffer,
         onProgress ? (page, total) => onProgress(Math.round((page / total) * 100), "Trích xuất văn bản từ PDF...") : undefined
+        ,
+        abortSignal,
       );
+      throwIfImportCancelled(abortSignal);
 
       // 2. Run heuristic steps in worker
       try {
@@ -130,10 +149,15 @@ export async function convertImportFile(
         );
         workerResult.warnings = [...extractionWarnings, ...workerResult.warnings];
         return workerResult;
-      } catch {
+      } catch (error: unknown) {
+        if (isImportCancellation(error, abortSignal)) {
+          throw new Error("Import cancelled");
+        }
         // Fallback to main thread heuristic
+        throwIfImportCancelled(abortSignal);
         const { bodySize, headingMap } = buildHeadingMap(pages);
         const { markdown, warnings: layoutWarnings, assets } = convertPdfPagesToMarkdown(pages, bodySize, headingMap);
+        throwIfImportCancelled(abortSignal);
         return {
           sourceFormat: "pdf",
           fileName: file.name,
@@ -146,7 +170,9 @@ export async function convertImportFile(
     }
   }
 
-  return converter.convert(file, onProgress);
+  const result = await converter.convert(file, onProgress, abortSignal);
+  throwIfImportCancelled(abortSignal);
+  return result;
 }
 
 // Bootstrap registry with the baseline Markdown and DOCX converters
@@ -155,4 +181,3 @@ registerConverter(docxConverter);
 registerConverter(pdfConverter);
 registerConverter(xlsxConverter);
 registerConverter(pptxConverter);
-

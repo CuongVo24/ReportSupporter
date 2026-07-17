@@ -87,7 +87,8 @@ export function ExportPanel({
             const blob = exportedBlobs?.[target];
             if (blob) {
               const url = URL.createObjectURL(blob);
-              window.open(url, "_blank");
+              window.open(url, "_blank", "noopener,noreferrer");
+              window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
             } else {
               console.warn("Blob not found for target", target);
             }

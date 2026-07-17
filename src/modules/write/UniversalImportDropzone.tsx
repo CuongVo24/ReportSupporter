@@ -16,6 +16,8 @@ import {
   getSupportedExtensions,
   getSupportedFormats,
 } from "@/modules/import";
+import { mapWithConcurrencySettled } from "@/modules/import/concurrency";
+import { collectDroppedFiles, MAX_DROPPED_FILES } from "@/modules/import/directory-reader";
 import type { ImportDraft } from "@/types";
 
 type UniversalImportDropzoneProps = {
@@ -54,6 +56,10 @@ export function UniversalImportDropzone({
 
   const processFiles = async (fileList: File[]) => {
     if (fileList.length === 0) return;
+    if (fileList.length > MAX_DROPPED_FILES) {
+      setError(`Chá»‰ cÃ³ thá»ƒ nháº­p tá»‘i Ä‘a ${MAX_DROPPED_FILES} tá»‡p má»—i láº§n.`);
+      return;
+    }
     setAnnouncement("Bắt đầu xử lý danh sách tệp tin...");
 
     let allFiles: File[] = [];
@@ -101,7 +107,7 @@ export function UniversalImportDropzone({
     });
     setBatchFiles(initialProgress);
 
-    const promises = docFiles.map(async (docFile, index) => {
+    const results = await mapWithConcurrencySettled(docFiles, 3, async (docFile, index) => {
       const progressItem = initialProgress[index];
       const abortSignal = progressItem.abortController?.signal;
 
@@ -177,8 +183,6 @@ export function UniversalImportDropzone({
         throw err;
       }
     });
-
-    const results = await Promise.allSettled(promises);
     const successful = results.filter(
       (r): r is PromiseFulfilledResult<ImportDraft> => r.status === "fulfilled"
     );
@@ -226,39 +230,9 @@ export function UniversalImportDropzone({
       }
     }
 
-    const readEntry = (entry: FileSystemEntry): Promise<File[]> => {
-      return new Promise((resolve) => {
-        if (entry.isFile) {
-          (entry as FileSystemFileEntry).file(
-            (file) => resolve([file]),
-            () => resolve([])
-          );
-        } else if (entry.isDirectory) {
-          const dirReader = (entry as FileSystemDirectoryEntry).createReader();
-          const readAllEntries = () => {
-            dirReader.readEntries(
-              async (subEntries) => {
-                if (subEntries.length === 0) {
-                  resolve([]);
-                } else {
-                  const results = await Promise.all(subEntries.map(readEntry));
-                  resolve(results.flat());
-                }
-              },
-              () => resolve([])
-            );
-          };
-          readAllEntries();
-        } else {
-          resolve([]);
-        }
-      });
-    };
-
     try {
-      const allResults = await Promise.all(entries.map(readEntry));
-      const flatFiles = allResults.flat();
-      void processFiles(flatFiles);
+      const droppedFiles = await collectDroppedFiles(entries);
+      void processFiles(droppedFiles);
     } catch (err) {
       setError("Lỗi khi đọc danh sách kéo thả: " + (err as Error).message);
     }

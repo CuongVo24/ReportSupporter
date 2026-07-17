@@ -79,9 +79,16 @@ export function mergeAdjacentTextItems(items: TextItem[]): TextItem[] {
  */
 export async function extractTextFromPdf(
   arrayBuffer: ArrayBuffer,
-  onProgress?: (pageNum: number, totalPages: number) => void
+  onProgress?: (pageNum: number, totalPages: number) => void,
+  abortSignal?: AbortSignal,
 ): Promise<{ pages: ExtractedPage[]; warnings: ImportWarning[] }> {
+  const throwIfCancelled = () => {
+    if (abortSignal?.aborted) throw new Error("Import cancelled");
+  };
+
+  throwIfCancelled();
   const pdfjs = await import("pdfjs-dist");
+  throwIfCancelled();
   // Ensure worker is configured locally
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
     pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.mjs";
@@ -98,6 +105,7 @@ export async function extractTextFromPdf(
   try {
     pdfDoc = await loadingTask.promise;
   } catch (err: unknown) {
+    if (abortSignal?.aborted) throw new Error("Import cancelled");
     const error = err as Error;
     if (error && error.name === "PasswordException") {
       throw new Error("Tài liệu PDF được mã hóa bảo mật. Vui lòng giải mã trước khi import.");
@@ -117,13 +125,18 @@ export async function extractTextFromPdf(
   const warnings: ImportWarning[] = [];
 
   for (let i = 1; i <= pdfDoc.numPages; i++) {
+    throwIfCancelled();
     const page = await pdfDoc.getPage(i);
+    throwIfCancelled();
     const viewport = page.getViewport({ scale: 1.0 });
     const textContent = await page.getTextContent();
+    throwIfCancelled();
     const ops = await page.getOperatorList();
+    throwIfCancelled();
 
     // Extract images on this page
     const images = await extractPageImages(page, ops, i, warnings);
+    throwIfCancelled();
 
     const rawItems: TextItem[] = [];
 

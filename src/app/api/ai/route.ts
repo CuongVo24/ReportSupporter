@@ -13,6 +13,64 @@ type AiProxyRequest = {
 
 const GENERIC_PROVIDER_ERROR =
   "AI provider request failed. Please check your API key, quota, model, or provider status.";
+const MAX_BODY_BYTES = 512 * 1024;
+const MAX_INPUT_CHARS = 100_000;
+const MAX_MODEL_CHARS = 128;
+const MAX_OUTPUT_TOKENS = 4_000;
+const AI_TIMEOUT_MS = 60_000;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_REQUESTS = 20;
+const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+
+class ProviderRequestError extends Error {}
+
+function clientAddress(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-real-ip")?.trim()
+    || "unknown";
+}
+
+function consumeRateLimit(key: string): { allowed: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+  const current = rateLimitBuckets.get(key);
+  if (!current || current.resetAt <= now) {
+    rateLimitBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+  if (current.count >= RATE_LIMIT_REQUESTS) {
+    return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)) };
+  }
+  current.count += 1;
+
+  // Keep the best-effort in-memory limiter bounded on long-lived instances.
+  if (rateLimitBuckets.size > 10_000) {
+    for (const [bucketKey, bucket] of rateLimitBuckets) {
+      if (bucket.resetAt <= now) rateLimitBuckets.delete(bucketKey);
+    }
+  }
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+function validModel(model: string | undefined): boolean {
+  return model === undefined || (
+    model.length <= MAX_MODEL_CHARS &&
+    /^[a-zA-Z0-9._:/-]+$/.test(model)
+  );
+}
+
+async function requestProvider(url: string, init: RequestInit): Promise<Response> {
+  try {
+    const response = await fetch(url, { ...init, signal: AbortSignal.timeout(AI_TIMEOUT_MS) });
+    if (!response.ok) throw new ProviderRequestError(GENERIC_PROVIDER_ERROR);
+    return response;
+  } catch (error: unknown) {
+    if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      throw error;
+    }
+    if (error instanceof ProviderRequestError) throw error;
+    throw new ProviderRequestError(GENERIC_PROVIDER_ERROR);
+  }
+}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
@@ -34,7 +92,14 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
   const provider = parseProvider(record.provider);
   const model = stringValue(record.model);
 
-  if (!actionResult.success || !input || !provider) return null;
+  if (
+    !actionResult.success ||
+    !input ||
+    input.trim().length === 0 ||
+    input.length > MAX_INPUT_CHARS ||
+    !provider ||
+    !validModel(model)
+  ) return null;
 
   return {
     action: actionResult.data,
@@ -98,7 +163,24 @@ function readAnthropicSuggestion(data: unknown): string {
 
 export async function POST(req: Request) {
   try {
-    const parsed = parseRequestBody(await req.json());
+    const declaredLength = Number(req.headers.get("content-length") || "0");
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
+    }
+
+    const rateLimit = consumeRateLimit(clientAddress(req));
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many AI requests. Please retry shortly." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
+
+    const rawBody = await req.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
+    }
+    const parsed = parseRequestBody(JSON.parse(rawBody));
 
     if (!parsed) {
       return NextResponse.json(
@@ -123,19 +205,16 @@ export async function POST(req: Request) {
 
     if (provider === "gemini") {
       const selectedModel = model || "gemini-1.5-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent`;
 
-      const response = await fetch(url, {
+      const response = await requestProvider(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(GENERIC_PROVIDER_ERROR);
-      }
 
       const data: unknown = await response.json();
       suggestion = readGeminiSuggestion(data);
@@ -143,7 +222,7 @@ export async function POST(req: Request) {
       const selectedModel = model || "gpt-4o";
       const url = "https://api.openai.com/v1/chat/completions";
 
-      const response = await fetch(url, {
+      const response = await requestProvider(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -152,12 +231,9 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           model: selectedModel,
           messages: [{ role: "user", content: prompt }],
+          max_tokens: MAX_OUTPUT_TOKENS,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(GENERIC_PROVIDER_ERROR);
-      }
 
       const data: unknown = await response.json();
       suggestion = readOpenAiSuggestion(data);
@@ -165,7 +241,7 @@ export async function POST(req: Request) {
       const selectedModel = model || "claude-3-5-sonnet-20241022";
       const url = "https://api.anthropic.com/v1/messages";
 
-      const response = await fetch(url, {
+      const response = await requestProvider(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,14 +250,10 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           model: selectedModel,
-          max_tokens: 4000,
+          max_tokens: MAX_OUTPUT_TOKENS,
           messages: [{ role: "user", content: prompt }],
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(GENERIC_PROVIDER_ERROR);
-      }
 
       const data: unknown = await response.json();
       suggestion = readAnthropicSuggestion(data);
@@ -190,6 +262,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ suggestion });
   } catch (error) {
     console.error("AI Proxy error:", error);
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
+    }
+    if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      return NextResponse.json({ error: "AI provider request timed out." }, { status: 504 });
+    }
+    if (error instanceof ProviderRequestError) {
+      return NextResponse.json({ error: GENERIC_PROVIDER_ERROR }, { status: 502 });
+    }
     const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { error: message },

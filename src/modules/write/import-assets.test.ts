@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import JSZip from "jszip";
 import {
   scanImageReferences,
   getBasename,
@@ -7,6 +8,8 @@ import {
   ingestAssetsAndEvidence,
   WARNING_ASSET_SIZE_BYTES,
   MAX_ASSET_SIZE_BYTES,
+  MAX_ZIP_ENTRIES,
+  unzipFiles,
 } from "./import-assets";
 
 
@@ -154,6 +157,33 @@ HTML link ngoài: <img src="http://example.com/other.png">
       expect(result.summary.warnings.some((w) => w.includes("big.png") && w.includes("Cảnh báo"))).toBe(true);
       // Hard limit trigger
       expect(result.summary.warnings.some((w) => w.includes("giant.png") && w.includes("Bỏ qua"))).toBe(true);
+    });
+  });
+
+  describe("unzipFiles", () => {
+    it("extracts a normal archive", async () => {
+      const zip = new JSZip();
+      zip.file("report.md", "# Report");
+      zip.file("images/example.png", new Uint8Array([1, 2, 3]));
+      const blob = await zip.generateAsync({ type: "blob" });
+
+      const files = await unzipFiles(new File([blob], "report.zip", { type: "application/zip" }));
+
+      expect(files.map((file) => file.name)).toEqual(["report.md", "images/example.png"]);
+      expect(files[0].type).toBe("text/markdown");
+      expect(files[1].type).toBe("image/png");
+    });
+
+    it("rejects archives with too many entries before decompression", async () => {
+      const zip = new JSZip();
+      for (let index = 0; index <= MAX_ZIP_ENTRIES; index++) {
+        zip.file(`entry-${index}.md`, "x");
+      }
+      const blob = await zip.generateAsync({ type: "blob" });
+
+      await expect(
+        unzipFiles(new File([blob], "too-many.zip", { type: "application/zip" })),
+      ).rejects.toThrow(String(MAX_ZIP_ENTRIES));
     });
   });
 });

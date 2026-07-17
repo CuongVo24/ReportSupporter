@@ -65,7 +65,12 @@ export async function exportPdfViaBrowserPrint(
     });
 
     // 6. Compile Mermaid diagrams to static SVGs locally
-    mermaid.initialize({ startOnLoad: false, theme: "default" });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "strict",
+      flowchart: { htmlLabels: false },
+    });
     const mermaidBlocks = iframeDoc.querySelectorAll("pre code.language-mermaid");
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];

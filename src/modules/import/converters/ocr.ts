@@ -62,28 +62,39 @@ export async function performOcrOnCanvas(
     },
   });
 
+  let terminated = false;
+  const terminateWorker = async () => {
+    if (terminated) return;
+    terminated = true;
+    await worker.terminate();
+  };
+  const onAbort = () => {
+    void terminateWorker();
+  };
+
   // Handle abort signal
   if (abortSignal) {
     if (abortSignal.aborted) {
-      await worker.terminate();
+      await terminateWorker();
       throw new Error("OCR cancelled");
     }
-    abortSignal.addEventListener("abort", async () => {
-      try {
-        await worker.terminate();
-      } catch {
-        // Ignore termination errors on abort
-      }
-    });
+    abortSignal.addEventListener("abort", onAbort, { once: true });
   }
 
   try {
     const { data: { text } } = await worker.recognize(canvas);
-    await worker.terminate();
+    if (abortSignal?.aborted) throw new Error("OCR cancelled");
     return text;
   } catch (err) {
-    await worker.terminate();
+    if (abortSignal?.aborted) throw new Error("OCR cancelled");
     throw err;
+  } finally {
+    abortSignal?.removeEventListener("abort", onAbort);
+    try {
+      await terminateWorker();
+    } catch {
+      // Ignore cleanup failures after conversion or cancellation.
+    }
   }
 }
 

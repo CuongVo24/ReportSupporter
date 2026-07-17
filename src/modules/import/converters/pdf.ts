@@ -13,14 +13,23 @@ export const pdfConverter: ImportConverter = {
   extensions: [".pdf"],
   mimeTypes: ["application/pdf"],
   maxBytes: 50 * 1024 * 1024, // 50MB
-  convert: async (file: File, onProgress?: (progress: number) => void): Promise<ImportResult> => {
+  convert: async (
+    file: File,
+    onProgress?: (progress: number) => void,
+    abortSignal?: AbortSignal,
+  ): Promise<ImportResult> => {
+    if (abortSignal?.aborted) throw new Error("Import cancelled");
     const arrayBuffer = await file.arrayBuffer();
+    if (abortSignal?.aborted) throw new Error("Import cancelled");
 
     // 1. Extract raw text items with font and position metadata
     const { pages, warnings: extractionWarnings } = await extractTextFromPdf(
       arrayBuffer,
-      onProgress ? (page, total) => onProgress(Math.round((page / total) * 100)) : undefined
+      onProgress ? (page, total) => onProgress(Math.round((page / total) * 100)) : undefined,
+      abortSignal,
     );
+
+    if (abortSignal?.aborted) throw new Error("Import cancelled");
 
     // 2. Analyze document styles for font size histogram & heading map
     const { bodySize, headingMap } = buildHeadingMap(pages);

@@ -1,7 +1,8 @@
-import type { ReportProjectBundle, ExportResult, TocNode } from "@/types";
+import type { ReportProjectBundle, ExportResult } from "@/types";
 import { prepareExport } from "./prepare-export";
 import { buildCoverPage } from "./build-cover-page";
 import { buildPrintCss } from "./print-css";
+import { renderTocToHtml } from "@/modules/format/toc-renderer";
 import { unified } from "unified";
 import rehypeStringify from "rehype-stringify";
 
@@ -30,30 +31,10 @@ export function exportHtml(bundle: ReportProjectBundle, qrDataUrls?: Record<stri
     // 3. Build TOC block
     let tocHtml = "";
     if (bundle.formatSettings.includeToc && formatted.toc.length > 0) {
-      const renderNodes = (nodes: TocNode[]): string => {
-        return `
-          <ul class="ws-toc-list">
-            ${nodes
-              .map(
-                (node) => `
-              <li class="ws-toc-item ws-toc-level-${node.level}">
-                <a href="#${node.id}" class="ws-toc-link">
-                  <span class="ws-toc-number">${node.number}</span>
-                  <span class="ws-toc-text">${node.text}</span>
-                </a>
-                ${node.children && node.children.length > 0 ? renderNodes(node.children) : ""}
-              </li>
-            `,
-              )
-              .join("")}
-          </ul>
-        `;
-      };
-
       tocHtml = `
         <div class="ws-toc-container">
           <div class="ws-toc-title">Mục lục</div>
-          ${renderNodes(formatted.toc)}
+          ${renderTocToHtml(formatted.toc)}
         </div>
         <div class="page-break"></div>
       `;
@@ -85,7 +66,12 @@ export function exportHtml(bundle: ReportProjectBundle, qrDataUrls?: Record<stri
   <!-- Mermaid Client-side Renderer -->
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'strict',
+      flowchart: { htmlLabels: false }
+    });
   </script>
 </body>
 </html>`;

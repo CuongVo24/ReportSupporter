@@ -38,7 +38,9 @@ vi.mock("@/modules/write", async (importOriginal) => {
   return {
     ...actual,
     loadBundle: vi.fn().mockImplementation(() => Promise.resolve({
-      project: {
+      status: "loaded",
+      bundle: {
+        project: {
         id: "test-proj",
         title: "Báo cáo thử nghiệm",
         templateId: "software-project",
@@ -46,22 +48,27 @@ vi.mock("@/modules/write", async (importOriginal) => {
         sections: mockBundleSections,
         updatedAt: "2026-06-24T22:00:00.000Z",
       },
-      assets: [],
-      evidence: [],
-      formatSettings: {
-        presetId: "academic-default",
-        includeToc: true,
-        includeListOfFigures: true,
-        includeListOfTables: true,
-        captionNumbering: "continuous",
+        assets: [],
+        evidence: [],
+        formatSettings: {
+          presetId: "academic-default",
+          includeToc: true,
+          includeListOfFigures: true,
+          includeListOfTables: true,
+          captionNumbering: "continuous",
+        },
+        schemaVersion: 1,
       },
-      schemaVersion: 1,
     })),
     saveBundle: vi.fn().mockResolvedValue(true),
-    useDraftAutosave: () => ({ status: "saved", quotaFull: false }),
+    useDraftAutosave: () => ({ status: "saved", quotaFull: false, error: null, retrySave: vi.fn() }),
     useImageInsert: () => ({ handleImageInserted: vi.fn() }),
   };
 });
+
+vi.mock("@/modules/export/use-export", () => ({
+  useExport: () => ({ jobs: [], runExport: vi.fn(), retry: vi.fn(), exportedBlobs: {} }),
+}));
 
 vi.mock("@/modules/export", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/modules/export")>();

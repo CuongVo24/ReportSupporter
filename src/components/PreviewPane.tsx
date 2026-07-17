@@ -96,6 +96,10 @@ export function PreviewPane({
   onAttachImageRequest,
 }: PreviewPaneProps) {
   const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
+  const assetSignature = useMemo(
+    () => assets.map((asset) => `${asset.id}:${asset.insertedAt}:${asset.mimeType}:${asset.data.length}`).join("|"),
+    [assets],
+  );
 
   // Debounce markdown changes to prevent rendering on every keystroke
   useEffect(() => {
@@ -150,10 +154,10 @@ export function PreviewPane({
   }, [finalMarkdown, hasContent]);
 
   // Cache for parsed ASTs of content parts
-  const partAstCacheRef = useRef<Map<string, unknown>>(new Map());
+  const partAstCacheRef = useRef<Map<string, ReturnType<typeof parseMarkdown>>>(new Map());
 
   const parsedParts = useMemo(() => {
-    const newCache = new Map<string, unknown>();
+    const newCache = new Map<string, ReturnType<typeof parseMarkdown>>();
     const oldCache = partAstCacheRef.current;
     
     const parts = contentParts.map((part) => {
@@ -162,43 +166,70 @@ export function PreviewPane({
         return { isMermaid, content: part, ast: null };
       }
       
-      let ast = oldCache.get(part);
+      const cacheKey = `${assetSignature}\u0000${part}`;
+      let ast = oldCache.get(cacheKey);
       if (!ast) {
         const resolvedMarkdown = resolveAssetRefs(part, assets);
         ast = parseMarkdown(resolvedMarkdown);
         transformUnembeddedImages(ast, assets);
       }
-      newCache.set(part, ast);
+      newCache.set(cacheKey, ast);
       return { isMermaid, content: part, ast };
     });
     
     partAstCacheRef.current = newCache;
     return parts;
-  }, [contentParts, assets]);
+  }, [contentParts, assets, assetSignature]);
 
   // Parse ASTs of all sections once for consistent headings and captions numbering
+  const sectionAstCacheRef = useRef<Map<string, {
+    content: string;
+    assetSignature: string;
+    ast: ReturnType<typeof parseMarkdown>;
+  }>>(new Map());
+
   const parsedSections = useMemo(() => {
     if (!hasContent) {
       return [];
     }
     if (sections && sections.length > 0) {
       const sortedSections = [...sections].sort((a, b) => a.order - b.order);
-      return sortedSections.map((sec) => {
+      const nextCache = new Map<string, {
+        content: string;
+        assetSignature: string;
+        ast: ReturnType<typeof parseMarkdown>;
+      }>();
+      const parsed = sortedSections.map((sec) => {
         let content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
         if (sec.id === lastSectionId && appendixMarkdown) {
           content = content + "\n\n" + appendixMarkdown;
         }
+        const cached = sectionAstCacheRef.current.get(sec.id);
+        if (cached && cached.content === content && cached.assetSignature === assetSignature) {
+          nextCache.set(sec.id, cached);
+          return { id: sec.id, ast: cached.ast };
+        }
         const resolvedMarkdown = resolveAssetRefs(content, assets);
         const ast = parseMarkdown(resolvedMarkdown);
         transformUnembeddedImages(ast, assets);
+        nextCache.set(sec.id, { content, assetSignature, ast });
         return { id: sec.id, ast };
       });
+      sectionAstCacheRef.current = nextCache;
+      return parsed;
     } else {
-      const ast = parseMarkdown(finalMarkdown);
+      const id = activeSectionId || "default";
+      const cached = sectionAstCacheRef.current.get(id);
+      if (cached && cached.content === finalMarkdown && cached.assetSignature === assetSignature) {
+        return [{ id, ast: cached.ast }];
+      }
+      const resolvedMarkdown = resolveAssetRefs(finalMarkdown, assets);
+      const ast = parseMarkdown(resolvedMarkdown);
       transformUnembeddedImages(ast, assets);
-      return [{ id: activeSectionId || "default", ast }];
+      sectionAstCacheRef.current = new Map([[id, { content: finalMarkdown, assetSignature, ast }]]);
+      return [{ id, ast }];
     }
-  }, [sections, activeSectionId, debouncedMarkdown, lastSectionId, appendixMarkdown, assets, finalMarkdown, hasContent]);
+  }, [sections, activeSectionId, debouncedMarkdown, lastSectionId, appendixMarkdown, assets, assetSignature, finalMarkdown, hasContent]);
 
   // Compute global numbered headings once for correct counter ordering across split content parts
   const globalNumberedHeadings = useMemo(() => {
@@ -293,6 +324,41 @@ export function PreviewPane({
     };
   }, [darkPreview]);
 
+  const activeCaptionRegistry = useMemo(
+    () => captionRegistry.filter((entry) => entry.sectionId === (activeSectionId || "default")),
+    [captionRegistry, activeSectionId],
+  );
+
+  const renderedParts = useMemo(() => {
+    const renderState = { index: 0 };
+    const captionState = { figIdx: 0, tableIdx: 0 };
+
+    return parsedParts.map((part, index) => {
+      if (part.isMermaid) {
+        return {
+          key: `mermaid-${index}`,
+          isMermaid: true as const,
+          code: part.content.replace(/^```mermaid\s*/, "").replace(/\s*```$/, ""),
+        };
+      }
+
+      const clonedAst = JSON.parse(JSON.stringify(part.ast));
+      const numberedAst = injectHeadingNumbers(clonedAst, globalNumberedHeadings, renderState);
+      normalizeCaptions(
+        [{ id: activeSectionId || "default", ast: numberedAst }],
+        activeCaptionRegistry,
+        captionState,
+      );
+      injectQrImages(numberedAst as unknown as EvidenceUnistNode, qrMap);
+
+      return {
+        key: `html-${index}`,
+        isMermaid: false as const,
+        html: renderMdastToHtml(numberedAst),
+      };
+    });
+  }, [parsedParts, globalNumberedHeadings, activeSectionId, activeCaptionRegistry, qrMap]);
+
   if (!hasContent) {
     return (
       <div className="ws-preview-container-empty">
@@ -300,10 +366,6 @@ export function PreviewPane({
       </div>
     );
   }
-
-  // Render cursor to track heading index across parts
-  const renderState = { index: 0 };
-  const captionState = { figIdx: 0, tableIdx: 0 };
 
   const presetId = formatSettings?.presetId || "academic-default";
   const preset = PRESETS[presetId] || PRESETS["academic-default"];
@@ -393,40 +455,19 @@ export function PreviewPane({
       {formatSettings?.includeToc && <TocBlock toc={tocData} />}
       {formatSettings?.includeListOfFigures && <LofBlock lof={lofData} />}
       {formatSettings?.includeListOfTables && <LotBlock lot={lotData} />}
-      {parsedParts.map((part, index) => {
+      {renderedParts.map((part) => {
         if (part.isMermaid) {
-          // Extract the mermaid code content (strip block fences)
-          const code = part.content
-            .replace(/^```mermaid\s*/, "")
-            .replace(/\s*```$/, "");
-
-          return <MermaidRenderer key={`mermaid-${index}`} code={code} />;
-        } else {
-          // Clone AST to avoid mutating cached AST across renders
-          const clonedAst = JSON.parse(JSON.stringify(part.ast));
-          
-          // Inject correct heading prefix numbers
-          const numberedAst = injectHeadingNumbers(clonedAst, globalNumberedHeadings, renderState);
-
-          // Normalize captions using registry and rendering state
-          const activeRegistry = captionRegistry.filter((e) => e.sectionId === (activeSectionId || "default"));
-          normalizeCaptions([{ id: activeSectionId || "default", ast: numberedAst }], activeRegistry, captionState);
-          
-          // Inject QR code images into AST before HTML generation
-          injectQrImages(numberedAst as unknown as EvidenceUnistNode, qrMap);
-
-          // Render HTML through the unified markdown pipeline
-          const renderedHtml = renderMdastToHtml(numberedAst);
-
-          return (
-            <div
-              key={`html-${index}`}
-              className="ws-preview-html-section"
-              dangerouslySetInnerHTML={{ __html: renderedHtml }}
-              onClick={handlePreviewClick}
-            />
-          );
+          return <MermaidRenderer key={part.key} code={part.code} />;
         }
+
+        return (
+          <div
+            key={part.key}
+            className="ws-preview-html-section"
+            dangerouslySetInnerHTML={{ __html: part.html }}
+            onClick={handlePreviewClick}
+          />
+        );
       })}
     </div>
   );

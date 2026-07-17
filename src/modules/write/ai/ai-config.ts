@@ -23,6 +23,7 @@ import { aiConfigSchema } from "@/types/ai";
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY = "rs:ai-config";
+let volatileApiKey: string | undefined;
 
 // ---------------------------------------------------------------------------
 // Default — flag OFF
@@ -45,7 +46,7 @@ export function loadAiConfig(): AiConfig {
   if (typeof window === "undefined") return DEFAULT_AI_CONFIG;
 
   const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return DEFAULT_AI_CONFIG;
+  if (!raw) return { ...DEFAULT_AI_CONFIG, apiKey: volatileApiKey };
 
   const parsed = z.string().safeParse(raw);
   if (!parsed.success) return DEFAULT_AI_CONFIG;
@@ -58,7 +59,19 @@ export function loadAiConfig(): AiConfig {
   }
 
   const result = aiConfigSchema.safeParse(json);
-  return result.success ? result.data : DEFAULT_AI_CONFIG;
+  if (!result.success) return DEFAULT_AI_CONFIG;
+
+  // One-time migration: rescue a legacy key into tab memory, then scrub it
+  // from persistent storage immediately.
+  if (!volatileApiKey && result.data.apiKey) {
+    volatileApiKey = result.data.apiKey;
+  }
+  if (result.data.apiKey) {
+    const { apiKey: _legacyKey, ...persistedConfig } = result.data;
+    void _legacyKey;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedConfig));
+  }
+  return { ...result.data, apiKey: volatileApiKey };
 }
 
 // ---------------------------------------------------------------------------
@@ -71,7 +84,14 @@ export function loadAiConfig(): AiConfig {
  */
 export function saveAiConfig(config: AiConfig): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  volatileApiKey = config.apiKey?.trim() || undefined;
+  const { apiKey: _apiKey, ...persistedConfig } = config;
+  void _apiKey;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedConfig));
+}
+
+export function clearAiSessionApiKey(): void {
+  volatileApiKey = undefined;
 }
 
 // ---------------------------------------------------------------------------

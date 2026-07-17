@@ -10,11 +10,13 @@ import type { ReportProjectBundle } from "@/types";
 export function createThrottledSaver<T>(
   save: (value: T) => void | Promise<void>,
   delayMs = 2000,
-): { schedule: (value: T) => void; flush: () => void } {
+): { schedule: (value: T) => void; flush: () => Promise<void> } {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let pending: { value: T } | null = null;
+  let queue: Promise<void> = Promise.resolve();
+  let latestOperation: Promise<void> | null = null;
 
-  const run = () => {
+  const run = (): Promise<void> => {
     if (timer) {
       clearTimeout(timer);
       timer = null;
@@ -22,28 +24,50 @@ export function createThrottledSaver<T>(
     if (pending) {
       const { value } = pending;
       pending = null;
-      void save(value);
+      const operation = queue.then(() => save(value));
+      queue = operation.catch(() => undefined);
+      latestOperation = operation;
+      void operation.finally(() => {
+        if (latestOperation === operation) latestOperation = null;
+      }).catch(() => undefined);
+      return operation;
     }
+    return latestOperation ?? queue;
   };
 
   return {
     schedule(value: T) {
       pending = { value };
       if (timer) clearTimeout(timer);
-      timer = setTimeout(run, delayMs);
+      timer = setTimeout(() => {
+        void run().catch(() => undefined);
+      }, delayMs);
     },
-    flush() {
-      run();
+    async flush() {
+      await run();
     },
   };
 }
 
-/** Load + validate the persisted bundle. Returns `null` if absent or shape-invalid. */
-export async function loadBundle(): Promise<ReportProjectBundle | null> {
+export type LoadBundleResult =
+  | { status: "missing" }
+  | { status: "loaded"; bundle: ReportProjectBundle }
+  | { status: "invalid"; raw: unknown; issues: string[] };
+
+/** Load and validate persisted data without conflating an invalid draft with an absent one. */
+export async function loadBundle(): Promise<LoadBundleResult> {
   const raw = await getRawBundle();
-  if (raw === undefined) return null;
+  if (raw === undefined) return { status: "missing" };
   const parsed = storedBundleSchema.safeParse(raw);
-  return parsed.success ? parsed.data : null;
+  if (parsed.success) return { status: "loaded", bundle: parsed.data };
+  return {
+    status: "invalid",
+    raw,
+    issues: parsed.error.issues.map((issue) => {
+      const path = issue.path.map(String).join(".");
+      return path ? `${path}: ${issue.message}` : issue.message;
+    }),
+  };
 }
 
 /** Persist a bundle to IndexedDB (may throw `QuotaExceededError`). */

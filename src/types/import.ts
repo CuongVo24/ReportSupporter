@@ -50,7 +50,11 @@ export type ImportConverter = {
   extensions: string[];    // [".docx"]
   mimeTypes: string[];
   maxBytes: number;        // per-format cap (mặc định 50MB — MAX_MARKDOWN_IMPORT_BYTES)
-  convert: (file: File, onProgress?: (progress: number) => void) => Promise<ImportResult>;
+  convert: (
+    file: File,
+    onProgress?: (progress: number) => void,
+    abortSignal?: AbortSignal,
+  ) => Promise<ImportResult>;
 };
 
 // Zod schema for ReportIssue used inside ImportDraft
@@ -103,4 +107,3 @@ export type OcrProgress = {
   status: string;
   progress: number;
 };
-

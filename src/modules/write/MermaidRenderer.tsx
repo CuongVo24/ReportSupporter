@@ -24,7 +24,8 @@ async function getMermaid(): Promise<MermaidApiShape> {
     mermaid.initialize({
       startOnLoad: false,
       theme: "default",
-      securityLevel: "loose",
+      securityLevel: "strict",
+      flowchart: { htmlLabels: false },
     });
     isMermaidInitialized = true;
   }
