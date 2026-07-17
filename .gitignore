@@ -37,6 +37,13 @@ next-env.d.ts
 # local preview helper
 .claude/launch.json
 
+# test artifacts
+playwright-report/
+test-results/
+
+# codegraph index
+.codegraph/
+
 # OS / editor
 .DS_Store
 Thumbs.db

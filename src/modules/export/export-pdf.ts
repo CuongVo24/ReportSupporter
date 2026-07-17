@@ -1,175 +1,118 @@
-import type { ReportProjectBundle, ExportResult } from "@/types";
+import type { ExportError, ExportJob, ExportResult, ReportProjectBundle } from "@/types";
+import { slugify } from "@/lib/slugify";
 import { prepareExport } from "./prepare-export";
 import { buildPrintableHtml } from "./print-preview";
-import mermaid from "mermaid";
+import { createVerifiedArtifact } from "./artifact-verification";
+import { exportHtml } from "./export-html";
 
-/**
- * Triggers PDF export via a hidden print iframe.
- * Renders KaTeX styles locally by inheriting parent styles, renders Mermaid diagrams
- * to static SVGs, decodes local image references, and reports export progress phases.
- */
-export async function exportPdfViaBrowserPrint(
-  bundle: ReportProjectBundle,
-  onPhaseChange?: (phase: "preparing" | "rendering-assets" | "ready" | "printing") => void
-): Promise<ExportResult> {
+export type PrintPreviewResult = { ok: true } | { ok: false; error: ExportError };
+
+/** Opens the browser print UI. This is a local preview action, not an export artifact. */
+export async function openPrintPreview(bundle: ReportProjectBundle): Promise<PrintPreviewResult> {
   if (typeof window === "undefined" || typeof document === "undefined") {
     return {
       ok: false,
       error: {
         stage: "render-pdf",
-        message: "PDF export via browser print can only run in a client environment.",
+        message: "Print Preview chỉ hoạt động trong trình duyệt.",
         recoverable: true,
       },
     };
   }
 
-  onPhaseChange?.("preparing");
-
   let iframe: HTMLIFrameElement | null = null;
   try {
-    // 1. Prepare printable HTML content
-    const input = prepareExport(bundle);
-    const htmlContent = buildPrintableHtml(input);
-
-    onPhaseChange?.("rendering-assets");
-
-    // 2. Create a hidden print iframe
     iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
+    iframe.style.inset = "auto 0 0 auto";
     iframe.style.width = "0";
     iframe.style.height = "0";
     iframe.style.border = "0";
     iframe.style.visibility = "hidden";
     document.body.appendChild(iframe);
-
-    const iframeWindow = iframe.contentWindow;
-    const iframeDoc = iframeWindow?.document;
-    if (!iframeWindow || !iframeDoc) {
-      throw new Error("Failed to create printing iframe context.");
+    const frameWindow = iframe.contentWindow;
+    const frameDocument = frameWindow?.document;
+    if (!frameWindow || !frameDocument) throw new Error("Không thể tạo bề mặt Print Preview.");
+    frameDocument.open();
+    frameDocument.write(buildPrintableHtml(prepareExport(bundle)));
+    frameDocument.close();
+    frameDocument.title = bundle.project.title;
+    for (const style of document.querySelectorAll("style, link[rel='stylesheet']")) {
+      frameDocument.head.appendChild(style.cloneNode(true));
     }
-
-    // 3. Write raw HTML structure
-    iframeDoc.open();
-    iframeDoc.write(htmlContent);
-    iframeDoc.close();
-
-    // 4. Set titled context to avoid about:blank in printed headers
-    iframeDoc.title = bundle.project.title;
-
-    // 5. Inherit parent stylesheets (resolves local KaTeX and app-compiled rules)
-    const parentStyles = document.querySelectorAll("style, link[rel='stylesheet']");
-    parentStyles.forEach((styleNode) => {
-      iframeDoc.head.appendChild(styleNode.cloneNode(true));
-    });
-
-    // 6. Compile Mermaid diagrams to static SVGs locally
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "default",
-      securityLevel: "strict",
-      flowchart: { htmlLabels: false },
-    });
-    const mermaidBlocks = iframeDoc.querySelectorAll("pre code.language-mermaid");
-    for (let i = 0; i < mermaidBlocks.length; i++) {
-      const block = mermaidBlocks[i];
-      const code = block.textContent || "";
-      const id = `mermaid-print-${i}`;
-      try {
-        const { svg } = await mermaid.render(id, code);
-        const pre = block.parentElement;
-        if (pre) {
-          const div = iframeDoc.createElement("div");
-          div.className = "mermaid-container";
-          div.innerHTML = svg;
-          pre.replaceWith(div);
-        }
-      } catch (err) {
-        console.error("Mermaid print render failed:", err);
-      }
-    }
-
-    // 7. Await all images to fully load and decode
-    const imgs = Array.from(iframeDoc.querySelectorAll("img"));
-    const imgPromises = imgs.map((img) => {
-      if (img.complete) return Promise.resolve();
-      return new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-      });
-    });
-    await Promise.all(imgPromises);
-
-    onPhaseChange?.("ready");
-    
-    // Give browser a frame to compute lay-outs (with fallback for testing/node environments)
-    const raf = typeof window !== "undefined" && window.requestAnimationFrame
-      ? window.requestAnimationFrame
-      : (cb: FrameRequestCallback | (() => void)) => setTimeout(cb, 0);
-    await new Promise((resolve) => raf(resolve as () => void));
-
-    onPhaseChange?.("printing");
-    iframeWindow.focus();
-    if (typeof iframeWindow.print === "function") {
-      iframeWindow.print();
-    } else {
-      console.warn("iframeWindow.print is not supported in this environment.");
-    }
-
-    // Delay cleanup to ensure browser print dialog initializes safely
-    const targetIframe = iframe;
-    setTimeout(() => {
-      try {
-        if (targetIframe.parentNode) {
-          document.body.removeChild(targetIframe);
-        }
-      } catch {
-        // ignore if already removed
-      }
-    }, 2000);
-
-    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-    return { ok: true, blob };
+    await Promise.all(Array.from(frameDocument.images).map((image) => image.decode?.().catch(() => undefined)));
+    await new Promise<void>((resolve) => (window.requestAnimationFrame ?? setTimeout)(() => resolve()));
+    frameWindow.focus();
+    frameWindow.print();
+    window.setTimeout(() => iframe?.remove(), 2_000);
+    return { ok: true };
   } catch (error: unknown) {
-    if (iframe && iframe.parentNode) {
-      document.body.removeChild(iframe);
-    }
-    const message = error instanceof Error ? error.message : "Failed to render PDF print surface.";
-    console.error("PDF export error details:", error);
+    iframe?.remove();
     return {
       ok: false,
       error: {
         stage: "render-pdf",
-        message,
+        message: error instanceof Error ? error.message : "Không thể mở Print Preview.",
         recoverable: true,
       },
     };
   }
 }
 
-/**
- * Server-side Puppeteer PDF rendering engine stub.
- * Disabled by default in MVP. Does not import the puppeteer package.
- */
+/** @deprecated Use openPrintPreview. Kept for one release while callers migrate. */
+export const exportPdfViaBrowserPrint = openPrintPreview;
+
+/** Generate a real PDF binary through the first-party renderer service. */
+export async function exportPdf(
+  bundle: ReportProjectBundle,
+  onPhaseChange?: (phase: ExportJob["phase"]) => void,
+  qrDataUrls?: Record<string, string>,
+): Promise<ExportResult> {
+  try {
+    onPhaseChange?.("preparing");
+    const htmlResult = await exportHtml(bundle, qrDataUrls);
+    if (!htmlResult.ok) return htmlResult;
+    const html = await htmlResult.artifact.blob.text();
+    onPhaseChange?.("rendering-assets");
+    const response = await fetch("/api/pdf", {
+      method: "POST",
+      headers: { "Content-Type": "text/html;charset=utf-8" },
+      body: html,
+      signal: AbortSignal.timeout(35_000),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({})) as { error?: unknown };
+      throw new Error(typeof body.error === "string"
+        ? body.error
+        : "Dịch vụ tạo PDF hiện không khả dụng. Bạn vẫn có thể dùng Print Preview cục bộ.");
+    }
+    const artifact = await createVerifiedArtifact({
+      target: "pdf",
+      blob: await response.blob(),
+      fileName: `${slugify(bundle.project.title) || "report"}.pdf`,
+    });
+    onPhaseChange?.("ready");
+    return { ok: true, artifact, blob: artifact.blob };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      error: {
+        stage: "render-pdf",
+        message: error instanceof Error ? error.message : "Không thể tạo PDF.",
+        recoverable: true,
+      },
+    };
+  }
+}
+
 export function renderPdfWithPuppeteer(_bundle: ReportProjectBundle): ExportResult {
   void _bundle;
   return {
     ok: false,
     error: {
       stage: "render-pdf",
-      message: "Puppeteer hardening disabled in MVP.",
+      message: "Puppeteer chạy trong Docker renderer, không chạy trong bundle trình duyệt.",
       recoverable: false,
     },
   };
-}
-
-/**
- * PDF Exporter entry point.
- */
-export async function exportPdf(
-  bundle: ReportProjectBundle,
-  onPhaseChange?: (phase: "preparing" | "rendering-assets" | "ready" | "printing") => void
-): Promise<ExportResult> {
-  return exportPdfViaBrowserPrint(bundle, onPhaseChange);
 }

@@ -1,10 +1,20 @@
 # 🔒 SECURITY & PRIVACY — ReportSupporter (V1.0)
 
+## W25–W36 server threat-model addendum
+
+The product remains local-first/no-login/no-cloud-sync, but AI proxy/rate-limit and ephemeral PDF rendering are narrow server surfaces:
+
+- Production rate limits are Upstash Redis sliding windows: AI 20/minute, PDF 5/minute. Missing/broken Redis returns 503; never fail open.
+- Identity is SHA-256(API key + trusted client address). Forwarded headers are ignored unless `TRUSTED_PROXY_MODE` selects the deployed proxy contract; no shared `unknown` bucket.
+- PDF strips scripts/event handlers/outbound resources, caps input at 25 MiB/30 seconds, disables worker JavaScript/network, and never logs/stores request bodies.
+- `/api/*` is NetworkOnly in the service worker. Cache Storage never holds report content or API responses; project data remains in IndexedDB/user-created backups.
+- Exported HTML must pass no-script/no-CDN/external-URL validation and offline CSP checks before `verified=true`.
+
 > **AI RULE:** File này là **single source of truth** cho security & privacy posture của ReportSupporter.
 > Mọi quyết định về sanitize HTML, ranh giới `dangerouslySetInnerHTML`, và phân loại dữ liệu draft phải bám file này.
 > Đổi posture → cập nhật file này trước, rồi mới đụng code (Golden Rule "Single Source of Truth", `Design/VibeCode.md`).
 
-ReportSupporter là **client-first, no-login, no-cloud** workspace (`ProductPRD.md` §6 Non-goals). Vì gần như không có server và không có tài khoản, **bề mặt tấn công truyền thống (authn/authz, SQLi, SSRF server) gần như bằng 0**. Nhưng đúng vì app render **Markdown do người dùng nhập** thành HTML trong chính DOM của họ, rủi ro số 1 là **stored XSS qua nội dung báo cáo**. File này khoá cách phòng thủ.
+ReportSupporter là **local-first, no-login, no-cloud-sync** workspace. Stored XSS remains the primary client threat; proxy trust, SSRF/resource exhaustion and server data handling are now explicit for the two server surfaces above.
 
 ---
 

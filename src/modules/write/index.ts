@@ -17,6 +17,20 @@ export {
 } from "./markdown-import";
 export type { MarkdownFileReadResult } from "./markdown-import";
 export { createThrottledSaver, loadBundle, saveBundle } from "./autosave";
+export {
+  addRecoveryItem,
+  dismissRecoveryItem,
+  duplicateProjectBundle,
+  listProjectSummaries,
+  listRecoveryItems,
+  loadProjectBundle,
+  permanentlyDeleteProject,
+  projectSummaryFromBundle,
+  restoreProjectFromTrash,
+  saveProjectBundle,
+  scanOrphanedSnapshots,
+  trashProject,
+} from "./project-store";
 export { computeWritingStats } from "./writing-stats";
 export type { WritingStats } from "./writing-stats";
 export {

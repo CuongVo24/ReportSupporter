@@ -110,6 +110,7 @@ describe("Present Module Integration Tests (multi-template)", () => {
         order: 1,
         title: "Minh chứng",
         status: "draft" as const,
+        revision: 0,
         markdown: "# Chương 1\n\nXem thêm link source code của chúng tôi tại [Mã nguồn](https://github.com/CuongVo24/ReportSupporter-deleted).\n",
       },
     ];
@@ -128,6 +129,7 @@ describe("Present Module Integration Tests (multi-template)", () => {
         order: 1,
         title: "Introduction",
         status: "draft" as const,
+        revision: 0,
         markdown: "# 1. Mở đầu\n\nMục tiêu của đề tài là xây dựng hệ thống báo cáo.\n\n## 1.1 Sơ đồ kiến trúc (Hình 1.1)\n\nXem quy trình tại sơ đồ.",
       },
       {
@@ -135,6 +137,7 @@ describe("Present Module Integration Tests (multi-template)", () => {
         order: 2,
         title: "Deployment",
         status: "draft" as const,
+        revision: 0,
         markdown: "# 2. Triển khai\n\nChúng tôi thực hiện deploy ứng dụng lên Vercel. Có một số hạn chế về dung lượng cơ sở dữ liệu. Hướng phát triển là tối ưu hóa truy vấn.",
       },
     ];

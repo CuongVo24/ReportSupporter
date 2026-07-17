@@ -9,6 +9,7 @@ describe("rewriteSection unit tests", () => {
     title: "Chương 1: Mở đầu",
     markdown: "Nội dung mở đầu báo cáo.",
     status: "draft",
+    revision: 0,
   };
 
   it("should return a no-op suggestion and not fetch when gateway is disabled", async () => {

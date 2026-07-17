@@ -16,7 +16,7 @@ const mockCtx = (sections: { id: string; order: number; markdown: string }[]): C
         title: "t",
         templateId: "temp",
         metadata: {},
-        sections: sections.map((s) => ({ ...s, title: "Title", status: "draft" as const })),
+        sections: sections.map((s) => ({ ...s, title: "Title", status: "draft" as const, revision: 0 })),
         updatedAt: "",
       },
       assets: [],

@@ -17,6 +17,7 @@ describe("prepareExport Optimization Parity", () => {
           title: "Introduction",
           markdown: "# Chapter 1\n\nSome text with an image:\n\n![My Figure](asset:img1)\n\n## Sub Heading 1.1\n\nSome text.",
           status: "draft",
+          revision: 0,
         },
         {
           id: "sec-2",
@@ -24,6 +25,7 @@ describe("prepareExport Optimization Parity", () => {
           title: "Body",
           markdown: "# Chapter 2\n\nHere is a table:\n\n| Col 1 | Col 2 |\n|---|---|\n| A | B |\n\nBảng 2.1: My Table Caption\n\n## Sub Heading 2.1\n\nMore text.",
           status: "draft",
+          revision: 0,
         },
       ],
     },
@@ -143,6 +145,7 @@ describe("prepareExport Optimization Parity", () => {
             title: "Test Placeholders",
             markdown: "# Heading\n\nThis is a [CHÈN ẢNH BUYER LOGIN] placeholder and [TODO: fix it] and {{STUDENT_NAME}}.",
             status: "draft",
+            revision: 0,
           },
         ],
       },

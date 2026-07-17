@@ -55,7 +55,6 @@ export function MermaidRenderer({ code }: MermaidRendererProps) {
       } catch (err: unknown) {
         if (active) {
           const errMsg = err instanceof Error ? err.message : "Failed to render Mermaid diagram";
-          console.error("Mermaid render error:", err);
           setError(errMsg);
         }
       }

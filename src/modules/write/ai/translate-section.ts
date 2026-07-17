@@ -1,4 +1,4 @@
-import type { AiActionGateway, AiSuggestion, ReportSection } from "@/types";
+import type { AiActionGateway, AiRequestOptions, AiSuggestion, ReportSection } from "@/types";
 import { buildNoopSuggestion } from "./ai-gateway";
 
 /**
@@ -8,12 +8,15 @@ import { buildNoopSuggestion } from "./ai-gateway";
 export async function translateSection(
   section: ReportSection,
   gateway: AiActionGateway,
+  options?: AiRequestOptions,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return buildNoopSuggestion("translate", section.markdown);
+    return buildNoopSuggestion("translate", section.markdown, options);
   }
 
-  return gateway.requestSuggestion("translate", section.markdown);
+  return options
+    ? gateway.requestSuggestion("translate", section.markdown, options)
+    : gateway.requestSuggestion("translate", section.markdown);
 }

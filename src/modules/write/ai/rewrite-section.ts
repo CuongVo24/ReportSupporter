@@ -1,4 +1,4 @@
-import type { ReportSection, AiSuggestion, AiActionGateway } from "@/types";
+import type { ReportSection, AiSuggestion, AiActionGateway, AiRequestOptions } from "@/types";
 import { buildNoopSuggestion } from "./ai-gateway";
 
 /**
@@ -11,12 +11,15 @@ import { buildNoopSuggestion } from "./ai-gateway";
 export async function rewriteSection(
   section: ReportSection,
   gateway: AiActionGateway,
+  options?: AiRequestOptions,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return buildNoopSuggestion("rewrite", section.markdown);
+    return buildNoopSuggestion("rewrite", section.markdown, options);
   }
 
-  return gateway.requestSuggestion("rewrite", section.markdown);
+  return options
+    ? gateway.requestSuggestion("rewrite", section.markdown, options)
+    : gateway.requestSuggestion("rewrite", section.markdown);
 }

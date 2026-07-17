@@ -8,6 +8,7 @@ export const reportSectionSchema = z.object({
   title: z.string(),
   markdown: z.string(),
   status: z.enum(["draft", "review", "done"]),
+  revision: z.number().int().nonnegative().default(0),
 });
 
 export const reportProjectSchema = z.object({

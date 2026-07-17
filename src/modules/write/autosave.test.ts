@@ -83,4 +83,40 @@ describe("loadBundle", () => {
       expect(result.issues.length).toBeGreaterThan(0);
     }
   });
+
+  it("migrates a v1 section to schema v2 with revision zero", async () => {
+    idbMocks.getRawBundle.mockResolvedValueOnce({
+      schemaVersion: 1,
+      project: {
+        id: "project-1",
+        title: "Legacy",
+        templateId: "software-project",
+        metadata: {},
+        sections: [{
+          id: "section-1",
+          order: 0,
+          title: "Mở đầu",
+          markdown: "Nội dung cũ",
+          status: "draft",
+        }],
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+      assets: [],
+      evidence: [],
+      formatSettings: {
+        presetId: "academic-default",
+        includeToc: true,
+        includeListOfFigures: false,
+        includeListOfTables: false,
+        captionNumbering: "continuous",
+      },
+    });
+
+    const result = await loadBundle();
+    expect(result.status).toBe("loaded");
+    if (result.status === "loaded") {
+      expect(result.bundle.schemaVersion).toBe(2);
+      expect(result.bundle.project.sections[0].revision).toBe(0);
+    }
+  });
 });

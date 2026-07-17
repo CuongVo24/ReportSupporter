@@ -1,5 +1,16 @@
 # 📐 CANONICAL TYPES — Single Source of Truth (V1.2)
 
+## W25–W35 canonical type addendum
+
+The executable source remains `src/types`; these additions supersede older examples below:
+
+- `ReportSection.revision: number`; bundle schema v2 migration assigns zero.
+- `ProjectSummary`, `ProjectRecord`, `RecoveryItem`, `ProjectPackageManifest` for multi-project persistence and `.rsproject` packages.
+- `ExportArtifact` integrity metadata and `ExportJob.artifact`; Print Preview has no job.
+- `AiActionGateway.request({ signal, requestId, context, onEvent })`, base project/section/revision/hash/usage, NDJSON events and per-section task states.
+- `ImportFileRef`, `AssetResolution`, `OcrResult`, review decisions; asset states `exact | unique-basename | ambiguous | missing`.
+- `PipelineRequest/PipelineResponse` echo request ID, project ID and revisions; `TemplateCatalogEntry` bundles template/cover/preset/rubric/checklist.
+
 This document locks the core TypeScript definitions for the entire ReportSupporter application. All code in `src/types/` must conform to these interfaces, and **every module spec references this file instead of re-declaring types** (see import-boundary rules in `Design/Conventions/Coding & Git Standard.md` §4b).
 
 > **Rule:** A type is defined **exactly once** — here. Module specs (`1.Write.md`, `2.Format.md`, `3.Check.md`, `Support.Evidence.md`) and pipeline/contract docs only *cite* these shapes. Changing a shape means editing this file first, then the code.

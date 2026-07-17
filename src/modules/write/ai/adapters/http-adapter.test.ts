@@ -16,7 +16,7 @@ describe("HttpAiAdapter", () => {
     vi.mocked(loadAiConfig).mockReturnValue({ enabled: false });
 
     const suggestion = await httpAdapter.request("rewrite", "input text");
-    expect(suggestion).toBe("");
+    expect(suggestion).toEqual({ suggestion: "" });
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -28,7 +28,7 @@ describe("HttpAiAdapter", () => {
 
     const suggestion = await httpAdapter.request("rewrite", "input text");
 
-    expect(suggestion).toBe("");
+    expect(suggestion).toEqual({ suggestion: "" });
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -47,7 +47,15 @@ describe("HttpAiAdapter", () => {
 
     const suggestion = await httpAdapter.request("rewrite", "input text");
     
-    expect(suggestion).toBe("improved text");
+    expect(suggestion).toEqual({
+      suggestion: "improved text",
+      usage: {
+        inputTokens: 3,
+        outputTokens: 4,
+        estimated: true,
+        catalogUpdatedAt: "2026-07-17",
+      },
+    });
     expect(fetch).toHaveBeenCalledWith("/api/ai", {
       method: "POST",
       headers: {
@@ -60,6 +68,7 @@ describe("HttpAiAdapter", () => {
         provider: "gemini",
         model: "gemini-1.5-pro",
       }),
+      signal: undefined,
     });
   });
 

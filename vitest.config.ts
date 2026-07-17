@@ -8,6 +8,14 @@ export default defineConfig({
   test: {
     environment: "node",
     testTimeout: 30000,
+    setupFiles: ["./src/test/setup.ts"],
+    update: false,
+    onConsoleLog(_log, type) {
+      if (type === "stderr") {
+        throw new Error("Unexpected stderr. Mock the expected error/warning in this test.");
+      }
+      return true;
+    },
   },
   resolve: {
     alias: {

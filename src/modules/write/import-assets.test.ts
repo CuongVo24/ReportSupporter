@@ -158,6 +158,32 @@ HTML link ngoài: <img src="http://example.com/other.png">
       // Hard limit trigger
       expect(result.summary.warnings.some((w) => w.includes("giant.png") && w.includes("Bỏ qua"))).toBe(true);
     });
+
+    it("prefers an exact normalized relative path over duplicate basenames", async () => {
+      const exact = { name: "docs/a/diagram.png", size: 10, type: "image/png" } as File;
+      const duplicate = { name: "docs/b/diagram.png", size: 10, type: "image/png" } as File;
+      const result = await ingestAssetsAndEvidence("![Diagram](./docs/a/diagram.png)", [duplicate, exact]);
+      expect(result.summary.resolutions[0]).toMatchObject({
+        status: "exact",
+        selectedFileId: "docs/a/diagram.png",
+      });
+      expect(result.assets[0].fileName).toBe("docs/a/diagram.png");
+    });
+
+    it("requires a review decision when duplicate basenames are ambiguous", async () => {
+      const first = { name: "folder-a/diagram.png", size: 10, type: "image/png" } as File;
+      const second = { name: "folder-b/diagram.png", size: 10, type: "image/png" } as File;
+      const unresolved = await ingestAssetsAndEvidence("![Diagram](assets/diagram.png)", [first, second]);
+      expect(unresolved.summary.resolutions[0].status).toBe("ambiguous");
+      expect(unresolved.assets).toHaveLength(0);
+
+      const resolved = await ingestAssetsAndEvidence(
+        "![Diagram](assets/diagram.png)",
+        [first, second],
+        { assetSelections: { "assets/diagram.png": "folder-b/diagram.png" } },
+      );
+      expect(resolved.assets[0].fileName).toBe("folder-b/diagram.png");
+    });
   });
 
   describe("unzipFiles", () => {
@@ -165,13 +191,15 @@ HTML link ngoài: <img src="http://example.com/other.png">
       const zip = new JSZip();
       zip.file("report.md", "# Report");
       zip.file("images/example.png", new Uint8Array([1, 2, 3]));
+      zip.file("images/vector.svg", "<svg/>");
       const blob = await zip.generateAsync({ type: "blob" });
 
       const files = await unzipFiles(new File([blob], "report.zip", { type: "application/zip" }));
 
-      expect(files.map((file) => file.name)).toEqual(["report.md", "images/example.png"]);
+      expect(files.map((file) => file.name)).toEqual(["report.md", "images/example.png", "images/vector.svg"]);
       expect(files[0].type).toBe("text/markdown");
       expect(files[1].type).toBe("image/png");
+      expect(files[2].type).toBe("image/svg+xml");
     });
 
     it("rejects archives with too many entries before decompression", async () => {

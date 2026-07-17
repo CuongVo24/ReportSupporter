@@ -8,6 +8,7 @@ import type {
   ImportResult,
   ImportWarning,
   ImportSourceFormat,
+  AssetResolution,
 } from "@/types";
 import { splitMarkdownIntoSections } from "./readme-import";
 import { extractEmbeddedAssets } from "../import";
@@ -63,6 +64,7 @@ export function appendSections(
       markdown: md,
       order: maxOrder + index + 1,
       status: section.status || "draft",
+      revision: 0,
     };
   });
 
@@ -138,6 +140,7 @@ export function replaceSections(
       markdown: md,
       order: index,
       status: section.status || "draft",
+      revision: 0,
     };
   });
 
@@ -227,6 +230,7 @@ export async function buildMarkdownImportDraft(
     missingCount: number;
     missingList: string[];
     warnings: string[];
+    resolutions?: AssetResolution[];
   },
   sourceFormat: ImportSourceFormat = "markdown"
 ): Promise<ImportDraft> {

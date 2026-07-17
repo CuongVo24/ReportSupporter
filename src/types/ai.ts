@@ -17,6 +17,7 @@ import { z } from "zod";
 // ---------------------------------------------------------------------------
 
 export type AiAction = "outline" | "rewrite" | "tone" | "translate" | "terminology";
+export type AiTaskStatus = "pending" | "running" | "done" | "failed" | "cancelled" | "stale";
 
 export const aiActionSchema = z.enum(["outline", "rewrite", "tone", "translate", "terminology"]);
 
@@ -31,8 +32,43 @@ export type AiSuggestion = {
   original: string;
   /** The AI-generated suggestion text. */
   suggestion: string;
+  requestId?: string;
+  projectId?: string;
+  sectionId?: string;
+  baseRevision?: number;
+  baseHash?: string;
+  createdAt?: string;
+  usage?: AiUsage;
   /** Undefined until the user explicitly accepts or rejects. */
   accepted?: boolean;
+};
+
+export type AiUsage = {
+  inputTokens?: number;
+  outputTokens?: number;
+  estimated: boolean;
+  estimatedCostUsd?: number;
+  catalogUpdatedAt?: string;
+};
+
+export type AiStreamEvent =
+  | { event: "meta"; requestId: string; provider: string; model: string }
+  | { event: "delta"; requestId: string; text: string }
+  | { event: "done"; requestId: string; usage?: AiUsage }
+  | { event: "error"; requestId: string; message: string };
+
+export type AiRequestContext = {
+  projectId?: string;
+  sectionId?: string;
+  revision?: number;
+  contentHash?: string;
+};
+
+export type AiRequestOptions = {
+  signal?: AbortSignal;
+  requestId?: string;
+  context?: AiRequestContext;
+  onEvent?: (event: AiStreamEvent) => void;
 };
 
 export const aiSuggestionSchema = z.object({
@@ -40,6 +76,19 @@ export const aiSuggestionSchema = z.object({
   action: aiActionSchema,
   original: z.string(),
   suggestion: z.string(),
+  requestId: z.string().optional(),
+  projectId: z.string().optional(),
+  sectionId: z.string().optional(),
+  baseRevision: z.number().int().nonnegative().optional(),
+  baseHash: z.string().optional(),
+  createdAt: z.string().optional(),
+  usage: z.object({
+    inputTokens: z.number().int().nonnegative().optional(),
+    outputTokens: z.number().int().nonnegative().optional(),
+    estimated: z.boolean(),
+    estimatedCostUsd: z.number().nonnegative().optional(),
+    catalogUpdatedAt: z.string().optional(),
+  }).optional(),
   accepted: z.boolean().optional(),
 });
 
@@ -83,6 +132,6 @@ export const aiConfigSchema = z.object({
 export type GatewayState = "ready" | "unconfigured" | "disabled";
 
 export interface AiActionGateway {
-  requestSuggestion: (action: AiAction, input: string) => Promise<AiSuggestion>;
+  requestSuggestion: (action: AiAction, input: string, options?: AiRequestOptions) => Promise<AiSuggestion>;
   getGatewayState: () => GatewayState;
 }

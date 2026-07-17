@@ -31,6 +31,7 @@ const mockCtx = (
             title: "Intro",
             markdown,
             status: "draft",
+            revision: 0,
           },
         ],
         updatedAt: "",

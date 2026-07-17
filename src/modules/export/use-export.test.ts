@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useExport } from "./use-export";
-import type { ReportProjectBundle, ExportJob } from "@/types";
+import type { ExportArtifact, ExportTarget, ReportProjectBundle, ExportJob } from "@/types";
 import { exportHtml } from "./export-html";
 import { exportDocx, packDocx } from "./export-docx";
 import type { Document } from "docx";
@@ -51,6 +51,24 @@ vi.mock("./export-docx", () => ({
   packDocx: vi.fn(),
 }));
 
+vi.mock("./artifact-verification", () => ({
+  createVerifiedArtifact: vi.fn(async ({ target, blob, fileName }: { target: ExportTarget; blob: Blob; fileName: string }) =>
+    mockArtifact(target, blob, fileName)),
+}));
+
+function mockArtifact(target: ExportTarget, blob: Blob, fileName = `report.${target}`): ExportArtifact {
+  return {
+    target,
+    blob,
+    mediaType: blob.type || "application/octet-stream",
+    fileName,
+    byteLength: blob.size,
+    sha256: "a".repeat(64),
+    generatedAt: "2026-07-17T00:00:00.000Z",
+    verified: true,
+  };
+}
+
 describe("useExport hook logic", () => {
   const mockBundle = {
     project: {
@@ -63,6 +81,7 @@ describe("useExport hook logic", () => {
           title: "Introduction",
           markdown: "# Giới thiệu\n\nNội dung giới thiệu.",
           status: "draft",
+          revision: 0,
         },
         {
           id: "sec-2",
@@ -70,6 +89,7 @@ describe("useExport hook logic", () => {
           title: "Conclusion",
           markdown: "# Kết luận\n\nNội dung kết luận.",
           status: "draft",
+          revision: 0,
         },
         {
           id: "sec-3",
@@ -77,6 +97,7 @@ describe("useExport hook logic", () => {
           title: "References",
           markdown: "# Tài liệu tham khảo\n\n1. Nguyễn Văn A. Sách mẫu, 2026.",
           status: "draft",
+          revision: 0,
         },
       ],
       metadata: {
@@ -101,7 +122,7 @@ describe("useExport hook logic", () => {
 
   it("should initialize hook and run HTML export successfully", async () => {
     const mockBlob = new Blob(["html content"], { type: "text/html" });
-    vi.mocked(exportHtml).mockReturnValue({ ok: true, blob: mockBlob });
+    vi.mocked(exportHtml).mockResolvedValue({ ok: true, blob: mockBlob, artifact: mockArtifact("html", mockBlob) });
 
     const { runExport } = useExport();
 
@@ -116,7 +137,7 @@ describe("useExport hook logic", () => {
 
   it("should transition HTML export lifecycle to error state on failure", async () => {
     const mockError = { stage: "render-html" as const, message: "Export failed", recoverable: true };
-    vi.mocked(exportHtml).mockReturnValue({ ok: false, error: mockError });
+    vi.mocked(exportHtml).mockResolvedValue({ ok: false, error: mockError });
 
     const { runExport } = useExport();
 
@@ -161,7 +182,7 @@ describe("useExport hook logic", () => {
 
   it("should support retrying a failed job", async () => {
     const mockError = { stage: "render-html" as const, message: "Network error", recoverable: true };
-    vi.mocked(exportHtml).mockReturnValueOnce({ ok: false, error: mockError });
+    vi.mocked(exportHtml).mockResolvedValueOnce({ ok: false, error: mockError });
 
     const { runExport, retry } = useExport(mockBundle);
 
@@ -172,7 +193,7 @@ describe("useExport hook logic", () => {
 
     // Mock success for retry
     const mockBlob = new Blob(["retry success content"]);
-    vi.mocked(exportHtml).mockReturnValueOnce({ ok: true, blob: mockBlob });
+    vi.mocked(exportHtml).mockResolvedValueOnce({ ok: true, blob: mockBlob, artifact: mockArtifact("html", mockBlob) });
 
     // Trigger retry
     const jobId = jobsArray[0].id;
@@ -184,7 +205,7 @@ describe("useExport hook logic", () => {
     expect(exportHtml).toHaveBeenCalledTimes(2);
   });
 
-  it("should bypass client download for PDF export but complete job state", async () => {
+  it("should download a verified PDF artifact and complete job state", async () => {
     const originalWindow = global.window;
     const originalDocument = global.document;
 
@@ -205,16 +226,16 @@ describe("useExport hook logic", () => {
     global.document = mockDoc as unknown as typeof document;
 
     try {
-      const mockBlob = new Blob(["pdf html representation"], { type: "text/html" });
+      const mockBlob = new Blob(["%PDF-1.7"], { type: "application/pdf" });
       const { exportPdf } = await import("./export-pdf");
-      vi.mocked(exportPdf).mockResolvedValue({ ok: true, blob: mockBlob });
+      vi.mocked(exportPdf).mockResolvedValue({ ok: true, blob: mockBlob, artifact: mockArtifact("pdf", mockBlob) });
 
       const { runExport } = useExport();
       await runExport("pdf", mockBundle);
 
       expect(jobsArray).toHaveLength(1);
       expect(jobsArray[0].status).toBe("done");
-      expect(mockDoc.createElement).not.toHaveBeenCalled();
+      expect(mockDoc.createElement).toHaveBeenCalledWith("a");
     } finally {
       global.window = originalWindow;
       global.document = originalDocument;
@@ -248,7 +269,7 @@ describe("useExport hook logic", () => {
 
     try {
       const mockBlob = new Blob(["html content"]);
-      vi.mocked(exportHtml).mockReturnValue({ ok: true, blob: mockBlob });
+      vi.mocked(exportHtml).mockResolvedValue({ ok: true, blob: mockBlob, artifact: mockArtifact("html", mockBlob) });
 
       const { runExport } = useExport();
       await runExport("html", mockBundle);
@@ -265,14 +286,14 @@ describe("useExport hook logic", () => {
   });
 
   it("should report phases during PDF export execution", async () => {
-    const mockBlob = new Blob(["pdf html representation"], { type: "text/html" });
+    const mockBlob = new Blob(["%PDF-1.7"], { type: "application/pdf" });
     const { exportPdf } = await import("./export-pdf");
     vi.mocked(exportPdf).mockImplementation(async (bundle, onPhaseChange) => {
       onPhaseChange?.("preparing");
       onPhaseChange?.("rendering-assets");
       onPhaseChange?.("ready");
       onPhaseChange?.("printing");
-      return { ok: true, blob: mockBlob };
+      return { ok: true, blob: mockBlob, artifact: mockArtifact("pdf", mockBlob) };
     });
 
     const { runExport } = useExport();
@@ -295,6 +316,7 @@ describe("useExport hook logic", () => {
             title: "Bad Section",
             markdown: "![Unembedded Image](relative/path.png)",
             status: "draft",
+            revision: 0,
           },
         ],
       },
@@ -319,7 +341,7 @@ describe("useExport hook logic", () => {
     };
 
     const mockBlob = new Blob(["html content"], { type: "text/html" });
-    vi.mocked(exportHtml).mockReturnValue({ ok: true, blob: mockBlob });
+    vi.mocked(exportHtml).mockResolvedValue({ ok: true, blob: mockBlob, artifact: mockArtifact("html", mockBlob) });
 
     const { runExport } = useExport();
 
@@ -354,6 +376,7 @@ describe("useExport hook logic", () => {
             title: "Bad Section",
             markdown: "![Unembedded Image](relative/path.png)",
             status: "draft",
+            revision: 0,
           },
         ],
       },

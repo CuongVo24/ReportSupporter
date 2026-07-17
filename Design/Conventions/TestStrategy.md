@@ -1,5 +1,16 @@
 # 🧪 TEST STRATEGY — ReportSupporter (V1.0)
 
+## W36 mandatory release pipeline
+
+Order is fixed: encoding scan → lint → typecheck → subsystem unit/integration → performance → production build → bundle budget → Playwright browser QA → PDF Docker integration → production offline/PWA QA → `npm audit --omit=dev`.
+
+- Vitest fails unexpected stderr and CI never uses snapshot update. Snapshot changes require the explicit local `test:update-snapshots` command and review.
+- Browser QA covers every interactive control in Project Library, Workspace, Import, AI, Export, Submission, Trash/Recovery and Template Catalog, plus keyboard/axe, mobile/tablet/desktop and light/dark.
+- Migration seeds IndexedDB v3 and proves atomic/idempotent v4 conversion with assets/evidence/snapshots intact.
+- Security regression includes spoofed forwarding headers, production fail-closed Redis, two-instance shared limits and PDF script/network/body-log blocking.
+- Artifact fixtures must open/validate: `%PDF-` with pdfjs, DOCX/PPTX ZIP entries, offline HTML with no external URL, and submission manifest checksum parity.
+- Contract status stays `IN_PROGRESS` until the QA report and machine-generated artifacts are attached.
+
 > **AI RULE:** File này hợp nhất chiến lược test cho dự án. Nó **không** thay thế QC checklist trong từng `Modules/*.md`; nó nêu *tầng test*, *fixtures*, và cách verify **determinism**. Đổi chiến lược → cập nhật file này.
 
 Triết lý: **test ít nhưng đúng chỗ.** Trục giá trị của ReportSupporter là **deterministic** (cùng Markdown + metadata → cùng output) và **Checker offline regression-safe**. Test tập trung vào hai trục đó, không chạy theo coverage %.

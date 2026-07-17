@@ -1,5 +1,12 @@
 # 🔗 PIPELINE CONTRACT — Unified AST Document Model (V1.1)
 
+## W30 common worker protocol
+
+- Preview/check/format use discriminated `PipelineRequest/PipelineResponse`; pure core functions remain unit-testable and execute in `pipeline.worker.ts` in browsers.
+- Every message carries request ID, project ID, section revisions and cache key derived from revision plus format/asset hash. Out-of-order/stale responses are rejected.
+- Preview does not parse AST on the main thread. Mermaid remains lazy on the main thread because it needs DOM; Import/OCR have separate lazy paths.
+- Route shell, editor, preview, import/OCR, Present, Export, AI settings and Mermaid are split. Gates: Library ≤200 KiB gzip, Workspace ≤450 KiB gzip, reducer P95 <16 ms, 40-page main-thread transfer/response P95 <200 ms.
+
 This contract defines the unified data structures, caching strategy, and thread boundaries for the Markdown-to-AST parsing pipeline. It ensures that the Write, Format, Check, and Export modules consume a single source of truth without redundant parsing.
 
 > **Lưu ý:** Các kiểu dữ liệu cơ bản khác (như `ReportProject`, `ReportSection`, `EvidenceItem`, `FormatPreset`) được định nghĩa tập trung tại [CanonicalTypes.md](file:///e:/ReportSupporter/Design/Modules/Other/CanonicalTypes.md).

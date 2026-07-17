@@ -9,6 +9,7 @@ describe("translateSection", () => {
     title: "Abstract",
     markdown: "This project presents a reporting workspace.",
     status: "draft",
+    revision: 0,
   };
 
   it("returns no-op and does not call gateway when disabled", async () => {

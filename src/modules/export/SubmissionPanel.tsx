@@ -18,12 +18,17 @@ export function SubmissionPanel({
   check,
   exportedBlobs,
   jobs,
+  onFixIssue,
+  onOpenExport,
 }: {
   bundle: ReportProjectBundle;
   check?: CheckResult;
   exportedBlobs: Partial<Record<ExportTarget, Blob>>;
   jobs: ExportJob[];
+  onFixIssue?: (sectionId: string) => void;
+  onOpenExport?: () => void;
 }) {
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [history, setHistory] = useState<ExportJob[]>([]);
   const [packaging, setPackaging] = useState(false);
   const [isValidationOpen, setIsValidationOpen] = useState(false);
@@ -81,6 +86,17 @@ export function SubmissionPanel({
   });
 
   const hasSessionBlobs = Object.keys(exportedBlobs).length > 0;
+  const verifiedJobs = jobs.filter((job) => job.status === "done" && job.artifact?.verified);
+  const livePreflight = buildPreflightResult(bundle);
+
+  const goToNextStep = () => {
+    if (step === 1 && livePreflight.hasP0) {
+      setPreflightResult(livePreflight);
+      setIsValidationOpen(true);
+      return;
+    }
+    setStep((current) => Math.min(4, current + 1) as 1 | 2 | 3 | 4);
+  };
 
   const executeDownloadPackage = async () => {
     try {
@@ -146,6 +162,15 @@ export function SubmissionPanel({
     <div className="ws-submission-panel">
       <h3 className="ws-submission-title">Đóng gói nộp bài</h3>
 
+      <ol aria-label="Các bước đóng gói" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 6, padding: 0, listStyle: "none" }}>
+        {["Soát lỗi", "Tạo artifact", "Xác minh", "Đóng gói"].map((label, index) => (
+          <li key={label} aria-current={step === index + 1 ? "step" : undefined} style={{ padding: 8, borderBottom: step === index + 1 ? "3px solid var(--rs-color-primary)" : "1px solid var(--rs-color-border)", fontSize: 12 }}>
+            {index + 1}. {label}
+          </li>
+        ))}
+      </ol>
+
+      {step === 1 && (
       <div className="ws-submission-checklist-container">
         <h4 className="ws-submission-checklist-title">Checklist kiểm tra báo cáo</h4>
         {check === undefined ? (
@@ -185,8 +210,50 @@ export function SubmissionPanel({
             ))}
           </ul>
         )}
+        {livePreflight.issues.length > 0 && (
+          <div aria-label="Lỗi preflight cần xử lý">
+            {livePreflight.issues.map((issue, index) => (
+              <div key={`${issue.sectionId ?? "project"}-${index}`} className={`ws-validation-item ws-validation-item-${issue.severity}`}>
+                <span>{issue.message}</span>
+                {issue.sectionId && onFixIssue && (
+                  <Button size="sm" variant="ghost" onClick={() => onFixIssue(issue.sectionId!)}>Đi tới mục cần sửa</Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+      )}
 
+      {step === 2 && (
+        <div className="ws-submission-checklist-container">
+          <h4 className="ws-submission-checklist-title">Artifact trong phiên hiện tại</h4>
+          {verifiedJobs.length > 0 ? (
+            <ul>{verifiedJobs.map((job) => <li key={job.id}>{job.target.toUpperCase()} · {job.artifact?.byteLength.toLocaleString("vi-VN")} byte · SHA-256 {job.artifact?.sha256.slice(0, 12)}…</li>)}</ul>
+          ) : <p>Chưa có artifact đã xác minh.</p>}
+          <Button variant="secondary" onClick={onOpenExport}>Mở công cụ xuất bản</Button>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="ws-submission-checklist-container">
+          <h4 className="ws-submission-checklist-title">Xác minh và preview cuối</h4>
+          {verifiedJobs.length > 0 ? verifiedJobs.map((job) => (
+            <div key={job.id} className="ws-export-job ws-export-job-done">
+              <strong>{job.fileName}</strong> — MIME {job.artifact?.mediaType}; checksum hợp lệ.
+              {exportedBlobs[job.target] && (
+                <Button size="sm" variant="ghost" onClick={() => {
+                  const url = URL.createObjectURL(exportedBlobs[job.target]!);
+                  window.open(url, "_blank", "noopener,noreferrer");
+                  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+                }}>Mở preview</Button>
+              )}
+            </div>
+          )) : <p>Hãy tạo ít nhất một artifact ở bước 2.</p>}
+        </div>
+      )}
+
+      {step === 4 && (<>
       {!hasSessionBlobs && (
         <div className="ws-submission-blobs-warning" style={{ marginTop: "var(--rs-space-3)", marginBottom: "var(--rs-space-2)" }}>
           Bộ nộp sẽ <strong>không</strong> kèm file báo cáo (report.html/pdf/docx) vì bạn chưa xuất bản trong phiên này — hãy xuất bản lại trước khi đóng gói.
@@ -204,8 +271,9 @@ export function SubmissionPanel({
       >
         Tải về evidence.zip
       </Button>
+      </>)}
 
-      {history.length > 0 && (
+      {step === 3 && history.length > 0 && (
         <div className="ws-submission-history-container">
           <div className="ws-submission-history-header">
             <h4 className="ws-submission-checklist-title">Lịch sử xuất bản cục bộ</h4>
@@ -238,6 +306,10 @@ export function SubmissionPanel({
           </ul>
         </div>
       )}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 12 }}>
+        <Button variant="ghost" disabled={step === 1} onClick={() => setStep((current) => Math.max(1, current - 1) as 1 | 2 | 3 | 4)}>Quay lại</Button>
+        {step < 4 && <Button variant="primary" onClick={goToNextStep}>Tiếp tục</Button>}
+      </div>
       {/* Unified Preflight Dialog (P0 blocking + warnings) */}
       <Dialog
         isOpen={isValidationOpen}

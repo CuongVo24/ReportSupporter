@@ -66,6 +66,32 @@ vi.mock("@/modules/write", async (importOriginal) => {
   };
 });
 
+vi.mock("@/modules/workspace/controllers/project-controller", () => ({
+  loadWorkspaceProject: vi.fn().mockImplementation(() => Promise.resolve({
+    status: "loaded",
+    bundle: {
+      project: {
+        id: "test-proj",
+        title: "Báo cáo thử nghiệm",
+        templateId: "software-project",
+        metadata: {},
+        sections: mockBundleSections,
+        updatedAt: "2026-06-24T22:00:00.000Z",
+      },
+      assets: [],
+      evidence: [],
+      formatSettings: {
+        presetId: "academic-default",
+        includeToc: true,
+        includeListOfFigures: true,
+        includeListOfTables: true,
+        captionNumbering: "continuous",
+      },
+      schemaVersion: 2,
+    },
+  })),
+}));
+
 vi.mock("@/modules/export/use-export", () => ({
   useExport: () => ({ jobs: [], runExport: vi.fn(), retry: vi.fn(), exportedBlobs: {} }),
 }));

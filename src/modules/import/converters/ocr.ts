@@ -1,4 +1,4 @@
-import type { OcrProgress } from "@/types";
+import type { OcrProgress, OcrResult } from "@/types";
 
 /**
  * Renders a specific page of a PDF File to an HTMLCanvasElement.
@@ -45,6 +45,15 @@ export async function performOcrOnCanvas(
   onProgress?: (progress: { status: string; progress: number }) => void,
   abortSignal?: AbortSignal
 ): Promise<string> {
+  return (await performDetailedOcrOnCanvas(canvas, 1, onProgress, abortSignal)).text;
+}
+
+export async function performDetailedOcrOnCanvas(
+  canvas: HTMLCanvasElement,
+  page: number,
+  onProgress?: (progress: { status: string; progress: number }) => void,
+  abortSignal?: AbortSignal,
+): Promise<OcrResult> {
   // Lazy dynamic import of tesseract.js
   const Tesseract = await import("tesseract.js");
 
@@ -82,9 +91,23 @@ export async function performOcrOnCanvas(
   }
 
   try {
-    const { data: { text } } = await worker.recognize(canvas);
+    const recognition = await worker.recognize(canvas);
     if (abortSignal?.aborted) throw new Error("OCR cancelled");
-    return text;
+    const data = recognition.data as unknown as {
+      text?: string;
+      confidence?: number;
+      blocks?: Array<{ text?: string; confidence?: number }> | null;
+    };
+    return {
+      page,
+      text: data.text ?? "",
+      confidence: typeof data.confidence === "number" ? data.confidence : 0,
+      blocks: (data.blocks ?? []).map((block, index) => ({
+        id: `page-${page}-block-${index + 1}`,
+        text: block.text ?? "",
+        confidence: typeof block.confidence === "number" ? block.confidence : 0,
+      })),
+    };
   } catch (err) {
     if (abortSignal?.aborted) throw new Error("OCR cancelled");
     throw err;

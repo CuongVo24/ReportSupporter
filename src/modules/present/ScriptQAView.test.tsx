@@ -81,7 +81,8 @@ describe("DefenseQAView Component (RTL)", () => {
   ];
 
   const mockSections = [
-    { id: "sec-1", order: 0, title: "Mở đầu", markdown: "", status: "draft" as const },
+    { id: "sec-1", order: 0, title: "Mở đầu", markdown: "", status: "draft" as const,
+    revision: 0 },
   ];
 
   it("renders QAs grouped by topic and verify AI button is disabled", () => {

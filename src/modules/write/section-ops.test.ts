@@ -12,14 +12,18 @@ import type { ReportSection } from "@/types";
 
 describe("section-ops helpers", () => {
   const createMockSections = (): ReportSection[] => [
-    { id: "1", order: 0, title: "Mục 1", markdown: "# Mục 1\nNội dung 1", status: "done" },
-    { id: "2", order: 1, title: "Mục 2", markdown: "# Mục 2\nNội dung 2", status: "draft" },
+    { id: "1", order: 0, title: "Mục 1", markdown: "# Mục 1\nNội dung 1", status: "done",
+    revision: 0 },
+    { id: "2", order: 1, title: "Mục 2", markdown: "# Mục 2\nNội dung 2", status: "draft",
+    revision: 0 },
   ];
 
   it("renumbers sections sequentially starting from 0", () => {
     const sections = [
-      { id: "1", order: 5, title: "Mục 1", markdown: "", status: "draft" as const },
-      { id: "2", order: 10, title: "Mục 2", markdown: "", status: "draft" as const },
+      { id: "1", order: 5, title: "Mục 1", markdown: "", status: "draft" as const,
+      revision: 0 },
+      { id: "2", order: 10, title: "Mục 2", markdown: "", status: "draft" as const,
+      revision: 0 },
     ];
     const result = renumberSections(sections);
     expect(result[0].order).toBe(0);
@@ -70,7 +74,8 @@ describe("section-ops helpers", () => {
 
     // Non-matching heading inside markdown shouldn't update markdown
     const withNoHeading = [
-      { id: "3", order: 0, title: "Mục 3", markdown: "Nội dung không có heading", status: "draft" as const },
+      { id: "3", order: 0, title: "Mục 3", markdown: "Nội dung không có heading", status: "draft" as const,
+      revision: 0 },
     ];
     const renamed2 = renameSection(withNoHeading, "3", "Tiêu đề mới");
     expect(renamed2[0].title).toBe("Tiêu đề mới");
@@ -107,7 +112,8 @@ describe("section-ops helpers", () => {
   it("moveSectionToIndex moves any section to a target index and renumbers", () => {
     const initial = [
       ...createMockSections(),
-      { id: "3", order: 2, title: "Má»¥c 3", markdown: "# Má»¥c 3", status: "review" as const },
+      { id: "3", order: 2, title: "Mục 3", markdown: "# Mục 3", status: "review" as const,
+      revision: 0 },
     ];
 
     const movedToStart = moveSectionToIndex(initial, "3", 0);

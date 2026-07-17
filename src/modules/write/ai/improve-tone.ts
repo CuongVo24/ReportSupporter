@@ -1,4 +1,4 @@
-import type { AiSuggestion, AiActionGateway } from "@/types";
+import type { AiSuggestion, AiActionGateway, AiRequestOptions } from "@/types";
 import { buildNoopSuggestion } from "./ai-gateway";
 
 /**
@@ -11,12 +11,15 @@ import { buildNoopSuggestion } from "./ai-gateway";
 export async function improveTone(
   text: string,
   gateway: AiActionGateway,
+  options?: AiRequestOptions,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return buildNoopSuggestion("tone", text);
+    return buildNoopSuggestion("tone", text, options);
   }
 
-  return gateway.requestSuggestion("tone", text);
+  return options
+    ? gateway.requestSuggestion("tone", text, options)
+    : gateway.requestSuggestion("tone", text);
 }

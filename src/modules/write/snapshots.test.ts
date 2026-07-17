@@ -23,6 +23,7 @@ function createBundle(projectId = "project-1"): ReportProjectBundle {
           title: "Intro",
           markdown: "Hello",
           status: "draft",
+          revision: 0,
         },
       ],
       updatedAt: "2026-06-28T00:00:00.000Z",

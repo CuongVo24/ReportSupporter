@@ -34,6 +34,7 @@ describe("Export QR translation", () => {
             title: "Introduction",
             markdown: "Introduction text",
             status: "draft",
+            revision: 0,
           },
         ],
         updatedAt: "2026-06-24T00:00:00Z",

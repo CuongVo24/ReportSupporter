@@ -4,9 +4,12 @@ import { suggestWholeReportSections } from "./whole-report-ai";
 
 describe("suggestWholeReportSections", () => {
   const sections: ReportSection[] = [
-    { id: "sec-2", order: 2, title: "Kết luận", markdown: "Conclusion text", status: "draft" },
-    { id: "sec-0", order: 0, title: "Trống", markdown: "   ", status: "draft" },
-    { id: "sec-1", order: 1, title: "Mở đầu", markdown: "Intro text", status: "draft" },
+    { id: "sec-2", order: 2, title: "Kết luận", markdown: "Conclusion text", status: "draft",
+    revision: 0 },
+    { id: "sec-0", order: 0, title: "Trống", markdown: "   ", status: "draft",
+    revision: 0 },
+    { id: "sec-1", order: 1, title: "Mở đầu", markdown: "Intro text", status: "draft",
+    revision: 0 },
   ];
 
   it("returns no suggestions and does not call gateway when disabled", async () => {

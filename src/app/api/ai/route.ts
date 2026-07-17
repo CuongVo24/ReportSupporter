@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { aiActionSchema } from "@/types/ai";
-import type { AiAction } from "@/types/ai";
+import type { AiAction, AiStreamEvent, AiUsage } from "@/types/ai";
+import { createRateLimiter, rateLimitIdentity } from "@/lib/server/rate-limit";
 
 type AiProvider = "gemini" | "openai" | "anthropic";
 
@@ -9,6 +10,7 @@ type AiProxyRequest = {
   input: string;
   provider: AiProvider;
   model?: string;
+  requestId?: string;
 };
 
 const GENERIC_PROVIDER_ERROR =
@@ -18,38 +20,13 @@ const MAX_INPUT_CHARS = 100_000;
 const MAX_MODEL_CHARS = 128;
 const MAX_OUTPUT_TOKENS = 4_000;
 const AI_TIMEOUT_MS = 60_000;
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_REQUESTS = 20;
-const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+const consumeAiRateLimit = createRateLimiter({
+  namespace: "ai",
+  requests: 20,
+  windowSeconds: 60,
+});
 
 class ProviderRequestError extends Error {}
-
-function clientAddress(req: Request): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || req.headers.get("x-real-ip")?.trim()
-    || "unknown";
-}
-
-function consumeRateLimit(key: string): { allowed: boolean; retryAfterSeconds: number } {
-  const now = Date.now();
-  const current = rateLimitBuckets.get(key);
-  if (!current || current.resetAt <= now) {
-    rateLimitBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
-  if (current.count >= RATE_LIMIT_REQUESTS) {
-    return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)) };
-  }
-  current.count += 1;
-
-  // Keep the best-effort in-memory limiter bounded on long-lived instances.
-  if (rateLimitBuckets.size > 10_000) {
-    for (const [bucketKey, bucket] of rateLimitBuckets) {
-      if (bucket.resetAt <= now) rateLimitBuckets.delete(bucketKey);
-    }
-  }
-  return { allowed: true, retryAfterSeconds: 0 };
-}
 
 function validModel(model: string | undefined): boolean {
   return model === undefined || (
@@ -91,6 +68,7 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
   const input = stringValue(record.input);
   const provider = parseProvider(record.provider);
   const model = stringValue(record.model);
+  const requestId = stringValue(record.requestId);
 
   if (
     !actionResult.success ||
@@ -106,6 +84,7 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
     input,
     provider,
     model,
+    requestId,
   };
 }
 
@@ -161,6 +140,32 @@ function readAnthropicSuggestion(data: unknown): string {
   return stringValue(firstContent.text) ?? "";
 }
 
+function readUsage(provider: AiProvider, data: unknown): AiUsage | undefined {
+  const record = asRecord(data);
+  const usage = provider === "gemini" ? asRecord(record.usageMetadata) : asRecord(record.usage);
+  if (!usage) return undefined;
+  const input = provider === "gemini" ? usage.promptTokenCount : provider === "openai" ? usage.prompt_tokens : usage.input_tokens;
+  const output = provider === "gemini" ? usage.candidatesTokenCount : provider === "openai" ? usage.completion_tokens : usage.output_tokens;
+  if (typeof input !== "number" && typeof output !== "number") return undefined;
+  return {
+    inputTokens: typeof input === "number" ? input : undefined,
+    outputTokens: typeof output === "number" ? output : undefined,
+    estimated: false,
+  };
+}
+
+function ndjson(events: AiStreamEvent[]): Response {
+  const body = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
+  return new Response(body, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/x-ndjson;charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
 export async function POST(req: Request) {
   try {
     const declaredLength = Number(req.headers.get("content-length") || "0");
@@ -168,7 +173,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
     }
 
-    const rateLimit = consumeRateLimit(clientAddress(req));
+    const apiKey = req.headers.get("x-api-key")?.trim() ?? "";
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Missing API key. Configure a local client API key in AI Settings." },
+        { status: 401 },
+      );
+    }
+
+    const rateLimit = await consumeAiRateLimit(rateLimitIdentity(req, apiKey));
+    if (!rateLimit.available) {
+      return NextResponse.json(
+        { error: "AI service rate limiter is unavailable. Please retry shortly." },
+        { status: 503 },
+      );
+    }
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: "Too many AI requests. Please retry shortly." },
@@ -189,22 +208,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const { action, input, provider, model } = parsed;
-
-    const apiKey = req.headers.get("x-api-key")?.trim() ?? "";
-
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Missing API key. Configure a local client API key in AI Settings." },
-        { status: 401 },
-      );
-    }
+    const { action, input, provider, model, requestId: suppliedRequestId } = parsed;
+    const requestId = suppliedRequestId || crypto.randomUUID();
 
     const prompt = buildPrompt(action, input);
     let suggestion = "";
+    let usage: AiUsage | undefined;
+    let selectedModel = "";
 
     if (provider === "gemini") {
-      const selectedModel = model || "gemini-1.5-flash";
+      selectedModel = model || "gemini-1.5-flash";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent`;
 
       const response = await requestProvider(url, {
@@ -218,8 +231,9 @@ export async function POST(req: Request) {
 
       const data: unknown = await response.json();
       suggestion = readGeminiSuggestion(data);
+      usage = readUsage(provider, data);
     } else if (provider === "openai") {
-      const selectedModel = model || "gpt-4o";
+      selectedModel = model || "gpt-4o";
       const url = "https://api.openai.com/v1/chat/completions";
 
       const response = await requestProvider(url, {
@@ -237,8 +251,9 @@ export async function POST(req: Request) {
 
       const data: unknown = await response.json();
       suggestion = readOpenAiSuggestion(data);
+      usage = readUsage(provider, data);
     } else {
-      const selectedModel = model || "claude-3-5-sonnet-20241022";
+      selectedModel = model || "claude-3-5-sonnet-20241022";
       const url = "https://api.anthropic.com/v1/messages";
 
       const response = await requestProvider(url, {
@@ -257,11 +272,16 @@ export async function POST(req: Request) {
 
       const data: unknown = await response.json();
       suggestion = readAnthropicSuggestion(data);
+      usage = readUsage(provider, data);
     }
 
-    return NextResponse.json({ suggestion });
+    const events: AiStreamEvent[] = [
+      { event: "meta", requestId, provider, model: selectedModel },
+      ...suggestion.match(/[\s\S]{1,512}/gu)?.map((text) => ({ event: "delta" as const, requestId, text })) ?? [],
+      { event: "done", requestId, usage },
+    ];
+    return ndjson(events);
   } catch (error) {
-    console.error("AI Proxy error:", error);
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
     }

@@ -31,7 +31,7 @@ describe("PresentPanel Component", () => {
         members: members || ["An", "Bình"],
       },
       sections: [
-        { id: "sec-1", order: 0, title: "Mở đầu", markdown, status: "draft" },
+        { id: "sec-1", order: 0, title: "Mở đầu", markdown, status: "draft", revision: 0 },
       ],
       updatedAt: "2026-06-25T00:00:00.000Z",
     },

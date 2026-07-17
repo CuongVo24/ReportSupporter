@@ -1,0 +1,14 @@
+services:
+  pdf-renderer:
+    build: ./services/pdf-renderer
+    environment:
+      PORT: 8080
+      PDF_RENDERER_TOKEN: ${PDF_RENDERER_TOKEN:-local-render-token}
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

@@ -8,9 +8,7 @@ import { exportJobSchema } from "./schemas";
 export async function clearExportHistory(): Promise<void> {
   try {
     await clearDbHistory();
-  } catch (err) {
-    console.error("Failed to clear export history:", err);
-  }
+  } catch {}
 }
 
 /**
@@ -43,9 +41,7 @@ export async function recordExport(job: ExportJob): Promise<void> {
 
     // 2. Atomic replacement in transaction
     await replaceExportHistory(capped);
-  } catch (err) {
-    console.error("Failed to record export history:", err);
-  }
+  } catch {}
 }
 
 /**
@@ -67,8 +63,7 @@ export async function loadExportHistory(): Promise<ExportJob[]> {
     validJobs.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
 
     return validJobs;
-  } catch (err) {
-    console.error("Failed to load export history:", err);
+  } catch {
     return [];
   }
 }

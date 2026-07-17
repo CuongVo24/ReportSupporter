@@ -62,6 +62,7 @@ describe("ImportPreviewDialog A11y", () => {
           title: "Heading 1",
           markdown: "# Heading 1\nSome text.",
           status: "draft",
+          revision: 0,
         },
       ],
       mode: "append",

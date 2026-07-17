@@ -19,8 +19,10 @@ describe("Export Module", () => {
             members: ["Trần Văn B - 123456", "Lê Văn C - 789012"],
           },
           sections: [
-            { id: "sec2", order: 2, title: "Triển khai", markdown: "# Triển khai\nContent 2", status: "draft" },
-            { id: "sec1", order: 1, title: "Mở đầu", markdown: "# Mở đầu\nContent 1", status: "draft" },
+            { id: "sec2", order: 2, title: "Triển khai", markdown: "# Triển khai\nContent 2", status: "draft",
+            revision: 0 },
+            { id: "sec1", order: 1, title: "Mở đầu", markdown: "# Mở đầu\nContent 1", status: "draft",
+            revision: 0 },
           ],
         },
       };
@@ -39,7 +41,7 @@ describe("Export Module", () => {
 
   describe("exportHtml", () => {
     it("returns ok:true with a text/html Blob", async () => {
-      const result = exportHtml(bundle);
+      const result = await exportHtml(bundle);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.blob).toBeInstanceOf(Blob);
@@ -51,8 +53,9 @@ describe("Export Module", () => {
         expect(htmlText).toContain("Mở đầu");
         
         // Check embedded elements
-        expect(htmlText).toContain("katex.min.css");
-        expect(htmlText).toContain("mermaid@11.15.0");
+        expect(htmlText).toContain("data:font/woff2;base64");
+        expect(htmlText).toContain("Content-Security-Policy");
+        expect(htmlText).not.toContain("<script");
         expect(htmlText).toContain("ws-toc-container");
       }
     });
@@ -63,13 +66,15 @@ describe("Export Module", () => {
         project: {
           ...bundle.project,
           sections: [
-            { id: "sec2", order: 2, title: "Section 2", markdown: "Content 2", status: "draft" },
-            { id: "sec1", order: 1, title: "Section 1", markdown: "Content 1", status: "draft" },
+            { id: "sec2", order: 2, title: "Section 2", markdown: "Content 2", status: "draft",
+            revision: 0 },
+            { id: "sec1", order: 1, title: "Section 1", markdown: "Content 1", status: "draft",
+            revision: 0 },
           ],
         },
       };
 
-      const result = exportHtml(outOfOrderBundle);
+      const result = await exportHtml(outOfOrderBundle);
       expect(result.ok).toBe(true);
       if (result.ok) {
         const htmlText = await result.blob.text();
@@ -97,12 +102,13 @@ describe("Export Module", () => {
               title: "Header",
               markdown: "Body content with <iframe src=javascript:alert(3)></iframe> and <script>alert(4)</script>",
               status: "draft",
+              revision: 0,
             },
           ],
         },
       };
 
-      const result = exportHtml(maliciousBundle);
+      const result = await exportHtml(maliciousBundle);
       expect(result.ok).toBe(true);
       if (result.ok) {
         const htmlText = await result.blob.text();
@@ -113,9 +119,8 @@ describe("Export Module", () => {
         expect(htmlText).toContain("School with &lt;span class=&#039;dangerous&#039;&gt;tag&lt;/span&gt; &amp; details");
         
         // Check markdown body has iframe and script stripped by rehypeSanitize
-        const bodyStart = htmlText.indexOf('<div class="report-body">');
-        const bodyEnd = htmlText.indexOf('</div>\n\n  <!-- Mermaid');
-        const bodyHtml = htmlText.substring(bodyStart, bodyEnd);
+        const bodyStart = htmlText.indexOf('<main class="report-body">');
+        const bodyHtml = htmlText.substring(bodyStart);
         expect(bodyHtml).not.toContain("<iframe");
         expect(bodyHtml).not.toContain("<script");
       }
@@ -128,7 +133,6 @@ describe("Export Module", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");
-        expect(result.error.message).toContain("client environment");
         expect(result.error.recoverable).toBe(true);
       }
     });

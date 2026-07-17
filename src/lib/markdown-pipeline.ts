@@ -80,8 +80,7 @@ export function renderMarkdown(markdown: string): string {
   try {
     const result = renderProcessor.processSync(markdown);
     return result.toString();
-  } catch (error) {
-    console.error("Failed to render markdown:", error);
+  } catch {
     return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
   }
 }
@@ -107,8 +106,7 @@ export function renderMdastToHtml(ast: MdastRoot): string {
   try {
     const hast = renderMdastToHast(ast);
     return stringifyHast(hast);
-  } catch (error) {
-    console.error("Failed to render MDAST:", error);
+  } catch {
     return '<p class="ws-preview-error">⚠ Không render được nội dung.</p>';
   }
 }

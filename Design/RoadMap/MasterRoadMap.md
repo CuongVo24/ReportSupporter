@@ -1,10 +1,10 @@
-# Master Roadmap - ReportSupporter (12 Weeks Core + 3 UI + 4 Import)
+# Master Roadmap - ReportSupporter (W1–W36)
 
 ## Project Overview
 
 - **Goal:** Build a reporting workspace that helps students and project teams write, format, check, and export complete submission-ready reports.
 - **Core value:** Fast report creation, usable export, academic formatting, pre-submit checking, and evidence-aware submission workflow.
-- **MVP stack:** Next.js (App Router) — **client-first**, gần như không server: editor/format/check/export đều chạy trong trình duyệt, PDF qua browser-print, **không backend bắt buộc** ở Core MVP (Node chỉ là runtime dev/build; Puppeteer server-side là hardening tùy chọn sau — xem `Design/Modules/Other/TechnicalStack.md`).
+- **Production stack:** Next.js App Router, local-first IndexedDB/PWA. Backend chỉ phục vụ AI/rate-limit và PDF renderer first-party Node/Docker; không account, cloud sync hoặc lưu nội dung báo cáo.
 - **Privacy posture:** Core report editing should work without mandatory login.
 
 ## Phase 1 - Core MVP: Report Workspace (Weeks 1-4)
@@ -169,3 +169,32 @@
 - Check engine chạy trên `ImportDraft` (module "import") — báo lỗi cấu trúc ngay trong preview.
 - OCR experimental: `tesseract.js` lazy-load, flag default OFF, chỉ chạy sau explicit action (vie+eng).
 - Import worker + progress + perf hardening; E2E round-trip (import → edit → check → export); **đóng Phase 5**.
+
+## Phase 6 — Production safety and reliable artifacts (W25–W28)
+
+| Week | Scope | Exit evidence |
+|---|---|---|
+| W25 | Section revision/hash, abortable AI, mandatory pre-Apply snapshot, encoding gate, bounded dev limiter, Redis production limiter, strict stderr/snapshot policy | race/security/migration tests |
+| W26 | IndexedDB v4 multi-project library, atomic bundle+summary, Recent/search/duplicate/Trash/recovery | seeded v3→v4 migration and CRUD browser QA |
+| W27 | Offline HTML, separate Print Preview, verified real PDF through isolated Docker worker | `%PDF-`, pdfjs open, network/script blocking |
+| W28 | Four-step Submission Wizard, QR parity, MIME/magic/ZIP/SHA verification, deterministic asset resolution | verified manifest and ambiguous asset tests |
+
+## Phase 7 — Architecture and full roadmap (W29–W33)
+
+| Week | Scope | Exit evidence |
+|---|---|---|
+| W29 | Reducer-driven workspace plus project/editor/import/export/AI/snapshot controllers and explicit command error states | reducer/controller tests |
+| W30 | Common parse/format/check worker, revision-aware cache/stale discard, lazy feature chunks | Library ≤200 KiB, Workspace ≤450 KiB, main-thread P95 gates |
+| W31 | Two-column Smart Import Review, OCR confidence, heading/asset decisions and transaction-wide Undo | append/replace restoration tests |
+| W32 | NDJSON `meta/delta/done/error`, per-section task states/cancel/retry, actual-or-estimated usage/cost | reordered/cancel/stale AI tests |
+| W33 | Bundled/offline internal Template Catalog plus validated `.rstemplate.json` personal templates | Zod/import/export/catalog browser QA |
+
+## Phase 8 — Offline durability and release (W34–W36)
+
+| Week | Scope | Exit evidence |
+|---|---|---|
+| W34 | Serwist manifest/install/update flow; precache shell/fonts/workers/catalog; API NetworkOnly | production offline reload/navigation QA |
+| W35 | `.rsproject` checksummed backup, collision-safe import, storage 80/90% warning, persistent storage gesture, daily snapshot/weekly reminder | package/quota/recovery tests |
+| W36 | Playwright/axe/responsive/theme/offline, PDF/Redis integration, bundle/perf/security gates and staging beta evidence | QA report + artifacts before `DONE` |
+
+Rollout order is fixed behind `NEXT_PUBLIC_FF_*`: project migration dual-read → PDF/Submission → pipeline worker → Smart Import/AI → Template Catalog/PWA. Disabling a flag must not delete local data. Trash is never auto-purged and stale AI content is always regenerated, never auto-merged.

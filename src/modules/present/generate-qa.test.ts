@@ -22,6 +22,7 @@ describe("generateDefenseQA", () => {
         title: "Introduction",
         markdown: "Mục tiêu của đề tài là xây dựng workspace quản lý dự án. Phạm vi nghiên cứu trong học kỳ này.",
         status: "done",
+        revision: 0,
       },
     ];
 
@@ -40,6 +41,7 @@ describe("generateDefenseQA", () => {
         title: "Deployment",
         markdown: "Chúng tôi thực hiện deploy ứng dụng lên máy chủ đám mây. Quy trình triển khai tự động qua CI/CD.",
         status: "done",
+        revision: 0,
       },
     ];
 
@@ -59,6 +61,7 @@ describe("generateDefenseQA", () => {
         title: "Evaluation",
         markdown: "Kết quả thu được rất khả quan. Tuy nhiên hệ thống còn gặp hạn chế về hiệu năng. Trong tương lai chúng tôi sẽ nâng cấp thêm nhiều chức năng khác.",
         status: "done",
+        revision: 0,
       },
     ];
 
@@ -80,6 +83,7 @@ describe("generateDefenseQA", () => {
         title: "Empty content",
         markdown: "Nội dung bình thường không có từ khóa đặc biệt nào.",
         status: "done",
+        revision: 0,
       },
     ];
 
@@ -95,6 +99,7 @@ describe("generateDefenseQA", () => {
         title: "Introduction",
         markdown: "Mục tiêu của đề tài là xây dựng workspace quản lý dự án. Quy trình triển khai hệ thống lên deploy.",
         status: "done",
+        revision: 0,
       },
     ];
 
@@ -113,6 +118,7 @@ describe("generateDefenseQA", () => {
         // none of these should match 'git', 'setup', or 'docker' respectively
         markdown: "Chúng tôi đang số hóa các quy trình digital cho doanh nghiệp. Cấu hình setupconfig chưa tối ưu. Chúng tôi đang dockerize ứng dụng.",
         status: "done",
+        revision: 0,
       },
     ];
 
@@ -130,6 +136,7 @@ describe("generateDefenseQA", () => {
         title: "Positive Match Test",
         markdown: "Dự án sử dụng git để quản lý mã nguồn.",
         status: "done",
+        revision: 0,
       },
     ];
 

@@ -1,13 +1,14 @@
 import JSZip from "jszip";
-import type { ReportProjectBundle, ExportTarget, SubmissionPackage, PackageManifest } from "@/types";
+import type { ExportTarget, PackageManifest, ReportProjectBundle, SubmissionPackage } from "@/types";
+import { createVerifiedArtifact, sha256Blob } from "./artifact-verification";
 
-/**
- * Builds a submission package (evidence.zip) containing exported documents, README,
- * evidence appendix markdown, and a manifest.json file detailing the contents.
- * All file packing happens on the client using JSZip.
- * 
- * @param input Input exports, metadata bundle, README and evidence appendix strings.
- */
+const FILE_NAMES: Record<ExportTarget, string> = {
+  html: "report.html",
+  pdf: "report.pdf",
+  docx: "report.docx",
+  pptx: "report.pptx",
+};
+
 export async function buildSubmissionZip(input: {
   bundle: ReportProjectBundle;
   exports: Partial<Record<ExportTarget, Blob>>;
@@ -15,61 +16,49 @@ export async function buildSubmissionZip(input: {
   evidenceAppendixMarkdown: string;
 }): Promise<SubmissionPackage> {
   const zip = new JSZip();
-  const files: { name: string; target: ExportTarget | "readme" | "evidence" }[] = [];
+  const files: PackageManifest["files"] = [];
 
-  // 1. Add README.md if provided
-  if (input.readmeMarkdown) {
-    zip.file("README.md", input.readmeMarkdown);
-    files.push({ name: "README.md", target: "readme" });
-  }
+  const addText = async (name: string, target: "readme" | "evidence", contents: string) => {
+    const blob = new Blob([contents], { type: "text/markdown;charset=utf-8" });
+    zip.file(name, contents);
+    files.push({
+      name,
+      target,
+      byteLength: blob.size,
+      sha256: await sha256Blob(blob),
+      mediaType: blob.type,
+    });
+  };
 
-  // 2. Add evidence/appendix.md if provided
+  if (input.readmeMarkdown) await addText("README.md", "readme", input.readmeMarkdown);
   if (input.evidenceAppendixMarkdown) {
-    zip.file("evidence/appendix.md", input.evidenceAppendixMarkdown);
-    files.push({ name: "evidence/appendix.md", target: "evidence" });
+    await addText("evidence/appendix.md", "evidence", input.evidenceAppendixMarkdown);
   }
 
-  // 3. Add exported targets if provided
-  const exportsMap = input.exports || {};
-  if (exportsMap.html) {
-    const buffer = await exportsMap.html.arrayBuffer();
-    zip.file("report.html", buffer);
-    files.push({ name: "report.html", target: "html" });
+  for (const target of ["html", "pdf", "docx", "pptx"] as const) {
+    const blob = input.exports[target];
+    if (!blob) continue;
+    const artifact = await createVerifiedArtifact({ target, blob, fileName: FILE_NAMES[target] });
+    if (!artifact.verified) throw new Error(`${target.toUpperCase()} artifact has not been verified.`);
+    zip.file(FILE_NAMES[target], await artifact.blob.arrayBuffer());
+    files.push({
+      name: FILE_NAMES[target],
+      target,
+      byteLength: artifact.byteLength,
+      sha256: artifact.sha256,
+      mediaType: artifact.mediaType,
+    });
   }
 
-  if (exportsMap.pdf) {
-    const buffer = await exportsMap.pdf.arrayBuffer();
-    zip.file("report.pdf", buffer);
-    files.push({ name: "report.pdf", target: "pdf" });
-  }
-
-  if (exportsMap.docx) {
-    const buffer = await exportsMap.docx.arrayBuffer();
-    zip.file("report.docx", buffer);
-    files.push({ name: "report.docx", target: "docx" });
-  }
-
-  if (exportsMap.pptx) {
-    const buffer = await exportsMap.pptx.arrayBuffer();
-    zip.file("report.pptx", buffer);
-    files.push({ name: "report.pptx", target: "pptx" });
-  }
-
-  // 4. Build manifest.json
   const manifest: PackageManifest = {
     generatedAt: new Date().toISOString(),
-    projectTitle: input.bundle.project?.title || "Untitled Project",
+    projectTitle: input.bundle.project.title || "Untitled Project",
     files,
-    evidenceCount: input.bundle.evidence ? input.bundle.evidence.length : 0,
+    evidenceCount: input.bundle.evidence.length,
   };
-
   zip.file("manifest.json", JSON.stringify(manifest, null, 2));
-
-  // 5. Generate package Blob
-  const blob = await zip.generateAsync({ type: "blob" });
-
-  return {
-    manifest,
-    blob,
-  };
+  const blob = await zip.generateAsync({ type: "blob", mimeType: "application/zip" });
+  const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+  if (signature.join(",") !== "80,75,3,4") throw new Error("Submission package is not a valid ZIP archive.");
+  return { manifest, blob };
 }

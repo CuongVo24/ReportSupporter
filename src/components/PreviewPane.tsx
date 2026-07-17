@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Info } from "lucide-react";
-import { parseMarkdown, renderMdastToHtml } from "@/lib/markdown-pipeline";
-import { resolveAssetRefs, transformUnembeddedImages, MermaidRenderer } from "@/modules/write";
+import { renderMdastToHtml } from "@/lib/markdown-pipeline";
+import { MermaidRenderer } from "@/modules/write/MermaidRenderer";
 import { parseHeadings, numberHeadings, generateToc, buildCaptionRegistry, normalizeCaptions, generateListOfFigures, generateListOfTables, HeadingNode, injectHeadingNumbers, renderTocToHtml } from "@/modules/format";
 import { buildEvidenceAppendix, toQrDataUrl, injectQrImages, type UnistNode as EvidenceUnistNode } from "@/modules/evidence";
 import type { ReportAsset, FormatSettings, TocNode, EvidenceItem, CaptionEntry } from "@/types";
 import { PRESETS } from "@/modules/export/helpers";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 import { EmptyState } from "@/components/states";
+import { contentHash } from "@/lib/content-hash";
+import { runPipelineRequest, StalePipelineResponseError } from "@/modules/pipeline/pipeline-client";
+import type { PipelinePreviewResult } from "@/types";
 
 type PreviewPaneProps = {
+  projectId?: string;
   markdown: string;
   assets?: ReportAsset[];
   formatSettings?: FormatSettings;
-  sections?: { id: string; order: number; markdown: string }[];
+  sections?: { id: string; order: number; markdown: string; revision?: number }[];
   activeSectionId?: string;
   evidence?: EvidenceItem[];
   darkPreview?: boolean;
@@ -86,6 +90,7 @@ function LotBlock({ lot }: { lot: CaptionEntry[] }) {
 }
 
 export function PreviewPane({
+  projectId = "preview",
   markdown,
   assets = [],
   formatSettings,
@@ -153,83 +158,44 @@ export function PreviewPane({
     return finalMarkdown.split(/(```mermaid[\s\S]*?```)/g);
   }, [finalMarkdown, hasContent]);
 
-  // Cache for parsed ASTs of content parts
-  const partAstCacheRef = useRef<Map<string, ReturnType<typeof parseMarkdown>>>(new Map());
-
-  const parsedParts = useMemo(() => {
-    const newCache = new Map<string, ReturnType<typeof parseMarkdown>>();
-    const oldCache = partAstCacheRef.current;
-    
-    const parts = contentParts.map((part) => {
-      const isMermaid = part.startsWith("```mermaid") && part.endsWith("```");
-      if (isMermaid) {
-        return { isMermaid, content: part, ast: null };
-      }
-      
-      const cacheKey = `${assetSignature}\u0000${part}`;
-      let ast = oldCache.get(cacheKey);
-      if (!ast) {
-        const resolvedMarkdown = resolveAssetRefs(part, assets);
-        ast = parseMarkdown(resolvedMarkdown);
-        transformUnembeddedImages(ast, assets);
-      }
-      newCache.set(cacheKey, ast);
-      return { isMermaid, content: part, ast };
+  const previewSections = useMemo(() => {
+    if (!hasContent) return [];
+    if (!sections?.length) return [{ id: activeSectionId || "default", markdown: finalMarkdown }];
+    return [...sections].sort((a, b) => a.order - b.order).map((section) => {
+      let content = section.id === activeSectionId ? debouncedMarkdown : section.markdown;
+      if (section.id === lastSectionId && appendixMarkdown) content += `\n\n${appendixMarkdown}`;
+      return { id: section.id, markdown: content };
     });
-    
-    partAstCacheRef.current = newCache;
-    return parts;
-  }, [contentParts, assets, assetSignature]);
+  }, [activeSectionId, appendixMarkdown, debouncedMarkdown, finalMarkdown, hasContent, lastSectionId, sections]);
+  const [pipelinePreview, setPipelinePreview] = useState<PipelinePreviewResult>({ parsedParts: [], parsedSections: [] });
 
-  // Parse ASTs of all sections once for consistent headings and captions numbering
-  const sectionAstCacheRef = useRef<Map<string, {
-    content: string;
-    assetSignature: string;
-    ast: ReturnType<typeof parseMarkdown>;
-  }>>(new Map());
-
-  const parsedSections = useMemo(() => {
+  useEffect(() => {
     if (!hasContent) {
-      return [];
+      setPipelinePreview({ parsedParts: [], parsedSections: [] });
+      return;
     }
-    if (sections && sections.length > 0) {
-      const sortedSections = [...sections].sort((a, b) => a.order - b.order);
-      const nextCache = new Map<string, {
-        content: string;
-        assetSignature: string;
-        ast: ReturnType<typeof parseMarkdown>;
-      }>();
-      const parsed = sortedSections.map((sec) => {
-        let content = sec.id === activeSectionId ? debouncedMarkdown : sec.markdown;
-        if (sec.id === lastSectionId && appendixMarkdown) {
-          content = content + "\n\n" + appendixMarkdown;
-        }
-        const cached = sectionAstCacheRef.current.get(sec.id);
-        if (cached && cached.content === content && cached.assetSignature === assetSignature) {
-          nextCache.set(sec.id, cached);
-          return { id: sec.id, ast: cached.ast };
-        }
-        const resolvedMarkdown = resolveAssetRefs(content, assets);
-        const ast = parseMarkdown(resolvedMarkdown);
-        transformUnembeddedImages(ast, assets);
-        nextCache.set(sec.id, { content, assetSignature, ast });
-        return { id: sec.id, ast };
-      });
-      sectionAstCacheRef.current = nextCache;
-      return parsed;
-    } else {
-      const id = activeSectionId || "default";
-      const cached = sectionAstCacheRef.current.get(id);
-      if (cached && cached.content === finalMarkdown && cached.assetSignature === assetSignature) {
-        return [{ id, ast: cached.ast }];
+    let active = true;
+    const sectionRevisions = Object.fromEntries((sections ?? []).map((section) => [section.id, section.revision ?? 0]));
+    const revisionHash = contentHash(previewSections.map((section) => `${section.id}\0${section.markdown}`).join("\0"));
+    void runPipelineRequest({
+      requestId: crypto.randomUUID(),
+      projectId,
+      operation: "preview",
+      sectionRevisions,
+      cacheKey: `preview:${projectId}:${revisionHash}:${contentHash(assetSignature)}`,
+      payload: { parts: contentParts, sections: previewSections, assets },
+    }).then((response) => {
+      if (active && response.ok && response.operation === "preview") setPipelinePreview(response.result);
+    }).catch((error: unknown) => {
+      if (!(error instanceof StalePipelineResponseError) && active) {
+        setPipelinePreview({ parsedParts: [], parsedSections: [] });
       }
-      const resolvedMarkdown = resolveAssetRefs(finalMarkdown, assets);
-      const ast = parseMarkdown(resolvedMarkdown);
-      transformUnembeddedImages(ast, assets);
-      sectionAstCacheRef.current = new Map([[id, { content: finalMarkdown, assetSignature, ast }]]);
-      return [{ id, ast }];
-    }
-  }, [sections, activeSectionId, debouncedMarkdown, lastSectionId, appendixMarkdown, assets, assetSignature, finalMarkdown, hasContent]);
+    });
+    return () => { active = false; };
+  }, [assetSignature, assets, contentParts, hasContent, previewSections, projectId, sections]);
+
+  const parsedParts = pipelinePreview.parsedParts;
+  const parsedSections = pipelinePreview.parsedSections;
 
   // Compute global numbered headings once for correct counter ordering across split content parts
   const globalNumberedHeadings = useMemo(() => {

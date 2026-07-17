@@ -26,6 +26,7 @@ describe("runChecker Engine Core & Rules", () => {
             title: "Mở đầu",
             markdown: "# Mở đầu\nGiới thiệu dự án ở đây.",
             status: "draft" as const,
+            revision: 0,
           },
           {
             id: "s2",
@@ -33,6 +34,7 @@ describe("runChecker Engine Core & Rules", () => {
             title: "Kết luận",
             markdown: "# Kết luận\nĐúc kết kết quả đạt được.",
             status: "draft" as const,
+            revision: 0,
           },
           {
             id: "s3",
@@ -40,6 +42,7 @@ describe("runChecker Engine Core & Rules", () => {
             title: "Tài liệu tham khảo",
             markdown: "# Tài liệu tham khảo\n1. Tài liệu tham chiếu A.",
             status: "draft" as const,
+            revision: 0,
           },
         ],
         updatedAt: new Date().toISOString(),
@@ -113,7 +116,8 @@ describe("runChecker Engine Core & Rules", () => {
       project: {
         ...baseBundle.project,
         sections: [
-          { id: "s1", order: 1, title: "Giới thiệu", markdown: "# Hello\nContent without conclusion/references", status: "draft" as const }
+          { id: "s1", order: 1, title: "Giới thiệu", markdown: "# Hello\nContent without conclusion/references", status: "draft" as const,
+          revision: 0 }
         ],
       },
     };
@@ -139,6 +143,7 @@ describe("runChecker Engine Core & Rules", () => {
             title: "Đội ngũ",
             markdown: "| Thành viên | Vai trò |\n|---|---|\n| Nguyễn Văn A | Trưởng nhóm |",
             status: "draft" as const,
+            revision: 0,
           },
         ],
       },
@@ -157,7 +162,8 @@ describe("runChecker Engine Core & Rules", () => {
           school: "Trường",
         },
         sections: [
-          { id: "s1", order: 1, title: "Body", markdown: "# Body\nNo links whatsoever.", status: "draft" as const },
+          { id: "s1", order: 1, title: "Body", markdown: "# Body\nNo links whatsoever.", status: "draft" as const,
+          revision: 0 },
         ],
       },
     };
@@ -232,7 +238,8 @@ describe("runChecker Engine Core & Rules", () => {
         ...baseBundle.project,
         metadata: { school: "Trường" },
         sections: [
-          { id: "s1", order: 1, title: "Body", markdown: "# Body\n[Deploy Link](https://my-demo-app.vercel.app)", status: "draft" as const },
+          { id: "s1", order: 1, title: "Body", markdown: "# Body\n[Deploy Link](https://my-demo-app.vercel.app)", status: "draft" as const,
+          revision: 0 },
         ],
       },
     };

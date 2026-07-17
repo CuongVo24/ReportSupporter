@@ -15,7 +15,7 @@
  *   - Adapter injection replaces direct SDK usage (approve before cài SDK).
  */
 
-import type { AiAction, AiSuggestion, GatewayState } from "@/types/ai";
+import type { AiAction, AiRequestOptions, AiSuggestion, GatewayState } from "@/types/ai";
 import { loadAiConfig, isAiReady } from "./ai-config";
 
 // ---------------------------------------------------------------------------
@@ -31,7 +31,10 @@ export interface AiAdapter {
    * Send a request to the underlying provider and return a suggestion.
    * The adapter owns network/SDK details; the gateway only orchestrates.
    */
-  request(action: AiAction, input: string): Promise<string>;
+  request(action: AiAction, input: string, options?: AiRequestOptions): Promise<string | {
+    suggestion: string;
+    usage?: AiSuggestion["usage"];
+  }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,21 +82,34 @@ export function getGatewayState(): GatewayState {
 export async function requestSuggestion(
   action: AiAction,
   input: string,
+  options?: AiRequestOptions,
 ): Promise<AiSuggestion> {
+  const requestOptions = options ?? {};
   const config = loadAiConfig();
 
   // Guard: not ready (disabled, no provider, or no adapter) — no network
   if (!isAiReady(config) || _adapter === null) {
-    return buildNoopSuggestion(action, input);
+    return buildNoopSuggestion(action, input, requestOptions);
   }
 
   // Ready path — delegate to adapter
-  const suggestion = await _adapter.request(action, input);
+  const response = options
+    ? await _adapter.request(action, input, options)
+    : await _adapter.request(action, input);
+  const suggestion = typeof response === "string" ? response : response.suggestion;
+  const usage = typeof response === "string" ? undefined : response.usage;
   return {
-    id: crypto.randomUUID(),
+    id: requestOptions.requestId ?? crypto.randomUUID(),
     action,
     original: input,
     suggestion,
+    requestId: requestOptions.requestId,
+    projectId: requestOptions.context?.projectId,
+    sectionId: requestOptions.context?.sectionId,
+    baseRevision: requestOptions.context?.revision,
+    baseHash: requestOptions.context?.contentHash,
+    createdAt: new Date().toISOString(),
+    usage,
   };
 }
 
@@ -104,12 +120,19 @@ export async function requestSuggestion(
 export function buildNoopSuggestion(
   action: AiAction,
   original: string,
+  options: AiRequestOptions = {},
 ): AiSuggestion {
   return {
-    id: crypto.randomUUID(),
+    id: options.requestId ?? crypto.randomUUID(),
     action,
     original,
     // Empty suggestion signals no-op; UI should guard on GatewayState instead.
     suggestion: "",
+    requestId: options.requestId,
+    projectId: options.context?.projectId,
+    sectionId: options.context?.sectionId,
+    baseRevision: options.context?.revision,
+    baseHash: options.context?.contentHash,
+    createdAt: new Date().toISOString(),
   };
 }

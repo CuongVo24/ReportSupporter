@@ -4,8 +4,11 @@ import type { AiAction } from "@/types";
 export interface SuggestionDiffProps {
   original: string;
   suggestion: string;
-  onAccept: (suggestion: string) => void;
+  onAccept: (suggestion: string) => void | Promise<void>;
   onReject: () => void;
+  acceptDisabled?: boolean;
+  disabledReason?: string;
+  onRegenerate?: () => void;
   title?: string;
   action?: AiAction;
 }
@@ -15,6 +18,9 @@ export function SuggestionDiff({
   suggestion,
   onAccept,
   onReject,
+  acceptDisabled = false,
+  disabledReason,
+  onRegenerate,
   title = "So sánh đề xuất thay đổi",
   action,
 }: SuggestionDiffProps) {
@@ -29,7 +35,7 @@ export function SuggestionDiff({
             ? "Chuẩn hóa thuật ngữ"
             : title;
 
-  const canAccept = suggestion.trim().length > 0 && suggestion !== original;
+  const canAccept = !acceptDisabled && suggestion.trim().length > 0 && suggestion !== original;
 
   return (
     <div className="ws-suggestion-diff-container">
@@ -50,6 +56,9 @@ export function SuggestionDiff({
       </div>
 
       <div className="ws-suggestion-diff-actions">
+        {disabledReason && (
+          <p role="alert" className="ws-ai-assist-error">{disabledReason}</p>
+        )}
         <button
           type="button"
           disabled={!canAccept}
@@ -58,6 +67,15 @@ export function SuggestionDiff({
         >
           Áp dụng đề xuất
         </button>
+        {acceptDisabled && onRegenerate && (
+          <button
+            type="button"
+            onClick={onRegenerate}
+            className="ws-suggestion-diff-accept-btn"
+          >
+            Tạo lại từ nội dung hiện tại
+          </button>
+        )}
         <button
           type="button"
           onClick={onReject}

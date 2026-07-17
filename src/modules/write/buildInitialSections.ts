@@ -27,6 +27,7 @@ export function buildInitialSections(
         order: 0,
         status: "draft",
         markdown: memberMarkdown,
+        revision: 0,
       };
 
       // Shift orders of imported sections by 1 to accommodate the prepended member section

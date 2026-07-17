@@ -15,6 +15,7 @@ function createBundle(markdowns: string[], evidenceUrl?: string): ReportProjectB
         title: `Section ${index + 1}`,
         markdown,
         status: "draft",
+        revision: 0,
       })),
       updatedAt: "2026-06-28T00:00:00.000Z",
     },

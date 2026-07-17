@@ -1,5 +1,11 @@
 # 📜 WORKFLOW — ReportSupporter Solo Agile-AI (V1.0)
 
+## W25–W36 contract and documentation rule
+
+Every functional PR updates implementation, canonical spec, weekly contract, tests and QA evidence together. Contract transitions are `READY_TO_IMPLEMENT → IN_PROGRESS → DONE`; `DONE` is forbidden until required browser/integration evidence exists. Roadmap/PRD/README status must match contract evidence in the same PR.
+
+Feature rollout order is migration dual-read → PDF/Submission → pipeline worker → Smart Import/AI → Catalog/PWA. A rollback flag must preserve all IndexedDB data. Stale AI is regenerated, never auto-merged; Trash is never auto-purged.
+
 > Quy trình vận hành cho dự án **1 người + AI agent**. Rút gọn từ mô hình team nhưng giữ nguyên các "chốt gác" kỷ luật.
 >
 > **⛔ NGUYÊN TẮC THÉP: NO BRIEF — NO CODE.** Không có Task Brief + Contract được approve → không gõ code thật.

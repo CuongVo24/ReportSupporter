@@ -1,5 +1,9 @@
 # 📤 FLOW — Export (Module 4) · "Ra bản nộp"
 
+## W27–W28 production flow
+
+Export target → generate → verify MIME/magic/package/checksum → mark job done → optional download. PDF generation and local Print Preview are separate controls. Submission uses preflight/click-to-fix → generate artifact → verify/preview → package. A missing PDF service is an explicit unavailable state and never creates a fake job.
+
 > **STATUS: ✅ SPEC.** Screen-level cho luồng xuất HTML/PDF/DOCX, theo `_FlowSpecRule.md`. Logic ở `Modules/4.Export.md`. Đây là khoảnh khắc **Trustworthy** quan trọng nhất — ra file đi nộp. Hiện thực SignatureInteractions #5 (tiến trình job thật).
 
 ## Bản đồ bước

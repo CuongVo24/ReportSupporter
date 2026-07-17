@@ -24,6 +24,7 @@ Left column paragraph line 2	Right column paragraph line 2
 Left column paragraph line 3	Right column paragraph line 3
 ",
     "order": 0,
+    "revision": 0,
     "status": "draft",
     "title": "LaTeX Research Paper Title",
   },
@@ -58,6 +59,7 @@ exports[`PDF Import Flow Snapshot and Verification > should process report-word.
     "markdown": "# Bao Cao Ket Qua
 ",
     "order": 0,
+    "revision": 0,
     "status": "draft",
     "title": "Bao Cao Ket Qua",
   },
@@ -78,6 +80,7 @@ R2 C1	R2 C2
 R3 C1	R3 C2
 ",
     "order": 1,
+    "revision": 0,
     "status": "draft",
     "title": "Gioi Thieu Chung",
   },
@@ -102,6 +105,7 @@ exports[`PDF Import Flow Snapshot and Verification > should process scan-vn.pdf 
 > [Trang 2: bản scan — chưa trích được chữ. Thử OCR (experimental) ở bản W24.]
 ",
     "order": 0,
+    "revision": 0,
     "status": "draft",
     "title": "Scan vn",
   },

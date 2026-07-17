@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReportProjectBundle } from "@/types";
 import { createThrottledSaver, saveBundle } from "./autosave";
+import { putRecoveryItemRecord } from "@/lib/idb-client";
 
 /**
  * React hook that throttles saving workspace bundle changes to IndexedDB.
@@ -30,8 +31,21 @@ export function useDraftAutosave(bundle: ReportProjectBundle | null) {
         if (next.revision === latestRevisionRef.current) {
           const isQuotaError = saveError instanceof DOMException && saveError.name === "QuotaExceededError";
           setQuotaFull(isQuotaError);
-          setError(saveError instanceof Error ? saveError.message : "KhÃ´ng thá»ƒ lÆ°u báº£n tháº£o.");
+          setError(saveError instanceof Error ? saveError.message : "Không thể lưu bản thảo.");
           setStatus("error");
+          try {
+            await putRecoveryItemRecord({
+              id: `autosave-error-${next.bundle.project.id}`,
+              kind: "autosave-error",
+              projectId: next.bundle.project.id,
+              title: "Autosave chưa ghi được dữ liệu",
+              detail: saveError instanceof Error ? saveError.message : "Lỗi lưu bản thảo không xác định.",
+              createdAt: new Date().toISOString(),
+              payload: next.bundle,
+            });
+          } catch {
+            // Storage may be completely full; UI still exposes retry and quota state.
+          }
         }
       }
     }, 2000)
@@ -75,13 +89,18 @@ export function useDraftAutosave(bundle: ReportProjectBundle | null) {
     const flushWhenHidden = () => {
       if (document.visibilityState === "hidden") flush();
     };
+    const flushForServiceWorkerUpdate = () => {
+      void saver.flush().finally(() => window.dispatchEvent(new Event("rs:autosave-flushed")));
+    };
     
     window.addEventListener("beforeunload", flush);
     document.addEventListener("visibilitychange", flushWhenHidden);
+    window.addEventListener("rs:flush-autosave", flushForServiceWorkerUpdate);
     
     return () => {
       window.removeEventListener("beforeunload", flush);
       document.removeEventListener("visibilitychange", flushWhenHidden);
+      window.removeEventListener("rs:flush-autosave", flushForServiceWorkerUpdate);
       void saver.flush();
     };
   }, []);

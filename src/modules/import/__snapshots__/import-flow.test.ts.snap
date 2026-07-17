@@ -18,6 +18,7 @@ exports[`DOCX Import Flow Snapshot and Verification > should process vn_anh_nhun
     "markdown": "# BÁO CÁO KẾT QUẢ PHÂN TÍCH ĐỒ THỊ
 ",
     "order": 0,
+    "revision": 0,
     "status": "draft",
     "title": "BÁO CÁO KẾT QUẢ PHÂN TÍCH ĐỒ THỊ",
   },
@@ -30,6 +31,7 @@ Hình ảnh dưới đây biểu diễn một điểm chấm đỏ tượng trư
 ![](data:null;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==)
 ",
     "order": 1,
+    "revision": 0,
     "status": "draft",
     "title": "I. Kết quả đo đạc trực quan",
   },
@@ -73,6 +75,7 @@ exports[`DOCX Import Flow Snapshot and Verification > should process vn_mon_hoc_
     "markdown": "# BÁO CÁO MÔN HỌC KIỂM THỬ PHẦN MỀM
 ",
     "order": 0,
+    "revision": 0,
     "status": "draft",
     "title": "BÁO CÁO MÔN HỌC KIỂM THỬ PHẦN MỀM",
   },
@@ -83,6 +86,7 @@ exports[`DOCX Import Flow Snapshot and Verification > should process vn_mon_hoc_
 Đây là báo cáo tổng quan về quá trình xây dựng hệ thống kiểm thử tự động phục vụ cho các dự án phần mềm doanh nghiệp.
 ",
     "order": 1,
+    "revision": 0,
     "status": "draft",
     "title": "I. Giới thiệu chung",
   },
@@ -108,6 +112,7 @@ Dưới đây là bảng thống kê kết quả kiểm thử:
 | 2   | Tải tài liệu lên   | Không đạt |
 ",
     "order": 2,
+    "revision": 0,
     "status": "draft",
     "title": "Cơ sở lý thuyết",
   },
@@ -136,6 +141,7 @@ exports[`DOCX Import Flow Snapshot and Verification > should process vn_track_ch
     "markdown": "# BÁO CÁO THAY ĐỔI CẤU TRÚC HỆ THỐNG
 ",
     "order": 0,
+    "revision": 0,
     "status": "draft",
     "title": "BÁO CÁO THAY ĐỔI CẤU TRÚC HỆ THỐNG",
   },
@@ -146,6 +152,7 @@ exports[`DOCX Import Flow Snapshot and Verification > should process vn_track_ch
 Tài liệu này theo dõi các chỉnh sửa lớn của nhóm phát triển.
 ",
     "order": 1,
+    "revision": 0,
     "status": "draft",
     "title": "Giới thiệu tổng quan",
   },
@@ -156,6 +163,7 @@ Tài liệu này theo dõi các chỉnh sửa lớn của nhóm phát triển.
 Đoạn văn bản gốc ban đầu. Phần nội dung được thêm mới bởi tác giả A.
 ",
     "order": 2,
+    "revision": 0,
     "status": "draft",
     "title": "Kết quả đạt được sau chỉnh sửa",
   },

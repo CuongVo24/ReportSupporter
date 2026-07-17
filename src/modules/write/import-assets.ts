@@ -1,5 +1,8 @@
-import type { ReportAsset, EvidenceItem } from "@/types";
+import type { AssetResolution, ReportAsset, EvidenceItem } from "@/types";
 import JSZip from "jszip";
+import { rewriteMarkdownRefs } from "./asset-ref-rewrite";
+
+export { rewriteMarkdownRefs } from "./asset-ref-rewrite";
 
 export const WARNING_ASSET_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 export const MAX_ASSET_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -25,7 +28,7 @@ function assertSafeZipPath(entry: ZipEntryWithMetadata): void {
     /^[a-z]:\//i.test(normalized) ||
     normalized.split("/").some((segment) => segment === "..")
   ) {
-    throw new Error(`Tá»‡p ZIP chá»©a Ä‘Æ°á»ng dáº«n khÃ´ng an toÃ n: ${originalName}`);
+    throw new Error(`Tệp ZIP chứa đường dẫn không an toàn: ${originalName}`);
   }
 }
 
@@ -39,18 +42,18 @@ function assertSafeZipMetadata(entries: ZipEntryWithMetadata[]): void {
     if (typeof uncompressedSize !== "number") continue;
 
     if (uncompressedSize > MAX_ZIP_ENTRY_BYTES) {
-      throw new Error(`Tá»‡p "${entry.name}" vÆ°á»£t quÃ¡ giá»›i háº¡n giáº£i nÃ©n 50MB.`);
+      throw new Error(`Tệp "${entry.name}" vượt quá giới hạn giải nén 50MB.`);
     }
     knownExpandedBytes += uncompressedSize;
     if (knownExpandedBytes > MAX_ZIP_EXPANDED_BYTES) {
-      throw new Error("Tá»‡p ZIP vÆ°á»£t quÃ¡ giá»›i háº¡n 250MB sau khi giáº£i nÃ©n.");
+      throw new Error("Tệp ZIP vượt quá giới hạn 250MB sau khi giải nén.");
     }
     if (
       typeof compressedSize === "number" &&
       uncompressedSize > 0 &&
       (compressedSize === 0 || uncompressedSize / compressedSize > MAX_ZIP_COMPRESSION_RATIO)
     ) {
-      throw new Error(`Tá»· lá»‡ nÃ©n cá»§a "${entry.name}" vÆ°á»£t quÃ¡ ngÆ°á»¡ng an toÃ n.`);
+      throw new Error(`Tỷ lệ nén của "${entry.name}" vượt quá ngưỡng an toàn.`);
     }
   }
 }
@@ -65,6 +68,7 @@ export type IngestResult = {
     missingCount: number;
     warnings: string[];
     missingList: string[];
+    resolutions: AssetResolution[];
   };
 };
 
@@ -104,6 +108,16 @@ export function getBasename(path: string): string {
   return path.split(/[/\\]/).pop() || "";
 }
 
+export function normalizeRelativePath(path: string): string {
+  let decoded = path.trim();
+  try { decoded = decodeURIComponent(decoded); } catch { /* keep original text */ }
+  return decoded.replace(/\\/gu, "/").replace(/^\.\//u, "").replace(/\/+/gu, "/").toLocaleLowerCase("en-US");
+}
+
+function fileRelativePath(file: File): string {
+  return normalizeRelativePath(file.webkitRelativePath || file.name);
+}
+
 /**
  * Check if path belongs to evidence/minh_chung/appendix folders.
  */
@@ -120,39 +134,17 @@ export function isEvidencePath(path: string): boolean {
 }
 
 /**
- * Safe rewriting of reference strings in markdown source to asset:id format.
- */
-export function rewriteMarkdownRefs(
-  markdown: string,
-  replacements: { original: string; assetId: string }[]
-): string {
-  let result = markdown;
-  for (const rep of replacements) {
-    const escapedPath = rep.original.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-    
-    // Rewrite markdown format: ![alt](original) -> ![alt](asset:id)
-    const mdRegex = new RegExp(`(!\\[.*?\\]\\()${escapedPath}(\\))`, "g");
-    result = result.replace(mdRegex, `$1asset:${rep.assetId}$2`);
-
-    // Rewrite HTML format: <img src="original"> -> <img src="asset:id">
-    const htmlRegex = new RegExp(`(<img\\s+[^>]*src=["'])${escapedPath}(["'])`, "gi");
-    result = result.replace(htmlRegex, `$1asset:${rep.assetId}$2`);
-  }
-  return result;
-}
-
-/**
  * Processes a potential zip file and returns a list of File objects.
  */
 export async function unzipFiles(zipFile: File): Promise<File[]> {
   if (zipFile.size > MAX_ZIP_ARCHIVE_BYTES) {
-    throw new Error("Tá»‡p ZIP vÆ°á»£t quÃ¡ giá»›i háº¡n dung lÆ°á»£ng 50MB.");
+    throw new Error("Tệp ZIP vượt quá giới hạn dung lượng 50MB.");
   }
 
   const zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
   const entries = Object.values(zip.files).filter((entry) => !entry.dir) as ZipEntryWithMetadata[];
   if (entries.length > MAX_ZIP_ENTRIES) {
-    throw new Error(`Tá»‡p ZIP chá»©a quÃ¡ nhiá»u tá»‡p (tá»‘i Ä‘a ${MAX_ZIP_ENTRIES}).`);
+    throw new Error(`Tệp ZIP chứa quá nhiều tệp (tối đa ${MAX_ZIP_ENTRIES}).`);
   }
   assertSafeZipMetadata(entries);
 
@@ -164,18 +156,18 @@ export async function unzipFiles(zipFile: File): Promise<File[]> {
   for (const zipEntry of entries) {
     const blob = await zipEntry.async("blob");
     if (blob.size > MAX_ZIP_ENTRY_BYTES) {
-      throw new Error(`Tá»‡p "${zipEntry.name}" vÆ°á»£t quÃ¡ giá»›i háº¡n giáº£i nÃ©n 50MB.`);
+      throw new Error(`Tệp "${zipEntry.name}" vượt quá giới hạn giải nén 50MB.`);
     }
     expandedBytes += blob.size;
     if (expandedBytes > MAX_ZIP_EXPANDED_BYTES) {
-      throw new Error("Tá»‡p ZIP vÆ°á»£t quÃ¡ giá»›i háº¡n 250MB sau khi giáº£i nÃ©n.");
+      throw new Error("Tệp ZIP vượt quá giới hạn 250MB sau khi giải nén.");
     }
 
     const name = zipEntry.name;
     const ext = name.split(".").pop()?.toLowerCase() || "";
     let type = "";
     if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) {
-      type = `image/${ext === "jpg" ? "jpeg" : ext}`;
+      type = ext === "svg" ? "image/svg+xml" : `image/${ext === "jpg" ? "jpeg" : ext}`;
     } else if (ext === "md" || ext === "markdown") {
       type = "text/markdown";
     }
@@ -191,7 +183,8 @@ export async function unzipFiles(zipFile: File): Promise<File[]> {
  */
 export async function ingestAssetsAndEvidence(
   markdown: string,
-  availableFiles: File[]
+  availableFiles: File[],
+  decisions: { assetSelections?: Record<string, string> } = {},
 ): Promise<IngestResult> {
   const referencedPaths = scanImageReferences(markdown);
   const assets: ReportAsset[] = [];
@@ -201,6 +194,7 @@ export async function ingestAssetsAndEvidence(
   const warnings: string[] = [];
   const missingList: string[] = [];
   let embeddedCount = 0;
+  const resolutions: AssetResolution[] = [];
 
   for (const refPath of referencedPaths) {
     const refBasename = getBasename(refPath).toLowerCase();
@@ -209,12 +203,36 @@ export async function ingestAssetsAndEvidence(
       continue;
     }
 
-    // Basename matching
-    const matchedFile = availableFiles.find(
-      (f) => getBasename(f.name).toLowerCase() === refBasename
+    const normalizedRef = normalizeRelativePath(refPath);
+    const exactMatches = availableFiles.filter((file) => fileRelativePath(file) === normalizedRef);
+    const basenameMatches = availableFiles.filter(
+      (file) => getBasename(fileRelativePath(file)).toLocaleLowerCase("en-US") === refBasename,
     );
+    const selectedPath = decisions.assetSelections?.[refPath]
+      ? normalizeRelativePath(decisions.assetSelections[refPath])
+      : undefined;
+    const selected = selectedPath
+      ? availableFiles.find((file) => fileRelativePath(file) === selectedPath)
+      : undefined;
+    const matchedFile = selected ?? exactMatches[0] ?? (basenameMatches.length === 1 ? basenameMatches[0] : undefined);
+    const status: AssetResolution["status"] = selected || exactMatches.length === 1
+      ? "exact"
+      : basenameMatches.length === 1
+        ? "unique-basename"
+        : basenameMatches.length > 1
+          ? "ambiguous"
+          : "missing";
+    resolutions.push({
+      reference: refPath,
+      status,
+      selectedFileId: matchedFile ? fileRelativePath(matchedFile) : undefined,
+      candidateFileIds: (exactMatches.length ? exactMatches : basenameMatches).map(fileRelativePath),
+    });
 
     if (!matchedFile) {
+      if (status === "ambiguous") {
+        warnings.push(`Có nhiều tệp trùng tên "${getBasename(refPath)}". Hãy chọn đúng đường dẫn trước khi nhập.`);
+      }
       missingList.push(refPath);
       continue;
     }
@@ -299,6 +317,7 @@ export async function ingestAssetsAndEvidence(
       missingCount: missingList.length,
       warnings,
       missingList,
+      resolutions,
     },
   };
 }

@@ -16,8 +16,10 @@ describe("computeWritingStats", () => {
 
   it("aggregates multiple sections", () => {
     const sections: ReportSection[] = [
-      { id: "a", order: 0, title: "A", markdown: "One two", status: "draft" },
-      { id: "b", order: 1, title: "B", markdown: "Three four five", status: "review" },
+      { id: "a", order: 0, title: "A", markdown: "One two", status: "draft",
+      revision: 0 },
+      { id: "b", order: 1, title: "B", markdown: "Three four five", status: "review",
+      revision: 0 },
     ];
 
     expect(computeWritingStats(sections).words).toBe(5);

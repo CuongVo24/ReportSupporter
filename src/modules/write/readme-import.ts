@@ -41,6 +41,7 @@ export function splitMarkdownIntoSections(
         markdown: leadingContent + "\n",
         order: order++,
         status: "draft",
+        revision: 0,
       });
     }
   } else if (headingIndices.length === 0) {
@@ -53,6 +54,7 @@ export function splitMarkdownIntoSections(
         markdown: trimmed + "\n",
         order: order++,
         status: "draft",
+        revision: 0,
       });
     }
     return sections;
@@ -81,6 +83,7 @@ export function splitMarkdownIntoSections(
       markdown: content + "\n",
       order: order++,
       status: "draft",
+      revision: 0,
     });
   }
 

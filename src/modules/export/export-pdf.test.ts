@@ -23,14 +23,17 @@ describe("export-pdf", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");
-        expect(result.error.message).toContain("client environment");
+        expect(result.error.message).toContain("Print Preview");
         expect(result.error.recoverable).toBe(true);
       }
     });
 
     it("should successfully trigger browser print through a hidden iframe", async () => {
       // Mock global window
-      global.window = {} as unknown as typeof window;
+      global.window = {
+        requestAnimationFrame: (callback: FrameRequestCallback) => { callback(0); return 1; },
+        setTimeout: vi.fn(),
+      } as unknown as typeof window;
 
       const mockIframeDoc = {
         open: vi.fn(),
@@ -40,11 +43,13 @@ describe("export-pdf", () => {
           appendChild: vi.fn(),
         },
         querySelectorAll: vi.fn().mockReturnValue([]),
+        images: [],
         title: "",
       };
 
       const mockIframe = {
         style: {},
+        remove: vi.fn(),
         contentWindow: {
           document: mockIframeDoc,
           focus: vi.fn(),
@@ -71,10 +76,6 @@ describe("export-pdf", () => {
 
       const result = await exportPdfViaBrowserPrint(bundle);
       expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.blob).toBeInstanceOf(Blob);
-        expect(result.blob.type).toBe("text/html;charset=utf-8");
-      }
 
       expect(mockCreateElement).toHaveBeenCalledWith("iframe");
       expect(mockIframeDoc.open).toHaveBeenCalled();
@@ -90,15 +91,14 @@ describe("export-pdf", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.stage).toBe("render-pdf");
-        expect(result.error.message).toContain("Puppeteer hardening disabled");
+        expect(result.error.message).toContain("Docker renderer");
         expect(result.error.recoverable).toBe(false);
       }
     });
   });
 
-  describe("exportPdf alias", () => {
-    it("should point to exportPdfViaBrowserPrint", async () => {
-      // In no-window, it should behave like exportPdfViaBrowserPrint
+  describe("exportPdf", () => {
+    it("does not report success when the PDF service is unavailable", async () => {
       const result = await exportPdf(bundle);
       expect(result.ok).toBe(false);
       if (!result.ok) {

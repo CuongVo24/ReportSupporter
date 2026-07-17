@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect } from "vitest";
 import { buildSubmissionZip } from "./build-submission-zip";
 import JSZip from "jszip";
 import type { ReportProjectBundle } from "@/types";
@@ -14,7 +14,8 @@ const mockBundle: ReportProjectBundle = {
       members: ["Nguyễn Văn A - 123456", "Trần Thị B - 789012"],
     },
     sections: [
-      { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done" },
+      { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done",
+      revision: 0 },
     ],
     updatedAt: "2026-06-24T22:00:00.000Z",
   },
@@ -34,9 +35,19 @@ const mockBundle: ReportProjectBundle = {
 };
 
 describe("buildSubmissionZip", () => {
-  const htmlBlob = new Blob(["<html>HTML Content</html>"], { type: "text/html" });
+  const htmlBlob = new Blob(['<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'"></head><body>HTML Content</body></html>'], { type: "text/html" });
   const pdfBlob = new Blob(["%PDF-1.4 PDF Content"], { type: "application/pdf" });
-  const docxBlob = new Blob(["DOCX Content"], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  let docxBlob: Blob;
+
+  beforeAll(async () => {
+    const docx = new JSZip();
+    docx.file("[Content_Types].xml", "<Types/>");
+    docx.file("word/document.xml", "<document/>");
+    docxBlob = await docx.generateAsync({
+      type: "blob",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+  });
 
   it("should generate a complete submission package containing all targets, README, and evidence appendix", async () => {
     const readmeMarkdown = "# Project README";
@@ -62,11 +73,12 @@ describe("buildSubmissionZip", () => {
     expect(manifest.projectTitle).toBe("Báo cáo thử nghiệm");
     expect(manifest.evidenceCount).toBe(2);
     expect(manifest.files).toHaveLength(5);
-    expect(manifest.files).toContainEqual({ name: "README.md", target: "readme" });
-    expect(manifest.files).toContainEqual({ name: "evidence/appendix.md", target: "evidence" });
-    expect(manifest.files).toContainEqual({ name: "report.html", target: "html" });
-    expect(manifest.files).toContainEqual({ name: "report.pdf", target: "pdf" });
-    expect(manifest.files).toContainEqual({ name: "report.docx", target: "docx" });
+    expect(manifest.files).toContainEqual(expect.objectContaining({ name: "README.md", target: "readme" }));
+    expect(manifest.files).toContainEqual(expect.objectContaining({ name: "evidence/appendix.md", target: "evidence" }));
+    expect(manifest.files).toContainEqual(expect.objectContaining({ name: "report.html", target: "html" }));
+    expect(manifest.files).toContainEqual(expect.objectContaining({ name: "report.pdf", target: "pdf" }));
+    expect(manifest.files).toContainEqual(expect.objectContaining({ name: "report.docx", target: "docx" }));
+    expect(manifest.files.every((file) => file.sha256.length === 64 && file.byteLength > 0)).toBe(true);
     expect(new Date(manifest.generatedAt).getTime()).not.toBeNaN();
 
     // Load zip and inspect entries
@@ -103,8 +115,8 @@ describe("buildSubmissionZip", () => {
     });
 
     expect(result.manifest.files).toHaveLength(2); // Only evidence/appendix.md and report.docx
-    expect(result.manifest.files).toContainEqual({ name: "evidence/appendix.md", target: "evidence" });
-    expect(result.manifest.files).toContainEqual({ name: "report.docx", target: "docx" });
+    expect(result.manifest.files).toContainEqual(expect.objectContaining({ name: "evidence/appendix.md", target: "evidence" }));
+    expect(result.manifest.files).toContainEqual(expect.objectContaining({ name: "report.docx", target: "docx" }));
 
     const zip = await JSZip.loadAsync(await result.blob.arrayBuffer());
     expect(zip.files["README.md"]).toBeUndefined();
@@ -152,5 +164,14 @@ describe("buildSubmissionZip", () => {
         expect(c1).toEqual(c2);
       }
     }
+  });
+
+  it("rejects an artifact with the wrong magic bytes", async () => {
+    await expect(buildSubmissionZip({
+      bundle: mockBundle,
+      exports: { pdf: new Blob(["not-pdf"], { type: "application/pdf" }) },
+      readmeMarkdown: "",
+      evidenceAppendixMarkdown: "",
+    })).rejects.toThrow("%PDF-");
   });
 });

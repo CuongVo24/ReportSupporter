@@ -20,6 +20,7 @@ function createMockBundle(sections: { id: string; markdown: string }[], evidence
         title: `Section ${s.id}`,
         markdown: s.markdown,
         status: "draft",
+        revision: 0,
       })),
       updatedAt: "2026-06-29T00:00:00Z",
     },

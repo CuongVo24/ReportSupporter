@@ -26,7 +26,8 @@ describe("SubmissionPanel Preflight Integration", () => {
         members: ["Nguyễn Văn A"],
       },
       sections: [
-        { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done" },
+        { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done",
+        revision: 0 },
       ],
       updatedAt: "2026-06-24T22:00:00.000Z",
     },
@@ -94,14 +95,13 @@ describe("SubmissionPanel Preflight Integration", () => {
       />
     );
 
-    // Click on Download Package
-    const downloadBtn = screen.getByRole("button", { name: "Tải về bộ nộp bài" });
-    fireEvent.click(downloadBtn);
+    // P0 is blocked at the click-to-fix preflight stage, before artifact generation.
+    fireEvent.click(screen.getByRole("button", { name: "Tiếp tục" }));
 
     // Should open the blocked dialog
     expect(screen.getByText("Không thể đóng gói — còn lỗi bắt buộc")).toBeDefined();
     expect(screen.getByText(/Còn 1 lỗi bắt buộc phải sửa/i)).toBeDefined();
-    expect(screen.getByText(/Thiếu link deploy bắt buộc/i)).toBeDefined();
+    expect(screen.getAllByText(/Thiếu link deploy bắt buộc/i)).toHaveLength(2);
     expect(screen.getByText(/Thêm link deploy vào Evidence Kit/i)).toBeDefined();
 
     // The "Vẫn tải xuống" button should be present but disabled (blocked by P0)
@@ -145,9 +145,11 @@ describe("SubmissionPanel Preflight Integration", () => {
       />
     );
 
-    // Click on Download Package
-    const downloadBtn = screen.getByRole("button", { name: "Tải về bộ nộp bài" });
-    fireEvent.click(downloadBtn);
+    // Advance through review, artifact generation and final verification.
+    for (let index = 0; index < 3; index += 1) {
+      fireEvent.click(screen.getByRole("button", { name: "Tiếp tục" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Tải về bộ nộp bài" }));
 
     // Should open validation warning dialog
     expect(screen.getByText("Kiểm tra chất lượng báo cáo trước khi nộp")).toBeDefined();

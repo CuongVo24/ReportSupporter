@@ -1,6 +1,7 @@
 import type { Root as MdastRoot } from "mdast";
 import type { Root as HastRoot } from "hast";
 import type { TocNode, CaptionEntry, FormatPreset } from "./format";
+import type { CheckResult, ReportAsset, ReportProjectBundle } from "./report";
 
 /**
  * A single section parsed into AST.
@@ -38,3 +39,39 @@ export type FormattedReport = {
   mdast: MdastRoot;       // formatted nodes for DOCX rendering (Module 4)
 };
 
+export type PipelinePreviewPart = {
+  isMermaid: boolean;
+  content: string;
+  ast: MdastRoot | null;
+};
+
+export type PipelinePreviewResult = {
+  parsedParts: PipelinePreviewPart[];
+  parsedSections: Array<{ id: string; ast: MdastRoot }>;
+};
+
+type PipelineRequestBase = {
+  requestId: string;
+  projectId: string;
+  sectionRevisions: Record<string, number>;
+  cacheKey: string;
+};
+
+export type PipelineRequest = PipelineRequestBase & (
+  | {
+      operation: "preview";
+      payload: {
+        parts: string[];
+        sections: Array<{ id: string; markdown: string }>;
+        assets: ReportAsset[];
+      };
+    }
+  | { operation: "check"; payload: { bundle: ReportProjectBundle } }
+  | { operation: "format"; payload: { bundle: ReportProjectBundle; qrDataUrls?: Record<string, string> } }
+);
+
+export type PipelineResponse =
+  | { requestId: string; projectId: string; operation: "preview"; sectionRevisions: Record<string, number>; ok: true; result: PipelinePreviewResult }
+  | { requestId: string; projectId: string; operation: "check"; sectionRevisions: Record<string, number>; ok: true; result: CheckResult }
+  | { requestId: string; projectId: string; operation: "format"; sectionRevisions: Record<string, number>; ok: true; result: { formatted: FormattedReport } }
+  | { requestId: string; projectId: string; operation: PipelineRequest["operation"]; sectionRevisions: Record<string, number>; ok: false; error: string };

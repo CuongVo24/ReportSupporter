@@ -35,7 +35,7 @@ export function InvalidDraftRecovery({ raw, issues, onReset }: InvalidDraftRecov
     try {
       await onReset();
     } catch (error: unknown) {
-      setResetError(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ táº¡o báº£n tháº£o má»›i.");
+      setResetError(error instanceof Error ? error.message : "Không thể tạo bản thảo mới.");
       setResetting(false);
     }
   };
@@ -43,17 +43,17 @@ export function InvalidDraftRecovery({ raw, issues, onReset }: InvalidDraftRecov
   return (
     <main className="ws-state-container" role="alert" style={{ maxWidth: 720, margin: "64px auto", padding: 32 }}>
       <AlertTriangle size={36} aria-hidden="true" />
-      <h1>KhÃ´ng thá»ƒ Ä‘á»c báº£n tháº£o Ä‘Ã£ lÆ°u</h1>
-      <p>Dá»¯ liá»‡u cÅ© Ä‘Æ°á»£c giá»¯ nguyÃªn. HÃ£y táº£i báº£n sao trÆ°á»›c khi chá»§ Ä‘á»™ng táº¡o láº¡i workspace.</p>
+      <h1>Không thể đọc bản thảo đã lưu</h1>
+      <p>Dữ liệu cũ được giữ nguyên. Hãy tải bản sao trước khi chủ động tạo lại workspace.</p>
       <ul style={{ textAlign: "left", maxHeight: 180, overflow: "auto", width: "100%" }}>
         {issues.slice(0, 10).map((issue, index) => <li key={`${index}-${issue}`}>{issue}</li>)}
       </ul>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Button variant="secondary" leadingIcon={<Download size={16} />} onClick={downloadRawDraft}>
-          Táº£i báº£n sao dá»¯ liá»‡u
+          Tải bản sao dữ liệu
         </Button>
         <Button variant="danger" leadingIcon={<RotateCcw size={16} />} loading={resetting} onClick={() => void resetDraft()}>
-          Bá» báº£n lá»—i vÃ  táº¡o má»›i
+          Bỏ bản lỗi và tạo mới
         </Button>
       </div>
       {resetError && <p className="ws-save-status-error">{resetError}</p>}

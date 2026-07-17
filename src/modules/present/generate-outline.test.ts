@@ -29,6 +29,7 @@ describe("generateSlideOutline", () => {
         order: 1,
         title: "Giới thiệu",
         status: "draft",
+        revision: 0,
         markdown: "# Giới thiệu\n\nĐây là chương giới thiệu bối cảnh. Mục tiêu của chúng tôi là xây dựng ReportSupporter.\n\n## Lý do chọn đề tài\n\nChúng tôi muốn giải quyết các khó khăn trong làm báo cáo.\n",
       },
       {
@@ -36,6 +37,7 @@ describe("generateSlideOutline", () => {
         order: 2,
         title: "Hiện thực",
         status: "draft",
+        revision: 0,
         markdown: "# Triển khai hệ thống\n\nKiến trúc phần mềm được thiết kế theo MVC. Xem thêm tại [Mã nguồn](https://github.com/CuongVo24/ReportSupporter).\n",
       },
     ];
@@ -84,6 +86,7 @@ describe("generateSlideOutline", () => {
         order: 1,
         title: "Giới thiệu",
         status: "draft",
+        revision: 0,
         markdown: "# Giới thiệu\n\nCó nội dung.\n",
       },
       {
@@ -91,6 +94,7 @@ describe("generateSlideOutline", () => {
         order: 2,
         title: "Chương rỗng",
         status: "draft",
+        revision: 0,
         markdown: "",
       },
       {
@@ -98,6 +102,7 @@ describe("generateSlideOutline", () => {
         order: 3,
         title: "Chương whitespace",
         status: "draft",
+        revision: 0,
         markdown: "   \n   \n",
       },
     ];
@@ -114,6 +119,7 @@ describe("generateSlideOutline", () => {
         order: 1,
         title: "Nội dung tự do",
         status: "draft",
+        revision: 0,
         markdown: "Đây là một đoạn văn tự do không có tiêu đề. Câu thứ hai.",
       },
     ];
@@ -137,6 +143,7 @@ describe("generateSlideOutline", () => {
         order: 1,
         title: "Nhiều bullets",
         status: "draft",
+        revision: 0,
         markdown: `
 # Tiêu đề
 - Bullet 1
@@ -169,6 +176,7 @@ describe("generateSlideOutline", () => {
         order: 1,
         title: "Nested",
         status: "draft",
+        revision: 0,
         markdown: `
 # Tiêu đề
 - Item 1
@@ -196,6 +204,7 @@ describe("generateSlideOutline", () => {
         order: 1,
         title: "H3",
         status: "draft",
+        revision: 0,
         markdown: `
 # H1 Title
 ### Subsubsection 1
@@ -219,6 +228,7 @@ Paragraph under h3.
         order: 1,
         title: "Evidence",
         status: "draft",
+        revision: 0,
         markdown: `
 # Slide Title
 Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter) và một ảnh minh chứng:
@@ -239,6 +249,7 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
         order: 1,
         title: "Broken Ref",
         status: "draft",
+        revision: 0,
         markdown: `
 # Slide Title
 [GitHub Repo](https://github.com/CuongVo24/ReportSupporter)
@@ -262,6 +273,7 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
         order: 1,
         title: "Chương",
         status: "draft",
+        revision: 0,
         markdown: "# Tiêu đề\n\nNội dung một. Nội dung hai.\n",
       },
     ];
@@ -278,6 +290,7 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
         order: 1,
         title: "Section 1",
         status: "draft",
+        revision: 0,
         markdown: "# Chương **độc nhất**\n\nNội dung chương 1.\n",
       },
       {
@@ -285,6 +298,7 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
         order: 2,
         title: "Section 2",
         status: "draft",
+        revision: 0,
         markdown: "# Chương trùng lặp\n\nNội dung chương 2.\n",
       },
     ];
@@ -302,6 +316,7 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
         order: 1,
         title: "Section 1",
         status: "draft",
+        revision: 0,
         markdown: "# Chương 1\n\n## Mục 1.1\n\n## Mục 1.2\n",
       },
       {
@@ -309,6 +324,7 @@ Chúng tôi có link github [Repo](https://github.com/CuongVo24/ReportSupporter)
         order: 2,
         title: "Section 2",
         status: "draft",
+        revision: 0,
         markdown: "# Chương 2\n\n## Mục 2.1\n",
       },
     ];

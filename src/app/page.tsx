@@ -1,6 +1,5 @@
-import { Workspace } from "@/components/Workspace";
+import { ProjectLibrary } from "@/components/ProjectLibrary";
 
 export default function Home() {
-  // Workspace-first route: the editor IS the landing surface (TechnicalStack §1).
-  return <Workspace />;
+  return <ProjectLibrary />;
 }

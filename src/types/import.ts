@@ -44,6 +44,36 @@ export type ImportResult = {
   convertedAt: string; // ISO 8601
 };
 
+export type ImportFileRef = {
+  id: string;
+  name: string;
+  relativePath: string;
+  mimeType: string;
+  byteLength: number;
+};
+
+export type AssetResolutionStatus = "exact" | "unique-basename" | "ambiguous" | "missing";
+
+export type AssetResolution = {
+  reference: string;
+  status: AssetResolutionStatus;
+  selectedFileId?: string;
+  candidateFileIds: string[];
+};
+
+export type OcrResult = {
+  page: number;
+  text: string;
+  confidence: number;
+  blocks: Array<{ id: string; text: string; confidence: number }>;
+};
+
+export type ImportReviewDecisions = {
+  headingLevels: Record<string, number>;
+  assetSelections: Record<string, string>;
+  acceptedOcrBlocks: Record<string, boolean>;
+};
+
 /** Một converter đăng ký vào registry (Module 6). Route theo extension + MIME, extension thắng khi MIME rỗng/sai. */
 export type ImportConverter = {
   format: ImportSourceFormat;
@@ -83,8 +113,19 @@ export const importDraftSchema = z.object({
     missingCount: z.number(),
     missingList: z.array(z.string()),
     warnings: z.array(z.string()),
+    resolutions: z.array(z.object({
+      reference: z.string(),
+      status: z.enum(["exact", "unique-basename", "ambiguous", "missing"]),
+      selectedFileId: z.string().optional(),
+      candidateFileIds: z.array(z.string()),
+    })).optional(),
   }).optional(),
   evidence: z.array(evidenceItemSchema).optional(),
+  reviewDecisions: z.object({
+    headingLevels: z.record(z.string(), z.number().int().min(1).max(6)),
+    assetSelections: z.record(z.string(), z.string()),
+    acceptedOcrBlocks: z.record(z.string(), z.boolean()),
+  }).optional(),
 });
 
 export type ImportDraft = {
@@ -93,14 +134,17 @@ export type ImportDraft = {
   mode: "append" | "replace";
   issues?: ReportIssue[];
   file?: File;
+  availableFiles?: File[];
   summary?: {
     totalScanned: number;
     embeddedCount: number;
     missingCount: number;
     missingList: string[];
     warnings: string[];
+    resolutions?: AssetResolution[];
   };
   evidence?: EvidenceItem[];
+  reviewDecisions?: ImportReviewDecisions;
 };
 
 export type OcrProgress = {

@@ -1,5 +1,16 @@
 # 🚀 PERFORMANCE OPTIMIZATION — ReportSupporter
 
+## W30 release budgets
+
+| Surface | Required budget |
+|---|---:|
+| Project Library initial route JS (gzip) | ≤200 KiB |
+| `/workspace/[projectId]` initial route JS (gzip) | ≤450 KiB |
+| Workspace reducer event P95 | <16 ms |
+| 40-page pipeline caller-thread transfer/response P95 | <200 ms |
+
+`scripts/check-bundle-budget.mjs` reads exact production manifest routes and gzips JavaScript chunks. Heavy worker wall-clock parsing is measured separately; the 200 ms criterion is deliberately main-thread occupancy.
+
 > **AI RULE:** Hiệu năng không phải việc làm sau cùng — nó được thiết kế ngay từ dòng code đầu (tinh thần `Design/VibeCode.md`).
 > Mọi kỹ thuật dưới đây **chỉ dùng công nghệ trong `Design/Modules/Other/TechnicalStack.md`** (đã khoá) + **Web Platform API có sẵn** (Web Worker, `requestIdleCallback`, `IntersectionObserver`...). **Cấm** kéo thêm lib hiệu năng/state ngoài stack.
 

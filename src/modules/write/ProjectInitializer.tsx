@@ -161,7 +161,6 @@ export function ProjectInitializer({
         setGeneratedSections(sections);
       }
     } catch (err) {
-      console.error(err);
       const msg = err instanceof Error ? err.message : "Đã xảy ra lỗi khi gọi AI.";
       setAiError(msg);
     } finally {

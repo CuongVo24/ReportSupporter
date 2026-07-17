@@ -44,8 +44,10 @@ describe("IssuesPanel section titles mapping", () => {
   };
 
   const mockSections: ReportSection[] = [
-    { id: "sec1", order: 1, title: "Giới thiệu", markdown: "", status: "done" },
-    { id: "sec2", order: 2, title: "Triển khai", markdown: "", status: "draft" }
+    { id: "sec1", order: 1, title: "Giới thiệu", markdown: "", status: "done",
+    revision: 0 },
+    { id: "sec2", order: 2, title: "Triển khai", markdown: "", status: "draft",
+    revision: 0 }
   ];
 
   it("displays section title instead of sectionId when sections list is provided", () => {

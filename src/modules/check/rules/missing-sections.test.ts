@@ -21,6 +21,7 @@ describe("Missing Sections Check Rules (Template-Aware)", () => {
         title: s.title,
         markdown: s.markdown,
         status: "draft",
+        revision: 0,
       })),
       updatedAt: new Date().toISOString(),
     },

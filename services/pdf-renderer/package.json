@@ -1,0 +1,12 @@
+{
+  "name": "report-supporter-pdf-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "puppeteer": "24.16.0"
+  }
+}

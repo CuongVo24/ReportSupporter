@@ -25,9 +25,9 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
             │                                                  │                        │     → rehype-katex
             ▼                                                  ▼                        │     → rehype-highlight
    remark-rehype → hast ──► rehype-katex ──► rehype-highlight ──► rehype-stringify ─────┤     → rehype-stringify
-            │                                                                            ├─ PDF: HTML → browser print
-            ▼                                                                            │     (Puppeteer worker later)
-   PREVIEW (client) + mermaid render (client-side / Chromium khi PDF)                    └─ DOCX: mdast → docx
+            │                                                                            ├─ PDF: sanitized HTML → first-party Docker/Puppeteer worker
+            ▼                                                                            │     (JavaScript/network disabled, ephemeral request)
+   PREVIEW (client) + Mermaid lazy client render                                          └─ DOCX: mdast → docx
 ```
 
 **Bất biến:** Format, Check, Export **không** parse Markdown riêng — tất cả tiêu thụ cùng AST. Đây chính là "intermediate document model" trong `Modules/4.Export.md`. Đổi parser/plugin ⇒ ảnh hưởng cả 3 nhánh ⇒ phải qua Contract.
@@ -41,7 +41,7 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 * **Framework:** `Next.js` (App Router) + `React` + `TypeScript` (strict mode bật `"strict": true`).
 * **Package manager:** `npm` (scripts: `dev`, `build`, `lint`, `typecheck` — khớp Contract W1).
 * **Rendering posture:** Workspace-first. Route đầu tiên (`/`) PHẢI là editor workspace, **không** phải landing/marketing page.
-* **Node usage:** MVP hạn chế server-side; PDF first path dùng browser print/print CSS. Server-side Puppeteer chỉ là hardening sau nếu có Contract approve.
+* **Node usage:** production server scope is AI proxy/rate-limit and the first-party PDF renderer only. The renderer does not persist or log report bodies.
 
 ---
 
@@ -94,17 +94,24 @@ Xương sống deterministic: **một nguồn Markdown + metadata → một AST 
 | Target | Library | Ghi chú |
 |---|---|---|
 | `report.html` | `rehype-stringify` + print CSS nhúng | Output của pipeline §3 |
-| `report.pdf` | Browser print / print CSS từ HTML đã format | MVP first path, không kéo Chromium sớm. Submission-friendly nhưng page number/header-footer là best-effort theo browser |
+| `report.pdf` | `/api/pdf` → isolated Node/Docker Puppeteer `page.pdf()` | Binary verified by `%PDF-`; 30s timeout, 25 MiB body, JS/outbound network disabled |
 | `report.docx` | **`docx`** (npm) sinh trực tiếp từ mdast AST | Editable version, best-effort parity, **không** cần LibreOffice/Pandoc |
 
 * **CẤM** cho MVP: Pandoc binary, LibreOffice headless, `@react-pdf/renderer` (không trung thực Markdown phức tạp).
-* Puppeteer không còn là PDF first path của MVP. Nếu cần header/footer/page number chính xác hơn, thêm Puppeteer bằng Contract riêng sau khi HTML/browser-print ổn.
+* Browser Print is now `openPrintPreview()` only. It never creates an artifact/history entry. Production PDF uses the pinned first-party worker.
 
 ---
 
 ## 5. 🗄️ STORAGE LAYER
 
-* **Local draft autosave:** IndexedDB qua **`idb`** (thin wrapper).
+* **Local multi-project persistence:** IndexedDB v4 qua **`idb`** with `project-bundles`, `project-summaries`, `settings` and `recovery-items` stores.
+
+## W25–W36 production additions
+
+- Redis: `@upstash/redis` + `@upstash/ratelimit`, sliding window, fail-closed in production. Identity is SHA-256 of API key plus trusted client IP; forwarded headers are read only under `TRUSTED_PROXY_MODE`.
+- Workers: common `PipelineRequest/PipelineResponse` for preview/check/format; payload carries request/project/revisions and cache key. Heavy import/OCR/PDF workers and fonts are local assets.
+- PWA: `@serwist/next`/`serwist`; APIs are NetworkOnly and report content is never placed in Cache Storage. Update activation waits for autosave flush and explicit reload confirmation.
+- Storage stays local-first: no backend DB, auth, remote marketplace or cloud SDK. `.rsproject` backup and personal `.rstemplate.json` files are user-initiated local files.
     * *Lý do:* No login, no cloud (Non-goals §6). Draft phải sống qua refresh (Acceptance `Modules/1.Write.md`).
 * **CẤM:** không thêm backend DB, auth, hay cloud SDK trong MVP.
 

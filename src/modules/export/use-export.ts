@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
-import type { ExportJob, ExportTarget, ReportProjectBundle, ExportError, SlideOutline, Speaker, SpeakerScript } from "@/types";
+import type { ExportArtifact, ExportJob, ExportTarget, ReportProjectBundle, ExportError, SlideOutline, Speaker, SpeakerScript } from "@/types";
 import { recordExport } from "./export-history";
 
 import { runChecker } from "@/modules/check/run-checker";
 import { slugify } from "@/lib/slugify";
+import { createVerifiedArtifact } from "./artifact-verification";
 
 async function executeExport(
   target: ExportTarget,
@@ -14,7 +15,7 @@ async function executeExport(
     scripts?: Record<string, SpeakerScript>;
   },
   onPhaseChange?: (phase: ExportJob["phase"]) => void
-): Promise<Blob> {
+): Promise<ExportArtifact> {
   if (target === "pptx") {
     // PPTX has its own separate validation constraints (not blocked by body P0 errors)
     if (!extraParams?.slides || extraParams.slides.length === 0) {
@@ -40,7 +41,7 @@ async function executeExport(
     }
   }
 
-  let blob: Blob;
+  let artifact: ExportArtifact;
   onPhaseChange?.("preparing");
 
   const qrDataUrls: Record<string, string> = {};
@@ -63,19 +64,23 @@ async function executeExport(
   if (target === "html") {
     const { exportHtml } = await import("./export-html");
     const res = Object.keys(qrDataUrls).length > 0
-      ? exportHtml(bundle, qrDataUrls)
-      : exportHtml(bundle);
+      ? await exportHtml(bundle, qrDataUrls)
+      : await exportHtml(bundle);
     if (!res.ok) {
       throw res.error;
     }
-    blob = res.blob;
+    artifact = res.artifact;
   } else if (target === "pdf") {
     const { exportPdf } = await import("./export-pdf");
-    const res = await exportPdf(bundle, onPhaseChange);
+    const res = await exportPdf(
+      bundle,
+      onPhaseChange,
+      Object.keys(qrDataUrls).length > 0 ? qrDataUrls : undefined,
+    );
     if (!res.ok) {
       throw res.error;
     }
-    blob = res.blob;
+    artifact = res.artifact;
   } else if (target === "docx") {
     const { exportDocx, packDocx } = await import("./export-docx");
     const res = Object.keys(qrDataUrls).length > 0
@@ -85,7 +90,12 @@ async function executeExport(
       throw res.error;
     }
     try {
-      blob = await packDocx(res.doc);
+      const blob = await packDocx(res.doc);
+      artifact = await createVerifiedArtifact({
+        target: "docx",
+        blob,
+        fileName: `${slugify(bundle.project.title) || "report"}.docx`,
+      });
     } catch (packErr: unknown) {
       const msg = packErr instanceof Error ? packErr.message : "Failed to pack DOCX zip archive.";
       const docxError: ExportError = {
@@ -101,11 +111,16 @@ async function executeExport(
     }
     try {
       const { buildPptx } = await import("@/modules/present/export-pptx");
-      blob = await buildPptx(
+      const blob = await buildPptx(
         extraParams.slides,
         extraParams.speakers || [],
         extraParams.scripts || {}
       );
+      artifact = await createVerifiedArtifact({
+        target: "pptx",
+        blob,
+        fileName: `${slugify(bundle.project.title) || "report"}.pptx`,
+      });
     } catch (pptxErr: unknown) {
       const msg = pptxErr instanceof Error ? pptxErr.message : "Failed to generate PPTX document.";
       const pptxError: ExportError = {
@@ -119,7 +134,7 @@ async function executeExport(
     throw new Error(`Unsupported export target: ${target}`);
   }
 
-  return blob;
+  return artifact;
 }
 
 export function useExport(currentBundle?: ReportProjectBundle) {
@@ -153,7 +168,7 @@ export function useExport(currentBundle?: ReportProjectBundle) {
 
     let currentPhase: ExportJob["phase"] = undefined;
     try {
-      const blob = await executeExport(target, bundle, extraParams, (phase) => {
+      const artifact = await executeExport(target, bundle, extraParams, (phase) => {
         currentPhase = phase;
         setJobs((prev) =>
           prev.map((job) =>
@@ -164,8 +179,8 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         );
       });
 
-      if (target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
-        const url = URL.createObjectURL(blob);
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
+        const url = URL.createObjectURL(artifact.blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = fileName;
@@ -175,8 +190,19 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         globalThis.setTimeout(() => URL.revokeObjectURL(url), 0);
       }
 
-      setExportedBlobs((prev) => ({ ...prev, [target]: blob }));
-      const finishedJob: ExportJob = { ...newJob, phase: currentPhase, status: "done", finishedAt: new Date().toISOString() };
+      setExportedBlobs((prev) => ({ ...prev, [target]: artifact.blob }));
+      const artifactMetadata = {
+        target: artifact.target, mediaType: artifact.mediaType, fileName: artifact.fileName,
+        byteLength: artifact.byteLength, sha256: artifact.sha256, generatedAt: artifact.generatedAt,
+        verified: artifact.verified,
+      };
+      const finishedJob: ExportJob = {
+        ...newJob,
+        phase: currentPhase,
+        status: "done",
+        artifact: artifactMetadata,
+        finishedAt: new Date().toISOString(),
+      };
       await recordExport(finishedJob);
       setJobs((prev) =>
         prev.map((job) => (job.id === id ? finishedJob : job))
@@ -231,15 +257,15 @@ export function useExport(currentBundle?: ReportProjectBundle) {
 
       let currentPhase: ExportJob["phase"] = undefined;
       try {
-        const blob = await executeExport(job.target, activeBundle, extraParams, (phase) => {
+        const artifact = await executeExport(job.target, activeBundle, extraParams, (phase) => {
           currentPhase = phase;
           setJobs((prev) =>
             prev.map((j) => (j.id === jobId ? { ...j, phase } : j))
           );
         });
 
-        if (job.target !== "pdf" && typeof window !== "undefined" && typeof document !== "undefined") {
-          const url = URL.createObjectURL(blob);
+        if (typeof window !== "undefined" && typeof document !== "undefined") {
+          const url = URL.createObjectURL(artifact.blob);
           const a = document.createElement("a");
           a.href = url;
           a.download = job.fileName;
@@ -250,13 +276,19 @@ export function useExport(currentBundle?: ReportProjectBundle) {
         }
 
         const targetJob = jobs.find((j) => j.id === jobId);
+        const artifactMetadata = {
+          target: artifact.target, mediaType: artifact.mediaType, fileName: artifact.fileName,
+          byteLength: artifact.byteLength, sha256: artifact.sha256, generatedAt: artifact.generatedAt,
+          verified: artifact.verified,
+        };
         const finishedJob: ExportJob = {
           ...(targetJob || job),
           phase: currentPhase || targetJob?.phase || job.phase,
           status: "done",
+          artifact: artifactMetadata,
           finishedAt: new Date().toISOString()
         };
-        setExportedBlobs((prev) => ({ ...prev, [job.target]: blob }));
+        setExportedBlobs((prev) => ({ ...prev, [job.target]: artifact.blob }));
         await recordExport(finishedJob);
         setJobs((prev) =>
           prev.map((j) => (j.id === jobId ? finishedJob : j))

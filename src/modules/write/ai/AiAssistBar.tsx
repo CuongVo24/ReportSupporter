@@ -1,43 +1,56 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, AlertTriangle, ChevronDown } from "lucide-react";
-import type { ReportSection, AiSuggestion } from "@/types";
-import {
-  getGatewayState,
-  requestSuggestion,
-  rewriteSection,
-  improveTone,
-  translateSection,
-  improveTerminology,
-  SuggestionDiff,
-  UserControlBar,
-} from "@/modules/write";
+import type { AiAction, AiRequestOptions, ReportSection, AiSuggestion } from "@/types";
+import { contentHash } from "@/lib/content-hash";
+import { getGatewayState, requestSuggestion } from "./ai-gateway";
+import { rewriteSection } from "./rewrite-section";
+import { improveTone } from "./improve-tone";
+import { translateSection } from "./translate-section";
+import { improveTerminology } from "./improve-terminology";
+import { SuggestionDiff } from "./SuggestionDiff";
+import { UserControlBar } from "./UserControlBar";
 
 interface AiAssistBarProps {
+  projectId: string;
   section: ReportSection;
   onChange: (newText: string) => void;
+  onBeforeApply?: () => Promise<void>;
   onOpenSettings?: () => void;
 }
 
-export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarProps) {
+type LoadingAction = Extract<AiAction, "rewrite" | "tone" | "translate" | "terminology">;
+
+export function AiAssistBar({ projectId, section, onChange, onBeforeApply, onOpenSettings }: AiAssistBarProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [showDiff, setShowDiff] = useState(false);
   // originalText is only set right before an AI request, not on section open.
   const [originalText, setOriginalText] = useState<string | null>(null);
-  const [loadingAction, setLoadingAction] = useState<"rewrite" | "tone" | "translate" | "terminology" | null>(null);
+  const [loadingAction, setLoadingAction] = useState<LoadingAction | null>(null);
+  const [staleReason, setStaleReason] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const latestSectionRef = useRef(section);
+  const activeRequestRef = useRef<{ requestId: string; controller: AbortController } | null>(null);
+
+  latestSectionRef.current = section;
 
   // Reset AI states when the user switches sections
   useEffect(() => {
+    activeRequestRef.current?.controller.abort();
+    activeRequestRef.current = null;
     setOriginalText(null);
     setAiSuggestion(null);
     setAiError(null);
     setShowDiff(false);
     setLoadingAction(null);
+    setIsAiLoading(false);
+    setStaleReason(null);
     setIsDropdownOpen(false);
   }, [section.id]);
+
+  useEffect(() => () => activeRequestRef.current?.controller.abort(), []);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -61,88 +74,76 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
     getGatewayState,
   };
 
-  const handleRewrite = async () => {
-    setOriginalText(section.markdown); // snapshot right before request
+  const runAction = async (
+    action: LoadingAction,
+    request: (options: AiRequestOptions) => Promise<AiSuggestion>,
+  ) => {
+    activeRequestRef.current?.controller.abort();
+
+    const baseSection = section;
+    const requestId = crypto.randomUUID();
+    const controller = new AbortController();
+    const baseHash = contentHash(baseSection.markdown);
+    activeRequestRef.current = { requestId, controller };
+
+    setOriginalText(baseSection.markdown);
     setIsAiLoading(true);
-    setLoadingAction("rewrite");
+    setLoadingAction(action);
     setAiError(null);
+    setAiSuggestion(null);
+    setShowDiff(false);
+    setStaleReason(null);
+
     try {
-      const suggestion = await rewriteSection(section, gateway);
-      if (suggestion.suggestion) {
-        setAiSuggestion(suggestion);
-        setShowDiff(true);
-      } else {
+      const suggestion = await request({
+        signal: controller.signal,
+        requestId,
+        context: {
+          projectId,
+          sectionId: baseSection.id,
+          revision: baseSection.revision,
+          contentHash: baseHash,
+        },
+      });
+
+      if (activeRequestRef.current?.requestId !== requestId) return;
+      const current = latestSectionRef.current;
+      if (current.id !== baseSection.id) return;
+
+      if (!suggestion.suggestion) {
         setAiError("AI không trả về kết quả.");
+        return;
       }
-    } catch {
+
+      const stale = current.revision !== baseSection.revision || contentHash(current.markdown) !== baseHash;
+      setAiSuggestion(suggestion);
+      setStaleReason(stale
+        ? "Nội dung đã thay đổi trong khi AI xử lý. Đề xuất này không thể áp dụng; hãy tạo lại từ bản hiện tại."
+        : null);
+      setShowDiff(true);
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       setAiError("Lỗi kết nối AI gateway.");
     } finally {
-      setIsAiLoading(false);
-      setLoadingAction(null);
+      if (activeRequestRef.current?.requestId === requestId) {
+        activeRequestRef.current = null;
+        setIsAiLoading(false);
+        setLoadingAction(null);
+      }
     }
   };
 
-  const handleTone = async () => {
-    setOriginalText(section.markdown); // snapshot right before request
-    setIsAiLoading(true);
-    setLoadingAction("tone");
-    setAiError(null);
-    try {
-      const suggestion = await improveTone(section.markdown, gateway);
-      if (suggestion.suggestion) {
-        setAiSuggestion(suggestion);
-        setShowDiff(true);
-      } else {
-        setAiError("AI không trả về kết quả.");
-      }
-    } catch {
-      setAiError("Lỗi kết nối AI gateway.");
-    } finally {
-      setIsAiLoading(false);
-      setLoadingAction(null);
-    }
-  };
+  const handleRewrite = () => runAction("rewrite", (options) => rewriteSection(section, gateway, options));
+  const handleTone = () => runAction("tone", (options) => improveTone(section.markdown, gateway, options));
+  const handleTranslate = () => runAction("translate", (options) => translateSection(section, gateway, options));
+  const handleTerminology = () => runAction("terminology", (options) => improveTerminology(section.markdown, gateway, options));
 
-  const handleTranslate = async () => {
-    setOriginalText(section.markdown);
-    setIsAiLoading(true);
-    setLoadingAction("translate");
-    setAiError(null);
-    try {
-      const suggestion = await translateSection(section, gateway);
-      if (suggestion.suggestion) {
-        setAiSuggestion(suggestion);
-        setShowDiff(true);
-      } else {
-        setAiError("AI không trả về kết quả.");
-      }
-    } catch {
-      setAiError("Lỗi kết nối AI gateway.");
-    } finally {
-      setIsAiLoading(false);
-      setLoadingAction(null);
-    }
-  };
-
-  const handleTerminology = async () => {
-    setOriginalText(section.markdown);
-    setIsAiLoading(true);
-    setLoadingAction("terminology");
-    setAiError(null);
-    try {
-      const suggestion = await improveTerminology(section.markdown, gateway);
-      if (suggestion.suggestion) {
-        setAiSuggestion(suggestion);
-        setShowDiff(true);
-      } else {
-        setAiError("AI không trả về kết quả.");
-      }
-    } catch {
-      setAiError("Lỗi kết nối AI gateway.");
-    } finally {
-      setIsAiLoading(false);
-      setLoadingAction(null);
-    }
+  const regenerate = () => {
+    const action = aiSuggestion?.action;
+    if (action === "rewrite") void handleRewrite();
+    if (action === "tone") void handleTone();
+    if (action === "translate") void handleTranslate();
+    if (action === "terminology") void handleTerminology();
   };
 
   const getTriggerLabel = () => {
@@ -157,7 +158,7 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
   };
 
   // UserControlBar only shown when an AI interaction has occurred (originalText set)
-  const showControlBar = originalText !== null;
+  const showControlBar = originalText !== null && staleReason === null;
 
   return (
     <div className="ws-ai-assist-bar-container">
@@ -274,13 +275,34 @@ export function AiAssistBar({ section, onChange, onOpenSettings }: AiAssistBarPr
           original={aiSuggestion.original}
           suggestion={aiSuggestion.suggestion}
           action={aiSuggestion.action}
-          onAccept={(newVal) => {
+          acceptDisabled={staleReason !== null}
+          disabledReason={staleReason ?? undefined}
+          onRegenerate={staleReason ? regenerate : undefined}
+          onAccept={async (newVal) => {
+            const current = latestSectionRef.current;
+            const isStillCurrent =
+              current.id === aiSuggestion.sectionId &&
+              current.revision === aiSuggestion.baseRevision &&
+              contentHash(current.markdown) === aiSuggestion.baseHash;
+            if (!isStillCurrent) {
+              setStaleReason("Nội dung đã thay đổi. Hãy tạo lại đề xuất trước khi áp dụng.");
+              return;
+            }
+            try {
+              await onBeforeApply?.();
+            } catch {
+              setAiError("Không thể tạo bản lưu an toàn nên đề xuất chưa được áp dụng.");
+              return;
+            }
             onChange(newVal);
             setAiSuggestion(null);
             setShowDiff(false);
+            setStaleReason(null);
           }}
           onReject={() => {
             setShowDiff(false);
+            setAiSuggestion(null);
+            setStaleReason(null);
           }}
         />
       )}

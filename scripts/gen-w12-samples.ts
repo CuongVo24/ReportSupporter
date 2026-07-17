@@ -40,7 +40,7 @@ test("Generate Week 12 Report Samples", async () => {
     }
 
     // 1. Export HTML
-    const htmlResult = exportHtml(bundle);
+    const htmlResult = await exportHtml(bundle);
     expect(htmlResult.ok).toBe(true);
     if (htmlResult.ok) {
       const htmlText = await htmlResult.blob.text();

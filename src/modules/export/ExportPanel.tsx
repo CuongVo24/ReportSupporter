@@ -90,7 +90,10 @@ export function ExportPanel({
               window.open(url, "_blank", "noopener,noreferrer");
               window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
             } else {
-              console.warn("Blob not found for target", target);
+              setToastVariant("error");
+              setToastTitle("Artifact không còn trong bộ nhớ phiên này.");
+              setToastAction(undefined);
+              setToastOpen(true);
             }
           },
         });

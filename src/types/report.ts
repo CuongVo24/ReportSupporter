@@ -8,6 +8,8 @@ export type ReportSection = {
   title: string;
   markdown: string;
   status: "draft" | "review" | "done";
+  /** Monotonic content version used to reject stale async results. */
+  revision: number;
 };
 
 export type ReportProject = {
@@ -50,6 +52,43 @@ export type ReportProjectBundle = {
   schemaVersion: number;
 };
 
+export type ProjectSummary = {
+  id: string;
+  title: string;
+  templateId: string;
+  sectionCount: number;
+  createdAt: string;
+  updatedAt: string;
+  lastOpenedAt: string;
+  deletedAt?: string;
+};
+
+export type ProjectRecord = {
+  summary: ProjectSummary;
+  bundle: ReportProjectBundle;
+};
+
+export type RecoveryItemKind = "invalid-draft" | "orphaned-snapshot" | "autosave-error";
+
+export type RecoveryItem = {
+  id: string;
+  kind: RecoveryItemKind;
+  projectId?: string;
+  title: string;
+  detail: string;
+  createdAt: string;
+  payload?: unknown;
+};
+
+export type ProjectPackageManifest = {
+  format: "report-supporter-project";
+  version: 1;
+  projectId: string;
+  exportedAt: string;
+  includesSnapshots: boolean;
+  files: Array<{ path: string; byteLength: number; sha256: string }>;
+};
+
 // --- Checker types verbatim from CanonicalTypes.md §6 ---
 import type { Root as MdastRoot } from "mdast";
 import type { FormattedReport } from "./pipeline";
@@ -87,4 +126,3 @@ export type CheckResult = {
   readinessScore: number; // 0..100
   ranAt: string;          // ISO 8601
 };
-

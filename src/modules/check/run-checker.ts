@@ -37,8 +37,7 @@ export function runChecker(bundle: ReportProjectBundle, formatted?: FormattedRep
     try {
       const ruleIssues = rule.run(ctx);
       issues.push(...ruleIssues);
-    } catch (error) {
-      console.error(`Rule ${rule.id} failed to run:`, error);
+    } catch {
       issues.push({
         id: "checker-rule-error",
         severity: "info",
@@ -68,4 +67,3 @@ export function runChecker(bundle: ReportProjectBundle, formatted?: FormattedRep
     ranAt,
   };
 }
-

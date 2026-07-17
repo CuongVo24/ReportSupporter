@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -33,4 +34,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  register: true,
+  disable: process.env.NODE_ENV !== "production",
+  cacheOnNavigation: true,
+  reloadOnOnline: false,
+  additionalPrecacheEntries: [
+    { url: "/", revision: "1" },
+    { url: "/templates", revision: "1" },
+    { url: "/offline", revision: "1" },
+    { url: "/pdf.worker.mjs", revision: "1" },
+  ],
+});
+
+export default withSerwist(nextConfig);

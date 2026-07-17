@@ -1,5 +1,14 @@
 # 🚢 DEPLOYMENT & BUILD — ReportSupporter (V1.0)
 
+## W27–W36 production topology
+
+- Next.js serves the PWA and Serwist `/sw.js` over HTTPS. APIs are online-only.
+- PDF renderer is `services/pdf-renderer`/`docker-compose.pdf.yml` behind `PDF_RENDERER_URL` + `PDF_RENDERER_TOKEN`; its failure is explicit and Print Preview remains available.
+- Production requires `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` and a reviewed `TRUSTED_PROXY_MODE`.
+- Rollout flags: `NEXT_PUBLIC_FF_PROJECT_MIGRATION_DUAL_READ`, `NEXT_PUBLIC_FF_PDF_SUBMISSION`, `NEXT_PUBLIC_FF_PIPELINE_WORKER`, `NEXT_PUBLIC_FF_SMART_IMPORT_AI`, `NEXT_PUBLIC_FF_TEMPLATE_CATALOG`, `NEXT_PUBLIC_FF_PWA`. `false` disables a surface without deleting data.
+- Rollout order: migration dual-read → PDF/Submission → worker → Smart Import/AI → Catalog/PWA. Service-worker activation waits for autosave flush and explicit reload confirmation.
+- Monitoring is aggregate errors/latency only; report bodies and API keys are not logged or persisted.
+
 > **AI RULE:** File này là **single source of truth** cho cách **build & host** ReportSupporter.
 > MVP là client-first nên deployment cố ý tối giản. Đổi cách deploy / output mode → cập nhật file này trước.
 

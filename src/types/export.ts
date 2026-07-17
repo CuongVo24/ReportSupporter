@@ -11,8 +11,20 @@ export type ExportError = {
   recoverable: boolean;
 };
 
+export type ExportArtifact = {
+  target: ExportTarget;
+  blob: Blob;
+  mediaType: string;
+  fileName: string;
+  byteLength: number;
+  sha256: string;
+  generatedAt: string;
+  verified: boolean;
+};
+export type ExportArtifactMetadata = Omit<ExportArtifact, "blob">;
+
 export type ExportResult =
-  | { ok: true; blob: Blob }
+  | { ok: true; artifact: ExportArtifact; blob: Blob }
   | { ok: false; error: ExportError };
 
 export type ExportJob = {
@@ -24,13 +36,20 @@ export type ExportJob = {
   finishedAt?: string;
   fileName: string;
   error?: ExportError;
+  artifact?: ExportArtifactMetadata;
   phase?: "preparing" | "rendering-assets" | "ready" | "printing";
 };
 
 export type PackageManifest = {
   generatedAt: string;
   projectTitle: string;
-  files: { name: string; target: ExportTarget | "readme" | "evidence" }[];
+  files: {
+    name: string;
+    target: ExportTarget | "readme" | "evidence";
+    byteLength: number;
+    sha256: string;
+    mediaType: string;
+  }[];
   evidenceCount: number;
 };
 

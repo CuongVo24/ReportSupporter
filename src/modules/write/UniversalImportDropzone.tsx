@@ -57,7 +57,7 @@ export function UniversalImportDropzone({
   const processFiles = async (fileList: File[]) => {
     if (fileList.length === 0) return;
     if (fileList.length > MAX_DROPPED_FILES) {
-      setError(`Chá»‰ cÃ³ thá»ƒ nháº­p tá»‘i Ä‘a ${MAX_DROPPED_FILES} tá»‡p má»—i láº§n.`);
+      setError(`Chỉ có thể nhập tối đa ${MAX_DROPPED_FILES} tệp mỗi lần.`);
       return;
     }
     setAnnouncement("Bắt đầu xử lý danh sách tệp tin...");
@@ -145,6 +145,7 @@ export function UniversalImportDropzone({
         );
 
         finalDraft.file = docFile;
+        finalDraft.availableFiles = otherFiles;
         setBatchFiles((prev) =>
           prev.map((p) =>
             p.id === progressItem.id

@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
-import { EditorPanel } from "@/components/EditorPanel";
-import { PreviewPane } from "@/components/PreviewPane";
 import { CommandPalette } from "@/components/CommandPalette";
 import { buildWorkspaceCommands } from "@/components/command-registry";
 import { SnapshotHistory } from "@/components/SnapshotHistory";
@@ -15,48 +13,46 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Loader2, CheckCircle2, AlertTriangle, Sparkles, FileUp, Maximize2, Minimize2, Save } from "lucide-react";
 import { LoadingSkeleton, EmptyState, EmptyReportHub } from "@/components/states";
 import { InvalidDraftRecovery } from "@/components/InvalidDraftRecovery";
-import {
-  createProjectFromTemplate,
-  loadBundle,
-  saveBundle,
-  softwareProjectTemplate,
-  ALL_TEMPLATES,
-  ProjectInitializer,
-  useDraftAutosave,
-  useImageInsert,
-  buildInitialSections,
-  AiAssistBar,
-  appendSections,
-  replaceSections,
-  UniversalImportDropzone,
-  addSection,
-  duplicateSection,
-  renameSection,
-  deleteSection,
-  moveSection,
-  moveSectionToIndex,
-  createImageAsset,
-  rewriteMarkdownRefs,
-  isMarkdownFile,
-  readMarkdownFile,
-  importReadme,
-  AiSettingsDialog,
-  registerAdapter,
-  httpAdapter,
-  loadAiConfig,
-  isAiReady,
-  listSnapshots,
-  restoreSnapshot,
-  takeSnapshot,
-  computeWritingStats,
-  type ReportSnapshot,
-} from "@/modules/write";
-import { computeReportHealth, runChecker, type ReportHealth } from "@/modules/check";
+import { createProjectFromTemplate } from "@/modules/write/create-project";
+import { saveBundle } from "@/modules/write/autosave";
+import { softwareProjectTemplate } from "@/modules/write/templates/software-project";
+import { ALL_TEMPLATES } from "@/modules/write/templates";
+import { useDraftAutosave } from "@/modules/write/use-draft-autosave";
+import { createImageAsset, useImageInsert } from "@/modules/write/use-image-insert";
+import { addSection, deleteSection, duplicateSection, moveSection, moveSectionToIndex, renameSection } from "@/modules/write/section-ops";
+import { rewriteMarkdownRefs } from "@/modules/write/asset-ref-rewrite";
+import { registerAdapter } from "@/modules/write/ai/ai-gateway";
+import { httpAdapter } from "@/modules/write/ai/adapters/http-adapter";
+import { isAiReady, loadAiConfig } from "@/modules/write/ai/ai-config";
+import { listSnapshots, restoreSnapshot, takeSnapshot, type ReportSnapshot } from "@/modules/write/snapshots";
+import { computeWritingStats } from "@/modules/write/writing-stats";
+import { computeReportHealth, type ReportHealth } from "@/modules/check/report-health";
 import { useExport } from "@/modules/export/use-export";
-import { checkDraft } from "@/modules/import/check-draft";
 import type { CheckResult, ReportProjectBundle, TemplateSchema, EvidenceItem, ReportSection, ImportDraft } from "@/types";
+import { createWorkspaceStateAdapters, initialWorkspaceState, workspaceReducer } from "@/modules/workspace/workspace-reducer";
+import { loadWorkspaceProject } from "@/modules/workspace/controllers/project-controller";
+import { updateSectionMarkdown } from "@/modules/workspace/controllers/editor-controller";
+import { runPipelineRequest, StalePipelineResponseError } from "@/modules/pipeline/pipeline-client";
+import { contentHash } from "@/lib/content-hash";
+import { getSettingRecord, putSettingRecord } from "@/lib/idb-client";
 
 const panelLoading = () => <LoadingSkeleton variant="panel" />;
+const EditorPanel = dynamic(
+  () => import("@/components/EditorPanel").then((module) => module.EditorPanel),
+  { ssr: false, loading: panelLoading },
+);
+const PreviewPane = dynamic(
+  () => import("@/components/PreviewPane").then((module) => module.PreviewPane),
+  { ssr: false, loading: panelLoading },
+);
+const ProjectInitializer = dynamic(
+  () => import("@/modules/write/ProjectInitializer").then((module) => module.ProjectInitializer),
+  { ssr: false, loading: panelLoading },
+);
+const AiAssistBar = dynamic(
+  () => import("@/modules/write/ai/AiAssistBar").then((module) => module.AiAssistBar),
+  { ssr: false },
+);
 const ExportPanel = dynamic(
   () => import("@/modules/export/ExportPanel").then((module) => module.ExportPanel),
   { ssr: false, loading: panelLoading },
@@ -81,6 +77,14 @@ const AiWholeReportPanel = dynamic(
   () => import("@/modules/write/ai/AiWholeReportPanel").then((module) => module.AiWholeReportPanel),
   { ssr: false, loading: panelLoading },
 );
+const UniversalImportDropzone = dynamic(
+  () => import("@/modules/write/UniversalImportDropzone").then((module) => module.UniversalImportDropzone),
+  { ssr: false, loading: panelLoading },
+);
+const AiSettingsDialog = dynamic(
+  () => import("@/modules/write/ai/AiSettingsPanel").then((module) => module.AiSettingsDialog),
+  { ssr: false },
+);
 
 const emptyCheckResult: CheckResult = {
   issues: [],
@@ -103,11 +107,13 @@ function appendMarkdown(existing: string, addition: string) {
   return `${existing.trimEnd()}${existing.trim() ? "\n\n" : ""}${trimmedAddition}`;
 }
 
-export function Workspace() {
-  const [bundle, setBundle] = useState<ReportProjectBundle | null>(null);
-  const [invalidDraft, setInvalidDraft] = useState<{ raw: unknown; issues: string[] } | null>(null);
-  const [draftLoadError, setDraftLoadError] = useState("");
-  const [activeId, setActiveId] = useState<string | null>(null);
+export function Workspace({ projectId }: { projectId?: string } = {}) {
+  const [workspaceState, workspaceDispatch] = useReducer(workspaceReducer, initialWorkspaceState);
+  const { bundle, invalidDraft, loadError: draftLoadError, activeSectionId: activeId } = workspaceState;
+  const stateAdapters = useMemo(() => createWorkspaceStateAdapters(workspaceDispatch), []);
+  const { setBundle, setInvalidDraft, setLoadError: setDraftLoadError, setActiveSectionId: setActiveId } = stateAdapters;
+  const latestWorkspaceBundleRef = useRef(bundle);
+  latestWorkspaceBundleRef.current = bundle;
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
   const [hasRun, setHasRun] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -162,6 +168,7 @@ export function Workspace() {
         return {
           ...sec,
           markdown: updatedMarkdown,
+          revision: updatedMarkdown === sec.markdown ? sec.revision : sec.revision + 1,
         };
       }
       return sec;
@@ -184,8 +191,16 @@ export function Workspace() {
     setBundle(nextBundle);
 
     if (hasRun) {
-      const checkRes = runChecker(nextBundle);
-      setCheckResult(checkRes);
+      const requestId = crypto.randomUUID();
+      const response = await runPipelineRequest({
+        requestId,
+        projectId: nextBundle.project.id,
+        operation: "check",
+        sectionRevisions: Object.fromEntries(nextBundle.project.sections.map((section) => [section.id, section.revision])),
+        cacheKey: `${nextBundle.project.id}:check:${nextBundle.project.sections.map((section) => section.revision).join(",")}`,
+        payload: { bundle: nextBundle },
+      });
+      if (response.ok && response.operation === "check") setCheckResult(response.result);
     }
 
     setToastMessage("Nhúng ảnh thành công!");
@@ -210,6 +225,7 @@ export function Workspace() {
   const [darkPreview, setDarkPreview] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string>("");
   const [isManualSaving, setIsManualSaving] = useState(false);
+  const [importUndoBundle, setImportUndoBundle] = useState<ReportProjectBundle | null>(null);
 
   const { status, quotaFull, error: autosaveError, retrySave } = useDraftAutosave(bundle);
   const { handleImageInserted } = useImageInsert(setBundle);
@@ -229,7 +245,7 @@ export function Workspace() {
     let active = true;
     void (async () => {
       try {
-        const result = await loadBundle();
+        const result = await loadWorkspaceProject(projectId);
         if (!active) return;
         if (result.status === "invalid") {
           setInvalidDraft({ raw: result.raw, issues: result.issues });
@@ -237,6 +253,10 @@ export function Workspace() {
         }
 
         const existing = result.status === "loaded" ? result.bundle : null;
+        if (projectId && !existing) {
+          setDraftLoadError("Dự án không tồn tại hoặc đã bị xóa khỏi trình duyệt này.");
+          return;
+        }
         const next = existing ?? createProjectFromTemplate(softwareProjectTemplate);
         setBundle(next);
         setActiveId(next.project.sections[0]?.id ?? null);
@@ -250,31 +270,32 @@ export function Workspace() {
           } catch (error: unknown) {
             if (active) {
               setToastVariant("error");
-              setToastMessage(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ lÆ°u báº£n tháº£o má»›i.");
+              setToastMessage(error instanceof Error ? error.message : "Không thể lưu bản thảo mới.");
               setToastOpen(true);
             }
           }
         }
       } catch (error: unknown) {
         if (active) {
-          setDraftLoadError(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ Ä‘á»c báº£n tháº£o tá»« trÃ¬nh duyá»‡t.");
+          setDraftLoadError(error instanceof Error ? error.message : "Không thể đọc bản thảo từ trình duyệt.");
         }
       }
     })();
     return () => {
       active = false;
     };
-  }, []);
+  }, [projectId, setActiveId, setBundle, setDraftLoadError, setInvalidDraft]);
 
   const handleDiscardInvalidDraft = useCallback(async () => {
     const next = createProjectFromTemplate(softwareProjectTemplate);
+    if (projectId) next.project.id = projectId;
     await saveBundle(next);
     setInvalidDraft(null);
     setDraftLoadError("");
     setBundle(next);
     setActiveId(next.project.sections[0]?.id ?? null);
     setIsInitializing(true);
-  }, []);
+  }, [projectId, setActiveId, setBundle, setDraftLoadError, setInvalidDraft]);
 
   useEffect(() => {
     const config = loadAiConfig();
@@ -294,8 +315,7 @@ export function Workspace() {
     setIsSnapshotLoading(true);
     try {
       setSnapshots(await listSnapshots(projectId));
-    } catch (error) {
-      console.warn("Unable to load report snapshots", error);
+    } catch {
       setSnapshots([]);
     } finally {
       setIsSnapshotLoading(false);
@@ -306,16 +326,41 @@ export function Workspace() {
     void refreshSnapshots(bundle?.project.id);
   }, [bundle?.project.id, refreshSnapshots]);
 
+  useEffect(() => {
+    const activeProjectId = bundle?.project.id;
+    if (!activeProjectId) return;
+    let stopped = false;
+    const ensureDailySnapshot = async () => {
+      const current = latestWorkspaceBundleRef.current;
+      if (!current || current.project.id !== activeProjectId || stopped) return;
+      const key = `last-auto-snapshot:${activeProjectId}`;
+      const raw = await getSettingRecord(key);
+      const last = typeof raw === "string" ? Date.parse(raw) : 0;
+      if (last && Date.now() - last < 24 * 60 * 60 * 1_000) return;
+      await takeSnapshot(current, "Snapshot tự động hằng ngày");
+      await putSettingRecord(key, new Date().toISOString());
+      if (!stopped) await refreshSnapshots(activeProjectId);
+    };
+    void ensureDailySnapshot().catch(() => undefined);
+    const interval = window.setInterval(() => void ensureDailySnapshot().catch(() => undefined), 60 * 60 * 1_000);
+    return () => { stopped = true; window.clearInterval(interval); };
+  }, [bundle?.project.id, refreshSnapshots]);
+
   const snapshotBefore = useCallback(async (reason: string) => {
     if (!bundle) return;
     try {
       await takeSnapshot(bundle, reason);
       void refreshSnapshots(bundle.project.id);
-    } catch (error) {
-      console.warn("Unable to create report snapshot", error);
+    } catch {
       setToastMessage("Không thể tạo bản lưu an toàn, thao tác vẫn tiếp tục.");
       setToastOpen(true);
     }
+  }, [bundle, refreshSnapshots]);
+
+  const snapshotBeforeRequired = useCallback(async (reason: string) => {
+    if (!bundle) throw new Error("Không có báo cáo để tạo bản lưu an toàn.");
+    await takeSnapshot(bundle, reason);
+    await refreshSnapshots(bundle.project.id);
   }, [bundle, refreshSnapshots]);
 
   const handleCreateSnapshot = useCallback(async () => {
@@ -325,8 +370,7 @@ export function Workspace() {
       void refreshSnapshots(bundle.project.id);
       setToastMessage("Đã tạo một bản lưu an toàn.");
       setToastOpen(true);
-    } catch (error) {
-      console.warn("Unable to create manual snapshot", error);
+    } catch {
       setToastMessage("Không thể tạo bản lưu an toàn.");
       setToastVariant("error");
       setToastOpen(true);
@@ -360,27 +404,35 @@ export function Workspace() {
   }, [bundle, checkResult]);
 
   const handleChange = useCallback((markdown: string) => {
-    setBundle((prev) => {
-      if (!prev || !activeId) return prev;
-      const sections = prev.project.sections.map((sec) =>
-        sec.id === activeId ? { ...sec, markdown } : sec,
-      );
-      return {
-        ...prev,
-        project: { ...prev.project, sections, updatedAt: new Date().toISOString() },
-      };
-    });
-  }, [activeId]);
+    setBundle((previous) => updateSectionMarkdown(previous, activeId, markdown));
+  }, [activeId, setBundle]);
 
   const handleCheck = useCallback(() => {
     if (!bundle) return;
-    const result = runChecker(bundle);
-    setCheckResult(result);
-    setHasRun(true);
-    setSideTab("check");
-    requestSidePanelOpen();
-    setToastMessage(`Đã soát — ${result.issues.length} vấn đề`);
-    setToastOpen(true);
+    const sectionRevisions = Object.fromEntries(bundle.project.sections.map((section) => [section.id, section.revision]));
+    const cacheKey = `check:${bundle.project.id}:${contentHash(JSON.stringify({ sectionRevisions, format: bundle.formatSettings, assets: bundle.assets.map((asset) => [asset.id, asset.insertedAt]) }))}`;
+    void runPipelineRequest({
+      requestId: crypto.randomUUID(),
+      projectId: bundle.project.id,
+      operation: "check",
+      sectionRevisions,
+      cacheKey,
+      payload: { bundle },
+    }).then((response) => {
+      if (!response.ok || response.operation !== "check") return;
+      setCheckResult(response.result);
+      setHasRun(true);
+      setSideTab("check");
+      requestSidePanelOpen();
+      setToastMessage(`Đã soát — ${response.result.issues.length} vấn đề`);
+      setToastOpen(true);
+    }).catch((error: unknown) => {
+      if (!(error instanceof StalePipelineResponseError)) {
+        setToastVariant("error");
+        setToastMessage("Không thể chạy pipeline soát báo cáo.");
+        setToastOpen(true);
+      }
+    });
   }, [bundle, requestSidePanelOpen]);
 
   const handleJump = useCallback((sectionId?: string) => {
@@ -389,7 +441,7 @@ export function Workspace() {
       setActiveView("editor");
       focusEditorOnNextFrame();
     }
-  }, []);
+  }, [setActiveId]);
 
   const handleOpenReportHealth = useCallback(() => {
     setSideTab("check");
@@ -425,7 +477,7 @@ export function Workspace() {
         setToastOpen(true);
         setIsManualSaving(false);
       });
-  }, [activeId, bundle]);
+  }, [activeId, bundle, setBundle]);
 
   const handleCreateSection = useCallback(() => {
     if (!bundle) return;
@@ -447,7 +499,7 @@ export function Workspace() {
     setActiveId(newSection.id);
     setActiveView("editor");
     focusEditorOnNextFrame();
-  }, [activeId, bundle]);
+  }, [activeId, bundle, setActiveId, setBundle]);
 
   const handleDuplicateSection = useCallback(() => {
     if (!bundle || !activeSection) return;
@@ -467,7 +519,7 @@ export function Workspace() {
     setActiveId(duplicate.id);
     setActiveView("editor");
     focusEditorOnNextFrame();
-  }, [activeSection, bundle]);
+  }, [activeSection, bundle, setActiveId, setBundle]);
 
   const handleMoveSection = useCallback((direction: "up" | "down", id?: string) => {
     if (!bundle) return;
@@ -484,7 +536,7 @@ export function Workspace() {
         updatedAt: new Date().toISOString(),
       },
     });
-  }, [activeId, bundle]);
+  }, [activeId, bundle, setBundle]);
 
   const handleMoveSectionFromMenu = useCallback((id: string, direction: "up" | "down") => {
     handleMoveSection(direction, id);
@@ -508,7 +560,7 @@ export function Workspace() {
     setBundle(next);
     setActiveId(draggedId);
     void saveBundle(next);
-  }, [bundle]);
+  }, [bundle, setActiveId, setBundle]);
 
   const handleSectionFilesDrop = useCallback(async (sectionId: string, files: File[]) => {
     if (!bundle) return;
@@ -524,7 +576,11 @@ export function Workspace() {
 
       const sections = bundle.project.sections.map((section) =>
         section.id === sectionId
-          ? { ...section, markdown: appendMarkdown(section.markdown, result.ref) }
+          ? {
+              ...section,
+              markdown: appendMarkdown(section.markdown, result.ref),
+              revision: section.revision + 1,
+            }
           : section,
       );
       const next: ReportProjectBundle = {
@@ -550,6 +606,7 @@ export function Workspace() {
       return;
     }
 
+    const { isMarkdownFile, readMarkdownFile } = await import("@/modules/write/markdown-import");
     const markdownFile = files.find((file) => isMarkdownFile(file));
     if (!markdownFile) {
       setToastMessage("Chỉ hỗ trợ thả ảnh hoặc file Markdown vào mục lục.");
@@ -564,13 +621,18 @@ export function Workspace() {
       return;
     }
 
+    const { importReadme } = await import("@/modules/write/readme-import");
     const parsedSections = importReadme(result.markdown);
     const markdownToInsert = parsedSections.length > 0
       ? parsedSections.map((section: ReportSection) => section.markdown).join("\n\n")
       : result.markdown;
     const sections = bundle.project.sections.map((section) =>
       section.id === sectionId
-        ? { ...section, markdown: appendMarkdown(section.markdown, markdownToInsert) }
+        ? {
+            ...section,
+            markdown: appendMarkdown(section.markdown, markdownToInsert),
+            revision: section.revision + 1,
+          }
         : section,
     );
     const next: ReportProjectBundle = {
@@ -590,7 +652,7 @@ export function Workspace() {
     void saveBundle(next);
     setToastMessage("Đã chèn nội dung Markdown vào mục đã thả.");
     setToastOpen(true);
-  }, [bundle]);
+  }, [bundle, setActiveId, setBundle]);
 
   const handleRenameSection = useCallback((id: string, newTitle: string) => {
     if (!bundle) return;
@@ -604,7 +666,7 @@ export function Workspace() {
         updatedAt: new Date().toISOString(),
       },
     });
-  }, [bundle]);
+  }, [bundle, setBundle]);
 
   const executeDeleteSection = useCallback(async (id: string, shouldSnapshot = false) => {
     if (!bundle) return;
@@ -635,7 +697,7 @@ export function Workspace() {
     void saveBundle(nextBundle);
     setIsDeleteConfirmOpen(false);
     setSectionToDeleteId(null);
-  }, [bundle, activeId, snapshotBefore]);
+  }, [bundle, activeId, setActiveId, setBundle, snapshotBefore]);
 
   const handleDeleteSection = useCallback((id: string) => {
     if (!bundle) return;
@@ -693,12 +755,13 @@ export function Workspace() {
     focusEditorOnNextFrame();
   }, []);
 
-  const handleInitialize = useCallback((
+  const handleInitialize = useCallback(async (
     template: TemplateSchema,
     title: string,
     metadata: Record<string, string | string[]>
   ) => {
     if (!bundle) return;
+    const { buildInitialSections } = await import("@/modules/write/buildInitialSections");
     const generatedSections = buildInitialSections(template, { title, ...metadata });
 
     const cleanMetadata = { ...metadata };
@@ -717,7 +780,7 @@ export function Workspace() {
     setBundle(next);
     setActiveId(generatedSections[0]?.id ?? null);
     setIsInitializing(false);
-  }, [bundle]);
+  }, [bundle, setActiveId, setBundle]);
 
   const handleStartBlank = useCallback(() => {
     if (!bundle) return;
@@ -727,6 +790,7 @@ export function Workspace() {
       title: "Nội dung",
       markdown: "",
       status: "draft",
+      revision: 0,
     };
 
     const next: ReportProjectBundle = {
@@ -743,12 +807,12 @@ export function Workspace() {
     setBundle(next);
     setActiveId(blankSection.id);
     setIsInitializing(false);
-  }, [bundle]);
+  }, [bundle, setActiveId, setBundle]);
 
-  const handleImportMarkdown = useCallback((draft: ImportDraft) => {
+  const handleImportMarkdown = useCallback(async (draft: ImportDraft) => {
     if (!bundle) return;
     const parsedSections = draft.sections;
-    
+    const { replaceSections } = await import("@/modules/write/markdown-import");
     const replaced = replaceSections(bundle, parsedSections, draft.result.assets, draft.evidence || []);
     const titleVal = draft.result.fileName 
       ? draft.result.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") 
@@ -768,10 +832,11 @@ export function Workspace() {
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(next);
-  }, [bundle]);
+  }, [bundle, setActiveId, setBundle]);
 
-  const handleApplyAiOutline = useCallback((sections: ReportSection[], title: string) => {
+  const handleApplyAiOutline = useCallback(async (sections: ReportSection[], title: string) => {
     if (!bundle) return;
+    const { replaceSections } = await import("@/modules/write/markdown-import");
     const replaced = replaceSections(bundle, sections);
     const next: ReportProjectBundle = {
       ...replaced,
@@ -787,7 +852,7 @@ export function Workspace() {
     setCheckResult(null);
     setHasRun(false);
     void saveBundle(next);
-  }, [bundle]);
+  }, [bundle, setActiveId, setBundle]);
 
   const handleReset = useCallback(async () => {
     await snapshotBefore("Trước khi tạo báo cáo mới");
@@ -799,16 +864,20 @@ export function Workspace() {
     setHasRun(false);
     void saveBundle(fresh);
     setIsResetConfirmOpen(false);
-  }, [snapshotBefore]);
+  }, [setActiveId, setBundle, snapshotBefore]);
 
   const handleCommitImport = useCallback(async (draft: ImportDraft) => {
     if (!bundle) return;
     const parsedSections = draft.sections;
     if (parsedSections.length === 0) return;
+    await snapshotBefore(draft.mode === "replace"
+      ? "Trước khi ghi đè báo cáo bằng tệp tin"
+      : "Trước khi chèn nội dung nhập vào báo cáo");
+    setImportUndoBundle(structuredClone(bundle));
 
     let next: ReportProjectBundle;
+    const { appendSections, replaceSections } = await import("@/modules/write/markdown-import");
     if (draft.mode === "replace") {
-      await snapshotBefore("Trước khi ghi đè báo cáo bằng tệp tin");
       const replaced = replaceSections(
         bundle,
         parsedSections,
@@ -852,7 +921,7 @@ export function Workspace() {
     setHasRun(false);
     void saveBundle(next);
     setToastOpen(true);
-  }, [bundle, snapshotBefore]);
+  }, [bundle, setActiveId, setBundle, snapshotBefore]);
 
   const handleEvidenceChange = useCallback((evidence: EvidenceItem[]) => {
     setBundle((prev) => {
@@ -866,14 +935,16 @@ export function Workspace() {
         },
       };
     });
-  }, []);
+  }, [setBundle]);
 
   const handleApplyWholeReportAiSection = useCallback(async (sectionId: string, markdown: string) => {
     if (!bundle) return;
     const targetSection = bundle.project.sections.find((section) => section.id === sectionId);
     await snapshotBefore(`Trước khi áp dụng AI cho "${targetSection?.title ?? "mục"}"`);
     const sections = bundle.project.sections.map((section) =>
-      section.id === sectionId ? { ...section, markdown } : section,
+      section.id === sectionId && section.markdown !== markdown
+        ? { ...section, markdown, revision: section.revision + 1 }
+        : section,
     );
     const next: ReportProjectBundle = {
       ...bundle,
@@ -892,7 +963,7 @@ export function Workspace() {
     void saveBundle(next);
     setToastMessage("Đã áp dụng đề xuất AI cho một mục.");
     setToastOpen(true);
-  }, [bundle, snapshotBefore]);
+  }, [bundle, setActiveId, setBundle, snapshotBefore]);
 
   const handleConfirmRestoreSnapshot = useCallback(async () => {
     if (!snapshotToRestore) return;
@@ -914,7 +985,7 @@ export function Workspace() {
     setSnapshotToRestore(null);
     setToastMessage("Đã khôi phục phiên bản đã chọn.");
     setToastOpen(true);
-  }, [refreshSnapshots, snapshotToRestore]);
+  }, [refreshSnapshots, setActiveId, setBundle, snapshotToRestore]);
 
   const commands = useMemo(() => buildWorkspaceCommands({
     createSection: handleCreateSection,
@@ -1069,9 +1140,9 @@ export function Workspace() {
     return (
       <main className="ws-state-container" role="alert" style={{ maxWidth: 680, margin: "64px auto", padding: 32 }}>
         <AlertTriangle size={36} aria-hidden="true" />
-        <h1>KhÃ´ng thá»ƒ má»Ÿ báº£n tháº£o</h1>
+        <h1>Không thể mở bản thảo</h1>
         <p>{draftLoadError}</p>
-        <Button variant="secondary" onClick={() => window.location.reload()}>Thá»­ táº£i láº¡i</Button>
+        <Button variant="secondary" onClick={() => window.location.reload()}>Thử tải lại</Button>
       </main>
     );
   }
@@ -1253,7 +1324,8 @@ export function Workspace() {
           </Button>
         </div>
       </div>
-      <AiWholeReportPanel
+              <AiWholeReportPanel
+                projectId={bundle.project.id}
         sections={bundle.project.sections}
         onApplySection={handleApplyWholeReportAiSection}
         onOpenSettings={() => setIsAiSettingsOpen(true)}
@@ -1326,6 +1398,11 @@ export function Workspace() {
               check={checkResult ?? undefined}
               exportedBlobs={exportedBlobs}
               jobs={jobs}
+              onFixIssue={(sectionId) => {
+                setActiveId(sectionId);
+                setActiveView("editor");
+              }}
+              onOpenExport={() => setSideTab("export")}
             />
           </TabsContent>
           <TabsContent value="evidence" className="ws-side-tabs-content">
@@ -1356,8 +1433,10 @@ export function Workspace() {
       editor={
         <div className="ws-editor-stack">
           <AiAssistBar
+            projectId={bundle.project.id}
             section={activeSection}
             onChange={handleChange}
+            onBeforeApply={() => snapshotBeforeRequired("Trước khi áp dụng đề xuất AI")}
             onOpenSettings={() => setIsAiSettingsOpen(true)}
           />
           <div className="ws-editor-wrapper">
@@ -1376,6 +1455,7 @@ export function Workspace() {
       }
       preview={
         <PreviewPane
+          projectId={bundle.project.id}
           markdown={activeSection.markdown}
           assets={bundle.assets}
           formatSettings={bundle.formatSettings}
@@ -1411,7 +1491,27 @@ export function Workspace() {
         commands={commands}
         onOpenChange={handleCommandPaletteOpenChange}
       />
-      <Toast open={toastOpen} onOpenChange={setToastOpen} variant={toastVariant} title={toastMessage} />
+      <Toast
+        open={toastOpen}
+        onOpenChange={(open) => {
+          setToastOpen(open);
+          if (!open) setImportUndoBundle(null);
+        }}
+        variant={toastVariant}
+        title={toastMessage}
+        action={importUndoBundle ? {
+          label: "Hoàn tác",
+          onClick: () => {
+            const restored = importUndoBundle;
+            setBundle(restored);
+            setActiveId(restored.project.sections[0]?.id ?? null);
+            setCheckResult(null);
+            setHasRun(false);
+            setImportUndoBundle(null);
+            void saveBundle(restored);
+          },
+        } : undefined}
+      />
       <input
         type="file"
         ref={attachFileInputRef}
@@ -1452,17 +1552,20 @@ export function Workspace() {
           <UniversalImportDropzone
             imported={importDrafts}
             onImported={(drafts) => {
-              if (bundle) {
-                const draftsWithIssues = drafts.map((draft) => ({
-                  ...draft,
-                  issues: checkDraft(draft, bundle),
-                }));
-                setImportDrafts(draftsWithIssues);
-              } else {
-                setImportDrafts(drafts);
-              }
-              setIsImportDialogOpen(false);
-              setIsPreviewDialogOpen(true);
+              void (async () => {
+                if (bundle) {
+                  const { checkDraft } = await import("@/modules/import/check-draft");
+                  const draftsWithIssues = drafts.map((draft) => ({
+                    ...draft,
+                    issues: checkDraft(draft, bundle),
+                  }));
+                  setImportDrafts(draftsWithIssues);
+                } else {
+                  setImportDrafts(drafts);
+                }
+                setIsImportDialogOpen(false);
+                setIsPreviewDialogOpen(true);
+              })();
             }}
           />
         </div>

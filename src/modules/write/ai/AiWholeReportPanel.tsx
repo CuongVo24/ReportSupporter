@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import type { ReportSection } from "@/types";
+import { contentHash } from "@/lib/content-hash";
 import { getGatewayState, requestSuggestion } from "./ai-gateway";
 import { SuggestionDiff } from "./SuggestionDiff";
 import {
   suggestWholeReportSections,
   type SectionAiSuggestion,
+  type SectionAiTask,
   type WholeReportAiAction,
 } from "./whole-report-ai";
 
 type AiWholeReportPanelProps = {
   sections: ReportSection[];
+  projectId?: string;
   onApplySection: (sectionId: string, markdown: string) => void;
   onOpenSettings?: () => void;
 };
@@ -25,6 +28,7 @@ function actionLabel(action: WholeReportAiAction): string {
 
 export function AiWholeReportPanel({
   sections,
+  projectId,
   onApplySection,
   onOpenSettings,
 }: AiWholeReportPanelProps) {
@@ -32,6 +36,9 @@ export function AiWholeReportPanel({
   const [runningAction, setRunningAction] = useState<WholeReportAiAction | null>(null);
   const [suggestions, setSuggestions] = useState<SectionAiSuggestion[]>([]);
   const [error, setError] = useState("");
+  const [tasks, setTasks] = useState<Record<string, SectionAiTask>>({});
+  const [lastAction, setLastAction] = useState<WholeReportAiAction | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
   const state = getGatewayState();
   const isDisabled = state === "disabled" || state === "unconfigured";
@@ -67,11 +74,19 @@ export function AiWholeReportPanel({
 
     setIsRunning(true);
     setRunningAction(action);
+    setLastAction(action);
     setError("");
     setSuggestions([]);
+    setTasks({});
+    const controller = new AbortController();
+    controllerRef.current = controller;
 
     try {
-      const nextSuggestions = await suggestWholeReportSections(sortedSections, action, gateway);
+      const nextSuggestions = await suggestWholeReportSections(sortedSections, action, gateway, {
+        projectId,
+        signal: controller.signal,
+        onTask: (task) => setTasks((current) => ({ ...current, [task.sectionId]: task })),
+      });
       setSuggestions(nextSuggestions);
       if (nextSuggestions.length === 0) {
         setError("AI không trả về thay đổi nào khác nội dung hiện tại.");
@@ -81,7 +96,19 @@ export function AiWholeReportPanel({
     } finally {
       setIsRunning(false);
       setRunningAction(null);
+      controllerRef.current = null;
     }
+  };
+
+  const retrySection = async (sectionId: string) => {
+    const section = sortedSections.find((item) => item.id === sectionId);
+    const action = lastAction;
+    if (!section || (action !== "translate" && action !== "terminology")) return;
+    const result = await suggestWholeReportSections([section], action, gateway, {
+      projectId,
+      onTask: (task) => setTasks((current) => ({ ...current, [task.sectionId]: task })),
+    });
+    if (result[0]) setSuggestions((current) => [...current.filter((item) => item.sectionId !== sectionId), result[0]]);
   };
 
   const removeSuggestion = (sectionId: string) => {
@@ -126,7 +153,24 @@ export function AiWholeReportPanel({
         >
           {isRunning && runningAction === "terminology" ? "Đang chuẩn hóa..." : "Chuẩn thuật ngữ"}
         </button>
+        {isRunning && (
+          <button type="button" className="ws-ai-whole-action" onClick={() => controllerRef.current?.abort()}>
+            Hủy
+          </button>
+        )}
       </div>
+
+      {Object.keys(tasks).length > 0 && (
+        <ul aria-label="Tiến độ AI theo mục">
+          {sortedSections.filter((section) => tasks[section.id]).map((section) => {
+            const task = tasks[section.id];
+            return <li key={section.id}>
+              {section.title}: {task.status}
+              {task.status === "failed" && <button type="button" onClick={() => void retrySection(section.id)}>Thử lại mục này</button>}
+            </li>;
+          })}
+        </ul>
+      )}
 
       {isDisabled && (
         <button
@@ -157,12 +201,24 @@ export function AiWholeReportPanel({
                 original={item.suggestion.original}
                 suggestion={item.suggestion.suggestion}
                 action={item.suggestion.action}
+                acceptDisabled={(() => {
+                  const current = sections.find((section) => section.id === item.sectionId);
+                  return !current || current.revision !== item.suggestion.baseRevision || contentHash(current.markdown) !== item.suggestion.baseHash;
+                })()}
+                disabledReason="Nội dung mục đã thay đổi; hãy tạo lại đề xuất thay vì tự hợp nhất."
                 onAccept={(markdown) => {
                   onApplySection(item.sectionId, markdown);
                   removeSuggestion(item.sectionId);
                 }}
                 onReject={() => removeSuggestion(item.sectionId)}
               />
+              {item.suggestion.usage && (
+                <p>
+                  {item.suggestion.usage.inputTokens ?? "?"} token vào · {item.suggestion.usage.outputTokens ?? "?"} token ra
+                  {item.suggestion.usage.estimated ? " (ước tính)" : " (provider trả về)"}
+                  {item.suggestion.usage.estimatedCostUsd !== undefined ? ` · chi phí ước tính $${item.suggestion.usage.estimatedCostUsd.toFixed(6)}` : ""}
+                </p>
+              )}
             </article>
           ))}
         </div>

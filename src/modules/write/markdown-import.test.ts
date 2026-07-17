@@ -96,13 +96,16 @@ describe("markdown import helpers", () => {
 
   it("appendSections appends sections and updates order and IDs", () => {
     const initialSections: ReportSection[] = [
-      { id: "sec-1", order: 0, title: "Mục 1", markdown: "Nội dung 1", status: "done" },
+      { id: "sec-1", order: 0, title: "Mục 1", markdown: "Nội dung 1", status: "done",
+      revision: 0 },
     ];
     const bundle = createMockBundle(initialSections);
 
     const newSections: ReportSection[] = [
-      { id: "import-sec-0", order: 0, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft" },
-      { id: "external-id", order: 1, title: "Mục mới 2", markdown: "Nội dung mới 2", status: "draft" },
+      { id: "import-sec-0", order: 0, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft",
+      revision: 0 },
+      { id: "external-id", order: 1, title: "Mục mới 2", markdown: "Nội dung mới 2", status: "draft",
+      revision: 0 },
     ];
 
     const result = appendSections(bundle, newSections);
@@ -119,7 +122,8 @@ describe("markdown import helpers", () => {
   it("appendSections starts order at zero for an empty project", () => {
     const bundle = createMockBundle([]);
     const result = appendSections(bundle, [
-      { id: "import-sec-0", order: 4, title: "Mục mới", markdown: "Nội dung", status: "draft" },
+      { id: "import-sec-0", order: 4, title: "Mục mới", markdown: "Nội dung", status: "draft",
+      revision: 0 },
     ]);
 
     expect(result.project.sections[0].order).toBe(0);
@@ -127,12 +131,14 @@ describe("markdown import helpers", () => {
 
   it("replaceSections replaces sections and updates order and IDs", () => {
     const initialSections: ReportSection[] = [
-      { id: "sec-1", order: 0, title: "Mục 1", markdown: "Nội dung 1", status: "done" },
+      { id: "sec-1", order: 0, title: "Mục 1", markdown: "Nội dung 1", status: "done",
+      revision: 0 },
     ];
     const bundle = createMockBundle(initialSections);
 
     const newSections: ReportSection[] = [
-      { id: "external-id", order: 9, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft" },
+      { id: "external-id", order: 9, title: "Mục mới 1", markdown: "Nội dung mới 1", status: "draft",
+      revision: 0 },
     ];
 
     const result = replaceSections(bundle, newSections);

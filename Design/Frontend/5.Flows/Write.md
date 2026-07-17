@@ -1,5 +1,9 @@
 # ✍️ FLOW — Write (Module 1)
 
+## W26–W35 entry and safety changes
+
+The first screen is now Project Library, not a singleton workspace. User creates/opens a project, then navigates to `/workspace/[projectId]`. Editing increments section revision; autosave commits bundle+summary atomically. AI Apply and destructive import/reset require a snapshot. Save failures surface a recovery record and retry state instead of console-only errors.
+
 > **STATUS: ✅ SPEC.** Screen-level cho luồng viết, theo `_FlowSpecRule.md`. Logic ở `Modules/1.Write.md`; file này lo *màn trông & cảm thấy ra sao*. Đây là **bàn viết → tờ nộp** (chữ ký `0.ArtDirection.md` §12) — màn hình đầu tiên & ở lâu nhất.
 
 ## Bản đồ bước

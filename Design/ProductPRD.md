@@ -17,7 +17,7 @@ ReportSupporter should not feel like a generic converter site. Its main identity
 ## 3. MVP Goal
 
 Build a useful first version around Markdown reports, structured into two incremental milestones:
-- **Core MVP (Month 1 / W1–W4)**: The editor loop (write → format → check → export HTML, browser-print PDF, basic DOCX).
+- **Core MVP (Month 1 / W1–W4)**: The original editor loop (write → format → check → HTML/print-preview/basic DOCX). The production product supersedes browser-print-as-artifact with a first-party PDF renderer in W27.
 - **Submission MVP / Evidence MVP (Month 2 / W5)**: Verifiable submission package (adding evidence links through Evidence Kit, generating evidence appendix, and printing QR codes).
 
 Core features:
@@ -86,7 +86,7 @@ Core features:
 ### Export
 
 - Markdown to HTML.
-- Markdown to PDF through browser print / print CSS first.
+- Markdown to a verified PDF artifact through the first-party Node/Docker renderer; local Print Preview remains available as a separate action.
 - Markdown to DOCX as an editable best-effort version.
 - README/report template to PDF/DOCX.
 
@@ -124,6 +124,15 @@ See [MCP / Connector Markdown Ingestion Strategy](Decisions/MCP_Connector_Strate
 ## 7. Success Criteria
 
 - A student can create a clean report skeleton in under two minutes.
-- A Markdown report can export to HTML, browser-print PDF, and editable DOCX.
+- A Markdown report can export verified offline HTML, binary PDF, editable DOCX and PPTX artifacts; Print Preview is not counted as export.
+
+## 9. Production program (W25–W36)
+
+- Product remains local-first, no mandatory login, no cloud sync and no remote template marketplace. Server scope is limited to AI/rate limiting and ephemeral first-party PDF rendering.
+- `/` is the Project Library; `/workspace/[projectId]` is the editor. IndexedDB v4 persists multiple projects, summaries, settings and recovery items atomically while retaining the legacy draft for one rollback release.
+- All report mutations increment `ReportSection.revision`. AI suggestions and worker responses are accepted only when project/section/revision/content hash still match.
+- Export and submission only accept verified `ExportArtifact` records with MIME, magic bytes, byte length and SHA-256. Submission ZIP manifests carry the same integrity metadata.
+- Six roadmap capabilities are in scope: multi-project library, Smart Import Review, complete AI workflow, internal/offline Template Catalog, PWA offline shell and `.rsproject` backup/quota/recovery.
+- Release status changes to `DONE` only when CI, production browser QA, PDF Docker integration, Redis multi-instance coverage and QA artifacts are attached.
 - Checker output gives concrete, fixable issues before submission.
 - The first screen is the actual workspace, not a marketing landing page.

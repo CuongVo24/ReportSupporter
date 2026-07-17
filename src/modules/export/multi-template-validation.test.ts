@@ -41,7 +41,7 @@ describe("Multi-Template Export Validation Tests", () => {
       }
 
       it("should export to HTML successfully and contain key headers/sections", async () => {
-        const result = exportHtml(bundle);
+        const result = await exportHtml(bundle);
         expect(result.ok).toBe(true);
         if (result.ok) {
           const htmlText = await result.blob.text();
@@ -93,10 +93,12 @@ describe("Multi-Template Export Validation Tests", () => {
           },
           querySelectorAll: vi.fn().mockReturnValue([]),
           title: "",
+          images: [],
         };
 
         const mockIframe = {
           style: {},
+          remove: vi.fn(),
           contentWindow: {
             document: mockIframeDoc,
             focus: vi.fn(),
@@ -114,7 +116,10 @@ describe("Multi-Template Export Validation Tests", () => {
         const originalWindow = global.window;
         const originalDocument = global.document;
 
-        global.window = {} as unknown as typeof window;
+        global.window = {
+          requestAnimationFrame: (callback: FrameRequestCallback) => { callback(0); return 1; },
+          setTimeout: vi.fn(),
+        } as unknown as typeof window;
         global.document = {
           createElement: mockCreateElement,
           querySelectorAll: mockQuerySelectorAll,
@@ -127,10 +132,7 @@ describe("Multi-Template Export Validation Tests", () => {
         try {
           const result = await exportPdfViaBrowserPrint(bundle);
           expect(result.ok).toBe(true);
-          if (result.ok) {
-            expect(result.blob).toBeInstanceOf(Blob);
-            expect(result.blob.type).toBe("text/html;charset=utf-8");
-          }
+          expect(mockIframe.contentWindow.print).toHaveBeenCalled();
         } finally {
           global.window = originalWindow;
           global.document = originalDocument;

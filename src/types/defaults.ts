@@ -1,7 +1,7 @@
 // Bootstrap defaults used when creating a new project bundle (W1 Group C).
 import type { FormatSettings } from "./format";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_TEMPLATE_ID = "software-project";
 

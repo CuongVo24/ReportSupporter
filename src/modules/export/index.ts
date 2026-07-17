@@ -1,5 +1,5 @@
 export { exportHtml } from "./export-html";
-export { exportPdf, exportPdfViaBrowserPrint, renderPdfWithPuppeteer } from "./export-pdf";
+export { exportPdf, exportPdfViaBrowserPrint, openPrintPreview, renderPdfWithPuppeteer } from "./export-pdf";
 export { exportDocx, packDocx } from "./export-docx";
 export { mdastToDocxBlocks } from "./mdast-to-docx";
 export { verifyDocxLayout, type DocxLayoutCheck } from "./docx-layout-checklist";

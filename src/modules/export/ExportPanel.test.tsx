@@ -31,7 +31,8 @@ describe("ExportPanel Preflight Integration", () => {
         members: ["Nguyễn Văn A"],
       },
       sections: [
-        { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done" },
+        { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done",
+        revision: 0 },
       ],
       updatedAt: "2026-06-24T22:00:00.000Z",
     },

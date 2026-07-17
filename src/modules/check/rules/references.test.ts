@@ -25,6 +25,7 @@ describe("References Section check rule", () => {
               title: "Tài liệu tham khảo",
               markdown,
               status: "draft",
+              revision: 0,
             },
           ],
           updatedAt: new Date().toISOString(),

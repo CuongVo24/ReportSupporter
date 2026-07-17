@@ -19,6 +19,7 @@ export function addSection(
     order: insertAt !== undefined ? insertAt : sections.length,
     status: "draft",
     markdown: `# ${finalTitle}\n\n`,
+    revision: 0,
   };
 
   const insertIndex = insertAt !== undefined ? insertAt : sections.length;
@@ -49,6 +50,7 @@ export function duplicateSection(
     title: `${sectionToDuplicate.title} (bản sao)`,
     order: insertAt,
     status: "draft",
+    revision: 0,
   };
 
   const result = renumberSections([
@@ -84,6 +86,7 @@ export function renameSection(
         ...section,
         title: newTitle,
         markdown: updatedMarkdown,
+        revision: updatedMarkdown === section.markdown ? section.revision : section.revision + 1,
       };
     }
     return section;

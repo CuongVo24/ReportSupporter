@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider, ToastViewport } from "@/components/ui";
+import { PwaManager } from "@/components/PwaManager";
 
 const fontUi = Inter({
   subsets: ["latin", "latin-ext", "vietnamese"],
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body>
         <ToastProvider>
           {children}
+          <PwaManager />
           <ToastViewport />
         </ToastProvider>
       </body>

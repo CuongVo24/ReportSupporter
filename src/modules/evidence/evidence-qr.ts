@@ -9,8 +9,7 @@ export async function toQrDataUrl(url: string): Promise<string> {
   try {
     const { default: QRCode } = await import("qrcode");
     return await QRCode.toDataURL(url);
-  } catch (error) {
-    console.error("QR Code generation failed:", error);
+  } catch {
     return "";
   }
 }

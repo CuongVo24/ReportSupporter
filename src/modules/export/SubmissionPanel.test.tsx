@@ -1,37 +1,24 @@
-import { describe, it, expect, vi } from "vitest";
+// @vitest-environment jsdom
+import React from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { CheckResult, ReportProjectBundle } from "@/types";
 import { SubmissionPanel } from "./SubmissionPanel";
-import type { ReportProjectBundle, CheckResult } from "@/types";
-import { Button } from "@/components/ui";
 
-// Mock React hooks to allow direct invocation of the component function in pure Node
-vi.mock("react", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react")>();
-  return {
-    ...actual,
-    useState: (initial: unknown) => {
-      const val = typeof initial === "function" ? (initial as () => unknown)() : initial;
-      return [val, vi.fn()];
-    },
-    useCallback: (fn: (...args: unknown[]) => unknown) => fn,
-    useEffect: vi.fn(),
-    useMemo: (fn: () => unknown) => fn(),
-  };
-});
+vi.mock("./preflight", () => ({
+  buildPreflightResult: () => ({ ok: true, hasP0: false, issues: [] }),
+}));
 
-describe("SubmissionPanel component structure", () => {
-  const mockBundle: ReportProjectBundle = {
+describe("SubmissionPanel wizard", () => {
+  const bundle: ReportProjectBundle = {
+    schemaVersion: 2,
     project: {
       id: "test-proj",
       title: "Báo cáo thử nghiệm",
       templateId: "software-project",
-      metadata: {
-        school: "Đại học Công nghệ",
-        members: ["Nguyễn Văn A"],
-      },
-      sections: [
-        { id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung mở đầu", status: "done" },
-      ],
-      updatedAt: "2026-06-24T22:00:00.000Z",
+      metadata: { school: "Đại học Công nghệ", members: ["Nguyễn Văn A"] },
+      sections: [{ id: "sec1", order: 0, title: "Mở đầu", markdown: "Nội dung", status: "done", revision: 0 }],
+      updatedAt: "2026-07-17T00:00:00.000Z",
     },
     assets: [],
     evidence: [],
@@ -42,107 +29,40 @@ describe("SubmissionPanel component structure", () => {
       includeListOfTables: true,
       captionNumbering: "continuous",
     },
-    schemaVersion: 1,
   };
 
-  const mockCheck: CheckResult = {
+  const check: CheckResult = {
     issues: [],
-    grouped: {
-      error: [],
-      warning: [],
-      info: [],
-    },
+    grouped: { error: [], warning: [], info: [] },
     readinessScore: 85,
-    ranAt: "2026-06-24T22:00:00.000Z",
+    ranAt: "2026-07-17T00:00:00.000Z",
   };
 
-  it("renders the checklist items and download button", () => {
-    const element = SubmissionPanel({
-      bundle: mockBundle,
-      check: mockCheck,
-      exportedBlobs: { html: new Blob([""], { type: "text/html" }) },
-      jobs: [],
-    });
+  afterEach(cleanup);
 
-    expect(element).toBeDefined();
-    expect(element.type).toBe("div");
-    expect(element.props.className).toBe("ws-submission-panel");
+  it("walks through all four stages and exposes the final package action", () => {
+    render(<SubmissionPanel bundle={bundle} check={check} exportedBlobs={{ html: new Blob(["ok"], { type: "text/html" }) }} jobs={[]} />);
 
-    const children = element.props.children;
-    expect(children).toBeInstanceOf(Array);
+    expect(screen.getByRole("list", { name: "Các bước đóng gói" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Checklist kiểm tra báo cáo" })).toBeDefined();
 
-    const titleEl = children[0];
-    expect(titleEl.type).toBe("h3");
-    expect(titleEl.props.children).toBe("Đóng gói nộp bài");
+    fireEvent.click(screen.getByRole("button", { name: "Tiếp tục" }));
+    expect(screen.getByRole("heading", { name: "Artifact trong phiên hiện tại" })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Tiếp tục" }));
+    expect(screen.getByRole("heading", { name: "Xác minh và preview cuối" })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Tiếp tục" }));
 
-    const checklistContainer = children[1];
-    expect(checklistContainer.type).toBe("div");
-    expect(checklistContainer.props.className).toBe("ws-submission-checklist-container");
-
-    const downloadButton = children[3];
-    expect(downloadButton.type).toBe(Button);
-    expect(downloadButton.props.className).toBe("ws-submission-btn");
-    expect(downloadButton.props.children).toBe("Tải về evidence.zip");
-
-    // Verify accessibility (a11y) requirements
-    const checklistUl = checklistContainer.props.children[1];
-    expect(checklistUl.type).toBe("ul");
-    const items = checklistUl.props.children;
-    expect(items).toBeInstanceOf(Array);
-    
-    const firstItem = items[0];
-    expect(firstItem.type).toBe("li");
-    
-    const svgEl = firstItem.props.children[0];
-    expect(svgEl.props["aria-hidden"]).toBe("true");
-
-    const contentEl = firstItem.props.children[1];
-    expect(contentEl.props.className).toBe("ws-submission-checklist-content");
-    const hiddenLabel = contentEl.props.children[0];
-    expect(hiddenLabel.props.className).toBe("ws-visually-hidden");
-    expect(hiddenLabel.props.children).toBe("Đạt");
+    expect(screen.getByRole("button", { name: "Tải về bộ nộp bài" })).toBeDefined();
   });
 
-  it("renders the checklist warning and packages warning when conditions require it", () => {
-    // 1. Test case: exportedBlobs is empty (should show blobs warning)
-    const elementEmptyBlobs = SubmissionPanel({
-      bundle: mockBundle,
-      check: mockCheck,
-      exportedBlobs: {},
-      jobs: [],
-    });
-    const children = elementEmptyBlobs.props.children;
-    
-    // index 2 is the warning when empty
-    const blobsWarning = children[2];
-    expect(blobsWarning.type).toBe("div");
-    expect(blobsWarning.props.className).toBe("ws-submission-blobs-warning");
-    expect(blobsWarning.props.children.join("")).toContain("chưa xuất bản trong phiên này");
+  it("shows explicit warnings for a missing check and missing session artifacts", () => {
+    render(<SubmissionPanel bundle={bundle} exportedBlobs={{}} jobs={[]} />);
+    expect(screen.getByText("Soát báo cáo để rà lỗi trước khi nộp.")).toBeDefined();
 
-    const button = children[3];
-    expect(button.type).toBe(Button);
-    expect(button.props.className).toBe("ws-submission-btn");
+    for (let index = 0; index < 3; index += 1) {
+      fireEvent.click(screen.getByRole("button", { name: "Tiếp tục" }));
+    }
 
-    // 2. Test case: check is undefined (should show checker unrun warning)
-    const elementNoCheck = SubmissionPanel({
-      bundle: mockBundle,
-      check: undefined,
-      exportedBlobs: { html: new Blob([""], { type: "text/html" }) },
-      jobs: [],
-    });
-    const childrenNoCheck = elementNoCheck.props.children;
-    const checklistContainer = childrenNoCheck[1];
-    
-    const checklistWarning = checklistContainer.props.children[1];
-    expect(checklistWarning.type).toBe("div");
-    expect(checklistWarning.props.className).toBe("ws-submission-checklist-warning");
-    expect(checklistWarning.props.children).toContain("Soát báo cáo để rà lỗi trước khi nộp.");
-    
-    // blobs warning should not be rendered (since we passed html blob)
-    const noBlobsWarning = childrenNoCheck[2];
-    expect(noBlobsWarning).toBe(false);
-
-    const buttonNoCheck = childrenNoCheck[3];
-    expect(buttonNoCheck.type).toBe(Button);
+    expect(screen.getByText(/chưa xuất bản trong phiên này/i)).toBeDefined();
   });
 });

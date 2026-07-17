@@ -41,6 +41,7 @@ describe("checkDraft", () => {
           title: "Code Section",
           markdown: "```\nconsole.log(123);\n```",
           status: "draft",
+          revision: 0,
         },
       ],
       mode: "append",

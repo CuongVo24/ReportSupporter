@@ -1,4 +1,4 @@
-import type { AiActionGateway, AiSuggestion } from "@/types";
+import type { AiActionGateway, AiRequestOptions, AiSuggestion } from "@/types";
 import { buildNoopSuggestion } from "./ai-gateway";
 
 /**
@@ -8,12 +8,15 @@ import { buildNoopSuggestion } from "./ai-gateway";
 export async function improveTerminology(
   text: string,
   gateway: AiActionGateway,
+  options?: AiRequestOptions,
 ): Promise<AiSuggestion> {
   const state = gateway.getGatewayState();
 
   if (state === "disabled" || state === "unconfigured") {
-    return buildNoopSuggestion("terminology", text);
+    return buildNoopSuggestion("terminology", text, options);
   }
 
-  return gateway.requestSuggestion("terminology", text);
+  return options
+    ? gateway.requestSuggestion("terminology", text, options)
+    : gateway.requestSuggestion("terminology", text);
 }

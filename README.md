@@ -39,7 +39,7 @@ graph TD
 * Soạn thảo bằng Markdown trực quan kết hợp live preview.
 * Hỗ trợ chèn ảnh, bảng biểu, khối mã nguồn (code block), công thức toán học (LaTeX) và biểu đồ Mermaid.
 * Hệ thống mẫu (Template) báo cáo chuẩn khoa/trường giúp sinh skeleton tự động chỉ với việc điền metadata.
-* Tự động lưu bản nháp liên tục vào cơ sở dữ liệu trình duyệt (IndexedDB) — hoàn toàn offline.
+* Thư viện đa dự án lưu bundle/summary/settings/recovery trong IndexedDB v4; có tìm kiếm, Recent, duplicate, Trash không tự purge và Recovery Center.
 
 ### 2. 🎨 Module 2: Format (Chuẩn hóa tự động)
 * Áp dụng luật dàn trang A4 chuẩn học thuật (Times New Roman, cỡ chữ 13pt/14pt, giãn dòng 1.5, căn lề justify).
@@ -55,8 +55,8 @@ graph TD
 * Tính toán **Readiness Score (0-100)** biểu thị mức độ sẵn sàng nộp bài.
 
 ### 4. 📤 Module 4: Export (Xuất đa định dạng trung thực)
-* **HTML**: Xuất tệp HTML tự chứa (self-contained) ngoại tuyến, nhúng ảnh dạng base64.
-* **PDF**: Hỗ trợ xuất PDF chất lượng thông qua in trình duyệt (`exportPdfViaBrowserPrint()`) hoặc dựng server-side qua Puppeteer ở giai đoạn nâng cao.
+* **HTML**: Xuất tệp HTML offline, CSP chặt, inline KaTeX/font/ảnh và Mermaid SVG tĩnh; không script, CDN hoặc URL mạng.
+* **PDF**: `exportPdf()` tạo binary `%PDF-` qua renderer first-party Node/Docker; nội dung chỉ tồn tại tạm thời trong request và không được lưu/log. Print Preview local là luồng riêng, không tạo artifact hay history.
 * **DOCX**: Dựng tệp Word có cấu trúc từ AST để biên tập sâu hơn.
 
 ### 5. 🔗 Evidence Kit & Present (Bằng chứng số hóa & Thuyết trình)
@@ -83,7 +83,7 @@ Toàn bộ tài liệu phân tích kỹ thuật và lộ trình phát triển đ
 * [`Design/ProductPRD.md`](Design/ProductPRD.md): Yêu cầu sản phẩm chi tiết và phạm vi tính năng MVP.
 * [`Design/Modules/Other/TechnicalStack.md`](Design/Modules/Other/TechnicalStack.md): Stack công nghệ đã khóa và cấu trúc thư mục quy chuẩn.
 * [`Design/Modules/Other/PipelineContract.md`](Design/Modules/Other/PipelineContract.md): Quy ước chi tiết về mô hình dữ liệu AST dùng chung.
-* [`Design/RoadMap/MasterRoadMap.md`](Design/RoadMap/MasterRoadMap.md): Lộ trình 12 tuần phát triển từ Core MVP đến bản hoàn thiện.
+* [`Design/RoadMap/MasterRoadMap.md`](Design/RoadMap/MasterRoadMap.md): Lộ trình W1–W36; Phase 6–8 bao phủ production safety, full roadmap, PWA và release hardening.
 
 ---
 

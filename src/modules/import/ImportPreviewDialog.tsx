@@ -8,9 +8,11 @@ import { WarningsPanel } from "./preview/WarningsPanel";
 import { IssuesPanel } from "./preview/IssuesPanel";
 import { remapMarkdownHeadings } from "./remap-heading";
 import { loadOcrConfig, saveOcrConfig } from "./ocr-settings";
-import { performOcrOnCanvas, formatOcrTextToMarkdown, renderPdfPageToCanvas } from "./converters/ocr";
+import { performDetailedOcrOnCanvas, formatOcrTextToMarkdown, renderPdfPageToCanvas } from "./converters/ocr";
 import { ToastProvider, Toast, ToastViewport } from "@/components/ui/Toast";
-import type { ImportDraft, ReportSection } from "@/types";
+import type { ImportDraft, OcrResult } from "@/types";
+import { ingestAssetsAndEvidence } from "@/modules/write/import-assets";
+import { buildMarkdownImportDraft } from "@/modules/write/markdown-import";
 import "./ImportPreviewDialog.css";
 
 interface ImportPreviewDialogProps {
@@ -37,10 +39,12 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
   const [deltaMaps, setDeltaMaps] = useState<Record<string, Record<string, number>>>({});
   // Maps: file/draft fileName -> import mode ("append" | "replace")
   const [modes, setModes] = useState<Record<string, "append" | "replace">>({});
+  const [assetSelectionMaps, setAssetSelectionMaps] = useState<Record<string, Record<string, string>>>({});
 
   // OCR configs and states
   const [ocrEnabled, setOcrEnabled] = useState(false);
   const [ocrStates, setOcrStates] = useState<Record<string, { status: string; progress: number; controller: AbortController }>>({});
+  const [ocrResults, setOcrResults] = useState<Record<string, OcrResult>>({});
   
   // Toast state
   const [toast, setToast] = useState<{ isOpen: boolean; title?: string; description?: string; variant?: "success" | "info" | "error" }>({
@@ -63,16 +67,19 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
       const newExcluded: Record<string, Record<string, boolean>> = {};
       const newDeltas: Record<string, Record<string, number>> = {};
       const newModes: Record<string, "append" | "replace"> = {};
+      const newAssetSelections: Record<string, Record<string, string>> = {};
 
       drafts.forEach((d) => {
         newExcluded[d.result.fileName] = {};
         newDeltas[d.result.fileName] = {};
         newModes[d.result.fileName] = d.mode || "append";
+        newAssetSelections[d.result.fileName] = d.reviewDecisions?.assetSelections ?? {};
       });
 
       setExcludedMaps(newExcluded);
       setDeltaMaps(newDeltas);
       setModes(newModes);
+      setAssetSelectionMaps(newAssetSelections);
     }
   }, [isOpen, drafts]);
 
@@ -85,6 +92,8 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
   const activeExcludedMap = excludedMaps[activeFileName] || {};
   const activeDeltaMap = deltaMaps[activeFileName] || {};
   const activeMode = modes[activeFileName] || "append";
+  const activeAssetSelections = assetSelectionMaps[activeFileName] || {};
+  const ambiguousAssets = activeDraft.summary?.resolutions?.filter((resolution) => resolution.status === "ambiguous") ?? [];
 
   // Check if active draft has warnings and issues
   const activeWarnings = activeDraft.result.warnings || [];
@@ -203,8 +212,9 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
       const canvas = await renderPdfPageToCanvas(activeDraft.file, pageNum);
 
       // 2. Run OCR recognize
-      const rawText = await performOcrOnCanvas(
+      const ocrResult = await performDetailedOcrOnCanvas(
         canvas,
+        pageNum,
         (p) => {
           setOcrStates((prev) => {
             if (!prev[sectionId]) return prev;
@@ -218,8 +228,9 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
       );
 
       // 3. Format and update draft
-      const formattedMarkdown = formatOcrTextToMarkdown(rawText);
+      const formattedMarkdown = formatOcrTextToMarkdown(ocrResult.text);
       updateSectionMarkdown(sectionId, formattedMarkdown, pageNum);
+      setOcrResults((previous) => ({ ...previous, [sectionId]: ocrResult }));
 
       // Clear OCR state on success
       setOcrStates((prev) => {
@@ -232,7 +243,6 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
       if (error.message === "OCR cancelled") {
         // do nothing
       } else {
-        console.error("OCR error:", error);
         setToast({
           isOpen: true,
           variant: "error",
@@ -284,17 +294,28 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
     }
   };
 
-  const handleCommitActive = () => {
-    // Construct final draft with modified sections list and mode
-    const finalSections: ReportSection[] = keptSections.map((sec) => ({
-      ...sec,
-      markdown: remapMarkdownHeadings(sec.markdown, activeDeltaMap[sec.id] || 0),
-    }));
-
-    const finalDraft: ImportDraft = {
-      ...activeDraft,
-      sections: finalSections,
-      mode: activeMode,
+  const handleCommitActive = async () => {
+    const reviewedIngest = await ingestAssetsAndEvidence(
+      previewMarkdown,
+      activeDraft.availableFiles ?? [],
+      { assetSelections: activeAssetSelections },
+    );
+    const finalDraft = await buildMarkdownImportDraft(
+      activeDraft.result.fileName,
+      reviewedIngest.markdown,
+      [...activeDraft.result.assets, ...reviewedIngest.assets],
+      [...(activeDraft.evidence ?? []), ...reviewedIngest.evidence],
+      reviewedIngest.summary,
+      activeDraft.result.sourceFormat,
+    );
+    finalDraft.mode = activeMode;
+    finalDraft.file = activeDraft.file;
+    finalDraft.availableFiles = activeDraft.availableFiles;
+    finalDraft.reviewDecisions = {
+      headingLevels: activeDeltaMap,
+      assetSelections: activeAssetSelections,
+      acceptedOcrBlocks: Object.fromEntries(Object.values(ocrResults)
+        .flatMap((result) => result.blocks.map((block) => [block.id, true] as const))),
     };
 
     onCommit(finalDraft);
@@ -357,18 +378,28 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
           {/* Left Side: Markdown preview pipeline */}
           <div className="ws-import-preview-left">
             <div className="ws-import-preview-scroll">
-              <PreviewPane
-                markdown={previewMarkdown}
-                assets={activeDraft.result.assets}
-                evidence={activeDraft.evidence}
-                formatSettings={{
-                  presetId: "academic-default",
-                  includeToc: false,
-                  includeListOfFigures: false,
-                  includeListOfTables: false,
-                  captionNumbering: "continuous",
-                }}
-              />
+              <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 12 }}>
+                <section aria-label="Nội dung nguồn">
+                  <h4>Nguồn chuyển đổi</h4>
+                  <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{activeDraft.result.markdown}</pre>
+                </section>
+                <section aria-label="Kết quả sau review">
+                  <h4>Kết quả nhập</h4>
+                  <PreviewPane
+                    projectId={`import-${activeFileName}`}
+                    markdown={previewMarkdown}
+                    assets={activeDraft.result.assets}
+                    evidence={activeDraft.evidence}
+                    formatSettings={{
+                      presetId: "academic-default",
+                      includeToc: false,
+                      includeListOfFigures: false,
+                      includeListOfTables: false,
+                      captionNumbering: "continuous",
+                    }}
+                  />
+                </section>
+              </div>
             </div>
           </div>
 
@@ -434,7 +465,33 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
                 onRunOcr={handleRunOcr}
                 onCancelOcr={handleCancelOcr}
               />
+              {Object.entries(ocrResults).map(([sectionId, result]) => (
+                <p key={sectionId} className="ws-section-guessed-badge">
+                  OCR trang {result.page}: {result.confidence.toFixed(1)}% · {result.blocks.length} block
+                </p>
+              ))}
             </div>
+
+            {ambiguousAssets.length > 0 && (
+              <div className="ws-warnings-panel-section">
+                <div className="ws-section-panel-title">Chọn tệp cho ảnh trùng tên</div>
+                {ambiguousAssets.map((resolution) => (
+                  <label key={resolution.reference} style={{ display: "grid", gap: 4, marginBottom: 8 }}>
+                    <span>{resolution.reference}</span>
+                    <select
+                      value={activeAssetSelections[resolution.reference] ?? ""}
+                      onChange={(event) => setAssetSelectionMaps((previous) => ({
+                        ...previous,
+                        [activeFileName]: { ...previous[activeFileName], [resolution.reference]: event.target.value },
+                      }))}
+                    >
+                      <option value="">— Chọn đúng đường dẫn —</option>
+                      {resolution.candidateFileIds.map((candidate) => <option key={candidate} value={candidate}>{candidate}</option>)}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            )}
 
             {/* Checker Issues panel */}
             <div className="ws-warnings-panel-section" style={{ minHeight: "150px" }}>
@@ -489,7 +546,7 @@ export const ImportPreviewDialog: React.FC<ImportPreviewDialogProps> = ({
               Bỏ qua tệp này
             </Button>
           )}
-          <Button variant="primary" onClick={handleCommitActive}>
+          <Button variant="primary" onClick={() => void handleCommitActive()} disabled={ambiguousAssets.some((resolution) => !activeAssetSelections[resolution.reference])}>
             {commitButtonLabel}
           </Button>
         </div>

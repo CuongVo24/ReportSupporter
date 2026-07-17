@@ -25,6 +25,7 @@ export function createProjectFromTemplate(
     title: seed.title,
     markdown: seed.starterMarkdown,
     status: seed.status, // "draft"
+    revision: 0,
   }));
 
   const project: ReportProject = {

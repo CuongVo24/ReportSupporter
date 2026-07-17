@@ -12,7 +12,7 @@ const mockCtx = (markdown: string, assets: { id: string; url: string }[] = []): 
         title: "t",
         templateId: "temp",
         metadata: {},
-        sections: [{ id: "sec", order: 1, title: "t", markdown, status: "draft" as const }],
+        sections: [{ id: "sec", order: 1, title: "t", markdown, status: "draft" as const, revision: 0 }],
         updatedAt: "",
       },
       assets: assets.map((a) => ({

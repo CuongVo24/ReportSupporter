@@ -13,7 +13,7 @@ const mockCtx = (
   
   for (const [id, markdown] of Object.entries(sections)) {
     sectionAsts[id] = parseMarkdown(markdown) as MdastRoot;
-    bundleSections.push({ id, order: 1, title: id, markdown, status: "draft" as const });
+    bundleSections.push({ id, order: 1, title: id, markdown, status: "draft" as const, revision: 0 });
   }
 
   return {

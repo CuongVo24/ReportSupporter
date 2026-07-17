@@ -37,7 +37,7 @@ export async function collectDroppedFiles(
   async function visit(entry: FileSystemEntry): Promise<void> {
     if (entry.isFile) {
       if (files.length >= maxFiles) {
-        throw new Error(`Chá»‰ cÃ³ thá»ƒ nháº­p tá»‘i Ä‘a ${maxFiles} tá»‡p má»—i láº§n.`);
+        throw new Error(`Chỉ có thể nhập tối đa ${maxFiles} tệp mỗi lần.`);
       }
       files.push(await readFileEntry(entry as FileSystemFileEntry));
       return;
