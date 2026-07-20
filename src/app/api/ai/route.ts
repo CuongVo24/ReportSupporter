@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { aiActionSchema } from "@/types/ai";
 import type { AiAction, AiStreamEvent, AiUsage } from "@/types/ai";
 import { createRateLimiter, rateLimitIdentity } from "@/lib/server/rate-limit";
+import { parseGeminiChunk, extractJsonObjects } from "./providers/gemini";
+import { parseOpenAiLine } from "./providers/openai";
+import { parseAnthropicLine } from "./providers/anthropic";
 
 type AiProvider = "gemini" | "openai" | "anthropic";
 
@@ -35,9 +38,9 @@ function validModel(model: string | undefined): boolean {
   );
 }
 
-async function requestProvider(url: string, init: RequestInit): Promise<Response> {
+async function requestProvider(url: string, init: RequestInit, signal?: AbortSignal): Promise<Response> {
   try {
-    const response = await fetch(url, { ...init, signal: AbortSignal.timeout(AI_TIMEOUT_MS) });
+    const response = await fetch(url, { ...init, signal });
     if (!response.ok) throw new ProviderRequestError(GENERIC_PROVIDER_ERROR);
     return response;
   } catch (error: unknown) {
@@ -115,57 +118,6 @@ function buildPrompt(action: AiAction, input: string): string {
   }
 }
 
-function readGeminiSuggestion(data: unknown): string {
-  const record = asRecord(data);
-  const candidates = Array.isArray(record.candidates) ? record.candidates : [];
-  const firstCandidate = asRecord(candidates[0]);
-  const content = asRecord(firstCandidate.content);
-  const parts = Array.isArray(content.parts) ? content.parts : [];
-  const firstPart = asRecord(parts[0]);
-  return stringValue(firstPart.text) ?? "";
-}
-
-function readOpenAiSuggestion(data: unknown): string {
-  const record = asRecord(data);
-  const choices = Array.isArray(record.choices) ? record.choices : [];
-  const firstChoice = asRecord(choices[0]);
-  const message = asRecord(firstChoice.message);
-  return stringValue(message.content) ?? "";
-}
-
-function readAnthropicSuggestion(data: unknown): string {
-  const record = asRecord(data);
-  const content = Array.isArray(record.content) ? record.content : [];
-  const firstContent = asRecord(content[0]);
-  return stringValue(firstContent.text) ?? "";
-}
-
-function readUsage(provider: AiProvider, data: unknown): AiUsage | undefined {
-  const record = asRecord(data);
-  const usage = provider === "gemini" ? asRecord(record.usageMetadata) : asRecord(record.usage);
-  if (!usage) return undefined;
-  const input = provider === "gemini" ? usage.promptTokenCount : provider === "openai" ? usage.prompt_tokens : usage.input_tokens;
-  const output = provider === "gemini" ? usage.candidatesTokenCount : provider === "openai" ? usage.completion_tokens : usage.output_tokens;
-  if (typeof input !== "number" && typeof output !== "number") return undefined;
-  return {
-    inputTokens: typeof input === "number" ? input : undefined,
-    outputTokens: typeof output === "number" ? output : undefined,
-    estimated: false,
-  };
-}
-
-function ndjson(events: AiStreamEvent[]): Response {
-  const body = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
-  return new Response(body, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/x-ndjson;charset=utf-8",
-      "Cache-Control": "no-store",
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
-}
-
 export async function POST(req: Request) {
   try {
     const declaredLength = Number(req.headers.get("content-length") || "0");
@@ -212,31 +164,25 @@ export async function POST(req: Request) {
     const requestId = suppliedRequestId || crypto.randomUUID();
 
     const prompt = buildPrompt(action, input);
-    let suggestion = "";
-    let usage: AiUsage | undefined;
     let selectedModel = "";
+    let url = "";
+    let fetchInit: RequestInit = {};
 
     if (provider === "gemini") {
       selectedModel = model || "gemini-1.5-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent`;
-
-      const response = await requestProvider(url, {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:streamGenerateContent`;
+      fetchInit = {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
         }),
-      });
-
-      const data: unknown = await response.json();
-      suggestion = readGeminiSuggestion(data);
-      usage = readUsage(provider, data);
+      };
     } else if (provider === "openai") {
       selectedModel = model || "gpt-4o";
-      const url = "https://api.openai.com/v1/chat/completions";
-
-      const response = await requestProvider(url, {
+      url = "https://api.openai.com/v1/chat/completions";
+      fetchInit = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -246,17 +192,14 @@ export async function POST(req: Request) {
           model: selectedModel,
           messages: [{ role: "user", content: prompt }],
           max_tokens: MAX_OUTPUT_TOKENS,
+          stream: true,
+          stream_options: { include_usage: true },
         }),
-      });
-
-      const data: unknown = await response.json();
-      suggestion = readOpenAiSuggestion(data);
-      usage = readUsage(provider, data);
+      };
     } else {
       selectedModel = model || "claude-3-5-sonnet-20241022";
-      const url = "https://api.anthropic.com/v1/messages";
-
-      const response = await requestProvider(url, {
+      url = "https://api.anthropic.com/v1/messages";
+      fetchInit = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -267,20 +210,196 @@ export async function POST(req: Request) {
           model: selectedModel,
           max_tokens: MAX_OUTPUT_TOKENS,
           messages: [{ role: "user", content: prompt }],
+          stream: true,
         }),
-      });
-
-      const data: unknown = await response.json();
-      suggestion = readAnthropicSuggestion(data);
-      usage = readUsage(provider, data);
+      };
     }
 
-    const events: AiStreamEvent[] = [
-      { event: "meta", requestId, provider, model: selectedModel },
-      ...suggestion.match(/[\s\S]{1,512}/gu)?.map((text) => ({ event: "delta" as const, requestId, text })) ?? [],
-      { event: "done", requestId, usage },
-    ];
-    return ndjson(events);
+    const providerController = new AbortController();
+
+    // Link client request abort to provider request abort
+    if (req.signal) {
+      if (req.signal.aborted) {
+        providerController.abort(req.signal.reason);
+      } else {
+        req.signal.addEventListener("abort", () => {
+          providerController.abort(req.signal.reason);
+        });
+      }
+    }
+
+    // Set overall timeout
+    const timeoutId = setTimeout(() => {
+      providerController.abort(new DOMException("The operation timed out.", "TimeoutError"));
+    }, AI_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await requestProvider(url, fetchInit, providerController.signal);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
+        return NextResponse.json({ error: "AI provider request timed out." }, { status: 504 });
+      }
+      if (error instanceof ProviderRequestError) {
+        return NextResponse.json({ error: GENERIC_PROVIDER_ERROR }, { status: 502 });
+      }
+      const message = error instanceof Error ? error.message : "Internal server error";
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+
+    // Create dynamic readable stream to pipe to client
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder("utf-8", { fatal: false });
+
+        // Meta event must go out first
+        const metaEvent: AiStreamEvent = {
+          event: "meta",
+          requestId,
+          provider,
+          model: selectedModel,
+        };
+        controller.enqueue(encoder.encode(JSON.stringify(metaEvent) + "\n"));
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          controller.enqueue(encoder.encode(JSON.stringify({
+            event: "error",
+            requestId,
+            message: "Provider did not return a streamable response body.",
+          } as AiStreamEvent) + "\n"));
+          controller.close();
+          clearTimeout(timeoutId);
+          return;
+        }
+
+        let buffer = "";
+        let anthropicInputTokens: number | undefined;
+        let anthropicOutputTokens: number | undefined;
+        let parsedUsage: AiUsage | undefined;
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const text = decoder.decode(value, { stream: true });
+
+            if (provider === "gemini") {
+              buffer += text;
+              const { objects, remaining } = extractJsonObjects(buffer);
+              buffer = remaining;
+
+              for (const objText of objects) {
+                const parsed = parseGeminiChunk(objText);
+                if (parsed) {
+                  if (parsed.delta) {
+                    controller.enqueue(encoder.encode(JSON.stringify({
+                      event: "delta",
+                      requestId,
+                      text: parsed.delta,
+                    } as AiStreamEvent) + "\n"));
+                  }
+                  if (parsed.usage) {
+                    parsedUsage = parsed.usage;
+                  }
+                }
+              }
+            } else if (provider === "openai") {
+              buffer += text;
+              let lineEndIndex;
+              while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
+                const line = buffer.slice(0, lineEndIndex);
+                buffer = buffer.slice(lineEndIndex + 1);
+                const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
+
+                const parsed = parseOpenAiLine(cleanLine);
+                if (parsed) {
+                  if (parsed.delta) {
+                    controller.enqueue(encoder.encode(JSON.stringify({
+                      event: "delta",
+                      requestId,
+                      text: parsed.delta,
+                    } as AiStreamEvent) + "\n"));
+                  }
+                  if (parsed.usage) {
+                    parsedUsage = parsed.usage;
+                  }
+                }
+              }
+            } else if (provider === "anthropic") {
+              buffer += text;
+              let lineEndIndex;
+              while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
+                const line = buffer.slice(0, lineEndIndex);
+                buffer = buffer.slice(lineEndIndex + 1);
+                const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
+
+                const parsed = parseAnthropicLine(cleanLine);
+                if (parsed) {
+                  if (parsed.delta) {
+                    controller.enqueue(encoder.encode(JSON.stringify({
+                      event: "delta",
+                      requestId,
+                      text: parsed.delta,
+                    } as AiStreamEvent) + "\n"));
+                  }
+                  if (parsed.inputTokens !== undefined) {
+                    anthropicInputTokens = parsed.inputTokens;
+                  }
+                  if (parsed.outputTokens !== undefined) {
+                    anthropicOutputTokens = parsed.outputTokens;
+                  }
+                }
+              }
+            }
+          }
+
+          if (provider === "anthropic" && (anthropicInputTokens !== undefined || anthropicOutputTokens !== undefined)) {
+            parsedUsage = {
+              inputTokens: anthropicInputTokens,
+              outputTokens: anthropicOutputTokens,
+              estimated: false,
+            };
+          }
+
+          const doneEvent: AiStreamEvent = {
+            event: "done",
+            requestId,
+            usage: parsedUsage,
+          };
+          controller.enqueue(encoder.encode(JSON.stringify(doneEvent) + "\n"));
+          controller.close();
+        } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : GENERIC_PROVIDER_ERROR;
+          const errorEvent: AiStreamEvent = {
+            event: "error",
+            requestId,
+            message: errorMsg,
+          };
+          controller.enqueue(encoder.encode(JSON.stringify(errorEvent) + "\n"));
+          controller.close();
+        } finally {
+          reader.releaseLock();
+          clearTimeout(timeoutId);
+        }
+      },
+      cancel() {
+        providerController.abort();
+        clearTimeout(timeoutId);
+      }
+    });
+
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/x-ndjson;charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch (error) {
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });

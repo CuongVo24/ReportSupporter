@@ -94,4 +94,176 @@ describe("/api/ai route", () => {
     expect(init.headers).toMatchObject({ "x-goog-api-key": "secret-client-key" });
     expect(JSON.parse(String(init.body)).generationConfig.maxOutputTokens).toBe(4000);
   });
+
+  async function readResponseStream(response: Response): Promise<string[]> {
+    const reader = response.body?.getReader();
+    if (!reader) return [];
+    const decoder = new TextDecoder();
+    let buffer = "";
+    const lines: string[] = [];
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let lineEndIndex;
+        while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, lineEndIndex);
+          buffer = buffer.slice(lineEndIndex + 1);
+          if (line.trim()) lines.push(line);
+        }
+      }
+      if (buffer.trim()) lines.push(buffer);
+    } finally {
+      reader.releaseLock();
+    }
+    return lines;
+  }
+
+  it("handles OpenAI stream request and parses delta and usage", async () => {
+    const encoder = new TextEncoder();
+    const mockOpenAiStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: {"choices": [{"delta": {"content": "Hello"}}]}\n\n'));
+        controller.enqueue(encoder.encode('data: {"choices": [{"delta": {"content": " world"}}]}\n\n'));
+        controller.enqueue(encoder.encode('data: {"choices": [{}], "usage": {"prompt_tokens": 10, "completion_tokens": 5}}\n\n'));
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      }
+    });
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      body: mockOpenAiStream,
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(aiRequest({
+      action: "rewrite",
+      input: "Draft text",
+      provider: "openai",
+    }, "client-key"));
+
+    expect(response.status).toBe(200);
+    const lines = await readResponseStream(response);
+    expect(lines).toHaveLength(4);
+    expect(JSON.parse(lines[0])).toMatchObject({ event: "meta", provider: "openai" });
+    expect(JSON.parse(lines[1])).toEqual({ event: "delta", requestId: expect.any(String), text: "Hello" });
+    expect(JSON.parse(lines[2])).toEqual({ event: "delta", requestId: expect.any(String), text: " world" });
+    expect(JSON.parse(lines[3])).toEqual({ event: "done", requestId: expect.any(String), usage: { inputTokens: 10, outputTokens: 5, estimated: false } });
+  });
+
+  it("handles Gemini stream request and parses delta and usage", async () => {
+    const encoder = new TextEncoder();
+    const mockGeminiStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('[\n'));
+        controller.enqueue(encoder.encode('  {"candidates": [{"content": {"parts": [{"text": "Hello"}]}}]}\n'));
+        controller.enqueue(encoder.encode('  ,\n  {"candidates": [{"content": {"parts": [{"text": " world"}]}}],\n'));
+        controller.enqueue(encoder.encode('   "usageMetadata": {"promptTokenCount": 12, "candidatesTokenCount": 6}}\n'));
+        controller.enqueue(encoder.encode(']\n'));
+        controller.close();
+      }
+    });
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      body: mockGeminiStream,
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(aiRequest({
+      action: "rewrite",
+      input: "Draft text",
+      provider: "gemini",
+    }, "client-key"));
+
+    expect(response.status).toBe(200);
+    const lines = await readResponseStream(response);
+    expect(lines).toHaveLength(4);
+    expect(JSON.parse(lines[0])).toMatchObject({ event: "meta", provider: "gemini" });
+    expect(JSON.parse(lines[1])).toEqual({ event: "delta", requestId: expect.any(String), text: "Hello" });
+    expect(JSON.parse(lines[2])).toEqual({ event: "delta", requestId: expect.any(String), text: " world" });
+    expect(JSON.parse(lines[3])).toEqual({ event: "done", requestId: expect.any(String), usage: { inputTokens: 12, outputTokens: 6, estimated: false } });
+  });
+
+  it("handles Anthropic stream request and parses delta and usage", async () => {
+    const encoder = new TextEncoder();
+    const mockAnthropicStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('event: message_start\ndata: {"type": "message_start", "message": {"usage": {"input_tokens": 15}}}\n\n'));
+        controller.enqueue(encoder.encode('event: content_block_delta\ndata: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "Hello"}}\n\n'));
+        controller.enqueue(encoder.encode('event: content_block_delta\ndata: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": " world"}}\n\n'));
+        controller.enqueue(encoder.encode('event: message_delta\ndata: {"type": "message_delta", "usage": {"output_tokens": 7}}\n\n'));
+        controller.close();
+      }
+    });
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      body: mockAnthropicStream,
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(aiRequest({
+      action: "rewrite",
+      input: "Draft text",
+      provider: "anthropic",
+    }, "client-key"));
+
+    expect(response.status).toBe(200);
+    const lines = await readResponseStream(response);
+    expect(lines).toHaveLength(4);
+    expect(JSON.parse(lines[0])).toMatchObject({ event: "meta", provider: "anthropic" });
+    expect(JSON.parse(lines[1])).toEqual({ event: "delta", requestId: expect.any(String), text: "Hello" });
+    expect(JSON.parse(lines[2])).toEqual({ event: "delta", requestId: expect.any(String), text: " world" });
+    expect(JSON.parse(lines[3])).toEqual({ event: "done", requestId: expect.any(String), usage: { inputTokens: 15, outputTokens: 7, estimated: false } });
+  });
+
+  it("propagates client abort to upstream provider request", async () => {
+    const encoder = new TextEncoder();
+    let fetchSignal: AbortSignal | undefined;
+
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, init) => {
+      fetchSignal = init.signal;
+      return Promise.resolve({
+        ok: true,
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode('data: {"choices": [{"delta": {"content": "Hello"}}]}\n\n'));
+          }
+        })
+      });
+    }));
+
+    const controller = new AbortController();
+    const req = new Request("http://localhost/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": "client-key" },
+      body: JSON.stringify({
+        action: "rewrite",
+        input: "Draft text",
+        provider: "openai",
+      }),
+      signal: controller.signal,
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+
+    const reader = response.body?.getReader();
+    expect(reader).toBeDefined();
+
+    // Read the first chunk
+    const { value } = await reader!.read();
+    expect(value).toBeDefined();
+
+    // Trigger abort on client signal
+    controller.abort();
+
+    // Also call reader.cancel() as Next.js does when connection closes
+    await reader!.cancel();
+
+    expect(fetchSignal?.aborted).toBe(true);
+  });
 });
