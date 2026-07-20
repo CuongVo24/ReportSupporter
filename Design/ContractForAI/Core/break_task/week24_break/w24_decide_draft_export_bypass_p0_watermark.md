@@ -25,10 +25,10 @@
 4. Chỉ cho nháp **PDF/DOCX xem bố cục**, hay cả HTML? PPTX (slide) đã tách ở [[w24_fix_export_gate_scope_per_target_pptx]] — không thuộc phạm vi này.
 
 ## 3. Đầu ra của contract này (chưa chạm `src/`)
-- [ ] Ghi lại quyết định (a)/(b) + lý do vào `Design/Decisions/` (theo mẫu `w23_import_heading_hierarchy_decision.md`) + PR/roadmap.
-- [ ] Nếu (a): mở contract **polish** "microcopy gate + dẫn sang preview" (nhỏ).
-- [ ] Nếu (b): mở contract **feature** "Xuất bản nháp (watermark, bỏ P0 không phá file)" ở W24+ — kèm thiết kế watermark, phân loại P0-chặn-nháp vs P0-bỏ-qua, tên file `-NHAP`, tách khỏi lịch sử nộp/zip.
-- [ ] Cập nhật `w24_break_index.md` map #8 trỏ tới contract kết quả.
+- [x] Ghi lại quyết định (a)/(b) + lý do vào `Design/Decisions/` (theo mẫu `w23_import_heading_hierarchy_decision.md`) + PR/roadmap.
+- [x] Nếu (a): mở contract **polish** "microcopy gate + dẫn sang preview" (nhỏ).
+- [x] Nếu (b): mở contract **feature** "Xuất bản nháp (watermark, bỏ P0 không phá file)" ở W24+ — kèm thiết kế watermark, phân loại P0-chặn-nháp vs P0-bỏ-qua, tên file `-NHAP`, tách khỏi lịch sử nộp/zip.
+- [x] Cập nhật `w24_break_index.md` map #8 trỏ tới contract kết quả.
 
 ## 4. Scope
 
@@ -54,4 +54,4 @@
 
 ## 7. Status
 
-`PROPOSED (Decide) — chờ chủ dự án chốt nhánh (a)/(b) trước khi mở contract thi công.`
+`DONE — Đã chốt Nhánh (a) và hoàn thành phần Polish hiển thị microcopy khuyên dùng preview trong app.`
