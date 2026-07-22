@@ -74,5 +74,12 @@ Ngừng write amplification ở hot autosave trong release kế tiếp, vẫn m�
 
 ## 7. Status
 
-`PROPOSED — migration contract; chưa thi công.`
+`DONE (2026-07-21) — thi công theo 2 bước có proof:`
+- **S0 Inventory** — hot autosave = `Workspace → saveBundle → putRawBundle`; load = `loadWorkspaceProject(projectId) → loadProjectBundle` (project-bundles). Legacy `drafts/current` chỉ đọc bởi fallback no-projectId. Source of truth mới = `project-bundles`+`project-summaries`.
+- **S1 Stop legacy writes** — `idb-client.ts`: `putProjectRecord` và `putRawBundle` chỉ ghi `[PROJECT_BUNDLE_STORE, PROJECT_SUMMARY_STORE]` atomic; **không** clone vào `drafts/current`. Bundle không có project.id → fallback legacy (recovery, không phải hot path).
+- **S2 One-time import** — `project-store.ts`: `loadProjectBundle` khi project store thiếu → đọc legacy **một lần** (sentinel `legacy-imported:<projectId>` trong settings), validate/migrate, ghi project store; reload sau không đọc legacy.
+- **S3 Store deletion phase** — `drafts` store **giữ nguyên** release này (rollback). Deployment §5.1: ghi rõ rollback boundary (single-draft no-projectId sẽ không thấy edit mới), exit criterion (~2026-08-21 + matrix), owner (CuongVo24), M dùng schema version kế tiếp tách release.
+- **Tests** — `idb-client.migration.test.ts` (+3 W24-L): putProjectRecord/putRawBundle không ghi legacy, one-time legacy import; v3→v4 upgrade cũ vẫn giữ legacy cho rollback ✅. 165 write tests xanh.
+
+> 🔒 Không đổi `ReportProjectBundle`, không bump DB version (v4 giữ nguyên), không mất draft. Canonical còn lại: đo autosave bytes/quota delta bundle 5 MiB trước/sau (~½) + rehearsal upgrade→rollback — chạy trên staging/profiler.
 

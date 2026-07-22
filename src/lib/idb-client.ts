@@ -92,25 +92,31 @@ export async function getRawBundle(): Promise<unknown> {
 }
 
 export async function putRawBundle(value: unknown): Promise<void> {
+  // W24-L (S1): the hot autosave path no longer dual-writes the legacy
+  // `drafts/current` copy. `project-bundles` (+ `project-summaries`) is the
+  // single source of truth, so a 5 MiB bundle is cloned/written once, not twice.
+  // A bundle without a valid project id can't be keyed into the project store,
+  // so it falls back to the legacy store as a last-resort recovery slot (this
+  // path is not the normal autosave and does not carry base64 amplification).
   const db = await getDb();
   const summary = summaryFromBundle(value);
-  const stores = summary
-    ? [LEGACY_DRAFT_STORE, PROJECT_BUNDLE_STORE, PROJECT_SUMMARY_STORE]
-    : [LEGACY_DRAFT_STORE];
-  const tx = db.transaction(stores, "readwrite");
-  await tx.objectStore(LEGACY_DRAFT_STORE).put(value, LEGACY_CURRENT_KEY);
-  if (summary) {
-    const projectId = summary.id as string;
-    const existing = await tx.objectStore(PROJECT_SUMMARY_STORE).get(projectId) as Record<string, unknown> | undefined;
-    await tx.objectStore(PROJECT_BUNDLE_STORE).put(value, projectId);
-    await tx.objectStore(PROJECT_SUMMARY_STORE).put({
-      ...existing,
-      ...summary,
-      createdAt: existing?.createdAt ?? summary.createdAt,
-      lastOpenedAt: existing?.lastOpenedAt ?? summary.lastOpenedAt,
-      deletedAt: existing?.deletedAt,
-    });
+  if (!summary) {
+    const tx = db.transaction(LEGACY_DRAFT_STORE, "readwrite");
+    await tx.objectStore(LEGACY_DRAFT_STORE).put(value, LEGACY_CURRENT_KEY);
+    await tx.done;
+    return;
   }
+  const projectId = summary.id as string;
+  const tx = db.transaction([PROJECT_BUNDLE_STORE, PROJECT_SUMMARY_STORE], "readwrite");
+  const existing = await tx.objectStore(PROJECT_SUMMARY_STORE).get(projectId) as Record<string, unknown> | undefined;
+  await tx.objectStore(PROJECT_BUNDLE_STORE).put(value, projectId);
+  await tx.objectStore(PROJECT_SUMMARY_STORE).put({
+    ...existing,
+    ...summary,
+    createdAt: existing?.createdAt ?? summary.createdAt,
+    lastOpenedAt: existing?.lastOpenedAt ?? summary.lastOpenedAt,
+    deletedAt: existing?.deletedAt,
+  });
   await tx.done;
 }
 
@@ -123,13 +129,13 @@ export async function putProjectRecord(bundle: unknown, summary: unknown): Promi
   if (!bundleSummary) throw new Error("Project bundle is missing a valid project id.");
   const projectId = bundleSummary.id as string;
   const db = await getDb();
+  // W24-L (S1): write only the canonical stores atomically — no legacy dual-write.
   const tx = db.transaction(
-    [PROJECT_BUNDLE_STORE, PROJECT_SUMMARY_STORE, LEGACY_DRAFT_STORE],
+    [PROJECT_BUNDLE_STORE, PROJECT_SUMMARY_STORE],
     "readwrite",
   );
   await tx.objectStore(PROJECT_BUNDLE_STORE).put(bundle, projectId);
   await tx.objectStore(PROJECT_SUMMARY_STORE).put(summary);
-  await tx.objectStore(LEGACY_DRAFT_STORE).put(bundle, LEGACY_CURRENT_KEY);
   await tx.done;
 }
 
@@ -215,6 +221,17 @@ export async function getSnapshotRecords(projectId: string): Promise<unknown[]> 
 
 export async function getAllSnapshotRecords(): Promise<unknown[]> {
   return (await getDb()).getAll(SNAPSHOT_STORE);
+}
+
+// W24-M (S2): incremental delete of specific snapshot ids (surplus prune) —
+// does not touch the kept records.
+export async function deleteSnapshotRecords(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  const tx = db.transaction(SNAPSHOT_STORE, "readwrite");
+  const store = tx.objectStore(SNAPSHOT_STORE);
+  for (const id of ids) await store.delete(id);
+  await tx.done;
 }
 
 export async function replaceSnapshotRecords(projectId: string, snapshots: unknown[]): Promise<void> {

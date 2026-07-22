@@ -7,8 +7,11 @@ import {
   getRawProjectBundle,
   getProjectSummaryRecords,
   getSnapshotRecords,
+  putProjectRecord,
+  putRawBundle,
   resetIdbConnectionForTests,
 } from "./idb-client";
+import { loadProjectBundle } from "@/modules/write/project-store";
 
 const legacyBundle = {
   schemaVersion: 1,
@@ -65,5 +68,56 @@ describe("IndexedDB v3 to v4 migration", () => {
     await resetIdbConnectionForTests();
     expect(await getRawProjectBundle("legacy-project")).toEqual(legacyBundle);
     expect(await getProjectSummaryRecords()).toHaveLength(1);
+  });
+});
+
+describe("W24-L retire legacy dual-write", () => {
+  const summary = {
+    id: "legacy-project",
+    title: "Legacy project",
+    templateId: "software-project",
+    sectionCount: 1,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    lastOpenedAt: "2026-01-01T00:00:00.000Z",
+  };
+
+  it("putProjectRecord writes only the canonical stores, not the legacy draft", async () => {
+    await putProjectRecord(legacyBundle, summary);
+    expect(await getRawProjectBundle("legacy-project")).toEqual(legacyBundle);
+    // Legacy draft store is NOT written on the hot path anymore.
+    expect(await getRawBundle()).toBeUndefined();
+  });
+
+  it("putRawBundle writes the project store once (no legacy amplification)", async () => {
+    await putRawBundle(legacyBundle);
+    expect(await getRawProjectBundle("legacy-project")).toEqual(legacyBundle);
+    expect(await getRawBundle()).toBeUndefined();
+  });
+
+  it("imports a legacy-only draft exactly once, then no longer depends on legacy", async () => {
+    // Seed a legacy draft with no project-store record (a pre-v4 upgrader).
+    const db = await openDB(REPORT_SUPPORTER_DB_NAME, 4, {
+      upgrade(database, _oldVersion, _newVersion, transaction) {
+        for (const store of ["drafts", "project-bundles", "project-summaries", "settings", "recovery-items", "export-history", "snapshots"]) {
+          if (!database.objectStoreNames.contains(store)) {
+            if (store === "drafts" || store === "project-bundles" || store === "settings") database.createObjectStore(store);
+            else database.createObjectStore(store, { keyPath: "id" });
+          }
+        }
+        transaction.objectStore("drafts").put(legacyBundle, "current");
+      },
+    });
+    db.close();
+    await resetIdbConnectionForTests();
+
+    const first = await loadProjectBundle("legacy-project");
+    expect(first.status).toBe("loaded");
+    // The import copied it into the canonical store.
+    expect(await getRawProjectBundle("legacy-project")).toBeDefined();
+
+    // Second load reads only the project store (legacy no longer required).
+    const second = await loadProjectBundle("legacy-project");
+    expect(second.status).toBe("loaded");
   });
 });

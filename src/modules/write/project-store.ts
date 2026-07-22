@@ -4,11 +4,14 @@ import {
   getAllSnapshotRecords,
   getProjectSummaryRecord,
   getProjectSummaryRecords,
+  getRawBundle,
   getRawProjectBundle,
   getRecoveryItemRecords,
+  getSettingRecord,
   putProjectRecord,
   putProjectSummaryRecord,
   putRecoveryItemRecord,
+  putSettingRecord,
 } from "@/lib/idb-client";
 import { storedBundleSchema } from "@/types";
 import type { ProjectSummary, RecoveryItem, ReportProjectBundle } from "@/types";
@@ -78,8 +81,31 @@ export async function saveProjectBundle(bundle: ReportProjectBundle): Promise<vo
   await putProjectRecord(migrated, projectSummaryFromBundle(migrated, existing));
 }
 
+// W24-L (S2): if the project store has no record for this id, try the legacy
+// `drafts/current` copy exactly ONCE (guarded by a sentinel), migrate it into
+// the canonical store, and never read legacy again on subsequent loads. This
+// keeps upgraders from a pre-v4 single-draft build from losing their work
+// without paying a legacy read on every startup.
+async function importLegacyDraftIfPresent(projectId: string): Promise<unknown | undefined> {
+  const sentinelKey = `legacy-imported:${projectId}`;
+  if (await getSettingRecord(sentinelKey)) return undefined;
+  const legacy = await getRawBundle();
+  const parsedLegacy = storedBundleSchema.safeParse(legacy);
+  if (parsedLegacy.success && parsedLegacy.data.project.id === projectId) {
+    const migrated = migrateBundle(parsedLegacy.data);
+    await putProjectRecord(migrated, projectSummaryFromBundle(migrated));
+    await putSettingRecord(sentinelKey, true);
+    return getRawProjectBundle(projectId);
+  }
+  // Legacy is absent or belongs to a different project — mark done so we don't
+  // re-scan the legacy store on every future load of this id.
+  await putSettingRecord(sentinelKey, true);
+  return undefined;
+}
+
 export async function loadProjectBundle(projectId: string): Promise<LoadBundleResult> {
-  const raw = await getRawProjectBundle(projectId);
+  let raw = await getRawProjectBundle(projectId);
+  if (raw === undefined) raw = await importLegacyDraftIfPresent(projectId);
   if (raw === undefined) return { status: "missing" };
   const parsed = storedBundleSchema.safeParse(raw);
   if (!parsed.success) {

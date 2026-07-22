@@ -34,6 +34,11 @@ export function useDraftAutosave(bundle: ReportProjectBundle | null) {
           setError(saveError instanceof Error ? saveError.message : "Không thể lưu bản thảo.");
           setStatus("error");
           try {
+            // W24-M (S4): when the DB is out of quota, do NOT amplify pressure by
+            // writing the full bundle (incl. multi-MiB assets) back into the same
+            // full store. Persist only a light marker; the in-memory draft stays
+            // intact and the UI exposes retry. Non-quota errors (transient) keep
+            // the full payload so recovery can restore exact content.
             await putRecoveryItemRecord({
               id: `autosave-error-${next.bundle.project.id}`,
               kind: "autosave-error",
@@ -41,7 +46,7 @@ export function useDraftAutosave(bundle: ReportProjectBundle | null) {
               title: "Autosave chưa ghi được dữ liệu",
               detail: saveError instanceof Error ? saveError.message : "Lỗi lưu bản thảo không xác định.",
               createdAt: new Date().toISOString(),
-              payload: next.bundle,
+              payload: isQuotaError ? undefined : next.bundle,
             });
           } catch {
             // Storage may be completely full; UI still exposes retry and quota state.
