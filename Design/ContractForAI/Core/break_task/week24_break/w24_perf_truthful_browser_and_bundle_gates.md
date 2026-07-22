@@ -77,5 +77,14 @@ CI phải thất bại khi các lỗi người dùng thật tái xuất: worker 
 
 ## 7. Status
 
-`PROPOSED — keystone đo lường; nên làm baseline trước các tối ưu còn lại.`
+`IN PROGRESS (2026-07-21) — keystone đã thi công phần gate:`
+- `e2e/workspace-performance.spec.ts` (NEW): production actual-worker path, đo editor-ready, input→preview, long tasks, worker console errors (bắt `document is not defined`), transferred JS chunks, heap; ghi `test-results/performance/kpi-<size>.json`.
+- `e2e/fixtures/performance-project.ts` (NEW): fixture small/large (40 sections + ~5 MiB assets + 10 snapshots) deterministic, seed thẳng IndexedDB.
+- `scripts/collect-performance-artifact.mjs` (NEW): gộp KPI → `performance-artifact.json` có commit/env, cờ `canonical` (chỉ true khi có KPI production).
+- `scripts/check-bundle-budget.mjs` (REWRITE): 3 tập initial/critical/optional; số transitive critical lấy từ production trace, không còn cộng route manifest → hết con số 104.7 KiB giả; CI thiếu trace = fail, không pass thầm.
+- `pipeline-performance.test.ts` / `workspace-performance.test.ts` (RECLASSIFY): bỏ claim user-perf, ghi rõ chỉ là transfer-smoke / reducer microbench.
+- `package.json` (+`test:perf:e2e`, `perf:collect`); `.github/workflows/ci.yml` (build → perf e2e production → collect → check:bundle → e2e).
+- W30/W36 docs: thêm scope-of-evidence note (gate cũ = structural, không phải user-path proof).
+
+> Còn lại (canonical, chạy trên CI/staging — không chạy được trong môi trường local hiện tại): chạy `PLAYWRIGHT_USE_BUILD=1 npm run test:perf:e2e` trên production build thật để tạo baseline đỏ/đo variance 5 lần; sau đó K/J/M/P dùng artifact này làm before/after. Chưa đổi sang DONE cho tới khi có run canonical.
 

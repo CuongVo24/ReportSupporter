@@ -12,9 +12,9 @@ Scope: full local execution of the CI gate sequence defined in `.github/workflow
 | Lint | `npm run lint` | PASS — no findings |
 | Typecheck | `npm run typecheck` | PASS |
 | Unit/integration (subsystem batches) | `npm run test:subsystems` | PASS — all 5 batches, exit 0 (lib/workspace/pipeline; write/check; import/export; components/app/present/evidence/a11y; format/smoke) |
-| Performance | `npm run test:performance` | PASS — pipeline P95 and workspace reducer gates |
+| Performance | `npm run test:performance` | PASS — pipeline transfer-smoke and workspace reducer microbench (⚠️ W24-O: **structural only**, fake worker + reducer; NOT user-path perf — canonical gate = `npm run test:perf:e2e`) |
 | Production build | `npm run build` | PASS — 10 routes, Serwist service worker bundled at `/sw.js` |
-| Bundle budget | `npm run check:bundle` | PASS — Project Library 167.6 KiB / 200 KiB gzip, Workspace 104.7 KiB / 450 KiB gzip |
+| Bundle budget | `npm run check:bundle` | PASS — Project Library 167.6 KiB / 200 KiB gzip, Workspace 104.7 KiB / 450 KiB gzip (⚠️ W24-O: this 104.7 KiB is the **initial route slice only**; it undercounts the editor-ready transitive graph `WorkspaceLoader -> import("./Workspace")` measured at ~596.9 KiB gzip by the production trace. Truthful transitive budget now enforced via the perf artifact.) |
 | Playwright E2E (production build) | `PLAYWRIGHT_USE_BUILD=1 npm run test:e2e` | PASS — 4/4 (library CRUD 23.7s, keyboard/axe 21.6s, template catalog 6.6s, offline reload 1.5m), no retries |
 | PDF renderer integration | `npm run test:pdf-integration` | PASS — `%PDF-` signature, 19,143 bytes; JS disabled and outbound network aborted in worker (see notes) |
 | Security audit | `npm audit --omit=dev` | PASS — 0 vulnerabilities |

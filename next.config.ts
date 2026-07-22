@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
 
@@ -18,6 +19,23 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // W24-I: the markdown pipeline runs inside a module Web Worker. Webpack resolves
+  // the `browser` export condition for the worker bundle, which pulls
+  // `decode-named-character-reference/index.dom.js` — a variant that touches
+  // `document` and throws `document is not defined` in a worker. Force the
+  // DOM-free `index.js` (the package's own `worker`/`default` entry) everywhere;
+  // it is a pure lookup and works on the main thread too.
+  webpack(config) {
+    config.resolve = config.resolve ?? {};
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      "decode-named-character-reference$": path.resolve(
+        process.cwd(),
+        "node_modules/decode-named-character-reference/index.js",
+      ),
+    };
+    return config;
+  },
   async headers() {
     return [
       {

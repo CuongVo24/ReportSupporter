@@ -19,11 +19,24 @@ jobs:
       - run: npm run check:encoding
       - run: npm run lint
       - run: npm run typecheck
+      # W24-H: validate the deployment env contract. In CI (non-production env)
+      # this asserts the script runs and dev config is lenient; the REAL gate runs
+      # in the deploy pipeline with the target deployment's env loaded.
+      - run: npm run check:production-config
       - run: npm run test:subsystems
+      - run: npm run test:pdf-unit
       - run: npm run test:performance
       - run: npm run build
-      - run: npm run check:bundle
       - run: npx playwright install --with-deps chromium
+      # W24-O canonical perf gate: production build + actual Chromium + actual
+      # worker. Produces the KPI trace consumed by perf:collect and check:bundle.
+      - run: npm run test:perf:e2e
+        env:
+          PLAYWRIGHT_USE_BUILD: "1"
+      - run: npm run perf:collect
+      # Bundle budget now reads the production trace for the transitive critical
+      # graph; it must run AFTER the perf artifact exists.
+      - run: npm run check:bundle
       - run: npm run test:e2e
         env:
           PLAYWRIGHT_USE_BUILD: "1"
