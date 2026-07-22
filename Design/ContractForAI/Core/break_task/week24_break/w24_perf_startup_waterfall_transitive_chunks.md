@@ -73,5 +73,10 @@ Cho browser biết critical workspace chunk **trước/đồng thời hydration*
 
 ## 7. Status
 
-`PROPOSED — phụ thuộc O để đo đúng; chưa thi công.`
+`DONE (S1/S3) + measurement chờ O (2026-07-21):`
+- **S1 (DONE)** — `WorkspaceLoader.tsx` (REWRITE): bỏ `useEffect(() => import("./Workspace"))` waterfall; khai báo critical Workspace bằng `next/dynamic` ở **module scope** (`ssr:false` + loading) → Next phát preload/prefetch, chunk tải song song hydration thay vì `hydrate → effect → import`.
+- **S3 (DONE)** — giữ nguyên UX offline: `ChunkErrorBoundary` bắt lỗi tải chunk, nút "Thử lại" remount qua `key={attempt}` **không reload** (không mất autosave in-memory). Loading state accessible (`aria-busy/aria-live`).
+- **S2 (đã xác minh, không cần đổi)** — audit `Workspace.tsx`: EditorPanel/PreviewPane/Export/Submission/Evidence/Present/Import/AI/Settings **đều đã `next/dynamic`**; markdown-import/readme-import/buildInitialSections đều lazy `import()`. Không có barrel side-effect kéo panel ngoài surface. Trimming critical graph sâu hơn cần trace profiler O (production) — không static-import mù để tránh phình initial route.
+
+> Canonical còn lại (production trace qua O): xác nhận waterfall không còn idle gap sau hydration + editor-ready median cải thiện ≥25% + optional panels không tải trước click; offline stale-chunk retry trên PWA E2E. Chạy CI/staging bằng `e2e/workspace-performance.spec.ts`.
 
