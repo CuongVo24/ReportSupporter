@@ -73,5 +73,12 @@ Mọi request pipeline phải kết thúc bằng success, stale, timeout hoặc 
 
 ## 7. Status
 
-`PROPOSED — ưu tiên ngay sau PDF blocker; chưa thi công.`
+`DONE (2026-07-21) — thi công:`
+- `src/modules/pipeline/pipeline-client.ts` (REWRITE): manager theo `generation`; attach `message/error/messageerror`; timeout per-operation (preview 8s, check/format 15s) với `PipelineTimeoutError`; mọi failure reject toàn bộ pending của generation đúng một lần + clear timer + terminate; `PipelineWorkerError`; circuit breaker (2 crash → dùng fallback main-thread có `await` yield, không respawn storm); `resetPipelineClientForTests` reject pending đang đợi (không còn treo). `postMessage` throw cũng được bọc.
+- `next.config.ts` (MODIFY): webpack alias `decode-named-character-reference$` → `index.js` (DOM-free) — diệt `document is not defined` trong worker graph (S4).
+- `src/components/PreviewPane.tsx` (MODIFY): giữ last-known-good khi worker crash/timeout (không blank), banner `role=status` "Xem trước tạm gián đoạn · Thử lại" + retryTick.
+- `src/modules/pipeline/pipeline-client.test.ts` (NEW): error/messageerror/timeout/success/circuit → 5 test ✅; `pipeline-core.test.ts`, transfer-smoke vẫn xanh.
+- `e2e/pipeline-worker.spec.ts` (NEW): actual production worker parse markdown lớn, assert 0 `document is not defined` + 0 console error.
+
+> Canonical còn lại (production Chromium): chạy `PLAYWRIGHT_USE_BUILD=1 npm run test:e2e` xác nhận worker thật sống + ép crash hai lần chỉ một respawn — chạy CI/staging.
 
