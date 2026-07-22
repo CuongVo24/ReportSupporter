@@ -76,5 +76,17 @@ Giữ restore **đầy đủ và offline** nhưng snapshot chỉ tham chiếu as
 
 ## 7. Status
 
-`PROPOSED — high-impact architecture; phụ thuộc L và ADR/migration review.`
+`PARTIAL / IN PROGRESS (2026-07-21) — phần an toàn (không đổi schema) đã thi công + test; phần normalized-blob dedup DEFER sau ADR/heap profiler:`
+
+**Đã thi công (an toàn, đã test):**
+- **S2 Incremental prune** — `snapshots.ts` `pruneSnapshots`: đọc metadata (không parse full bundle), chỉ **delete surplus-oldest** qua `SnapshotStore.deleteSnapshots` + `idb-client.deleteSnapshotRecords` (transaction xóa đúng id). Bỏ `getAll → clear → rewrite-kept` (trước đó ghi lại ~9 bundle 5 MiB mỗi snapshot thứ 11). Fallback `replaceSnapshots` cho store cũ không có primitive. Test W24-M: snapshot thứ 11 → chỉ put `s10`, chỉ delete `s0`, không rewrite 9 bản giữ.
+- **S3 Metadata-first list** — `listSnapshotMetadata` trả `{id,projectId,takenAt,reason}` không Zod-parse/giữ bundle; `SnapshotHistory` + `Workspace` chuyển sang `SnapshotMetadata[]`; restore vẫn lazy load bundle qua `restoreSnapshot(id)`. Heap list tỷ lệ số snapshot, không tỷ lệ tổng asset bytes.
+- **S4 Quota degrade** — `use-draft-autosave.ts`: khi `QuotaExceededError`, recovery item **không** ghi lại full bundle (`payload: undefined`) vào DB đầy; lỗi transient khác vẫn giữ payload để khôi phục chính xác.
+
+**DEFER (Critical risk — cần ADR + property tests + heap profiler O):**
+- **S0/S1 normalized content-addressed asset-blob store + refcount/mark-sweep GC + lazy v4→v5 migration.** Đây là phần gây dedup 10×base64 (~260→~58 MiB) NHƯNG rủi ro **Critical: GC bug mất ảnh người dùng** (chính contract xếp Critical). Global lock "migration rollback/data-loss aware" + "L merge trước M dùng version kế tiếp" ⇒ không làm blind trong cùng phiên không có review.
+  - **ADR (chốt hướng, chưa code):** thêm store `asset-blobs` content-addressed (key = sha256(bytes), value `{mime, data}`); snapshot payload giữ `assetId → blobKey` manifest thay vì base64; hydrate về `ReportProjectBundle` tại boundary rồi `storedBundleSchema` validate. Refcount tăng khi snapshot/project tham chiếu blobKey, GC mark-sweep có tombstone + repair scan; migration **lazy per-project** (sentinel resumable, quota preflight), **không** duplicate toàn DB một transaction; giữ v4 full-bundle restore được cho tới hết support window (song hành với L §5.1). Schema bump = **v5** (kế tiếp v4 của L).
+  - **Điều kiện mở contract thi công:** (a) heap profiler O (production actual fixture 10 snapshot/5 MiB) xác nhận dedup ROI; (b) property/invariant test refcount + fault-injection GC repair xanh; (c) round-trip fixture mọi version byte-identical.
+
+> Không đánh DONE cho tới khi phần S0/S1 có ADR review + migration matrix. Phần đã làm giảm write amplification (prune) + list heap + quota pressure ngay, không phá restore/offline.
 

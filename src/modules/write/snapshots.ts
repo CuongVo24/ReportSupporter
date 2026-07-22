@@ -1,4 +1,5 @@
 import {
+  deleteSnapshotRecords,
   getSnapshotRecord,
   getSnapshotRecords,
   putSnapshotRecord,
@@ -22,6 +23,16 @@ export type SnapshotStore = {
   getSnapshot(id: string): Promise<unknown | undefined | null>;
   getSnapshots(projectId: string): Promise<unknown[]>;
   replaceSnapshots(projectId: string, snapshots: ReportSnapshot[]): Promise<void>;
+  // W24-M (S2): delete only surplus records instead of clear+rewrite-kept.
+  deleteSnapshots?(ids: string[]): Promise<void>;
+};
+
+/** Lightweight snapshot metadata — no bundle payload retained (W24-M S3). */
+export type SnapshotMetadata = {
+  id: string;
+  projectId: string;
+  takenAt: string;
+  reason: string;
 };
 
 type SnapshotOptions = {
@@ -36,6 +47,7 @@ const idbSnapshotStore: SnapshotStore = {
   getSnapshot: getSnapshotRecord,
   getSnapshots: getSnapshotRecords,
   replaceSnapshots: replaceSnapshotRecords,
+  deleteSnapshots: deleteSnapshotRecords,
 };
 
 function getDefaultStore(store?: SnapshotStore) {
@@ -132,6 +144,33 @@ export async function listSnapshots(
   );
 }
 
+/** Read only the metadata needed to render a history list — the bundle payload
+ * is NOT Zod-parsed or retained (W24-M S3). Heap scales with the number of
+ * snapshots, not with total asset bytes. */
+export async function listSnapshotMetadata(
+  projectId: string,
+  options: Pick<SnapshotOptions, "store"> = {},
+): Promise<SnapshotMetadata[]> {
+  const rawSnapshots = await getDefaultStore(options.store).getSnapshots(projectId);
+  const metadata: SnapshotMetadata[] = [];
+  for (const raw of rawSnapshots) {
+    if (!raw || typeof raw !== "object") continue;
+    const candidate = raw as Partial<ReportSnapshot>;
+    if (
+      typeof candidate.id !== "string" ||
+      typeof candidate.projectId !== "string" ||
+      typeof candidate.takenAt !== "string"
+    ) continue;
+    metadata.push({
+      id: candidate.id,
+      projectId: candidate.projectId,
+      takenAt: candidate.takenAt,
+      reason: typeof candidate.reason === "string" ? candidate.reason : "Snapshot",
+    });
+  }
+  return metadata.sort((a, b) => b.takenAt.localeCompare(a.takenAt));
+}
+
 export async function restoreSnapshot(
   id: string,
   options: Pick<SnapshotOptions, "store"> = {},
@@ -147,7 +186,21 @@ export async function pruneSnapshots(
   options: Pick<SnapshotOptions, "store"> = {},
 ): Promise<ReportSnapshot[]> {
   const store = getDefaultStore(options.store);
-  const kept = pruneSnapshotRecords(await listSnapshots(projectId, { store }), max);
-  await store.replaceSnapshots(projectId, kept);
-  return kept;
+  // W24-M (S2): read metadata (not full bundles) to decide what to prune, then
+  // DELETE only the surplus-oldest records. Avoids the previous
+  // getAll -> clear -> rewrite-kept, which re-wrote ~9 full 5 MiB bundles on
+  // every 11th snapshot. Falls back to replaceSnapshots for stores that predate
+  // the incremental deleteSnapshots primitive (e.g. legacy fakes).
+  const metadata = await listSnapshotMetadata(projectId, { store });
+  const keptIds = new Set(metadata.slice(0, Math.max(0, max)).map((meta) => meta.id));
+  const surplusIds = metadata.filter((meta) => !keptIds.has(meta.id)).map((meta) => meta.id);
+
+  if (store.deleteSnapshots) {
+    if (surplusIds.length > 0) await store.deleteSnapshots(surplusIds);
+  } else {
+    const kept = pruneSnapshotRecords(await listSnapshots(projectId, { store }), max);
+    await store.replaceSnapshots(projectId, kept);
+    return kept;
+  }
+  return pruneSnapshotRecords(await listSnapshots(projectId, { store }), max);
 }

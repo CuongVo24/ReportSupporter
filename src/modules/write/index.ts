@@ -37,13 +37,14 @@ export {
   MAX_PROJECT_SNAPSHOTS,
   createSnapshotRecord,
   listSnapshots,
+  listSnapshotMetadata,
   parseSnapshotRecord,
   pruneSnapshotRecords,
   pruneSnapshots,
   restoreSnapshot,
   takeSnapshot,
 } from "./snapshots";
-export type { ReportSnapshot, SnapshotStore } from "./snapshots";
+export type { ReportSnapshot, SnapshotMetadata, SnapshotStore } from "./snapshots";
 export { createEditorState, syncAnnotation, ariaLabelCompartment } from "./editor-setup";
 export {
   buildImageMarkdownDraft,

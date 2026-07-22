@@ -2,12 +2,13 @@
 
 import { RefreshCw, RotateCcw, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui";
-import type { ReportSnapshot } from "@/modules/write";
+import type { SnapshotMetadata } from "@/modules/write";
 
 type SnapshotHistoryProps = {
-  snapshots: ReportSnapshot[];
+  // W24-M (S3): the list is driven by lightweight metadata (no bundle payload).
+  snapshots: SnapshotMetadata[];
   onRefresh: () => void | Promise<void>;
-  onRestore: (snapshot: ReportSnapshot) => void;
+  onRestore: (snapshot: SnapshotMetadata) => void;
   onCreateSnapshot?: () => void | Promise<void>;
   isLoading?: boolean;
 };

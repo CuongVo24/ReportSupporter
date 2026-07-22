@@ -65,6 +65,9 @@ function createMemoryStore(initial: unknown[] = []): SnapshotStore {
         records.set(snapshot.id, snapshot);
       }
     },
+    async deleteSnapshots(ids) {
+      for (const id of ids) records.delete(id);
+    },
   };
 }
 
@@ -78,6 +81,32 @@ describe("snapshots", () => {
     ];
 
     expect(pruneSnapshotRecords(snapshots, 2).map((snapshot) => snapshot.id)).toEqual(["new", "middle"]);
+  });
+
+  it("prunes incrementally: deletes only surplus-oldest, does not rewrite kept (W24-M)", async () => {
+    const bundle = createBundle();
+    const records = new Map<string, unknown>();
+    const putIds: string[] = [];
+    const deletedIds: string[] = [];
+    const store = {
+      async putSnapshot(snapshot: ReportSnapshot) { records.set(snapshot.id, snapshot); putIds.push(snapshot.id); },
+      async getSnapshot(id: string) { return records.get(id); },
+      async getSnapshots() { return [...records.values()]; },
+      async replaceSnapshots() { throw new Error("replaceSnapshots must NOT be used on the incremental path"); },
+      async deleteSnapshots(ids: string[]) { for (const id of ids) records.delete(id); deletedIds.push(...ids); },
+    };
+    // Seed 10 existing snapshots (t0..t9), then take an 11th.
+    for (let i = 0; i < 10; i += 1) {
+      const snapshot = createSnapshotRecord(bundle, `s${i}`, new Date(`2026-06-28T00:0${i}:00.000Z`), `s${i}`);
+      records.set(snapshot.id, snapshot);
+    }
+    await takeSnapshot(bundle, "s10", { store, now: () => new Date("2026-06-28T00:10:00.000Z"), createId: () => "s10", max: 10 });
+
+    // Only the new snapshot was put; only the oldest surplus (s0) was deleted.
+    expect(putIds).toEqual(["s10"]);
+    expect(deletedIds).toEqual(["s0"]);
+    expect(records.has("s0")).toBe(false);
+    expect(records.size).toBe(10);
   });
 
   it("restores only snapshots with a valid stored bundle shape", async () => {
