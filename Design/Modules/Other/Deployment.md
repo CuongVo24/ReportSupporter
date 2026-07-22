@@ -39,10 +39,22 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 
 ## 3. ENVIRONMENT
 
-- **MVP không cần biến môi trường bắt buộc** (no API key, no DB URL, no secret).
-- AI route `/api/ai` dùng **client-key strategy**: người dùng nhập provider key trong UI, browser lưu cục bộ và gửi qua `x-api-key` cho mỗi request. Route **không** dùng biến môi trường server làm fallback để tránh biến endpoint public thành proxy tiêu credit.
-- Không đặt `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` như fallback server cho app này nếu chưa có auth/rate-limit riêng.
-- Không có "environment matrix" phức tạp: chỉ `dev` (local) và `production` (build host).
+> **Cập nhật W24-H (2026-07-21):** Đoạn cũ "MVP không cần biến môi trường bắt buộc" **đã lỗi thời** và mâu thuẫn với thực tế production (rate limiter fail-closed cần Redis). Nguồn sự thật env giờ là **`.env.example`** + validator `npm run check:production-config` (fail predeploy) + readiness `/api/ready`. Xem ma trận dưới đây.
+
+- **Dev/local:** không cần biến bắt buộc — rate limiter dùng bộ nhớ (`BoundedMemorySlidingWindow`), PDF dùng Print Preview client-side. `TRUSTED_PROXY_MODE=none` chấp nhận được ở dev.
+- **Production (fail-closed, BẮT BUỘC trước khi có traffic):**
+
+  | Biến | Bắt buộc khi | Ràng buộc | Nếu sai |
+  |---|---|---|---|
+  | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | production | đi cặp, URL `https://` | limiter `available:false` → `/api/ai` & `/api/pdf` trả 503 cho mọi user |
+  | `TRUSTED_PROXY_MODE` | production | `vercel`/`forwarded`/`cloudflare`/`x-real-ip` theo host (không `none`) | `none` ⇒ quota dùng chung bucket `direct`; mode sai host ⇒ spoof `x-forwarded-for` |
+  | `PDF_RENDERER_URL` + `PDF_RENDERER_TOKEN` | khi bật PDF (URL set) | đi cặp; token **không** rỗng/không phải default local | token rỗng ⇒ renderer mở cho mọi request; thiếu ⇒ PDF 503 |
+  | `PDF_MAX_CONCURRENCY` | tuỳ chọn | server clamp 1..4 (default 2) | vượt biên bị clamp |
+
+- **Hosting matrix** cho `TRUSTED_PROXY_MODE`: Vercel → `vercel`; Cloudflare (Workers/Pages) → `cloudflare`; Node sau nginx bạn kiểm soát → `x-real-ip`; single-instance nội bộ không proxy → chỉ `none` ở môi trường không public.
+- AI route `/api/ai` vẫn **client-key strategy**: người dùng nhập provider key trong UI, browser lưu cục bộ và gửi qua `x-api-key` mỗi request. Route **không** dùng biến môi trường server làm fallback (tránh biến endpoint thành proxy tiêu credit). Không đặt `GEMINI_API_KEY`/`OPENAI_API_KEY`/`ANTHROPIC_API_KEY` server-side.
+- **Ownership/rotation/rollback:** secret quản ở dashboard host (Vercel/Cloudflare env). Rotate `PDF_RENDERER_TOKEN` bằng cách set token mới ở cả renderer service và app env rồi redeploy; token cũ → renderer trả 401. Rollback = redeploy commit trước với cùng bộ env đã validate.
+- Chạy `npm run check:production-config` với env của target **trước** deploy; `/api/ready` xác nhận limiter + renderer sau deploy (cause code an toàn: `config_missing`/`redis_unreachable`/`renderer_unready`, không lộ secret).
 
 ---
 
@@ -57,8 +69,14 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 ## 5. RELEASE & ROLLBACK
 
 - **Release** = deploy một build đã qua DoD (lint / typecheck / build / test xanh — `WorkFlow.md`).
-- **Rollback** = redeploy build trước đó. Không có migration DB → rollback **không** mất dữ liệu (dữ liệu nằm ở client; schema migration là `ReportProjectBundle.schemaVersion` phía client, độc lập với release).
+- **Rollback** = redeploy build trước đó. Không có server DB → rollback **không** mất dữ liệu server (dữ liệu nằm ở client).
 - Mỗi release nên ghi evidence vào `Design/Reports/Month<X>/W<N>/` (build log, export mẫu).
+
+### 5.1 IndexedDB legacy draft — retire window (W24-L, 2026-07-21)
+
+- **Thay đổi:** autosave ngừng dual-write bản `drafts/current` (legacy); source of truth là `project-bundles` + `project-summaries`. `drafts` store **vẫn tồn tại** (schema v4) và được import **một lần** khi project store thiếu (sentinel `legacy-imported:<projectId>` trong `settings`).
+- **Rollback boundary (đọc kỹ):** build cũ ở chế độ **single-draft không projectId** đọc `drafts/current` qua `loadBundle()`. Sau khi release này ngừng dual-write, các edit mới **không** phản chiếu vào `drafts/current` nữa → rollback về build cũ ở chế độ đó **sẽ không thấy edit mới**. Chế độ multi-project (có projectId → `project-bundles`) **không** bị ảnh hưởng vì store đó vẫn được ghi. Không hứa tương thích hai chiều cho single-draft; nếu cần, export project trước khi rollback.
+- **Exit criterion để xóa `drafts` store:** chỉ xóa ở một **release + schema bump sau** khi (a) đã qua ≥1 support window (đề xuất 1 tháng kể từ 2026-07-21, tức từ ~2026-08-21) không còn client mở bản pre-v4, và (b) matrix upgrade/rollback đã chạy. **Owner:** chủ dự án (CuongVo24). **M dùng schema version kế tiếp**, không bump cùng lúc với việc xóa `drafts` — hai migration tách release.
 
 ---
 

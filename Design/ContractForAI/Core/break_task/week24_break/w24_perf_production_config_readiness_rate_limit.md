@@ -76,5 +76,15 @@ Biến các env hiện đang là “kiến thức ngầm” thành **deployment 
 
 ## 7. Status
 
-`PROPOSED — blocker cấu hình trước public beta; chưa thi công.`
+`DONE (2026-07-21) — thi công:`
+- `src/lib/server/production-config.ts` (NEW): `validateProductionConfig(env, {production, pdfEnabled})` — Redis URL+token đi cặp + https; `TRUSTED_PROXY_MODE` allowlist + production `none` = shared-bucket error; PDF URL+token đi cặp; token rỗng/default local trong production = error. Cause codes typed, **không echo secret**. `rendererTokenIsInsecure` cho renderer.
+- `scripts/check-production-config.mjs` (NEW): predeploy gate, in tên biến+cause, exit 1 khi sai; import validator qua Node strip-types.
+- `src/app/api/ready/route.ts` (NEW): readiness smoke → 200/503 với cause `config_missing`/`redis_unreachable` (Redis PING, không tốn quota)/`renderer_unready` (ping `/ready` có token). Không lộ secret.
+- `services/pdf-renderer/server.mjs` (MODIFY): `assertRendererTokenSecure()` — production token rỗng/default → fail start trước khi bind port.
+- `.env.example` (REWRITE): ma trận required/conditional + allowlist proxy + ràng buộc token.
+- `Design/Modules/Other/Deployment.md §3` (MODIFY): gỡ mâu thuẫn "MVP không cần env", thêm bảng required/conditional + hosting matrix Vercel/Cloudflare/Node + ownership/rotation/rollback.
+- `src/lib/server/production-config.test.ts` (NEW): 12 test (missing-half Redis, invalid proxy, shared bucket, PDF token missing/insecure, no-secret-leak, dev lenient) ✅.
+- `package.json` (+`check:production-config`), `.github/workflows/ci.yml` (thêm bước sau typecheck).
+
+> 🔒 Fail-closed giữ nguyên; chỉ làm lỗi sớm/quan sát được. Canonical còn lại: smoke staging đúng env xác nhận hai identity không chung bucket + rotate token 401/200 — chạy trên staging.
 
