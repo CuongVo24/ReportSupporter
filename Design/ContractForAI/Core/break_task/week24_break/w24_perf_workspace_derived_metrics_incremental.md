@@ -73,5 +73,15 @@ Cập nhật stats/health theo **delta section/evidence đã chuẩn hóa**, kh�
 
 ## 7. Status
 
-`PROPOSED — finding bổ sung; chỉ thi công nếu profiler O xác nhận ROI.`
+`PARTIAL / IN PROGRESS (2026-07-21) — S0 đo xong (ROI xác nhận), S3 thi công an toàn; S1/S2 cache defer:`
+
+**S0 Measurement (DONE)** — `src/modules/workspace/derived-metrics-performance.test.ts` (NEW): microbench advisory đo trên 40/100 section + evidence:
+- `computeWritingStats`: **rẻ** — median ~4ms(40) / ~7ms(100). → **không cần** per-section cache (S1) lúc này; đóng theo exit-path "không thêm cache vô ích".
+- `computeReportHealth`: **hot spot** — median ~14ms(40), **~67ms(100)**, p95 ~134ms. → vượt ngưỡng S0, **đáng tối ưu**.
+
+**S3 Scheduling (DONE)** — `Workspace.tsx`: health chuyển từ `setTimeout(300)` chạy thẳng sang **debounce 300ms → `requestIdleCallback`** (fallback setTimeout), latest-only, giữ giá trị cũ trên màn tới khi có bản mới. Không đổi công thức → **không rủi ro parity**; chỉ dời long task 67–134ms khỏi frame keystroke/preview.
+
+**S1/S2 algorithmic cache (DEFER)** — per-section stats cache + evidence single-pass index sẽ cắt chính chi phí 67ms của health, NHƯNG chạm công thức `report-health.ts` → rủi ro parity (lock "bit-for-bit tương đương"). Cần: (a) profiler O production xác nhận tỷ trọng health vs preview/autosave + chốt budget thật (<8ms/update), (b) oracle/property tests giữ baseline làm chân lý cho fixture Unicode/code/link/table/nhiều evidence. Chỉ thi công khi có hai điều kiện đó.
+
+> Test regression-guard (loose ceiling) + S3 idle-defer bảo vệ frame ngay bây giờ; không đánh DONE cho tới khi S1/S2 (nếu O xác nhận) có parity tests.
 

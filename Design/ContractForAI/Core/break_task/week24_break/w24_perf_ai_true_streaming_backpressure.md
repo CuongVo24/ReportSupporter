@@ -73,5 +73,5 @@ Giữ public NDJSON `meta/delta/done/error` nhưng phát `delta` ngay khi provid
 
 ## 7. Status
 
-`PROPOSED — tối ưu perceived latency sau blocker PDF/worker; chưa thi công.`
+`DONE — true streaming provider→NDJSON→client, backpressure + abort xuyên suốt đã thi công (commit 16bdca0 "feat(ai): implement true streaming with backpressure and abort cancellation").`
 

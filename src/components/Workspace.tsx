@@ -24,7 +24,7 @@ import { rewriteMarkdownRefs } from "@/modules/write/asset-ref-rewrite";
 import { registerAdapter } from "@/modules/write/ai/ai-gateway";
 import { httpAdapter } from "@/modules/write/ai/adapters/http-adapter";
 import { isAiReady, loadAiConfig } from "@/modules/write/ai/ai-config";
-import { listSnapshots, restoreSnapshot, takeSnapshot, type ReportSnapshot } from "@/modules/write/snapshots";
+import { listSnapshotMetadata, restoreSnapshot, takeSnapshot, type SnapshotMetadata } from "@/modules/write/snapshots";
 import { computeWritingStats } from "@/modules/write/writing-stats";
 import { computeReportHealth, type ReportHealth } from "@/modules/check/report-health";
 import { useExport } from "@/modules/export/use-export";
@@ -217,9 +217,9 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
   const [sideTab, setSideTab] = useState<SidePanelTab>("check");
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
   const [openSidePanelSignal, setOpenSidePanelSignal] = useState(0);
-  const [snapshots, setSnapshots] = useState<ReportSnapshot[]>([]);
+  const [snapshots, setSnapshots] = useState<SnapshotMetadata[]>([]);
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(false);
-  const [snapshotToRestore, setSnapshotToRestore] = useState<ReportSnapshot | null>(null);
+  const [snapshotToRestore, setSnapshotToRestore] = useState<SnapshotMetadata | null>(null);
   const [reportHealth, setReportHealth] = useState<ReportHealth | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [darkPreview, setDarkPreview] = useState(false);
@@ -314,7 +314,7 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
 
     setIsSnapshotLoading(true);
     try {
-      setSnapshots(await listSnapshots(projectId));
+      setSnapshots(await listSnapshotMetadata(projectId));
     } catch {
       setSnapshots([]);
     } finally {
@@ -396,11 +396,24 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
       return;
     }
 
+    // W24-P (S3): computeReportHealth is measured expensive (~14ms @40 sections,
+    // ~67ms median / ~134ms p95 @100). Debounce, then run it during browser idle
+    // (latest-only) so its long task doesn't compete with the keystroke/preview
+    // frame. The previous value stays on screen until the new one is ready. No
+    // formula change — this only reschedules, so health output is unchanged.
+    const ric = window.requestIdleCallback;
+    const cic = window.cancelIdleCallback;
+    let idleHandle: number | null = null;
     const timer = window.setTimeout(() => {
-      setReportHealth(computeReportHealth(bundle, checkResult));
+      const compute = () => setReportHealth(computeReportHealth(bundle, checkResult));
+      if (typeof ric === "function") idleHandle = ric(compute, { timeout: 1_000 });
+      else compute();
     }, 300);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      if (idleHandle !== null && typeof cic === "function") cic(idleHandle);
+    };
   }, [bundle, checkResult]);
 
   const handleChange = useCallback((markdown: string) => {
