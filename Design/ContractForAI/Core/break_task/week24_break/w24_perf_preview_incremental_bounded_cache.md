@@ -76,5 +76,11 @@ Sau một lần gõ, chỉ dữ liệu thay đổi được truyền/parse/rende
 
 ## 7. Status
 
-`PROPOSED — phụ thuộc I và baseline O; chưa thi công.`
+`PARTIAL / IN PROGRESS (2026-07-21) — thi công phần an toàn, đã test; phần protocol delta chờ profiler O:`
+- **S1 Coalesce (DONE)** — `pipeline-client.ts`: mỗi `projectId:operation` tối đa **1 in-flight + 1 queued**; request queued cũ bị reject `StalePipelineResponseError` **trước** khi tới worker (rapid typing không dồn CPU lên worker); check/format và preview coalesce độc lập theo operationKey nên command không bị preview spam thay thế.
+- **S3 Bounded cache (DONE)** — thay `Map` không eviction bằng **last-successful-per-operationKey** (tối đa 1 entry/operation/project); `clearPipelineCache(projectId?)` gọi khi PreviewPane unmount/đổi project. Heap không tăng theo số revision.
+- **Tests** `pipeline-client.test.ts` (+2 test W24-J): coalesce reject stale + cache hit/clear ✅.
+- **S2 asset-delta protocol / S4 render-ready migration: DEFER** — theo S0/exit-path của chính contract ("profile trước, không đổi protocol nếu profiler bác bỏ; feature-flag + fallback một release"). Cần artifact profiler O (production actual worker) đo transfer/clone/parse thật để chứng minh bottleneck trước khi đổi protocol. Chưa làm blind để tránh cache mutable AST/parity regression.
+
+> Trạng thái: **không đánh DONE** cho tới khi (a) O có run canonical đo transfer/parse/heap, và (b) nếu profiler xác nhận, mới thi công S2/S4 với version vector + invalidation matrix tests.
 

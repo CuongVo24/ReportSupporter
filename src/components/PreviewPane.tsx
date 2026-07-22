@@ -11,7 +11,7 @@ import { PRESETS } from "@/modules/export/helpers";
 import "@/lib/katex-styles"; // Import KaTeX CSS styles
 import { EmptyState } from "@/components/states";
 import { contentHash } from "@/lib/content-hash";
-import { runPipelineRequest, StalePipelineResponseError } from "@/modules/pipeline/pipeline-client";
+import { clearPipelineCache, runPipelineRequest, StalePipelineResponseError } from "@/modules/pipeline/pipeline-client";
 import type { PipelinePreviewResult } from "@/types";
 
 type PreviewPaneProps = {
@@ -168,10 +168,19 @@ export function PreviewPane({
     });
   }, [activeSectionId, appendixMarkdown, debouncedMarkdown, finalMarkdown, hasContent, lastSectionId, sections]);
   const [pipelinePreview, setPipelinePreview] = useState<PipelinePreviewResult>({ parsedParts: [], parsedSections: [] });
+  // W24-I: when the worker crashes/times out we keep the last good preview and
+  // surface a recoverable banner instead of blanking the pane silently.
+  const [previewInterrupted, setPreviewInterrupted] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
+
+  // W24-J: drop this project's cached pipeline responses when the pane unmounts
+  // or the project changes, so the bounded cache does not retain stale bytes.
+  useEffect(() => () => clearPipelineCache(projectId), [projectId]);
 
   useEffect(() => {
     if (!hasContent) {
       setPipelinePreview({ parsedParts: [], parsedSections: [] });
+      setPreviewInterrupted(false);
       return;
     }
     let active = true;
@@ -185,14 +194,19 @@ export function PreviewPane({
       cacheKey: `preview:${projectId}:${revisionHash}:${contentHash(assetSignature)}`,
       payload: { parts: contentParts, sections: previewSections, assets },
     }).then((response) => {
-      if (active && response.ok && response.operation === "preview") setPipelinePreview(response.result);
+      if (active && response.ok && response.operation === "preview") {
+        setPipelinePreview(response.result);
+        setPreviewInterrupted(false);
+      }
     }).catch((error: unknown) => {
+      // Stale responses are expected (superseded keystroke) — ignore quietly.
+      // A real worker crash/timeout keeps the last-known-good preview and flags retry.
       if (!(error instanceof StalePipelineResponseError) && active) {
-        setPipelinePreview({ parsedParts: [], parsedSections: [] });
+        setPreviewInterrupted(true);
       }
     });
     return () => { active = false; };
-  }, [assetSignature, assets, contentParts, hasContent, previewSections, projectId, sections]);
+  }, [assetSignature, assets, contentParts, hasContent, previewSections, projectId, sections, retryTick]);
 
   const parsedParts = pipelinePreview.parsedParts;
   const parsedSections = pipelinePreview.parsedSections;
@@ -343,6 +357,29 @@ export function PreviewPane({
 
   return (
     <div className="ws-preview-container">
+      {previewInterrupted && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+            padding: "0.5rem 0.75rem",
+            margin: "0 0 0.5rem",
+            borderRadius: "var(--rs-radius-sm, 6px)",
+            background: "var(--rs-color-warning-surface, #fff4e5)",
+            color: "var(--rs-color-warning-text, #7a4b00)",
+            fontSize: "0.85rem",
+          }}
+        >
+          <span>Xem trước tạm gián đoạn. Nội dung dưới đây là bản mới nhất còn hiển thị được.</span>
+          <button type="button" onClick={() => setRetryTick((tick) => tick + 1)} className="ws-preview-retry">
+            Thử lại
+          </button>
+        </div>
+      )}
       <style>{`
         .ws-preview-page {
           font-family: ${fontFamily} !important;
