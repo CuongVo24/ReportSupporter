@@ -72,5 +72,12 @@
 
 ## 7. Status
 
-`PROPOSED — chờ Approve; chưa chạm src/service runtime.`
+`DONE (2026-07-21) — thi công:`
+- `services/pdf-renderer/server.mjs` (REWRITE): `createAdmissionController` (semaphore, default `PDF_MAX_CONCURRENCY=2`, clamp 1..4, từ chối `503`+`Retry-After` **trước** readBody/newPage, không queue vô hạn); `createBrowserManager` (single-flight `launchPromise`, state `starting/ready/disconnected/draining`, relaunch đúng một lần khi disconnect, `getBrowser` retry ≤1 trước render); `/health` liveness vs `/ready` readiness (chỉ 200 khi browser connected & không draining); graceful shutdown drain job trong grace hữu hạn; log aggregate-only (durMs/active/rendered/rejected/failed/relaunches), không log HTML/PDF/token/URL. Factory export được để test không cần Chromium; bootstrap chỉ chạy khi là main module.
+- `services/pdf-renderer/server.test.mjs` (NEW): 5 test `node --test` — cap/reject, no underflow, single-flight launch, disconnect→readiness đỏ→relaunch một lần→xanh, draining refuse. ✅ pass.
+- `docker-compose.pdf.yml` (MODIFY): `PDF_MAX_CONCURRENCY`, `mem_limit 1g`/`mem_reservation`/`pids_limit 256`/`cpus 1.5`, tmpfs 384m ≤ memory envelope, healthcheck dùng `/ready`.
+- `scripts/test-pdf-integration.mjs` (MODIFY): chờ `/ready`, giữ %PDF- + JS off/network blocked, thêm burst `5×concurrency` chứng minh throttle 503 và renderer vẫn ready sau burst.
+- `package.json` (+`test:pdf-unit`), `.github/workflows/ci.yml` (thêm bước `test:pdf-unit`).
+
+> Canonical còn lại (cần Docker/Chromium — chạy CI/staging): burst 10 request đo active-page peak=2, soak peak RSS/PID để chốt limit, disconnect thật giữa hai lượt. Logic đã có unit proof; parity PDF/security isolation giữ nguyên.
 

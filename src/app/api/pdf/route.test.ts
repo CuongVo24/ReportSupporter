@@ -38,4 +38,49 @@ describe("/api/pdf", () => {
     }));
     expect(response.status).toBe(502);
   });
+
+  it("streams a valid %PDF- response through without buffering", async () => {
+    vi.stubEnv("PDF_RENDERER_URL", "http://renderer.internal");
+    const pdfBytes = new TextEncoder().encode("%PDF-1.7\n" + "x".repeat(2048));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(pdfBytes, {
+      status: 200,
+      headers: { "Content-Type": "application/pdf" },
+    })));
+    const response = await POST(new Request("http://localhost/api/pdf", {
+      method: "POST",
+      body: "<!doctype html><html><body>Report</body></html>",
+    }));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("application/pdf");
+    const out = new Uint8Array(await response.arrayBuffer());
+    expect(new TextDecoder().decode(out.slice(0, 5))).toBe("%PDF-");
+    expect(out.byteLength).toBe(pdfBytes.byteLength);
+  });
+
+  it("forwards renderer 503 overload with Retry-After (W24-G)", async () => {
+    vi.stubEnv("PDF_RENDERER_URL", "http://renderer.internal");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response('{"error":"Renderer at capacity"}', {
+      status: 503,
+      headers: { "Content-Type": "application/json", "Retry-After": "2" },
+    })));
+    const response = await POST(new Request("http://localhost/api/pdf", {
+      method: "POST",
+      body: "<!doctype html><html><body>Report</body></html>",
+    }));
+    expect(response.status).toBe(503);
+    expect(response.headers.get("retry-after")).toBe("2");
+  });
+
+  it("does not collapse a renderer 400 into a generic 502", async () => {
+    vi.stubEnv("PDF_RENDERER_URL", "http://renderer.internal");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response('{"error":"bad"}', {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    })));
+    const response = await POST(new Request("http://localhost/api/pdf", {
+      method: "POST",
+      body: "<!doctype html><html><body>Report</body></html>",
+    }));
+    expect(response.status).toBe(400);
+  });
 });

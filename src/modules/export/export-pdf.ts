@@ -74,14 +74,24 @@ export async function exportPdf(
     if (!htmlResult.ok) return htmlResult;
     const html = await htmlResult.artifact.blob.text();
     onPhaseChange?.("rendering-assets");
+    // W24-G deadline hierarchy: client (50s) > gateway (45s) > renderer op (40s).
     const response = await fetch("/api/pdf", {
       method: "POST",
       headers: { "Content-Type": "text/html;charset=utf-8" },
       body: html,
-      signal: AbortSignal.timeout(35_000),
+      signal: AbortSignal.timeout(50_000),
     });
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { error?: unknown };
+      // Distinguish overload (busy, retryable soon) from a genuine failure so the
+      // user knows to retry after N seconds rather than assuming PDF is broken.
+      if (response.status === 503 || response.status === 429) {
+        const retryAfter = response.headers.get("retry-after");
+        const suffix = retryAfter ? ` sau khoảng ${retryAfter}s` : " sau ít phút";
+        throw new Error(typeof body.error === "string"
+          ? body.error
+          : `Dịch vụ tạo PDF đang bận, hãy thử lại${suffix}. Bạn vẫn có thể dùng Print Preview cục bộ.`);
+      }
       throw new Error(typeof body.error === "string"
         ? body.error
         : "Dịch vụ tạo PDF hiện không khả dụng. Bạn vẫn có thể dùng Print Preview cục bộ.");

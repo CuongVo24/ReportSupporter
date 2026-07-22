@@ -74,5 +74,11 @@ Biến PDF thành một request lifecycle thống nhất: **một deadline budge
 
 ## 7. Status
 
-`PROPOSED — phụ thuộc F; chưa thi công.`
+`DONE (2026-07-21, sau F) — thi công:`
+- `src/app/api/pdf/route.ts` (MODIFY): deadline hierarchy `renderer 40s < gateway 45s < client 50s` (`PDF_GATEWAY_DEADLINE_MS`); combine `request.signal` + `AbortSignal.timeout` → client rời hủy render upstream (trả 499, không 5xx); **bounded streaming forward** — đọc đủ 5 byte verify `%PDF-` rồi stream phần còn lại qua `ReadableStream` đếm byte + enforce cap 50 MiB, **bỏ** `arrayBuffer()` toàn artifact; bỏ full re-encode input (dùng `Buffer.byteLength`); map đúng status: 503/429 forward + `Retry-After`, 400/401/413 passthrough, chỉ unknown → 502.
+- `services/pdf-renderer/server.mjs` (MODIFY): `renderPdf` một budget tổng `RENDER_DEADLINE_MS=40s` cho setContent+pdf (dùng `remaining()`), nhận `signal`, đóng page ngay khi abort; handler bridge `request 'close'` → AbortController, không ghi sau `writableEnded`, abort không tính failure và không relaunch browser.
+- `src/modules/export/export-pdf.ts` (MODIFY): client timeout 50s; phân biệt busy (503/429 → "đang bận, thử lại sau Ns" + gợi ý Print Preview) vs lỗi thật.
+- `src/app/api/pdf/route.test.ts` (UPDATE): +stream %PDF- hợp lệ, +forward 503 Retry-After, +400 không bị đổi thành 502. 6/6 pass.
+
+> Giữ nguyên `sanitizePdfHtml`, cap 25/50 MiB, verify `%PDF-`. Canonical còn lại (Docker/heap): abort giữa `page.pdf` đo slot về 0, mock 50 MiB+1 chunked đo peak heap không nhân đôi — chạy CI/staging.
 
