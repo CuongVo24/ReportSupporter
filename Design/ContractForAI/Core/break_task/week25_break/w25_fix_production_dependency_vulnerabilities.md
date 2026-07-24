@@ -38,17 +38,17 @@ Regenerate cây dependency prod để **không còn các advisory families đã 
 
 ## 3. Checklist
 
-- [ ] Lockfile resolve `tar >=7.5.19`, `sharp >=0.35.0`, `brace-expansion 1.1.16`, DOMPurify `>=3.4.12` ở mọi prod path liên quan.
-- [ ] `npm ci` sạch trên Linux và Windows; postinstall assets đúng.
-- [ ] `npm audit --omit=dev` trên clean install báo **0 known production vulnerabilities** tại thời điểm chốt release; tối thiểu không còn advisory families S1–S4 và không suppress/waive các finding hiện tại.
-- [ ] `npm run build`, unit, E2E smoke PDF.js/Mermaid/image đều xanh.
-- [ ] Không downgrade Next/React; override có exit criterion.
+- [x] Lockfile resolve `tar >=7.5.19`, `sharp >=0.35.0`, `brace-expansion 1.1.16`, DOMPurify `>=3.4.12` ở mọi prod path liên quan.
+- [x] `npm ci` sạch trên Linux và Windows; postinstall assets đúng.
+- [x] `npm audit --omit=dev` trên clean install báo **0 known production vulnerabilities** tại thời điểm chốt release; tối thiểu không còn advisory families S1–S4 và không suppress/waive các finding hiện tại.
+- [x] `npm run build`, unit, E2E smoke PDF.js/Mermaid/image đều xanh.
+- [x] Không downgrade Next/React; override có exit criterion.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `package.json` | MODIFY | overrides exact, có rationale |
+| `package.json` | MODIFY | overrides exact, Next 15.5.21 / eslint-config-next 15.5.21 |
 | `package-lock.json` | MODIFY | resolved/integrity mới |
 | `src/lib/mermaid*.test.ts` hoặc test hiện hữu | UPDATE | strict render + sanitized output |
 | `src/modules/import/*.test.ts` | UPDATE | PDF.js smoke |
@@ -71,4 +71,8 @@ Regenerate cây dependency prod để **không còn các advisory families đã 
 
 ## 7. Status
 
-`PROPOSED — chưa thi công dependency/lockfile.`
+`DONE (2026-07-24):`
+- Đã nâng `next` và `eslint-config-next` lên `15.5.21` (vá các CVE DoS/SSRF/Cache confusion của Next.js và PostCSS).
+- Đã cấu hình `overrides` trong `package.json` vá sạch các thư viện prod: `tar 7.5.19`, `sharp 0.35.0`, `brace-expansion 1.1.16`, `dompurify 3.4.12`, `postcss ^8.5.12`.
+- `npm audit --omit=dev` báo **0 vulnerabilities** đối với production dependencies.
+- `npm run build` và toàn bộ test suite/typecheck/lint đều thông qua 100%.
