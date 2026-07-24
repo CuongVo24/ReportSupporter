@@ -83,4 +83,33 @@ describe("/api/pdf", () => {
     }));
     expect(response.status).toBe(400);
   });
+
+  it("shares rate limit bucket across requests even if x-api-key header is rotated", async () => {
+    vi.stubEnv("PDF_RENDERER_URL", "http://renderer.internal");
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    const pdfBytes = new TextEncoder().encode("%PDF-1.7\ncontent");
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(new Response(pdfBytes, {
+      status: 200,
+      headers: { "Content-Type": "application/pdf" },
+    }))));
+
+    // Send 5 successful requests from same trusted IP with different x-api-key headers
+    for (let i = 0; i < 5; i++) {
+      const res = await POST(new Request("http://localhost/api/pdf", {
+        method: "POST",
+        headers: { "x-forwarded-for": "203.0.113.88", "x-api-key": `key-variation-${i}` },
+        body: "<!doctype html><html><body>Report</body></html>",
+      }));
+      expect(res.status).toBe(200);
+    }
+
+    // 6th request from same IP with yet another x-api-key header must hit rate limit 429
+    const blockedRes = await POST(new Request("http://localhost/api/pdf", {
+      method: "POST",
+      headers: { "x-forwarded-for": "203.0.113.88", "x-api-key": "key-variation-6" },
+      body: "<!doctype html><html><body>Report</body></html>",
+    }));
+    expect(blockedRes.status).toBe(429);
+    expect(blockedRes.headers.get("retry-after")).toBeDefined();
+  });
 });

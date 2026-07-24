@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createRateLimiter, rateLimitIdentity } from "@/lib/server/rate-limit";
+import { createRateLimiter, pdfAddressIdentity } from "@/lib/server/rate-limit";
 import { sanitizePdfHtml } from "./sanitize-pdf-html";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
@@ -24,10 +24,7 @@ export async function POST(request: Request) {
     return jsonError("HTML tạo PDF vượt quá giới hạn 25 MiB.", 413);
   }
 
-  const limit = await consumePdfRateLimit(rateLimitIdentity(
-    request,
-    request.headers.get("x-api-key")?.trim() || "pdf-render",
-  ));
+  const limit = await consumePdfRateLimit(pdfAddressIdentity(request));
   if (!limit.available) {
     return jsonError("PDF rate limiter is unavailable.", 503);
   }

@@ -266,4 +266,33 @@ describe("/api/ai route", () => {
 
     expect(fetchSignal?.aborted).toBe(true);
   });
+
+  it("enforces dual rate limiting (per-address and per-key)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: "OK" }] } }] }),
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    // 1. Consume 20 requests with same IP but rotated API keys -> 21st must be blocked by address quota
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    const addressHeaders = { "Content-Type": "application/json", "x-forwarded-for": "198.51.100.99" };
+
+    for (let i = 0; i < 20; i++) {
+      const res = await POST(new Request("http://localhost/api/ai", {
+        method: "POST",
+        headers: { ...addressHeaders, "x-api-key": `key-addr-test-${i}` },
+        body: JSON.stringify({ action: "rewrite", input: "Draft", provider: "gemini" }),
+      }));
+      expect(res.status).toBe(200);
+    }
+
+    const addrBlocked = await POST(new Request("http://localhost/api/ai", {
+      method: "POST",
+      headers: { ...addressHeaders, "x-api-key": "key-addr-test-new" },
+      body: JSON.stringify({ action: "rewrite", input: "Draft", provider: "gemini" }),
+    }));
+    expect(addrBlocked.status).toBe(429);
+    expect(addrBlocked.headers.get("retry-after")).toBeDefined();
+  });
 });

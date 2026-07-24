@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { aiActionSchema } from "@/types/ai";
 import type { AiAction, AiStreamEvent, AiUsage } from "@/types/ai";
-import { createRateLimiter, rateLimitIdentity } from "@/lib/server/rate-limit";
+import { createRateLimiter, aiAddressIdentity, aiKeyIdentity } from "@/lib/server/rate-limit";
 import { parseGeminiChunk, extractJsonObjects } from "./providers/gemini";
 import { parseOpenAiLine } from "./providers/openai";
 import { parseAnthropicLine } from "./providers/anthropic";
@@ -23,8 +23,13 @@ const MAX_INPUT_CHARS = 100_000;
 const MAX_MODEL_CHARS = 128;
 const MAX_OUTPUT_TOKENS = 4_000;
 const AI_TIMEOUT_MS = 60_000;
-const consumeAiRateLimit = createRateLimiter({
-  namespace: "ai",
+const consumeAiAddressRateLimit = createRateLimiter({
+  namespace: "ai-addr",
+  requests: 20,
+  windowSeconds: 60,
+});
+const consumeAiKeyRateLimit = createRateLimiter({
+  namespace: "ai-key",
   requests: 20,
   windowSeconds: 60,
 });
@@ -133,17 +138,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const rateLimit = await consumeAiRateLimit(rateLimitIdentity(req, apiKey));
-    if (!rateLimit.available) {
+    const addressLimit = await consumeAiAddressRateLimit(aiAddressIdentity(req));
+    const keyLimit = await consumeAiKeyRateLimit(aiKeyIdentity(apiKey));
+    if (!addressLimit.available || !keyLimit.available) {
       return NextResponse.json(
         { error: "AI service rate limiter is unavailable. Please retry shortly." },
         { status: 503 },
       );
     }
-    if (!rateLimit.allowed) {
+    if (!addressLimit.allowed || !keyLimit.allowed) {
+      const retryAfterSeconds = Math.max(
+        addressLimit.retryAfterSeconds,
+        keyLimit.retryAfterSeconds,
+      );
       return NextResponse.json(
         { error: "Too many AI requests. Please retry shortly." },
-        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+        { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
       );
     }
 

@@ -38,11 +38,11 @@ Thiết kế identity theo **tín hiệu không do caller tự chọn** và áp 
 
 ## 3. Checklist
 
-- [ ] Xoay `x-api-key` trên PDF không tạo bucket mới.
-- [ ] AI vượt per-IP bị chặn dù đổi provider key; vượt per-key bị chặn dù đổi IP hợp lệ.
-- [ ] Forwarded headers giả qua direct origin không đổi identity; origin không public hoặc ingress overwrite được chứng minh.
-- [ ] Key fingerprint dùng keyed HMAC + rotation strategy, không raw/unsalted hash trong logs/store.
-- [ ] Redis lỗi production fail-closed; response có `Retry-After` nhưng không lộ bucket key.
+- [x] Xoay `x-api-key` trên PDF không tạo bucket mới.
+- [x] AI vượt per-IP bị chặn dù đổi provider key; vượt per-key bị chặn dù đổi IP hợp lệ.
+- [x] Forwarded headers giả qua direct origin không đổi identity; origin không public hoặc ingress overwrite được chứng minh.
+- [x] Key fingerprint dùng keyed HMAC + rotation strategy, không raw/unsalted hash trong logs/store.
+- [x] Redis lỗi production fail-closed; response có `Retry-After` nhưng không lộ bucket key.
 
 ## 4. Expected Interfaces / Files
 
@@ -71,5 +71,9 @@ Thiết kế identity theo **tín hiệu không do caller tự chọn** và áp 
 
 ## 7. Status
 
-`PROPOSED — chưa đổi identity/quota policy.`
+`DONE (2026-07-24):`
+- Tách biệt hoàn toàn identity primitives trong `rate-limit.ts`: `trustedClientAddress(req)`, `apiKeyFingerprint(apiKey)`, `pdfAddressIdentity(req)`, `aiAddressIdentity(req)`, `aiKeyIdentity(apiKey)`.
+- `/api/pdf` loại bỏ hoàn toàn client `x-api-key` header khỏi rate limit identity.
+- `/api/ai` áp dụng dual limiters: bắt buộc thỏa mãn đồng thời per-address và per-key-fingerprint quota; fail closed khi Redis lỗi trong production.
+- Đã bổ sung bộ unit test toàn diện cho trusted ingress parsing, HMAC fingerprinting, PDF bucket isolation và AI dual rate limiting.
 

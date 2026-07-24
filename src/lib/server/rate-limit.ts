@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
@@ -89,23 +89,58 @@ export class BoundedMemorySlidingWindow {
   }
 }
 
-function trustedClientAddress(request: Request): string {
+/**
+ * Extracts and validates the trusted client IP address based on TRUSTED_PROXY_MODE.
+ * Malformed, spoofed, or unconfigured proxy headers fallback to "direct".
+ */
+export function trustedClientAddress(request: Request): string {
   const mode = process.env.TRUSTED_PROXY_MODE?.trim().toLowerCase() ?? "none";
+  let ip = "";
   if (mode === "vercel" || mode === "forwarded") {
-    return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "direct";
+    ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  } else if (mode === "cloudflare") {
+    ip = request.headers.get("cf-connecting-ip")?.trim() ?? "";
+  } else if (mode === "x-real-ip") {
+    ip = request.headers.get("x-real-ip")?.trim() ?? "";
   }
-  if (mode === "cloudflare") {
-    return request.headers.get("cf-connecting-ip")?.trim() || "direct";
+
+  if (!ip || !/^[a-fA-F0-9:.]+$/u.test(ip)) {
+    return "direct";
   }
-  if (mode === "x-real-ip") {
-    return request.headers.get("x-real-ip")?.trim() || "direct";
-  }
-  return "direct";
+
+  return ip;
 }
 
-export function rateLimitIdentity(request: Request, apiKey: string): string {
-  const raw = `${trustedClientAddress(request)}\0${apiKey}`;
-  return createHash("sha256").update(raw).digest("hex");
+/**
+ * Derives a truncated HMAC fingerprint for an API key using a server secret.
+ * Never stores or logs the raw API key.
+ */
+export function apiKeyFingerprint(apiKey: string): string {
+  const secret =
+    process.env.RATE_LIMIT_SECRET?.trim() ||
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+    "report-supporter-hmac-secret-v1";
+  return createHmac("sha256", secret).update(apiKey).digest("hex").slice(0, 32);
+}
+
+export function pdfAddressIdentity(request: Request): string {
+  const address = trustedClientAddress(request);
+  return createHash("sha256").update(`pdf\0${address}`).digest("hex");
+}
+
+export function aiAddressIdentity(request: Request): string {
+  const address = trustedClientAddress(request);
+  return createHash("sha256").update(`ai-addr\0${address}`).digest("hex");
+}
+
+export function aiKeyIdentity(apiKey: string): string {
+  return `ai-key-${apiKeyFingerprint(apiKey)}`;
+}
+
+export function rateLimitIdentity(request: Request, apiKey?: string): string {
+  const address = trustedClientAddress(request);
+  const keyFp = apiKey ? apiKeyFingerprint(apiKey) : "";
+  return createHash("sha256").update(`${address}\0${keyFp}`).digest("hex");
 }
 
 export function createRateLimiter(config: RateLimitConfig) {
