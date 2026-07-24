@@ -23,30 +23,67 @@ jobs:
       # this asserts the script runs and dev config is lenient; the REAL gate runs
       # in the deploy pipeline with the target deployment's env loaded.
       - run: npm run check:production-config
-      - run: npm run test:subsystems
+
+      # --- Lane: unit/mock (node env, no browser, no Docker) -----------------
+      # W25-K: coverage-gated. Includes the src/**/__security__/** fuzz/
+      # adversarial suites (bounded, seeded — see Design/Security/ThreatModel.md
+      # for which findings each suite documents). Fails the build if any
+      # global or critical-module coverage threshold in vitest.config.ts
+      # regresses below the measured baseline.
+      - name: "Unit/mock tests + coverage gate (incl. security fuzz suites)"
+        run: npm run test:coverage
+      - name: "Flake gate — pipeline-client circuit-breaker suite x20, no timeout increase"
+        run: |
+          for i in $(seq 1 20); do
+            echo "::group::pipeline-client repeat run $i/20"
+            npx vitest run src/modules/pipeline/pipeline-client.test.ts --maxWorkers=2
+            echo "::endgroup::"
+          done
       - run: npm run test:pdf-unit
       - run: npm run test:performance
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage
+
       - run: npm run build
+
+      # --- Lane: production browser (real Chromium, production build) -------
       - run: npx playwright install --with-deps chromium
       # W24-O canonical perf gate: production build + actual Chromium + actual
       # worker. Produces the KPI trace consumed by perf:collect and check:bundle.
-      - run: npm run test:perf:e2e
+      - name: "Production browser E2E — performance (real Chromium + real worker)"
+        run: npm run test:perf:e2e
         env:
           PLAYWRIGHT_USE_BUILD: "1"
       - run: npm run perf:collect
       # Bundle budget now reads the production trace for the transitive critical
       # graph; it must run AFTER the perf artifact exists.
       - run: npm run check:bundle
-      - run: npm run test:e2e
+      - name: "Production browser E2E — functional"
+        run: npm run test:e2e
         env:
           PLAYWRIGHT_USE_BUILD: "1"
+
+      # --- Lane: Docker isolation (PDF renderer sandbox — JS off, network ----
+      # blocked, canary proof, admission-control saturation) ------------------
       - run: docker compose -f docker-compose.pdf.yml up --build -d
-      - run: npm run test:pdf-integration
+      - name: "Docker isolation — PDF render, script/JS-off proof, egress canary, admission control"
+        run: npm run test:pdf-integration
         env:
           PDF_RENDERER_URL: http://127.0.0.1:8080
           PDF_RENDERER_TOKEN: local-render-token
+          PDF_CANARY_URL: http://127.0.0.1:9000
+          PDF_CANARY_URL_FROM_RENDERER: http://canary:9000
       - if: always()
         run: docker compose -f docker-compose.pdf.yml down
+
+      # --- Scheduled/release-lane evidence (NOT required on every PR, see ----
+      # w25_add_security_coverage_fuzz_and_flake_gates.md §2 out-of-scope):
+      # long performance soak runs are tracked separately and are not gated
+      # here — this job only proves the fast, per-PR lanes above.
+
       - run: npm audit --omit=dev
       - uses: actions/upload-artifact@v4
         if: always()

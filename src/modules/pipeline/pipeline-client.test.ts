@@ -3,7 +3,7 @@
 // timeout / reset each reject affected pending exactly once, and repeated crashes
 // open the circuit (fall back to the main thread) instead of a respawn storm.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PipelineRequest } from "@/types";
+import type { PipelineRequest, PipelineResponse } from "@/types";
 import {
   clearPipelineCache,
   PipelineTimeoutError,
@@ -12,6 +12,29 @@ import {
   runPipelineRequest,
   StalePipelineResponseError,
 } from "./pipeline-client";
+
+// W25-K (S2): the circuit-breaker fallback (`runOnMainThread` in
+// pipeline-client.ts) does a real `await import("./pipeline-core")`. Left
+// unmocked, this pulls in the real parser module graph and executes real
+// work — fast when the machine is idle, but slow enough under full-suite
+// CPU contention (or coverage instrumentation) to blow past `testTimeout`.
+// Mocking the module here makes the fallback path deterministic regardless
+// of machine load; the real dynamic import + real `pipeline-core` execution
+// is proven separately by the worker E2E suite (production actual-worker
+// proof), not by this unit test.
+vi.mock("./pipeline-core", () => ({
+  executePipelineRequest: vi.fn(
+    async (request: PipelineRequest): Promise<PipelineResponse> =>
+      ({
+        requestId: request.requestId,
+        projectId: request.projectId,
+        operation: request.operation,
+        sectionRevisions: request.sectionRevisions,
+        ok: true,
+        result: { parsedParts: [], parsedSections: [] },
+      }) as PipelineResponse,
+  ),
+}));
 
 type Listener = (event: unknown) => void;
 

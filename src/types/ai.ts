@@ -5,8 +5,11 @@
  * Design constraints (VibeCode §4 / W11 Locked):
  *   - Flag default OFF → no fetch when disabled.
  *   - Provider-agnostic: no SDK import here; gateway is an interface.
- *   - Client-key strategy: user key is stored in localStorage and sent to
- *     the first-party proxy via `x-api-key`; XSS can read localStorage.
+ *   - Client-key strategy: user key lives only in an in-memory tab variable
+ *     (never written to localStorage/sessionStorage) and is sent to the
+ *     first-party proxy via `x-api-key`; lost on reload by design. Any
+ *     legacy persisted key is scrubbed on load. Same-origin XSS can still
+ *     read the key while the tab is open — see Design/Security/ThreatModel.md.
  *   - No server-env fallback in `/api/ai`.
  */
 
@@ -105,7 +108,7 @@ export type AiConfig = {
    * No SDK is bundled; the provider adapter is loaded separately after approval.
    */
   provider?: string;
-  /** API key stored locally in the browser; required when enabled. */
+  /** API key held only in memory for the current tab; required when enabled. Never persisted. */
   apiKey?: string;
   /** Custom model identifier chosen by the user (optional) */
   model?: string;

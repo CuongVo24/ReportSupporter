@@ -1,9 +1,30 @@
-// W24-F/G integration probe. Verifies: readiness gating, a valid %PDF- render
-// with JS disabled + outbound network blocked, and admission-control saturation
-// (a burst over PDF_MAX_CONCURRENCY yields fast 503s, not unbounded Chromium pages).
+// W24-F/G/W25-K integration probe. Verifies: readiness gating, a valid
+// %PDF- render with JS actually disabled and outbound network actually
+// blocked (proven, not assumed — see S3 below), and admission-control
+// saturation (a burst over PDF_MAX_CONCURRENCY yields fast 503s, not
+// unbounded Chromium pages).
+//
+// W25-K (S3): the previous version of this probe only asserted the %PDF-
+// signature + byte size — it never proved the script marker failed to run
+// or that the tracker request was actually blocked (the old URL,
+// "example.invalid", never resolves regardless of whether interception
+// works, so it proved nothing about interception itself). This version:
+//   (a) extracts the rendered PDF's text and asserts the script-injected
+//       marker text is ABSENT while the real heading text IS present, and
+//   (b) points the tracker <img> at a real, reachable local canary
+//       listener (docker-compose.pdf.yml service "canary") and asserts it
+//       received exactly 0 hits after the render.
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+
 const baseUrl = process.env.PDF_RENDERER_URL ?? "http://127.0.0.1:8080";
 const token = process.env.PDF_RENDERER_TOKEN ?? "local-render-token";
 const maxConcurrency = Number(process.env.PDF_MAX_CONCURRENCY ?? "2");
+const canaryUrl = process.env.PDF_CANARY_URL ?? "http://127.0.0.1:9000";
+// Inside the renderer's own Docker network the canary is reachable by its
+// compose service name; from the host (where this script runs) it's the
+// mapped port above. Both must be provided because the request is issued
+// by the sandboxed Chromium page, not by this script.
+const canaryUrlFromRenderer = process.env.PDF_CANARY_URL_FROM_RENDERER ?? "http://canary:9000";
 
 // Wait for readiness (browser connected), not just liveness.
 let ready = false;
@@ -27,14 +48,60 @@ function renderRequest(body) {
   });
 }
 
-const html = `<!doctype html><html><body><h1>ReportSupporter PDF integration</h1><script>document.body.textContent='SCRIPT_RAN'</script><img src="https://example.invalid/tracker.png"></body></html>`;
+async function canaryHits() {
+  const response = await fetch(`${canaryUrl}/hits`);
+  if (!response.ok) throw new Error(`Canary /hits returned ${response.status}.`);
+  const { hits } = await response.json();
+  return hits;
+}
+
+async function extractPdfText(bytes) {
+  const doc = await getDocument({ data: bytes, disableWorker: true, isEvalSupported: false }).promise;
+  let text = "";
+  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+    const page = await doc.getPage(pageNum);
+    const content = await page.getTextContent();
+    text += content.items.map((item) => ("str" in item ? item.str : "")).join(" ") + "\n";
+  }
+  await doc.destroy();
+  return text;
+}
+
+// Reset the canary counter before the isolation probe so an earlier request
+// (e.g. a retried readiness poll against a misconfigured URL) can't taint it.
+await fetch(`${canaryUrl}/reset`, { method: "POST" }).catch(() => {});
+
+const HEADING_TEXT = "ReportSupporter PDF integration";
+const SCRIPT_MARKER = "SCRIPT_RAN";
+const html = `<!doctype html><html><body><h1>${HEADING_TEXT}</h1><script>document.body.textContent='${SCRIPT_MARKER}'</script><img src="${canaryUrlFromRenderer}/tracker.png"></body></html>`;
 const response = await renderRequest(html);
 if (!response.ok) throw new Error(`PDF renderer returned ${response.status}.`);
 const bytes = new Uint8Array(await response.arrayBuffer());
 const signature = new TextDecoder().decode(bytes.slice(0, 5));
 if (signature !== "%PDF-") throw new Error(`Invalid PDF signature: ${JSON.stringify(signature)}`);
 if (bytes.byteLength < 1_000) throw new Error("Rendered PDF is unexpectedly small.");
-console.log(`PDF integration passed (${bytes.byteLength} bytes, ${signature}).`);
+
+// (a) Script-execution proof: the rendered text must be the real heading,
+// never the marker the injected <script> would have written if JS ran.
+const pdfText = await extractPdfText(bytes);
+if (pdfText.includes(SCRIPT_MARKER)) {
+  throw new Error(`PDF text contains "${SCRIPT_MARKER}" — injected <script> executed. JS-disable isolation is broken.`);
+}
+if (!pdfText.includes(HEADING_TEXT)) {
+  throw new Error(`PDF text is missing the expected heading "${HEADING_TEXT}" — render may have failed silently.`);
+}
+
+// (b) Network-egress proof: the canary must show exactly 0 hits — the
+// renderer's request interception must have aborted the <img> request
+// before it ever reached a real, resolvable endpoint.
+const hitsAfterRender = await canaryHits();
+if (hitsAfterRender !== 0) {
+  throw new Error(`Canary received ${hitsAfterRender} hit(s) — outbound network from the render sandbox was NOT blocked.`);
+}
+
+console.log(
+  `PDF integration passed (${bytes.byteLength} bytes, ${signature}; script did not run; canary 0 hits).`,
+);
 
 // Saturation: fire a burst well above capacity. Some succeed, the excess must be
 // rejected with a fast 503 + Retry-After — proving admission control, not OOM.

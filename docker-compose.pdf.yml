@@ -1,4 +1,20 @@
 services:
+  # W25-K (S3): egress canary for the isolation proof in
+  # scripts/test-pdf-integration.mjs. Reachable from pdf-renderer via the
+  # compose-internal DNS name "canary" (both services share Compose's
+  # default network) — a real, resolvable endpoint, unlike the previous
+  # "example.invalid" which never resolved regardless of interception
+  # working. If request interception in server.mjs ever regresses, this
+  # canary receives a real hit; today it must stay at 0.
+  canary:
+    image: node:22-alpine
+    command: ["node", "/canary/pdf-canary-server.mjs"]
+    volumes:
+      - ./scripts/pdf-canary-server.mjs:/canary/pdf-canary-server.mjs:ro
+    environment:
+      CANARY_PORT: 9000
+    ports:
+      - "127.0.0.1:9000:9000"
   pdf-renderer:
     build: ./services/pdf-renderer
     environment:

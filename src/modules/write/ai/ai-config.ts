@@ -2,14 +2,21 @@
  * AI feature flag — W11 Group A.
  *
  * Reads/writes the AiConfig flag from/to localStorage (browser-side only).
- * When flag is OFF the gateway must NOT be called — this module provides
- * the guard helpers used by the gateway and any caller.
+ * The API key itself is never persisted: it lives only in a module-scope
+ * `volatileApiKey` variable for the lifetime of the tab. When flag is OFF
+ * the gateway must NOT be called — this module provides the guard helpers
+ * used by the gateway and any caller.
  *
  * Constraints:
  *   - Default: enabled=false (Locked #2).
- *   - Client-key strategy: provider key is stored locally and sent only to
- *     the first-party `/api/ai` proxy through the `x-api-key` header.
- *   - XSS risk is real: script execution in the origin can read localStorage.
+ *   - Client-key strategy: provider key is held in memory only and sent
+ *     only to the first-party `/api/ai` proxy through the `x-api-key`
+ *     header; it is stripped before any write to localStorage and lost on
+ *     reload by design.
+ *   - Legacy scrub: a config previously persisted with an `apiKey` field is
+ *     rescued into memory once, then rewritten without the key.
+ *   - XSS risk is real: script execution in the origin can still read the
+ *     in-memory key while the tab is open — see Design/Security/ThreatModel.md.
  *   - No network call here; purely config storage.
  *   - No AI SDK import.
  */
@@ -38,9 +45,10 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
 // ---------------------------------------------------------------------------
 
 /**
- * Load AI config from localStorage.
- * Falls back to DEFAULT_AI_CONFIG when absent or malformed.
- * Safe to call server-side (returns default when `window` is unavailable).
+ * Load AI config from localStorage (enabled/provider/model only) and merge
+ * in the in-memory `apiKey`, if any. Falls back to DEFAULT_AI_CONFIG when
+ * absent or malformed. Safe to call server-side (returns default when
+ * `window` is unavailable).
  */
 export function loadAiConfig(): AiConfig {
   if (typeof window === "undefined") return DEFAULT_AI_CONFIG;
@@ -79,8 +87,8 @@ export function loadAiConfig(): AiConfig {
 // ---------------------------------------------------------------------------
 
 /**
- * Persist AI config to localStorage.
- * No-op when `window` is unavailable (SSR).
+ * Persist AI config to localStorage, excluding `apiKey` (kept in memory
+ * only, see `volatileApiKey`). No-op when `window` is unavailable (SSR).
  */
 export function saveAiConfig(config: AiConfig): void {
   if (typeof window === "undefined") return;
