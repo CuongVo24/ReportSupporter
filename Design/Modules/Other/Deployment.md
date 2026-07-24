@@ -52,7 +52,7 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
   | `PDF_MAX_CONCURRENCY` | tuỳ chọn | server clamp 1..4 (default 2) | vượt biên bị clamp |
 
 - **Hosting matrix** cho `TRUSTED_PROXY_MODE`: Vercel → `vercel`; Cloudflare (Workers/Pages) → `cloudflare`; Node sau nginx bạn kiểm soát → `x-real-ip`; single-instance nội bộ không proxy → chỉ `none` ở môi trường không public.
-- AI route `/api/ai` vẫn **client-key strategy**: người dùng nhập provider key trong UI, browser lưu cục bộ và gửi qua `x-api-key` mỗi request. Route **không** dùng biến môi trường server làm fallback (tránh biến endpoint thành proxy tiêu credit). Không đặt `GEMINI_API_KEY`/`OPENAI_API_KEY`/`ANTHROPIC_API_KEY` server-side.
+- AI route `/api/ai` vẫn **client-key strategy**: người dùng nhập provider key trong UI, browser giữ key **chỉ trong bộ nhớ của tab** (không ghi `localStorage`/`sessionStorage`) và gửi qua `x-api-key` mỗi request; reload mất key, phải nhập lại. Route **không** dùng biến môi trường server làm fallback (tránh biến endpoint thành proxy tiêu credit). Không đặt `GEMINI_API_KEY`/`OPENAI_API_KEY`/`ANTHROPIC_API_KEY` server-side.
 - **Ownership/rotation/rollback:** secret quản ở dashboard host (Vercel/Cloudflare env). Rotate `PDF_RENDERER_TOKEN` bằng cách set token mới ở cả renderer service và app env rồi redeploy; token cũ → renderer trả 401. Rollback = redeploy commit trước với cùng bộ env đã validate.
 - Chạy `npm run check:production-config` với env của target **trước** deploy; `/api/ready` xác nhận limiter + renderer sau deploy (cause code an toàn: `config_missing`/`redis_unreachable`/`renderer_unready`, không lộ secret).
 
@@ -92,6 +92,7 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 
 - `Design/Modules/Other/TechnicalStack.md` — runtime posture, install matrix, Puppeteer later.
 - `Design/Modules/4.Export.md` — §5.3 PDF routes (browser print vs Puppeteer).
-- `Design/Modules/Other/Security.md` — AI client-key posture, localStorage XSS risk, proxy boundary.
+- `Design/Modules/Other/Security.md` — AI client-key posture (in-memory tab, not localStorage), XSS residual risk, proxy boundary.
+- `Design/Security/ThreatModel.md` — canonical threat model, assets/actors/boundaries, residual risks & owners.
 - `Design/RoadMap/MasterRoadMap.md` — W12 public demo.
 - `Design/Conventions/WorkFlow.md` — DoD gate trước release.

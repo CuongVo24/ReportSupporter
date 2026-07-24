@@ -27,7 +27,7 @@ ReportSupporter là **local-first, no-login, no-cloud-sync** workspace. Stored X
 | T3 | XSS khi mở `report.html` đã export | File self-contained chứa script độc | Trung bình | ✅ |
 | T4 | Lộ dữ liệu cá nhân trong draft | metadata (tên thành viên, trường, lớp, GV) + nội dung + ảnh lưu IndexedDB | Trung bình | ✅ (privacy) |
 | T5 | Supply-chain | dependency pipeline bị tamper | Trung bình | ✅ (cross-ref pinning) |
-| T6 | Lộ AI provider key cục bộ | XSS trong origin đọc `localStorage` nơi lưu key người dùng | Cao | ✅ |
+| T6 | Lộ AI provider key cục bộ | XSS trong origin đọc biến in-memory (tab hiện tại) nơi giữ key người dùng — key không nằm ở `localStorage` | Cao | ✅ |
 | — | AuthN/AuthZ, server injection, CSRF | không có server / login / cookie | — | ❌ N/A (Non-goals) |
 | — | Network / link-liveness trong Checker | Checker offline tuyệt đối (`3.Check.md`) | — | ❌ đã cấm |
 
@@ -86,8 +86,8 @@ remark-parse (+gfm +math)
 - **Lưu trú:** chỉ IndexedDB trên máy người dùng (`idb`). **Không** gửi đi đâu — no cloud, no telemetry, no analytics call (khớp Non-goals).
 - **Đọc lại an toàn:** mọi dữ liệu từ IndexedDB qua `storedBundleSchema.parse()` (`1.Write.md` §3.4) — `unknown` + zod, không tin dữ liệu thô (chống shape poisoning).
 - **Quyền kiểm soát:** cần đường "xoá dữ liệu" (xoá project / clear store) để người dùng tự dọn dữ liệu cá nhân. Soft-delete theo `Rule.md` §6 cho draft đang dùng; hard clear khi người dùng chủ động yêu cầu.
-- **AI client-key posture:** Trợ lý AI là opt-in. Người dùng nhập provider key trong UI; key được lưu ở `localStorage` và gửi đến `/api/ai` qua header `x-api-key` cho từng request. Key không được nhúng vào bundle và route không fallback sang env server.
-- **XSS risk:** Vì key nằm trong `localStorage`, mọi XSS cùng origin có thể đọc key. Do đó sanitize Markdown ở §1 là phòng thủ bắt buộc, không được nới lỏng.
+- **AI client-key posture:** Trợ lý AI là opt-in. Người dùng nhập provider key trong UI; key chỉ giữ trong một biến in-memory của tab (`volatileApiKey`, `src/modules/write/ai/ai-config.ts`), **không** ghi vào `localStorage`/`sessionStorage`, và gửi đến `/api/ai` qua header `x-api-key` cho từng request. Reload trang → mất key, phải nhập lại (chủ đích). Config còn lại (enabled/provider/model, không có key) mới được persist ở `localStorage`. Bản ghi cũ (trước thay đổi này) có `apiKey` trong storage được migrate một lần: rescue vào memory rồi xoá khỏi storage ngay (xem `loadAiConfig()`). Key không được nhúng vào bundle và route không fallback sang env server.
+- **XSS risk:** Vì key vẫn nằm trong bộ nhớ tab khi đang mở, XSS cùng origin trong phiên đó vẫn đọc được key (không có "tuyệt đối an toàn" — chỉ giảm bề mặt lộ so với localStorage persistent). Do đó sanitize Markdown ở §1 vẫn là phòng thủ bắt buộc, không được nới lỏng. Chi tiết đầy đủ + các boundary khác: `Design/Security/ThreatModel.md`.
 - **Proxy boundary:** `/api/ai` chỉ là proxy first-party để tránh gọi provider trực tiếp từ UI code; nó không cấp credit công cộng. Không cấu hình server env provider key nếu chưa có auth/rate-limit.
 
 ---
