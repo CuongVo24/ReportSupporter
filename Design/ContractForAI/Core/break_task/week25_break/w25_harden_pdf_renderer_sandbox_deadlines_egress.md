@@ -70,10 +70,16 @@ Renderer phải chịu được HTML độc hại ngay cả khi một lớp th�
 
 ## 7. Status
 
-`DONE (2026-07-25):`
-- **S1 Browser Sandbox**: Loại bỏ cờ `--no-sandbox` mặc định trong `server.mjs` (cho phép bật `PUPPETEER_DISABLE_SANDBOX` chỉ khi có isolation ADR ở tầng container/kernel).
-- **S2 End-to-End Total Deadline**: Đặt mốc `deadlineAt` tổng ngay khi HTTP request tới server (`startedAt`), dùng chung budget giữa `readBody` và `renderPdf` (không cộng nối tiếp timeout).
-- **S3 HTTP Slowloris Controls**: Cấu hình `server.requestTimeout` (30s), `server.headersTimeout` (10s), `server.keepAliveTimeout` (5s), và `readBody` timeout (15s). Hủy socket và giải phóng slot ngay nếu client truyền body chậm.
-- **S4 Egress Deny**: Bắt buộc chặn tất cả các yêu cầu kết nối ra ngoài mạng (`http:`, `https:`, `file:`, `ws:`), chỉ cho phép `about:blank` và `data:` URIs.
-- Vượt qua toàn bộ 5 node unit tests trong `services/pdf-renderer/server.test.mjs` và 21 Vitest tests.
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.7, §1.2) tìm thấy gap trong bản DONE trước: render concurrency slot bị `admission.tryAcquire()` TRƯỚC khi đọc body (slow client giữ slot đắt tiền trong lúc gửi body); browser lấy trước khi body đọc xong; job dùng `browser.newPage()` trực tiếp trên browser dùng chung — không có `BrowserContext` riêng (hai job chia sẻ cookie/localStorage/cache); numeric env parse bằng `Number(...)` không guard NaN; `docker-compose.pdf.yml` default `PDF_RENDERER_TOKEN` thành `local-render-token` trong khi image bake `NODE_ENV=production` khiến container crash-loop lúc boot; compose thiếu `cap_drop`; renderer share network mặc định với canary (không có network-level egress isolation, chỉ có app-level interception).
+
+Re-fix 2026-07-25:
+- **Hai tầng admission tách biệt.** Thêm `bodyAdmission` (budget rẻ, mặc định `max(8, MAX_CONCURRENCY*4)`, env `PDF_BODY_ADMISSION_MAX`) tách khỏi `admission` (render concurrency). Thứ tự mới: token/draining check → acquire `bodyAdmission` → đọc body (dùng `deadlineAt` bắt đầu từ handler entry) → release `bodyAdmission` → acquire `admission` (render slot) → `manager.getBrowser()` → render. Browser/context không còn được lấy trước khi body đọc xong.
+- **BrowserContext riêng mỗi job.** `renderPdf()` gọi `browser.createBrowserContext()` mỗi lần, `page` thuộc context đó; đóng cả `page` và `context` trong `finally` (kể cả khi `page.pdf()` throw hoặc job bị abort trước khi context được tạo).
+- **Numeric env parse an toàn.** `parseBoundedInt()` guard `Number.isFinite`/range, log `config_invalid` và dùng fallback thay vì lan truyền `NaN`; guard cục bộ `PDF_BODY_READ_TIMEOUT_MS < PDF_RENDER_DEADLINE_MS` (đồng bộ với hierarchy J đã validate ở tầng Next app, nhưng renderer là process riêng nên tự guard phòng thủ).
+- **Docker compose token fail-fast.** `PDF_RENDERER_TOKEN` đổi sang cú pháp bắt buộc `${PDF_RENDERER_TOKEN:?...}` — không còn default `local-render-token`; thiếu biến thì `docker compose up` báo lỗi rõ ràng ngay lập tức thay vì container crash-loop bên trong. CI (`ci.yml` lane "Docker isolation") trước đây KHÔNG set `PDF_RENDERER_TOKEN` ở bước `docker compose up` (chỉ set ở bước test sau đó) — đã bổ sung cùng giá trị CI-only ở cả hai bước.
+- **Container hardening bổ sung.** `cap_drop: ALL` thêm vào `pdf-renderer` service. Network `pdf-internal` mới với `internal: true` — chặn route ra Internet thật ở tầng Docker network (không chỉ dựa vào `page.on('request')` interception), trong khi `canary` vẫn cùng network đó nên vẫn dùng được cho proof interception hiện có (canary mô phỏng "host renderer có thể cố gọi", không phải một host internet thật).
+- **⚠️ Chưa verify bằng probe thật trong phiên này.** Docker daemon không chạy trong sandbox hiện tại (`docker compose config` chạy được và YAML hợp lệ, nhưng không thể `up`/build thật). `cap_drop: ALL` có rủi ro lý thuyết xung đột với Chromium namespace sandbox trên vài kernel — CI (`ci.yml` job `verify`, lane "Docker isolation") SẼ là lần chạy thật đầu tiên xác nhận container boot + `test:pdf-integration` xanh. Nếu CI đỏ ở lane này, việc đầu tiên cần kiểm là `cap_drop: ALL` có chặn Chromium sandbox hay không trước khi nghi ngờ chỗ khác.
+- Test: `services/pdf-renderer/server.test.mjs` 10/10 xanh (mới: context isolation per-job, context/page luôn đóng kể cả khi render throw, abort sớm không mở context, thứ tự `body:release` trước `render:acquire` trước `manager.getBrowser()`, request bị chặn ở body-admission-full không bao giờ chạm render slot/browser).
 

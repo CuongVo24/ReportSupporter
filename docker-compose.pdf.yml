@@ -1,11 +1,20 @@
+# W25-E: pdf-internal is `internal: true` — Docker refuses this network a
+# default route to the outside world, so pdf-renderer cannot reach the real
+# internet even if the app-level request-interception in server.mjs ever
+# regressed. It does NOT block host<->container published ports (Docker
+# implements those via host-side DNAT, not via the bridge's WAN route), so
+# 127.0.0.1:8080 stays reachable, and it does NOT block container<->container
+# traffic within the same network, so pdf-renderer can still resolve/reach
+# the "canary" container — which is the point: canary simulates "any host
+# the renderer might try to call" for the interception proof in
+# scripts/test-pdf-integration.mjs, while this network config is the
+# separate container-level egress-deny layer (defense-in-depth, not the same
+# control as page.on('request') interception).
+networks:
+  pdf-internal:
+    internal: true
+
 services:
-  # W25-K (S3): egress canary for the isolation proof in
-  # scripts/test-pdf-integration.mjs. Reachable from pdf-renderer via the
-  # compose-internal DNS name "canary" (both services share Compose's
-  # default network) — a real, resolvable endpoint, unlike the previous
-  # "example.invalid" which never resolved regardless of interception
-  # working. If request interception in server.mjs ever regresses, this
-  # canary receives a real hit; today it must stay at 0.
   canary:
     image: node:22-alpine
     command: ["node", "/canary/pdf-canary-server.mjs"]
@@ -13,21 +22,32 @@ services:
       - ./scripts/pdf-canary-server.mjs:/canary/pdf-canary-server.mjs:ro
     environment:
       CANARY_PORT: 9000
+    networks:
+      - pdf-internal
     ports:
       - "127.0.0.1:9000:9000"
   pdf-renderer:
     build: ./services/pdf-renderer
     environment:
       PORT: 8080
-      PDF_RENDERER_TOKEN: ${PDF_RENDERER_TOKEN:-local-render-token}
+      # Fail fast with a clear message at `docker-compose up` if the
+      # operator forgot to set a real token, instead of silently defaulting
+      # to the local dev token and crash-looping inside the container (the
+      # image bakes NODE_ENV=production, and the startup guard in
+      # server.mjs refuses to boot with the local default token in prod).
+      PDF_RENDERER_TOKEN: ${PDF_RENDERER_TOKEN:?Set PDF_RENDERER_TOKEN (see .env.example) before running docker-compose -f docker-compose.pdf.yml up}
       # W24-F: conservative capacity envelope (clamped 1..4 in server.mjs).
       PDF_MAX_CONCURRENCY: ${PDF_MAX_CONCURRENCY:-2}
+    networks:
+      - pdf-internal
     ports:
       - "127.0.0.1:8080:8080"
     read_only: true
     tmpfs:
       # tmpfs must not exceed the memory envelope below.
       - /tmp:size=384m,noexec,nosuid
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
     # W24-F resource envelope — a saturating burst is rejected (503) rather than

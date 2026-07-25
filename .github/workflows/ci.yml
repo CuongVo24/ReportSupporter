@@ -74,12 +74,19 @@ jobs:
           PLAYWRIGHT_USE_BUILD: "1"
 
       # --- Lane: Docker isolation (PDF renderer sandbox) ----------------------
+      # docker-compose.pdf.yml requires PDF_RENDERER_TOKEN (no default) — the
+      # image bakes NODE_ENV=production, and server.mjs's startup guard
+      # refuses to boot with the local dev default token in production, so
+      # this MUST be a real (CI-only, non-default) value here, not just on
+      # the later test step that only talks to the already-running container.
       - run: docker compose -f docker-compose.pdf.yml up --build -d
+        env:
+          PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
       - name: "Docker isolation — PDF render, script/JS-off proof, egress canary, admission control"
         run: npm run test:pdf-integration
         env:
           PDF_RENDERER_URL: http://127.0.0.1:8080
-          PDF_RENDERER_TOKEN: local-render-token
+          PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
           PDF_CANARY_URL: http://127.0.0.1:9000
           PDF_CANARY_URL_FROM_RENDERER: http://canary:9000
       - if: always()
