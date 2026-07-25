@@ -62,7 +62,7 @@ export async function openPrintPreview(bundle: ReportProjectBundle): Promise<Pri
 /** @deprecated Use openPrintPreview. Kept for one release while callers migrate. */
 export const exportPdfViaBrowserPrint = openPrintPreview;
 
-/** Generate a real PDF binary through the first-party renderer service. */
+/** Generate a real PDF binary through the first-party renderer service with render capability tickets. */
 export async function exportPdf(
   bundle: ReportProjectBundle,
   onPhaseChange?: (phase: ExportJob["phase"]) => void,
@@ -74,27 +74,51 @@ export async function exportPdf(
     if (!htmlResult.ok) return htmlResult;
     const html = await htmlResult.artifact.blob.text();
     onPhaseChange?.("rendering-assets");
-    // W24-G deadline hierarchy: client (50s) > gateway (45s) > renderer op (40s).
+
+    // 1. Issue short-lived PDF capability ticket from server
+    let ticket: string | undefined;
+    try {
+      const ticketRes = await fetch("/api/pdf/ticket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (ticketRes.ok) {
+        const ticketData = await ticketRes.json();
+        ticket = ticketData.ticket;
+      }
+    } catch {
+      // Fallback: PDF route will verify ticket and return clear error if missing
+    }
+
+    // 2. Post to /api/pdf with capability ticket
     const response = await fetch("/api/pdf", {
       method: "POST",
-      headers: { "Content-Type": "text/html;charset=utf-8" },
+      headers: {
+        "Content-Type": "text/html;charset=utf-8",
+        ...(ticket ? { "x-pdf-ticket": ticket } : {}),
+      },
       body: html,
       signal: AbortSignal.timeout(50_000),
     });
+
     if (!response.ok) {
-      const body = await response.json().catch(() => ({})) as { error?: unknown };
-      // Distinguish overload (busy, retryable soon) from a genuine failure so the
-      // user knows to retry after N seconds rather than assuming PDF is broken.
+      const body = (await response.json().catch(() => ({}))) as { error?: unknown };
       if (response.status === 503 || response.status === 429) {
         const retryAfter = response.headers.get("retry-after");
         const suffix = retryAfter ? ` sau khoảng ${retryAfter}s` : " sau ít phút";
-        throw new Error(typeof body.error === "string"
-          ? body.error
-          : `Dịch vụ tạo PDF đang bận, hãy thử lại${suffix}. Bạn vẫn có thể dùng Print Preview cục bộ.`);
+        throw new Error(
+          typeof body.error === "string"
+            ? body.error
+            : `Dịch vụ tạo PDF đang bận, hãy thử lại${suffix}. Bạn vẫn có thể dùng Print Preview cục bộ.`,
+        );
       }
-      throw new Error(typeof body.error === "string"
-        ? body.error
-        : "Dịch vụ tạo PDF hiện không khả dụng. Bạn vẫn có thể dùng Print Preview cục bộ.");
+      throw new Error(
+        typeof body.error === "string"
+          ? body.error
+          : "Dịch vụ tạo PDF hiện không khả dụng. Bạn vẫn có thể dùng Print Preview cục bộ.",
+      );
     }
     const artifact = await createVerifiedArtifact({
       target: "pdf",

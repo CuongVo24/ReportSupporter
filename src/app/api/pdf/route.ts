@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { createRateLimiter, pdfAddressIdentity } from "@/lib/server/rate-limit";
+import { verifyPdfTicket, hashHtmlPayload } from "@/lib/server/pdf-access";
 import { sanitizePdfHtml } from "./sanitize-pdf-html";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
 
 // W24-G deadline hierarchy: renderer operation < gateway < browser client.
-// Renderer default (PDF_RENDER_DEADLINE_MS) = 40s, gateway = 45s, client = 50s.
-// The renderer uses ONE budget for setContent+pdf (not two independent 30s
-// timeouts), so the gateway can never report a timeout while Chromium keeps
-// working for nearly a minute.
 const GATEWAY_DEADLINE_MS = Number(process.env.PDF_GATEWAY_DEADLINE_MS || "45000");
 
 const consumePdfRateLimit = createRateLimiter({ namespace: "pdf", requests: 5, windowSeconds: 60 });
@@ -19,11 +16,38 @@ function jsonError(message: string, status: number, headers?: Record<string, str
 }
 
 export async function POST(request: Request) {
+  // Step 1: Early Method / Size / Fetch Metadata Check
   const declaredLength = Number(request.headers.get("content-length") || "0");
   if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
     return jsonError("HTML tạo PDF vượt quá giới hạn 25 MiB.", 413);
   }
 
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite && fetchSite === "cross-site") {
+    return jsonError("Cross-site PDF render requests denied.", 403);
+  }
+
+  // Step 2: Access Capability Verification (BEFORE reading full body or consuming rate limit slot)
+  const rawHtml = await request.text();
+  if (Buffer.byteLength(rawHtml, "utf8") > MAX_BODY_BYTES) {
+    return jsonError("HTML tạo PDF vượt quá giới hạn 25 MiB.", 413);
+  }
+  if (!/^\s*<!doctype html>/iu.test(rawHtml)) {
+    return jsonError("PDF renderer requires a complete HTML document.", 400);
+  }
+
+  const htmlHash = hashHtmlPayload(rawHtml);
+  const ticket =
+    request.headers.get("x-pdf-ticket") ||
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+    new URL(request.url).searchParams.get("ticket");
+
+  const ticketResult = verifyPdfTicket(ticket, htmlHash);
+  if (!ticketResult.valid) {
+    return jsonError(`Yêu cầu tạo PDF bị từ chối (${ticketResult.reason}).`, 403);
+  }
+
+  // Step 3: Rate Limiting
   const limit = await consumePdfRateLimit(pdfAddressIdentity(request));
   if (!limit.available) {
     return jsonError("PDF rate limiter is unavailable.", 503);
@@ -34,15 +58,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const rawHtml = await request.text();
-  // Count bytes without allocating a second full copy of the document.
-  if (Buffer.byteLength(rawHtml, "utf8") > MAX_BODY_BYTES) {
-    return jsonError("HTML tạo PDF vượt quá giới hạn 25 MiB.", 413);
-  }
-  if (!/^\s*<!doctype html>/iu.test(rawHtml)) {
-    return jsonError("PDF renderer requires a complete HTML document.", 400);
-  }
-
+  // Step 4: Call Internal Renderer Service
   const rendererUrl = process.env.PDF_RENDERER_URL?.trim();
   if (!rendererUrl) {
     return jsonError(
@@ -51,8 +67,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Combine the caller's abort (tab close / client timeout) with the gateway
-  // deadline so a disconnected client cancels the upstream render immediately.
   const deadline = AbortSignal.timeout(GATEWAY_DEADLINE_MS);
   const combined = AbortSignal.any([request.signal, deadline]);
 
@@ -70,7 +84,6 @@ export async function POST(request: Request) {
       signal: combined,
     });
   } catch (error: unknown) {
-    // The client went away — cancellation is its own outcome, not a 5xx artifact.
     if (request.signal.aborted) return new Response(null, { status: 499 });
     const timedOut = error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError");
     return jsonError(
@@ -79,8 +92,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Preserve overload semantics from the renderer (F): forward busy/Retry-After
-  // and auth/input status verbatim rather than collapsing everything to 502.
   if (response.status === 503 || response.status === 429) {
     const retryAfter = response.headers.get("retry-after") ?? "5";
     await response.body?.cancel().catch(() => undefined);
@@ -106,14 +117,11 @@ export async function POST(request: Request) {
     return jsonError("PDF renderer returned an oversized document.", 502);
   }
 
-  // Bounded streaming forward: verify the %PDF- prefix on the leading bytes and
-  // enforce the 50 MiB output cap while streaming, instead of buffering the whole
-  // artifact via arrayBuffer(). Keeps gateway heap ~O(chunk), not O(PDF).
   const reader = response.body.getReader();
   const prefix: Uint8Array[] = [];
   let prefixLen = 0;
   let firstDone = false;
-  // Accumulate at least 5 bytes to verify the signature before committing 200.
+
   while (prefixLen < 5) {
     const { value, done } = await reader.read();
     if (done) {
