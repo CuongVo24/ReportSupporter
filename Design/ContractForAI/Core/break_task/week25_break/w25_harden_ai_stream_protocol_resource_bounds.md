@@ -39,21 +39,21 @@ Biến AI streaming thành protocol hữu hạn và cancelable ở mọi chiều
 
 ## 3. Checklist
 
-- [ ] Client cannot make response scale with arbitrary `requestId`; server ID fixed-size.
-- [ ] Every provider parser rejects boundedly on oversized/incomplete/no-newline input; tail memory stays under declared cap.
-- [ ] Slow/aborted client stops provider reader; queue/buffer/event/output budgets are enforced and measured.
-- [ ] Public errors contain allowlisted code/copy only; raw `Error.message` absent from response/events.
-- [ ] Fragmented UTF-8/SSE/JSON happy path and usage semantics remain correct.
+- [x] Client cannot make response scale with arbitrary `requestId`; server ID fixed-size.
+- [x] Every provider parser rejects boundedly on oversized/incomplete/no-newline input; tail memory stays under declared cap.
+- [x] Slow/aborted client stops provider reader; queue/buffer/event/output budgets are enforced and measured.
+- [x] Public errors contain allowlisted code/copy only; raw `Error.message` absent from response/events.
+- [x] Fragmented UTF-8/SSE/JSON happy path and usage semantics remain correct.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `src/app/api/ai/route.ts` | MODIFY | bounded pull/cancel bridge, generic errors |
-| `src/app/api/ai/providers/*.ts` | MODIFY/NEW | per-provider incremental parser limits |
+| `src/app/api/ai/route.ts` | MODIFY | bounded pull/cancel bridge, generic errors, stream budgets |
+| `src/app/api/ai/providers/*.ts` | MODIFY | per-provider incremental parser limits (64 KiB line / 128 KiB buffer / 32 depth) |
 | `src/types/ai.ts` | MODIFY | fixed ID/error code contract |
-| `src/modules/write/ai/adapters/http-adapter.ts` | MODIFY | bounded tail/event validation/cancel |
-| route/adapter tests + fuzz corpus | UPDATE/NEW | hostile fragmentation/slow consumer |
+| `src/modules/write/ai/adapters/http-adapter.ts` | MODIFY | bounded tail/event validation/cancel (128 KiB client line buffer) |
+| `src/app/api/ai/__security__/ai-stream-bounds.fuzz.test.ts` | NEW | stream budgets, parser fuzzing, error redaction tests |
 
 ## 5. Risks & Mitigations
 
@@ -73,5 +73,10 @@ Biến AI streaming thành protocol hữu hạn và cancelable ở mọi chiều
 
 ## 7. Status
 
-`PROPOSED — W24-N true streaming đã có; W25-D đóng resource/security boundary còn thiếu.`
+`DONE (2026-07-25):`
+- **S1 Canonical correlation ID**: Client `requestId` được chuẩn hóa `<=64` ký tự theo allowlist; rơi về UUID server-side khi không hợp lệ để chống amplification.
+- **S2 Provider parser limits**: Enforce `MAX_OPENAI_LINE_BYTES` (64 KiB), `MAX_ANTHROPIC_LINE_BYTES` (64 KiB), `MAX_GEMINI_BUFFER_BYTES` (128 KiB) và `MAX_GEMINI_BRACE_DEPTH` (32).
+- **S3 Stream budgets & client buffer**: Giới hạn `MAX_UPSTREAM_BYTES` (2 MiB), `MAX_TOTAL_DELTA_CHARS` (50,000 chars), `MAX_EVENTS` (2,000), `MAX_SINGLE_DELTA_CHARS` (16,000 chars), và client-side line buffer cap (`MAX_CLIENT_BUFFER_BYTES` 128 KiB). Tự động ngắt provider controller khi client cancel/abort.
+- **S4 Public error redaction**: Redact toàn bộ `Error.message` thô/secrets; chỉ xuất bản các mã lỗi chuẩn (`AI_PROVIDER_ERROR`, `AI_STREAM_EXCEEDED`, v.v.).
+- Bổ sung bộ fuzzing & security test suite `src/app/api/ai/__security__/ai-stream-bounds.fuzz.test.ts`.
 

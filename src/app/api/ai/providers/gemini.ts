@@ -1,11 +1,17 @@
 import type { AiUsage } from "@/types/ai";
 
+export const MAX_GEMINI_BUFFER_BYTES = 128 * 1024; // 128 KiB
+export const MAX_GEMINI_BRACE_DEPTH = 32;
+
 /**
  * Parses a single complete Gemini response object from the stream.
  */
 export function parseGeminiChunk(
   jsonText: string
 ): { delta?: string; usage?: AiUsage } | null {
+  if (jsonText.length > MAX_GEMINI_BUFFER_BYTES) {
+    return null;
+  }
   try {
     const data = JSON.parse(jsonText);
     const candidate = data.candidates?.[0];
@@ -36,8 +42,16 @@ export function parseGeminiChunk(
  * Extracts complete curly-braced JSON objects from a text buffer.
  * Correctly ignores curly braces nested inside string literals,
  * taking double quotes and backslash escaping into account.
+ * Enforces buffer size cap and nesting depth cap to prevent memory/CPU amplification.
  */
-export function extractJsonObjects(buffer: string): { objects: string[]; remaining: string } {
+export function extractJsonObjects(
+  buffer: string,
+  maxBufferBytes = MAX_GEMINI_BUFFER_BYTES,
+): { objects: string[]; remaining: string } {
+  if (buffer.length > maxBufferBytes) {
+    throw new Error("Gemini stream buffer limit exceeded");
+  }
+
   const objects: string[] = [];
   let inString = false;
   let escaped = false;
@@ -63,6 +77,9 @@ export function extractJsonObjects(buffer: string): { objects: string[]; remaini
           startIndex = i;
         }
         braceDepth++;
+        if (braceDepth > MAX_GEMINI_BRACE_DEPTH) {
+          throw new Error("Gemini stream nesting depth exceeded");
+        }
       } else if (char === "}") {
         if (braceDepth > 0) {
           braceDepth--;

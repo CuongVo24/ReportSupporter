@@ -3,6 +3,8 @@ import type { AiAction, AiRequestOptions, AiStreamEvent, AiSuggestion } from "@/
 import { loadAiConfig } from "../ai-config";
 import { estimateUsage, withEstimatedCost } from "../model-catalog";
 
+const MAX_CLIENT_BUFFER_BYTES = 128 * 1024; // 128 KiB cap for client line buffer
+
 export class HttpAiAdapter implements AiAdapter {
   async request(
     action: AiAction,
@@ -55,6 +57,10 @@ export class HttpAiAdapter implements AiAdapter {
             if (done) break;
 
             buffer += decoder.decode(value, { stream: true });
+            if (buffer.length > MAX_CLIENT_BUFFER_BYTES && buffer.indexOf("\n") === -1) {
+              throw new Error("AI stream line buffer exceeded maximum limit");
+            }
+
             let lineEndIndex;
             while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
               const line = buffer.slice(0, lineEndIndex);

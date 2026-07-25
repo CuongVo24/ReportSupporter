@@ -1,11 +1,14 @@
 import type { AiUsage } from "@/types/ai";
 
+export const MAX_OPENAI_LINE_BYTES = 64 * 1024; // 64 KiB
+
 /**
  * Parses a single SSE line from OpenAI streaming API.
  */
 export function parseOpenAiLine(
   line: string
 ): { delta?: string; usage?: AiUsage; done?: boolean } | null {
+  if (line.length > MAX_OPENAI_LINE_BYTES) return null;
   const trimmed = line.trim();
   if (!trimmed) return null;
   if (!trimmed.startsWith("data: ")) return null;

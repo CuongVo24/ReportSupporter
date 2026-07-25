@@ -58,7 +58,7 @@ export type AiStreamEvent =
   | { event: "meta"; requestId: string; provider: string; model: string }
   | { event: "delta"; requestId: string; text: string }
   | { event: "done"; requestId: string; usage?: AiUsage }
-  | { event: "error"; requestId: string; message: string };
+  | { event: "error"; requestId: string; code?: string; message: string };
 
 export type AiRequestContext = {
   projectId?: string;

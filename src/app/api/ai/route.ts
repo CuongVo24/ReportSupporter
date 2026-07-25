@@ -18,11 +18,23 @@ type AiProxyRequest = {
 
 const GENERIC_PROVIDER_ERROR =
   "AI provider request failed. Please check your API key, quota, model, or provider status.";
+const GENERIC_STREAM_EXCEEDED_ERROR =
+  "AI response stream exceeded maximum allowed output size.";
+const GENERIC_SERVER_ERROR =
+  "An internal server error occurred while processing the AI request.";
+
 const MAX_BODY_BYTES = 512 * 1024;
 const MAX_INPUT_CHARS = 100_000;
 const MAX_MODEL_CHARS = 128;
 const MAX_OUTPUT_TOKENS = 4_000;
 const AI_TIMEOUT_MS = 60_000;
+
+// Stream budget caps
+const MAX_UPSTREAM_BYTES = 2 * 1024 * 1024; // 2 MiB max raw upstream bytes
+const MAX_TOTAL_DELTA_CHARS = 50_000;       // 50,000 output characters max
+const MAX_EVENTS = 2_000;                  // 2,000 NDJSON events max
+const MAX_SINGLE_DELTA_CHARS = 16_000;     // 16,000 chars per single delta event max
+
 const consumeAiAddressRateLimit = createRateLimiter({
   namespace: "ai-addr",
   requests: 20,
@@ -36,14 +48,29 @@ const consumeAiKeyRateLimit = createRateLimiter({
 
 class ProviderRequestError extends Error {}
 
+function canonicalRequestId(supplied?: string): string {
+  if (
+    typeof supplied === "string" &&
+    supplied.length <= 64 &&
+    /^[a-zA-Z0-9._:-]+$/u.test(supplied)
+  ) {
+    return supplied;
+  }
+  return crypto.randomUUID();
+}
+
 function validModel(model: string | undefined): boolean {
-  return model === undefined || (
-    model.length <= MAX_MODEL_CHARS &&
-    /^[a-zA-Z0-9._:/-]+$/.test(model)
+  return (
+    model === undefined ||
+    (model.length <= MAX_MODEL_CHARS && /^[a-zA-Z0-9._:/-]+$/.test(model))
   );
 }
 
-async function requestProvider(url: string, init: RequestInit, signal?: AbortSignal): Promise<Response> {
+async function requestProvider(
+  url: string,
+  init: RequestInit,
+  signal?: AbortSignal,
+): Promise<Response> {
   try {
     const response = await fetch(url, { ...init, signal });
     if (!response.ok) throw new ProviderRequestError(GENERIC_PROVIDER_ERROR);
@@ -76,7 +103,7 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
   const input = stringValue(record.input);
   const provider = parseProvider(record.provider);
   const model = stringValue(record.model);
-  const requestId = stringValue(record.requestId);
+  const suppliedRequestId = stringValue(record.requestId);
 
   if (
     !actionResult.success ||
@@ -85,14 +112,16 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
     input.length > MAX_INPUT_CHARS ||
     !provider ||
     !validModel(model)
-  ) return null;
+  ) {
+    return null;
+  }
 
   return {
     action: actionResult.data,
     input,
     provider,
     model,
-    requestId,
+    requestId: canonicalRequestId(suppliedRequestId),
   };
 }
 
@@ -170,8 +199,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { action, input, provider, model, requestId: suppliedRequestId } = parsed;
-    const requestId = suppliedRequestId || crypto.randomUUID();
+    const { action, input, provider, model, requestId: parsedRequestId } = parsed;
+    const requestId = canonicalRequestId(parsedRequestId);
 
     const prompt = buildPrompt(action, input);
     let selectedModel = "";
@@ -254,8 +283,7 @@ export async function POST(req: Request) {
       if (error instanceof ProviderRequestError) {
         return NextResponse.json({ error: GENERIC_PROVIDER_ERROR }, { status: 502 });
       }
-      const message = error instanceof Error ? error.message : "Internal server error";
-      return NextResponse.json({ error: message }, { status: 500 });
+      return NextResponse.json({ error: GENERIC_SERVER_ERROR }, { status: 500 });
     }
 
     // Create dynamic readable stream to pipe to client
@@ -264,22 +292,34 @@ export async function POST(req: Request) {
         const encoder = new TextEncoder();
         const decoder = new TextDecoder("utf-8", { fatal: false });
 
+        let totalUpstreamBytes = 0;
+        let totalDeltaChars = 0;
+        let totalEvents = 0;
+
+        function emitEvent(event: AiStreamEvent): void {
+          if (totalEvents >= MAX_EVENTS) {
+            throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
+          }
+          totalEvents++;
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        }
+
         // Meta event must go out first
-        const metaEvent: AiStreamEvent = {
+        emitEvent({
           event: "meta",
           requestId,
           provider,
           model: selectedModel,
-        };
-        controller.enqueue(encoder.encode(JSON.stringify(metaEvent) + "\n"));
+        });
 
         const reader = response.body?.getReader();
         if (!reader) {
-          controller.enqueue(encoder.encode(JSON.stringify({
+          emitEvent({
             event: "error",
             requestId,
-            message: "Provider did not return a streamable response body.",
-          } as AiStreamEvent) + "\n"));
+            code: "AI_PROVIDER_ERROR",
+            message: GENERIC_PROVIDER_ERROR,
+          });
           controller.close();
           clearTimeout(timeoutId);
           return;
@@ -295,6 +335,11 @@ export async function POST(req: Request) {
             const { done, value } = await reader.read();
             if (done) break;
 
+            totalUpstreamBytes += value.byteLength;
+            if (totalUpstreamBytes > MAX_UPSTREAM_BYTES) {
+              throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
+            }
+
             const text = decoder.decode(value, { stream: true });
 
             if (provider === "gemini") {
@@ -303,17 +348,25 @@ export async function POST(req: Request) {
               buffer = remaining;
 
               for (const objText of objects) {
-                const parsed = parseGeminiChunk(objText);
-                if (parsed) {
-                  if (parsed.delta) {
-                    controller.enqueue(encoder.encode(JSON.stringify({
+                const parsedChunk = parseGeminiChunk(objText);
+                if (parsedChunk) {
+                  if (parsedChunk.delta) {
+                    let deltaText = parsedChunk.delta;
+                    if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
+                      deltaText = deltaText.slice(0, MAX_SINGLE_DELTA_CHARS);
+                    }
+                    totalDeltaChars += deltaText.length;
+                    if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
+                      throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
+                    }
+                    emitEvent({
                       event: "delta",
                       requestId,
-                      text: parsed.delta,
-                    } as AiStreamEvent) + "\n"));
+                      text: deltaText,
+                    });
                   }
-                  if (parsed.usage) {
-                    parsedUsage = parsed.usage;
+                  if (parsedChunk.usage) {
+                    parsedUsage = parsedChunk.usage;
                   }
                 }
               }
@@ -325,17 +378,25 @@ export async function POST(req: Request) {
                 buffer = buffer.slice(lineEndIndex + 1);
                 const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
 
-                const parsed = parseOpenAiLine(cleanLine);
-                if (parsed) {
-                  if (parsed.delta) {
-                    controller.enqueue(encoder.encode(JSON.stringify({
+                const parsedChunk = parseOpenAiLine(cleanLine);
+                if (parsedChunk) {
+                  if (parsedChunk.delta) {
+                    let deltaText = parsedChunk.delta;
+                    if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
+                      deltaText = deltaText.slice(0, MAX_SINGLE_DELTA_CHARS);
+                    }
+                    totalDeltaChars += deltaText.length;
+                    if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
+                      throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
+                    }
+                    emitEvent({
                       event: "delta",
                       requestId,
-                      text: parsed.delta,
-                    } as AiStreamEvent) + "\n"));
+                      text: deltaText,
+                    });
                   }
-                  if (parsed.usage) {
-                    parsedUsage = parsed.usage;
+                  if (parsedChunk.usage) {
+                    parsedUsage = parsedChunk.usage;
                   }
                 }
               }
@@ -347,27 +408,38 @@ export async function POST(req: Request) {
                 buffer = buffer.slice(lineEndIndex + 1);
                 const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
 
-                const parsed = parseAnthropicLine(cleanLine);
-                if (parsed) {
-                  if (parsed.delta) {
-                    controller.enqueue(encoder.encode(JSON.stringify({
+                const parsedChunk = parseAnthropicLine(cleanLine);
+                if (parsedChunk) {
+                  if (parsedChunk.delta) {
+                    let deltaText = parsedChunk.delta;
+                    if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
+                      deltaText = deltaText.slice(0, MAX_SINGLE_DELTA_CHARS);
+                    }
+                    totalDeltaChars += deltaText.length;
+                    if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
+                      throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
+                    }
+                    emitEvent({
                       event: "delta",
                       requestId,
-                      text: parsed.delta,
-                    } as AiStreamEvent) + "\n"));
+                      text: deltaText,
+                    });
                   }
-                  if (parsed.inputTokens !== undefined) {
-                    anthropicInputTokens = parsed.inputTokens;
+                  if (parsedChunk.inputTokens !== undefined) {
+                    anthropicInputTokens = parsedChunk.inputTokens;
                   }
-                  if (parsed.outputTokens !== undefined) {
-                    anthropicOutputTokens = parsed.outputTokens;
+                  if (parsedChunk.outputTokens !== undefined) {
+                    anthropicOutputTokens = parsedChunk.outputTokens;
                   }
                 }
               }
             }
           }
 
-          if (provider === "anthropic" && (anthropicInputTokens !== undefined || anthropicOutputTokens !== undefined)) {
+          if (
+            provider === "anthropic" &&
+            (anthropicInputTokens !== undefined || anthropicOutputTokens !== undefined)
+          ) {
             parsedUsage = {
               inputTokens: anthropicInputTokens,
               outputTokens: anthropicOutputTokens,
@@ -375,21 +447,38 @@ export async function POST(req: Request) {
             };
           }
 
-          const doneEvent: AiStreamEvent = {
+          emitEvent({
             event: "done",
             requestId,
             usage: parsedUsage,
-          };
-          controller.enqueue(encoder.encode(JSON.stringify(doneEvent) + "\n"));
+          });
           controller.close();
-        } catch (err) {
-          const errorMsg = err instanceof Error ? err.message : GENERIC_PROVIDER_ERROR;
-          const errorEvent: AiStreamEvent = {
-            event: "error",
+        } catch (err: unknown) {
+          const isExceeded = err instanceof Error && err.message === GENERIC_STREAM_EXCEEDED_ERROR;
+          const code = isExceeded ? "AI_STREAM_EXCEEDED" : "AI_PROVIDER_ERROR";
+          const message = isExceeded ? GENERIC_STREAM_EXCEEDED_ERROR : GENERIC_PROVIDER_ERROR;
+
+          console.error("[AI Stream Error]", {
             requestId,
-            message: errorMsg,
-          };
-          controller.enqueue(encoder.encode(JSON.stringify(errorEvent) + "\n"));
+            provider,
+            model: selectedModel,
+            code,
+          });
+
+          try {
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  event: "error",
+                  requestId,
+                  code,
+                  message,
+                } as AiStreamEvent) + "\n",
+              ),
+            );
+          } catch {
+            // Controller might be closed
+          }
           controller.close();
         } finally {
           reader.releaseLock();
@@ -399,7 +488,7 @@ export async function POST(req: Request) {
       cancel() {
         providerController.abort();
         clearTimeout(timeoutId);
-      }
+      },
     });
 
     return new Response(stream, {
@@ -420,9 +509,8 @@ export async function POST(req: Request) {
     if (error instanceof ProviderRequestError) {
       return NextResponse.json({ error: GENERIC_PROVIDER_ERROR }, { status: 502 });
     }
-    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: message },
+      { error: GENERIC_SERVER_ERROR },
       { status: 500 },
     );
   }

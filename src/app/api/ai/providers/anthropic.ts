@@ -1,9 +1,12 @@
+export const MAX_ANTHROPIC_LINE_BYTES = 64 * 1024; // 64 KiB
+
 /**
  * Parses a single SSE line from Anthropic streaming API.
  */
 export function parseAnthropicLine(
   line: string
 ): { delta?: string; inputTokens?: number; outputTokens?: number } | null {
+  if (line.length > MAX_ANTHROPIC_LINE_BYTES) return null;
   const trimmed = line.trim();
   if (!trimmed) return null;
   if (!trimmed.startsWith("data: ")) return null;
