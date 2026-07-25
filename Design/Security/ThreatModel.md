@@ -48,10 +48,10 @@ Mỗi threat: **Entry point → Primary control → Defense-in-depth → Residua
 
 ### T1 — Stored XSS qua Markdown/import
 - **Entry point:** Người dùng gõ/paste Markdown, hoặc import docx/xlsx/pptx/pdf chứa nội dung độc.
-- **Primary control:** `remark-rehype` không bật `allowDangerousHtml`, không có `rehype-raw` → raw HTML bị loại trước khi tới sanitize (`Security.md` §1.2).
-- **Defense-in-depth:** `rehype-sanitize` với schema mở rộng tối thiểu (`markdown-pipeline.ts`); ranh giới `dangerouslySetInnerHTML` chỉ một chỗ (preview pane) dùng output đã sanitize (`Security.md` §2).
-- **Residual risk:** DOM-clobbering qua `clobberPrefix: ""` trong schema (`markdown-pipeline.ts:18`) — id trùng tên với DOM API global có thể can thiệp script hợp lệ khác đọc `document.getElementById`/named property access. Chưa có adversarial test riêng.
-- **Test/Owner:** Fuzz suite mới (W25-K, `src/**/__security__/*`) phải cover ID/URL clobbering cases. Owner: chủ dự án, review mỗi khi đổi schema.
+- **Primary control:** `remark-rehype` không bật `allowDangerousHtml`, không có `rehype-raw` → raw HTML gõ trực tiếp trong markdown source bị coi là text trơ, không bao giờ thành element thật (`Security.md` §1.2 — xác nhận lại 2026-07-25 khi viết test cho W25-I, xem ghi chú trong `markdown-pipeline.fuzz.test.ts`).
+- **Defense-in-depth:** `rehype-sanitize` với schema mở rộng tối thiểu (`markdown-pipeline.ts`) áp dụng cho HTML do KaTeX/rehype-highlight/Mermaid tự sinh (không phải raw markdown HTML — xem control trên). `clobberPrefix: HEADING_DOM_CLOBBER_PREFIX` (`"user-content-"`, KHÔNG rỗng — đã fix trước phiên này) chống DOM-clobbering cho heading ID. Ranh giới `dangerouslySetInnerHTML`: `asSanitizedHtml` không còn export công khai (W25-I, 2026-07-25) — chỉ `markdown-pipeline.ts` tự gọi được sau khi chạy full sanitize pipeline; TOC (`toc-renderer.ts`) và Mermaid SVG (`sanitizeSvgMarkup()`, mới) có boundary/brand type riêng, không cast raw string. Pass thu hẹp `style`/`className` mới (`sink-style-narrowing.ts`) chạy sau `rehypeSanitize`, chặn `url()`/`expression()`/`javascript:`/`@import` trong style bất kể property.
+- **Residual risk:** Đã đóng gap DOM-clobbering/forge-brand chính; còn lại là rủi ro chung của mọi allowlist sanitizer (schema có thể sai sót chưa phát hiện). `<use>` SVG không còn nhận `href`/`xlink:href` (chặn hẳn thay vì cố allowlist pattern giá trị).
+- **Test/Owner:** `src/lib/__security__/markdown-pipeline.fuzz.test.ts` (mở rộng W25-I: asSanitizedHtml không export, style/className narrowing, Mermaid script/onload/use-href stripped). Owner: chủ dự án, review mỗi khi đổi schema.
 
 ### T2 — XSS qua URI scheme
 - **Entry point:** `[x](javascript:…)`, `data:text/html` cho link, `vbscript:`.
@@ -74,10 +74,11 @@ Mỗi threat: **Entry point → Primary control → Defense-in-depth → Residua
 - **Owner:** chủ dự án; review lại khi có yêu cầu multi-user/shared-device use case.
 
 ### T5 — Supply-chain (dependency/container)
-- **Entry point:** npm dependency compromise, PDF renderer container image compromise.
-- **Primary control:** Pin exact version mọi runtime dep (`TechnicalStack.md` §8d), lockfile commit, `npm ci`. `npm audit` chạy trong CI (không chặn cứng — advisory).
-- **Residual risk:** Không có SBOM/signature verification cho container image; không auto-bump/dependabot review process được ghi cụ thể ở đây.
-- **Owner:** chủ dự án review trước mỗi version bump qua Contract.
+- **Entry point:** npm dependency compromise, PDF renderer container image compromise, GitHub Actions supply chain (CI runner).
+- **Primary control:** Pin exact version mọi runtime dep (`TechnicalStack.md` §8d), lockfile commit, `npm ci`. `npm audit --omit=dev` chạy trong CI (root + `services/pdf-renderer` workspace riêng) **chặn cứng** (không `|| true` trên lệnh audit chính — chỉ JSON artifact upload dùng `|| true` để vẫn có bằng chứng khi audit đỏ). Deviation khỏi advisory mới nhất phải qua registry `dependency-overrides.json` có `owner`/`reviewBy`/`exitCondition`, enforce bởi `scripts/check-supply-chain.mjs`. GitHub Actions pin full commit SHA, enforce bởi `scripts/check-ci-actions.mjs`.
+- **Defense-in-depth (W25-F/L, 2026-07-25):** Renderer image build một lần trong CI, SBOM (SPDX, `anchore/sbom-action`) và vulnerability scan (`aquasecurity/trivy-action`, fail trên Critical/High) chạy trên đúng digest đó; `docker compose` tái sử dụng cùng image (không rebuild) cho integration test. `scripts/generate-release-evidence.mjs` liên kết commit/lockfile hash/image digest/SBOM hash/scan result/audit vào một manifest kiểm được offline.
+- **Residual risk:** SBOM/scan chưa được xác nhận chạy thật trên CI (viết trong sandbox không có Docker daemon — xem ghi chú "chưa verify" ở `w25_harden_pdf_renderer_reproducible_container.md`); chưa có image signing (cosign/sigstore) hay provenance attestation (SLSA). Base image Chromium update cadence phụ thuộc Dependabot `docker` ecosystem entry (mới thêm W25-L), chưa có SLA cụ thể.
+- **Owner:** chủ dự án review trước mỗi version bump qua Contract; theo dõi CI job `verify` (SBOM/scan lane) cho lần chạy thật đầu tiên sau merge.
 
 ### T6 — Lộ AI provider key
 - **Entry point:** XSS trong origin trong lúc tab đang mở, đọc biến `volatileApiKey`.
@@ -87,20 +88,21 @@ Mỗi threat: **Entry point → Primary control → Defense-in-depth → Residua
 - **Owner/Test:** regression test xác nhận `saveAiConfig`/`loadAiConfig` không bao giờ ghi `apiKey` vào bất kỳ `localStorage.setItem` payload nào (khuyến nghị thêm ở W25-K nếu chưa có).
 
 ### T7 — Rate-limit identity spoofing (server surface)
-- **Entry point:** `TRUSTED_PROXY_MODE=none` ở production, hoặc mode không khớp host thật → `x-forwarded-for` giả mạo được.
-- **Primary control:** `production-config.ts` `validateProductionConfig()` fail-closed nếu thiếu Redis pairing hay proxy mode sai (dòng ~49-129).
-- **Residual risk:** Nếu vận hành viên set sai `TRUSTED_PROXY_MODE` cho hosting thật (vd chọn `none` trên môi trường có public traffic), quota dùng chung bucket `direct` — không phải lỗi code, là lỗi cấu hình. Config-value fuzzing (W25-K) nên cover case chuỗi rỗng/whitespace/case-variant cho biến này.
+- **Entry point:** `TRUSTED_PROXY_MODE=none` ở production, hoặc mode không khớp host thật → `x-forwarded-for`/`Forwarded` giả mạo được; client tự thêm entry giả ở đầu chain XFF.
+- **Primary control:** `production-config.ts` `validateProductionConfig()` fail-closed nếu thiếu Redis pairing, proxy mode sai, hoặc thiếu `TRUSTED_PROXY_HOPS` (W25-B, 2026-07-25). `rate-limit.ts` `trustedClientAddress()` chỉ đọc phần tử được proxy tin cậy ĐẦU TIÊN append (đếm từ phải theo `TRUSTED_PROXY_HOPS`, qua `node:net.isIP` validate) — không bao giờ đọc phần client tự thêm ở đầu chain. Mode `forwarded` parse thật RFC 7239 (trước đây chỉ alias đọc `x-forwarded-for`, đã sửa). Fingerprint (địa chỉ + API key) dùng HMAC versioned với secret riêng `RATE_LIMIT_SECRET` (không còn fallback `UPSTASH_REDIS_REST_TOKEN`/hardcoded string).
+- **Residual risk:** Nếu vận hành viên set sai `TRUSTED_PROXY_MODE`/`TRUSTED_PROXY_HOPS` cho hosting thật (vd chọn `none` hoặc đếm sai số hop trên môi trường có public traffic), quota dùng chung bucket `direct` hoặc đọc nhầm địa chỉ — không phải lỗi code, là lỗi cấu hình; code không tự chứng minh được topology thật (cần proof triển khai riêng, xem `w25_fix_rate_limit_identity_trusted_ingress.md` §6).
 - **Owner:** ops/chủ dự án tại deploy time; `/api/ready` báo cause code rõ.
 
 ### T8 — Import resource exhaustion (zip bomb / oversized input)
 - **Entry point:** File import docx/xlsx/pptx/pdf/markdown, đặc biệt ZIP-based format (pptx/xlsx/docx).
-- **Primary control:** `maxBytes = 50MiB` cap trên **compressed** input size mỗi converter (`docx.ts`, `xlsx.ts`, `pptx.ts`, `pdf.ts`, `markdown.ts`).
-- **Residual risk (mở, chưa fix trong W25-K):** Không cap **decompressed size / entry count / compression ratio** cho ZIP-based converters (`pptx.ts` dùng `JSZip.loadAsync` không giới hạn entry count) → zip-bomb classic (file nén nhỏ, giải nén khổng lồ) không bị chặn bởi cap hiện tại. W25-K bổ sung fuzz test để **chứng minh** gap này tồn tại (regression case), fix thật thuộc contract implementation riêng (không sửa trong docs/test contract này).
-- **Owner:** mở issue/contract riêng cho ZIP expansion cap (không thuộc scope M/K).
+- **Primary control (W25-H, 2026-07-25 — đã fix, không còn là gap mở):** `maxBytes = 50MiB` cap trên compressed input size mỗi converter, CỘNG `src/modules/import/zip-central-directory.ts` (parser Central Directory nhị phân tự viết, đọc trực tiếp từ ZIP spec công khai, không qua JSZip private API) preflight TRƯỚC khi bất kỳ converter nào inflate: entry count (≤5,000), tổng uncompressed (≤250MiB), single-entry uncompressed (≤100MiB), tỷ lệ nén (>100x bị từ chối, kể cả compressed size gần 0), path traversal/absolute path/NUL byte, tên trùng lặp sau chuẩn hoá, entry mã hoá, compression method không hỗ trợ. `pptx.ts` (converter duy nhất tự gọi `.async()` trực tiếp) còn có `createInflationTracker` đếm byte giải nén THẬT, phòng trường hợp Central Directory khai man kích thước khai báo.
+- **Residual risk còn lại:** DOCX (dùng Mammoth) và XLSX (dùng SheetJS) không tự gọi `.async()` nên không có runtime inflation tracking cho riêng chúng — chỉ có preflight declared-size check (đã đủ mạnh vì đọc metadata thật từ Central Directory, nhưng không phải runtime-observed). XML text/shared-strings/styles/relationships bên trong archive (sau khi qua ZIP-level check) chưa có budget riêng trước khi materialize toàn bộ workbook/deck.
+- **Owner/Test:** `src/modules/import/__security__/resource-policy-bombs.fuzz.test.ts`, `src/modules/import/zip-central-directory.test.ts`. Xem `w25_harden_document_import_resource_budgets.md` §7 cho danh sách đầy đủ đã đóng/còn mở.
 
 ### T9 — Directory import file-count / dropped assets
-- **Primary control:** `MAX_DROPPED_FILES = 500` (`directory-reader.ts:1`), `MAX_IMAGE_SIZE_BYTES = 5MiB` mỗi ảnh (`extract-assets.ts:9`).
-- **Residual risk:** Không thấy cap tổng byte-size khi kéo thả cả thư mục (500 file × kích thước lớn vẫn có thể nặng). Cần fuzz/adversarial case.
+- **Primary control:** `MAX_DROPPED_FILES = 500` và (W25-H, 2026-07-25) `MAX_DROPPED_TOTAL_BYTES = 500MiB` cộng dồn `File.size` khi duyệt cây thư mục (`directory-reader.ts`, `resource-policy.ts` — trước đây chỉ có cap số lượng file, không có cap tổng dung lượng), `MAX_IMAGE_SIZE_BYTES = 5MiB` mỗi ảnh (`extract-assets.ts:9`).
+- **Residual risk:** `File.size` là metadata OS/browser cung cấp, không phải nội dung đã đọc — vẫn hợp lý làm cap sớm trước khi đọc file, nhưng nếu OS báo sai kích thước (hiếm) thì cap này không chính xác 100%.
+- **Owner/Test:** `src/modules/import/directory-reader.test.ts`.
 
 ### T10 — Abort/race trong worker & pipeline
 - **Entry point:** Abort trước/trong/sau khi gửi postMessage tới worker (`worker-client.ts`), circuit breaker + main-thread fallback trong `pipeline-client.ts`.
@@ -108,9 +110,11 @@ Mỗi threat: **Entry point → Primary control → Defense-in-depth → Residua
 - **Residual risk:** Trước W25-K, test không deterministic hoá dynamic import này → không chứng minh được race an toàn dưới tải thật; chỉ chứng minh dưới điều kiện máy rảnh. W25-K thêm inject/mock cho dynamic import để test race deterministic mọi điều kiện tải.
 
 ### T11 — AI streaming buffer không giới hạn
-- **Entry point:** NDJSON response từ AI provider (qua proxy) không có `\n` hoặc cực lớn.
-- **Current gap:** `http-adapter.ts` buffer NDJSON không có max size/max line count (dòng ~42-108) — attacker-controlled hoặc lỗi provider có thể grow buffer vô hạn trong phiên đó (memory exhaustion phía client, không phải server).
-- **Mitigation kế hoạch:** `options.signal` cho phép abort; nhưng không tự động cap buffer. W25-K thêm fuzz test chứng minh gap (oversized/no-newline case) làm regression baseline; cap thật (nếu cần) là contract riêng.
+- **Entry point:** NDJSON response từ `/api/ai` (giữa app server và LLM provider) hoặc từ `/api/ai` tới client browser, không có `\n` hoặc cực lớn, hoặc frame JSON hỏng.
+- **Primary control server-side (W25-D, 2026-07-25 — đã fix, không còn là gap mở):** `src/app/api/ai/route.ts` bridge giờ **pull-aware** thật (không còn greedy `while(true)` đọc hết upstream bất kể client có đọc hay không); cap `MAX_UPSTREAM_BYTES` (2MiB), `MAX_TOTAL_DELTA_CHARS` (50,000), `MAX_EVENTS` (2,000), `MAX_SINGLE_DELTA_CHARS` (16,000 — vượt thì abort với lỗi, không còn truncate-rồi-emit-như-thành-công); idle deadline 20s + total 60s; parser malformed JSON giờ trả typed protocol error thay vì bỏ qua âm thầm; decoder UTF-8 `fatal:true` + flush cuối stream.
+- **Primary control client-side (đã có từ trước, xác nhận lại):** `http-adapter.ts` có `MAX_CLIENT_BUFFER_BYTES = 128 KiB` cap cho buffer dòng chưa kết thúc (`\n`).
+- **Residual risk:** Client's `response.text()`/`response.json()` fallback path (dùng khi runtime không hỗ trợ streaming `response.body`) chưa có cap kích thước riêng — path này hiếm khi chạy (chỉ môi trường thiếu streaming body support).
+- **Owner/Test:** `src/app/api/ai/route.test.ts`, `src/app/api/ai/__security__/ai-stream-bounds.fuzz.test.ts` (mở rộng W25-D: no-echo correlation ID, pull-aware backpressure, malformed-frame/no-newline-tail/single-delta-overflow).
 
 ## 5. Non-goals (không trong threat model này)
 - AuthN/AuthZ, CSRF — không có login/session/cookie.

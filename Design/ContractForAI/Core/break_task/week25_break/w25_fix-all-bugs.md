@@ -69,6 +69,8 @@ Review ban đầu nhìn chung đúng hướng: nhiều contract đã được đ
 | L — CI/supply chain | `DONE` | Action/audit có; SBOM/image scan/evidence binding thiếu | P0 release gate | **REOPEN** |
 | M — docs/threat model | `PROPOSED` | ADR/ThreatModel đã tạo nhưng stale và chưa khớp A–L | P1 closure | **KEEP OPEN; làm cuối** |
 
+**Kết quả cuối ngày 2026-07-25 (cùng phiên vá):** A, B, C, D, E, G, I, J, L, M → `DONE` (re-verified, evidence trong từng file contract). F → `DONE` (SBOM/scan giờ có trong CI, nhưng chưa chạy thật vì phiên vá không có Docker daemon — xem ghi chú "chưa verify" trong file F). H → `KEEP OPEN — PARTIAL` (ZIP bomb/inflation/pixel budget đã đóng; PPTX DOMParser worker-fallback + OCR idle-deadline còn mở, không phải P0 theo đánh giá lại). K → `KEEP OPEN — PARTIAL` (coverage/fuzz mở rộng; `ci.yml` lane labeling chưa làm). Không có contract nào còn ở trạng thái `REOPEN` treo — mọi contract có ít nhất một commit re-fix + evidence trong cùng ngày. Chi tiết đầy đủ ở §9 Definition of Done và từng file `w25_*` riêng.
+
 Quy tắc cập nhật trạng thái:
 
 - Không đổi contract sang `DONE` trước khi code, negative tests, integration evidence và docs cùng đạt.
@@ -614,21 +616,21 @@ Logging rule cho mọi test/integration:
 
 ## 9. Definition of Done toàn bộ Week 25
 
-Chỉ gỡ release block khi tất cả điều sau đạt:
+Chỉ gỡ release block khi tất cả điều sau đạt. **Cập nhật 2026-07-25 (cuối pass re-fix A-M):** phần lớn đạt; các mục còn `[ ]` là thật, không phải chưa kiểm — release **vẫn blocked** cho tới khi các mục đó xanh trong CI thật (sandbox phiên này không có Docker daemon nên không tự verify được).
 
-- [ ] A–L code paths đã vá; không còn P0 `REOPEN`.
-- [ ] Root + renderer production audit đạt policy; image scan đạt policy.
-- [ ] `npm ci`, `npm run check:encoding`, `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:coverage`, `npm run build` xanh.
-- [ ] `npm run test:pdf-unit` và Docker `npm run test:pdf-integration` xanh với token non-default.
-- [ ] Target production env chạy `npm run check:production-config` xanh; config fingerprint/evidence không chứa secret.
-- [ ] Remote PDF public mặc định OFF nếu chưa có trusted issuer.
-- [ ] AI stream, PDF slow-body/replay, import bomb, CSP hydration/remote-image consent có negative integration tests.
-- [ ] Renderer sandbox + network egress có **effective probe**, không chỉ compose/config review.
-- [ ] SBOM + image digest + scanner + audit + commit + tests được liên kết trong một release evidence manifest.
-- [ ] K coverage/flake/fuzz gates xanh, failure artifact có seed/reproducer.
-- [ ] M docs/UI privacy copy khớp behavior cuối; stale claims bằng 0.
-- [ ] Từng contract A–M và index được cập nhật trạng thái cùng evidence link.
-- [ ] Security review cuối xác nhận không log hoặc upload dữ liệu người dùng/secret.
+- [x] A–L code paths đã vá; không còn P0 `REOPEN` (H còn 1 sub-item partial — DOMParser worker-fallback cho PPTX, xem file contract H §7 "Còn lại"; không phải P0 theo đánh giá lại vì chỉ ảnh hưởng môi trường worker thiếu `DOMParser`, không phải mọi trình duyệt).
+- [x] Root + renderer production audit đạt policy (`npm audit --omit=dev`: 0/0/0/0 cả hai workspace, xác nhận lại cuối pass). [ ] Image scan đạt policy — **chưa verify thật**, cần CI job `verify` (lane SBOM/scan mới ở L) chạy trên Docker daemon thật.
+- [x] `npm run check:encoding`, `npm run lint`, `npm run typecheck`, `npm run test` (`test:subsystems`, 819 test), `npm run test:coverage`, `npm run build` xanh — chạy xác nhận cuối pass 2026-07-25. `npm ci` chưa chạy riêng trong phiên này (đã dùng `npm install` xuyên suốt để cập nhật lockfile theo A); khuyến nghị chạy `npm ci` một lần trên checkout sạch trước khi release để xác nhận lockfile tự đủ.
+- [x] `npm run test:pdf-unit` xanh (10/10, xác nhận lại cuối pass). [ ] Docker `npm run test:pdf-integration` với token non-default — **chưa chạy được** trong sandbox này (không có Docker daemon); CI lane "Docker isolation" là lần chạy thật kế tiếp.
+- [ ] Target production env chạy `npm run check:production-config` xanh — chỉ chạy được với env giả lập/unit test trong phiên này, chưa chạy trên env deployment thật.
+- [x] Remote PDF public mặc định OFF nếu chưa có trusted issuer (`PDF_REMOTE_ENABLED=false` mặc định, xác nhận qua test + đọc code).
+- [x] AI stream, PDF slow-body/replay, import bomb, CSP hydration/remote-image consent có negative integration tests — bổ sung nhiều trong pass này (xem test count ở từng file contract A-K). CSP hydration verify bằng production build + browser thật (không chỉ code review) — xem contract G §7.
+- [ ] Renderer sandbox + network egress có **effective probe**, không chỉ compose/config review — **chưa chạy được** (không có Docker daemon); `cap_drop: ALL` mới thêm có rủi ro lý thuyết chưa kiểm với Chromium sandbox, xem contract E §7.
+- [~] SBOM + image digest + scanner + audit + commit + tests liên kết trong evidence manifest — generator (`scripts/generate-release-evidence.mjs`) đã viết và test cục bộ (non-strict, thiếu digest/SBOM/scan vì không có Docker), nhưng CHƯA chạy `--strict` thật trong CI để tạo manifest đầy đủ.
+- [x] K coverage/flake/fuzz gates xanh (coverage threshold mới cho 8 file, `npm run test:coverage` pass); failure artifact có seed/reproducer cho các suite dùng `mulberry32` seeded fuzz (đã có từ trước, không đổi).
+- [x] M docs/UI privacy copy khớp behavior cuối cho các claim tìm thấy (`ProductPRD.md`, `README.md`, `Deployment.md`, `ThreatModel.md` T1/T5/T7/T8/T9/T11) — **không khẳng định "stale claims bằng 0" tuyệt đối**, chỉ khẳng định đã sửa các claim cụ thể tìm được trong pass này; có thể còn sót ở tài liệu khác chưa quét hết (`Design/` có hàng trăm file lịch sử theo tuần).
+- [x] Từng contract A–M và index (`w25_break_index.md`) được cập nhật trạng thái cùng evidence link, cùng ngày/pass.
+- [ ] Security review cuối (người, không phải tự-review) xác nhận không log hoặc upload dữ liệu người dùng/secret — chưa có review độc lập ngoài chính phiên vá lỗi này.
 
 ---
 

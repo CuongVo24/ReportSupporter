@@ -39,11 +39,11 @@ Tài liệu và code comments nói đúng dữ liệu nào ở đâu, ai có th�
 
 ## 3. Checklist
 
-- [ ] Không còn claim API key persist localStorage; comment/UI/docs khớp memory-only + legacy scrub.
-- [ ] Data inventory ghi rõ IndexedDB plaintext, service-worker/cache/export files, network egress và deletion/retention.
-- [ ] Threat model map A–L, phân biệt primary boundary/mitigation/residual risk/owner.
-- [ ] ADR at-rest encryption chốt required/deferred/rejected với criteria, UX recovery và migration impact.
-- [ ] User-facing privacy copy tiếng Việt rõ, không tuyệt đối hóa “local-first/offline”.
+- [x] Không còn claim API key persist localStorage; comment/UI/docs khớp memory-only + legacy scrub. Code (`src/types/ai.ts`, `ai-config.ts`) đã đúng từ trước; đợt này sửa docs còn stale: `ProductPRD.md` §Privacy, `Design/Modules/Other/CanonicalTypes.md` (2 chỗ).
+- [x] Data inventory ghi rõ IndexedDB plaintext, service-worker/cache/export files, network egress và deletion/retention — đã có sẵn ở `ThreatModel.md` §1-3 (Assets/Actors/Data Classification) và `ADR-028`; xác nhận lại khớp code, không sửa thêm.
+- [x] Threat model map A–L, phân biệt primary boundary/mitigation/residual risk/owner — đợt này sync lại T1 (DOM-clobber/sink brand — đã đóng, trước ghi “chưa có adversarial test”), T5 (SBOM/scan mới), T7 (hop-count parsing mới), T8 (ZIP bomb — đã đóng, trước ghi “chưa fix”), T9 (aggregate byte cap mới), T11 (AI stream bounds — đã đóng, trước ghi “không giới hạn”).
+- [x] ADR at-rest encryption chốt required/deferred/rejected với criteria, UX recovery và migration impact — `ADR-028` đã đạt yêu cầu này từ trước (xác nhận lại, không cần sửa: status “Deferred” rõ ràng, criteria to revisit, không claim encryption đã ship).
+- [x] User-facing privacy copy tiếng Việt rõ, không tuyệt đối hóa “local-first/offline” — `AiSettingsPanel.tsx` đã đúng từ trước (xác nhận lại); `README.md` sửa dòng tuyên bố “không gửi dữ liệu báo cáo lên máy chủ” để làm rõ AI/PDF opt-in vẫn có network egress.
 
 ## 4. Expected Interfaces / Files
 
@@ -72,5 +72,17 @@ Tài liệu và code comments nói đúng dữ liệu nào ở đâu, ai có th�
 
 ## 7. Status
 
-`PROPOSED — docs contract, chỉ hoàn tất sau khi implementation contracts chốt behavior cuối.`
+`DONE (2026-07-25 — cuối pass re-fix A-K trong cùng ngày).`
+
+Thực hiện SAU khi A-K re-fix xong trong cùng phiên, đúng thứ tự contract yêu cầu ("làm cuối sau A-L"). Nhiều phần hoá ra đã đúng từ trước (code comments `ai.ts`/`ai-config.ts`, `ADR-028`, `Security.md` T6, `AiSettingsPanel.tsx` privacy copy, `KichBan-Test-Tong-The.md` QA script) — xác nhận lại, không sửa. Các claim thật sự stale tìm thấy và sửa:
+
+- `ProductPRD.md` §Privacy and AI Data Handling: "stored locally in browser localStorage" → in-memory only + legacy scrub, khớp `ai-config.ts` thật.
+- `Design/Modules/Other/CanonicalTypes.md` (2 chỗ): cùng loại claim sai, sửa tương tự.
+- `README.md`: dòng "không gửi dữ liệu báo cáo lên máy chủ đám mây" được làm rõ — đúng cho local-first mặc định, nhưng AI/PDF remote opt-in có network egress thật qua route first-party.
+- `Design/Modules/Other/Deployment.md`: đoạn "MVP không dùng route server nào (PDF = browser print client-side)" và "Puppeteer service... không bật trong MVP" — đã lỗi thời từ W24/W25 (route server + Puppeteer service THẬT đã tồn tại, chỉ bị tắt bằng feature flag `PDF_REMOTE_ENABLED`, không phải "chưa build"). Thêm ghi chú "Cập nhật W25-M" theo đúng convention file này đã dùng cho W24-H trước đó. Bổ sung biến env mới từ J/E/C vào ma trận (`TRUSTED_PROXY_HOPS`, `RATE_LIMIT_SECRET(+VERSION)`, `OPERATOR_DIAGNOSTICS_TOKEN`, `PDF_BODY_ADMISSION_MAX`, `PDF_REMOTE_ENABLED`, `PDF_TICKET_SECRET(+VERSION)`, `PDF_TICKET_TRUSTED_ISSUER_MODE`) — trước đây thiếu hoàn toàn dù validator đã fail-closed đòi các biến này.
+- `Design/Security/ThreatModel.md`: T1 (đóng — DOM-clobber prefix + brand type + sink narrowing, trước ghi "chưa có test riêng" dù test đã tồn tại), T5 (SBOM/scan mới từ L, trước ghi "không có SBOM"), T7 (hop-count RFC 7239 parsing mới từ B), T8 (ZIP bomb — đóng thật từ H, trước ghi rõ ràng "chưa fix, mở issue riêng"), T9 (aggregate byte cap mới từ H), T11 (AI stream bounds — đóng từ D, trước ghi "không giới hạn").
+- `src/app/api/pdf/sanitize-pdf-html.ts`: comment tuyên bố "gVisor isolation" không có thật trong deployment — sửa trong đợt I, xác nhận lại nhất quán với ThreatModel T3 (không đổi).
+- Index (`w25_break_index.md`) và plan tổng (`w25_fix-all-bugs.md` §2, §9): cập nhật trạng thái cuối cho A-M, không còn contract nào `REOPEN` treo; các mục §9 chưa xanh (Docker probe thật, security review độc lập) được đánh dấu trung thực là chưa đạt, không claim xong.
+
+**Không khẳng định tuyệt đối "0 stale claims toàn repo":** đã quét có mục tiêu (grep các cụm từ khoá cụ thể: `localStorage`+API key, MVP/Puppeteer/route server, gVisor, ZIP bomb/expansion, "không giới hạn"/"chưa cap") qua `Design/` và code comments liên quan trực tiếp tới A-L; không đọc toàn bộ hàng trăm file lịch sử theo tuần trong `Design/`. File lịch sử (`week16_break`, v.v.) mô tả trạng thái TẠI THỜI ĐIỂM đó được giữ nguyên, không sửa thành hiện tại.
 

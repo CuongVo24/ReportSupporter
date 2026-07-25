@@ -79,18 +79,20 @@
 
 ## Trạng thái
 
+> **Cập nhật 2026-07-25 (re-verification pass sau `w25_fix-all-bugs.md`):** review cùng ngày phát hiện A–M đều có gap thật giữa nhãn `DONE`/`PROPOSED` cũ và implementation (chi tiết § Kết luận trong `w25_fix-all-bugs.md`). Toàn bộ đã được REOPEN và vá lại trong cùng ngày, commit riêng từng contract (`w25/*` branch naming theo `w25_fix-all-bugs.md` §10). Trạng thái dưới đây phản ánh kết quả SAU re-fix, không phải trạng thái tại thời điểm review ban đầu.
+
 | Contract | Trạng thái |
 |---|---|
-| A — Production dependency vulnerabilities | `DONE` |
-| B — Rate-limit identity & trusted ingress | `DONE` |
-| C — Public PDF access policy | `DONE` |
-| D — AI stream protocol resource bounds | `DONE` |
-| E — Renderer sandbox/deadline/egress | `DONE` |
-| F — Reproducible renderer container | `DONE` |
-| G — CSP & remote-image privacy | `DONE` |
-| H — Document import resource budgets | `DONE` |
-| I — Markdown/DOM/PDF sanitization | `DONE` |
-| J — Readiness/runtime config | `DONE` |
-| K — Coverage/fuzz/flake/security gates | `PROPOSED` |
-| L — CI supply chain/release evidence | `DONE` |
-| M — Security docs/threat model/data at rest | `PROPOSED` |
+| A — Production dependency vulnerabilities | `DONE` (re-verified 2026-07-25) |
+| B — Rate-limit identity & trusted ingress | `DONE` (re-verified 2026-07-25) |
+| C — Public PDF access policy | `DONE` (re-verified 2026-07-25) |
+| D — AI stream protocol resource bounds | `DONE` (re-verified 2026-07-25) |
+| E — Renderer sandbox/deadline/egress | `DONE` (re-verified 2026-07-25; SBOM/scan/container probe chưa chạy thật — không có Docker daemon trong sandbox, CI job `verify` là lần chạy thật đầu tiên) |
+| F — Reproducible renderer container | `DONE` (re-verified 2026-07-25; cùng ghi chú "chưa verify Docker thật" như E) |
+| G — CSP & remote-image privacy | `DONE` (re-verified 2026-07-25; verify thật bằng production build + browser, xem file contract §7) |
+| H — Document import resource budgets | `KEEP OPEN — PARTIAL` (re-verified 2026-07-25; ZIP bomb/inflation/pixel budget đã đóng thật, PPTX DOMParser worker-fallback + OCR idle-deadline còn mở — xem file contract §7 "Còn lại") |
+| I — Markdown/DOM/PDF sanitization | `DONE` (re-verified 2026-07-25; đồng thời sửa mismatch file `PROPOSED` vs index `DONE` cũ) |
+| J — Readiness/runtime config | `DONE` (re-verified 2026-07-25, 2 lần trong cùng ngày — lần đầu buổi sáng còn thiếu secret/URL validation) |
+| K — Coverage/fuzz/flake/security gates | `KEEP OPEN — PARTIAL` (2026-07-25; coverage threshold + fuzz mở rộng cho file mới, nhưng `ci.yml` chưa phân lane unit/browser/Docker/soak rõ ràng hơn) |
+| L — CI supply chain/release evidence | `DONE` (re-verified 2026-07-25; SBOM/scan/evidence-manifest mới, cùng ghi chú "chưa chạy thật" như E/F) |
+| M — Security docs/threat model/data at rest | `DONE` (2026-07-25 — pass này) |

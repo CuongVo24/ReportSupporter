@@ -32,8 +32,11 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 
 - **Giữ Next build mặc định (Node-capable). KHÔNG khoá `output: 'export'` (static-only).**
 - Lý do: con đường hardening sau dùng **Puppeteer trong Node API route** (`4.Export.md` §5.3, `TechnicalStack.md` §8c "Export hardening later"). Khoá static export thuần sẽ **chặn mất** khả năng thêm route server đó về sau.
-- MVP **không** dùng tới route server nào (PDF = browser print client-side), nhưng để ngỏ build Node để không phải refactor khi bật Puppeteer.
-- Nếu một bản demo cần host tĩnh tuyệt đối (vd GitHub Pages), có thể export tĩnh **tạm** vì MVP chưa có route server — nhưng đó là quyết định theo Contract, **mặc định không chọn**.
+
+> **Cập nhật W25-M (2026-07-25):** Đoạn dưới đây ("MVP không dùng route server nào... PDF = browser print client-side") mô tả trạng thái **lúc quyết định ban đầu**, đã lỗi thời — giữ lại để tham chiếu lịch sử. Trạng thái thật hiện tại: app có `/api/ai`, `/api/pdf`, `/api/pdf/ticket`, `/api/ready` (route server thật, không phải static), và `services/pdf-renderer` (Puppeteer thật, Node service riêng, container hoá) đã tồn tại và deploy được. `src/middleware.ts` (W25-G, CSP nonce) cũng bắt buộc Node runtime, không tương thích `output: 'export'`. Print Preview (client-side, browser print) vẫn là đường PDF **mặc định** vì `PDF_REMOTE_ENABLED=false` theo mặc định (xem `w25_fix-all-bugs.md` §4.2) — route `/api/pdf` tồn tại và chạy được nhưng bị tắt bằng feature flag cho tới khi deployment có trusted upstream identity thật, không phải vì "chưa build".
+
+- MVP **không** dùng tới route server nào (PDF = browser print client-side), nhưng để ngỏ build Node để không phải refactor khi bật Puppeteer. *(Lịch sử — xem ghi chú W25-M ở trên.)*
+- Nếu một bản demo cần host tĩnh tuyệt đối (vd GitHub Pages), có thể export tĩnh **tạm** vì MVP chưa có route server — nhưng đó là quyết định theo Contract, **mặc định không chọn**. *(Không còn khả thi từ W25: middleware + API routes bắt buộc Node runtime.)*
 
 ---
 
@@ -48,8 +51,14 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
   |---|---|---|---|
   | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | production | đi cặp, URL `https://` | limiter `available:false` → `/api/ai` & `/api/pdf` trả 503 cho mọi user |
   | `TRUSTED_PROXY_MODE` | production | `vercel`/`forwarded`/`cloudflare`/`x-real-ip` theo host (không `none`) | `none` ⇒ quota dùng chung bucket `direct`; mode sai host ⇒ spoof `x-forwarded-for` |
-  | `PDF_RENDERER_URL` + `PDF_RENDERER_TOKEN` | khi bật PDF (URL set) | đi cặp; token **không** rỗng/không phải default local | token rỗng ⇒ renderer mở cho mọi request; thiếu ⇒ PDF 503 |
+  | `TRUSTED_PROXY_HOPS` *(mới W25-B)* | production, khi mode `vercel`/`forwarded` | số nguyên 1-10, đếm từ phải chuỗi XFF/Forwarded | thiếu/sai ⇒ predeploy check fail; đếm sai hop ⇒ có thể đọc nhầm địa chỉ client-controlled |
+  | `RATE_LIMIT_SECRET` + `_VERSION` *(mới W25-B/J)* | production | secret riêng ≥24 ký tự, không trùng secret khác | thiếu ⇒ predeploy fail; runtime throw nếu lọt qua |
+  | `OPERATOR_DIAGNOSTICS_TOKEN` *(mới W25-J)* | production | ≥24 ký tự | thiếu ⇒ `/api/ready` không có kênh operator (chỉ public `{ready}`) |
+  | `PDF_RENDERER_URL` + `PDF_RENDERER_TOKEN` | khi bật PDF (URL set) | đi cặp; token **không** rỗng/không phải default local; URL không userinfo/query/fragment | token rỗng ⇒ renderer mở cho mọi request; thiếu ⇒ PDF 503 |
   | `PDF_MAX_CONCURRENCY` | tuỳ chọn | server clamp 1..4 (default 2) | vượt biên bị clamp |
+  | `PDF_BODY_ADMISSION_MAX` *(mới W25-E)* | tuỳ chọn | mặc định `max(8, PDF_MAX_CONCURRENCY*4)` | budget upload riêng, không chiếm render slot |
+  | `PDF_REMOTE_ENABLED` *(mới W25-C)* | luôn có, mặc định `false` | `true` chỉ khi deployment có trusted upstream identity | mặc định OFF — `/api/pdf/ticket` trả 404, chỉ Print Preview hoạt động |
+  | `PDF_TICKET_SECRET` + `_VERSION`, `PDF_TICKET_TRUSTED_ISSUER_MODE` *(mới W25-C)* | khi `PDF_REMOTE_ENABLED=true` | secret riêng ≥24 ký tự; mode phải là `upstream-identity` ở production | thiếu ⇒ predeploy fail; issuer công khai ẩn danh bị chặn ở production |
 
 - **Hosting matrix** cho `TRUSTED_PROXY_MODE`: Vercel → `vercel`; Cloudflare (Workers/Pages) → `cloudflare`; Node sau nginx bạn kiểm soát → `x-real-ip`; single-instance nội bộ không proxy → chỉ `none` ở môi trường không public.
 - AI route `/api/ai` vẫn **client-key strategy**: người dùng nhập provider key trong UI, browser giữ key **chỉ trong bộ nhớ của tab** (không ghi `localStorage`/`sessionStorage`) và gửi qua `x-api-key` mỗi request; reload mất key, phải nhập lại. Route **không** dùng biến môi trường server làm fallback (tránh biến endpoint thành proxy tiêu credit). Không đặt `GEMINI_API_KEY`/`OPENAI_API_KEY`/`ANTHROPIC_API_KEY` server-side.
@@ -84,7 +93,7 @@ ReportSupporter chạy gần như hoàn toàn trong trình duyệt (`MasterRoadM
 
 - Không backend DB, không auth server, không cloud storage, không cron/queue.
 - Không CDN cấu hình đặc biệt ngoài mặc định của host.
-- Puppeteer service (nếu có sau) là **service/worker riêng, behind feature flag**, deploy tách — **không** bật trong MVP.
+- Puppeteer service (`services/pdf-renderer`) **đã tồn tại và deploy được** kể từ W24/W25 — chạy như service/worker riêng (container hoá, `docker-compose.pdf.yml`, `cap_drop: ALL` + network `internal: true`, xem `w25_harden_pdf_renderer_sandbox_deadlines_egress.md`), behind feature flag `PDF_REMOTE_ENABLED` (mặc định `false`). Không còn là "nếu có sau" — đã build, chỉ chưa bật mặc định vì thiếu trusted upstream identity boundary.
 
 ---
 

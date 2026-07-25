@@ -111,8 +111,8 @@ Core features:
 ### Privacy and AI Data Handling
 - AI capabilities are entirely opt-in and disabled by default.
 - When enabled, the application transmits active section/report contents to the chosen LLM provider (Google Gemini, OpenAI, or Anthropic Claude) through the first-party proxy `/api/ai`.
-- The AI provider API key is entered by the user, stored locally in browser `localStorage`, and sent per request through the `x-api-key` header. The proxy does not fall back to server environment keys.
-- Because `localStorage` can be read by script running in the same origin, XSS prevention remains a hard security requirement.
+- The AI provider API key is entered by the user and kept **in-memory only** (a module-level variable in `src/modules/write/ai/ai-config.ts`), sent per request through the `x-api-key` header. It is never written to `localStorage`; only the non-secret config (`enabled`/`provider`/`model`) is persisted there. A key from a previous build that *was* persisted (pre-W25 hardening) is scrubbed from `localStorage` on next read ("legacy scrub"). The proxy does not fall back to server environment keys, and the server never persists the key either (used once per request, not logged).
+- Because the key lives only in memory, it does not survive a page reload — the user re-enters it each session, which is the deliberate tradeoff for not persisting a secret client-side.
 
 
 ### Connector and AI Markdown Ingestion

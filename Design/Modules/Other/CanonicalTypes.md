@@ -427,7 +427,7 @@ Design constraints:
 - Flag `enabled` is `false` by default (Locked #2).
 - `provider` is user-supplied; no SDK is bundled here (Locked #3).
 - Client-key strategy: the user supplies a provider key in AI Settings.
-- The provider key is stored in browser `localStorage` and sent only to `/api/ai` through `x-api-key`; XSS can read localStorage, so Markdown sanitize must stay strict.
+- The provider key is kept **in-memory only** (module-level variable in `ai-config.ts`, not `localStorage`) and sent only to `/api/ai` through `x-api-key`; it does not survive a page reload. Only `enabled`/`provider`/`model` persist to `localStorage`. XSS in an open tab can still read the in-memory key, so Markdown sanitize must stay strict.
 - No server-env fallback in `/api/ai`; adapter injection pattern remains provider-agnostic (see `ai-gateway.ts`).
 
 ```ts
@@ -456,7 +456,7 @@ export type AiConfig = {
    * No SDK is bundled; adapters are approved separately.
    */
   provider?: string;
-  /** Provider API key stored in localStorage; required when enabled. */
+  /** Provider API key, in-memory only (never persisted to localStorage); required when enabled. */
   apiKey?: string;
   /** Optional model identifier. */
   model?: string;

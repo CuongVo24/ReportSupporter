@@ -72,7 +72,7 @@ Sản phẩm tuân thủ triết lý hiệu năng cao, tối giản thư viện 
 * **Frontend Framework**: Next.js 15 (App Router), React, TypeScript.
 * **Markdown Pipeline**: Bộ công cụ `unified` (`remark-parse`, `remark-gfm`, `rehype-katex`, `rehype-highlight`, `rehype-stringify`) xử lý AST mượt mà.
 * **Performance**: Unified pipeline và Checker được chạy ngầm dưới **Web Worker** để không gây giật lag luồng xử lý giao diện chính (main thread).
-* **Storage**: Lưu trữ cục bộ thông qua IndexedDB (thư viện `idb`), không gửi dữ liệu báo cáo lên máy chủ đám mây (Privacy-First).
+* **Storage**: Lưu trữ cục bộ thông qua IndexedDB (thư viện `idb`) — mặc định (local-first), không có tài khoản/đồng bộ đám mây. Khi người dùng **chủ động bật** trợ lý AI hoặc xuất PDF từ xa, nội dung liên quan (đoạn văn đang soạn / HTML báo cáo) được gửi qua route server first-party (`/api/ai`, `/api/pdf`) — với AI, đi tiếp tới nhà cung cấp LLM đã chọn. Cả hai đều opt-in, tắt mặc định, và server không lưu trữ lâu dài nội dung đó. Xem "Privacy and AI Data Handling" trong `Design/ProductPRD.md` để biết chi tiết luồng dữ liệu.
 
 ---
 
