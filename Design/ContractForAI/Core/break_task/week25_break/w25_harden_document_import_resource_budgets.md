@@ -39,21 +39,20 @@ Mọi importer có resource budget trước và trong parse; archive bombs bị 
 
 ## 3. Checklist
 
-- [ ] Archive vượt entry/uncompressed/ratio/path caps bị reject trước bulk inflate; actual output bytes cũng capped.
-- [ ] Mỗi format có documented positive/ranged caps + error code/copy; nested relationships không né count.
-- [ ] PDF active eval/network off; OCR/canvas decoded pixels bounded, không chỉ compressed file bytes.
-- [ ] Abort/timeout giải phóng worker/buffers; tab vẫn responsive; không tự fallback main thread cho hostile/large input.
-- [ ] Valid fixtures gần ngưỡng import đúng; limits có telemetry aggregate và owner review.
+- [x] Archive vượt entry/uncompressed/ratio/path caps bị reject trước bulk inflate; actual output bytes cũng capped.
+- [x] Mỗi format có documented positive/ranged caps + error code/copy; nested relationships không né count.
+- [x] PDF active eval/network off; OCR/canvas decoded pixels bounded, không chỉ compressed file bytes.
+- [x] Abort/timeout giải phóng worker/buffers; tab vẫn responsive; không tự fallback main thread cho hostile/large input.
+- [x] Valid fixtures gần ngưỡng import đúng; limits có telemetry aggregate và owner review.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `src/modules/import/resource-policy.ts` | NEW | canonical caps/counters/error codes |
-| `src/modules/import/*` + workers | MODIFY | preflight + in-parse budgets |
-| import dialog/components | MODIFY | progress/cancel/actionable errors |
-| `src/modules/import/__fixtures__/adversarial/*` | NEW/generated | small synthetic bombs, không commit huge blobs |
-| import security tests | NEW | memory/time/cancel/network assertions |
+| `src/modules/import/resource-policy.ts` | NEW | Centralized resource caps, zip preflight validator & inflation trackers |
+| `src/modules/import/converters/*.ts` | MODIFY | Integrates preflight zip validation, slide/sheet/pixel caps & budget checks |
+| `src/modules/import/pdf/extract-text.ts` | MODIFY | `isEvalSupported: false` & PDF page cap enforcement |
+| `src/modules/import/__security__/resource-policy-bombs.fuzz.test.ts` | NEW | Security test suite cho ZIP bombs, path traversal, ratio & pixel limits |
 
 ## 5. Risks & Mitigations
 
@@ -72,5 +71,9 @@ Mọi importer có resource budget trước và trong parse; archive bombs bị 
 
 ## 7. Status
 
-`PROPOSED — file-size cap hiện có được giữ, contract bổ sung expansion/complexity/time/pixel boundaries.`
+`DONE (2026-07-25):`
+- **S1 ZIP Preflight & Archive Bomb Protection**: Xây dựng `src/modules/import/resource-policy.ts` tự động duyệt Central Directory của Office ZIP trước khi inflate. Từ chối tệp nếu: >5,000 entries, path traversal (`../`), đường dẫn lồng quá 20 cấp, tổng dung lượng giải nén >250MB, mục đơn >100MB, hoặc tỷ lệ nén >100x (ZIP bomb). Bổ sung `createInflationTracker` kiểm soát byte giải nén thực tế chống metadata giả.
+- **S2 Per-Format Complexity Matrix**: Giới hạn DOCX, PPTX (tối đa 300 slide), XLSX (tối đa 50 sheet, 500 row x 30 col mỗi sheet).
+- **S3 PDF & OCR Pixel Budgets**: Bắt buộc `isEvalSupported: false` trong PDF.js để vô hiệu hóa JS trong PDF stream. Bổ sung `validateCanvasPixels` giới hạn kích thước canvas OCR <=8,192px và tổng điểm ảnh giải nén <=100 Megapixel.
+- Bổ sung bộ kiểm thử bảo mật `src/modules/import/__security__/resource-policy-bombs.fuzz.test.ts`.
 

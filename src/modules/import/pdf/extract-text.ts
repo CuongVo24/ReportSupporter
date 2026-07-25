@@ -99,6 +99,7 @@ export async function extractTextFromPdf(
     cMapUrl: "/cmaps/",
     cMapPacked: true,
     standardFontDataUrl: "/standard_fonts/",
+    isEvalSupported: false,
   });
 
   let pdfDoc;

@@ -1,4 +1,5 @@
 import type { ImportConverter, ImportResult, ImportWarning } from "@/types";
+import { validateZipPreflight, IMPORT_LIMITS } from "../resource-policy";
 
 function escapeCell(val: string): string {
   if (val.trim().length === 0) {
@@ -15,7 +16,8 @@ function escapeCell(val: string): string {
 /**
  * Converter for XLSX and XLS spreadsheets using SheetJS.
  * Dynamic imports 'xlsx' for bundle optimization and parses sheets into GFM tables.
- * Implements capping, hidden sheets skipping, workbook empty checks, and merged cells flattening.
+ * Implements capping, hidden sheets skipping, workbook empty checks, merged cells flattening,
+ * and zip preflight budget checks.
  */
 export const xlsxConverter: ImportConverter = {
   format: "xlsx",
@@ -24,18 +26,37 @@ export const xlsxConverter: ImportConverter = {
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.ms-excel",
   ],
-  maxBytes: 50 * 1024 * 1024, // 50MB
+  maxBytes: IMPORT_LIMITS.MAX_INPUT_BYTES,
   convert: async (file: File, onProgress?: (progress: number) => void): Promise<ImportResult> => {
+    if (file.size > IMPORT_LIMITS.MAX_INPUT_BYTES) {
+      throw new Error("Dung lượng tệp vượt quá giới hạn 50MB.");
+    }
+
     const name = file.name.trim().toLowerCase();
 
     // 1. Reject old Excel format (.xls)
     if (name.endsWith(".xls")) {
       throw new Error(
-        "Định dạng Excel cũ (.xls) không được hỗ trợ. Vui lòng lưu lại thành định dạng .xlsx mới hơn."
+        "Định dạng Excel cũ (.xls) không được hỗ trợ. Vui lòng lưu lại thành định dạng .xlsx mới hơn.",
       );
     }
 
     const arrayBuffer = await file.arrayBuffer();
+
+    // Preflight zip check if it's a valid XLSX zip
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const preflight = validateZipPreflight(zip);
+      if (!preflight.valid) {
+        throw new Error(preflight.error || "Tệp Excel không đáp ứng giới hạn an toàn.");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("giới hạn")) {
+        throw err;
+      }
+      // If JSZip fails to parse zip headers, let SheetJS handle format errors cleanly
+    }
 
     // Dynamic import of SheetJS for bundle optimization
     const XLSX = await import("xlsx");
@@ -46,6 +67,12 @@ export const xlsxConverter: ImportConverter = {
       cellNF: true,
       cellText: true,
     });
+
+    if (workbook.SheetNames.length > IMPORT_LIMITS.MAX_XLSX_SHEETS) {
+      throw new Error(
+        `Tệp Excel vượt quá giới hạn tối đa ${IMPORT_LIMITS.MAX_XLSX_SHEETS} trang tính (${workbook.SheetNames.length} trang tính).`,
+      );
+    }
 
     const warnings: ImportWarning[] = [];
     const mdBlocks: string[] = [];
@@ -100,8 +127,8 @@ export const xlsxConverter: ImportConverter = {
       const totalCols = range.e.c - range.s.c + 1;
 
       // 4. Row and Column limits
-      const maxRows = 500;
-      const maxCols = 30;
+      const maxRows = IMPORT_LIMITS.MAX_XLSX_ROWS_PER_SHEET;
+      const maxCols = IMPORT_LIMITS.MAX_XLSX_COLS_PER_SHEET;
 
       const endRow = Math.min(range.e.r, range.s.r + maxRows - 1);
       const endCol = Math.min(range.e.c, range.s.c + maxCols - 1);
@@ -168,7 +195,7 @@ export const xlsxConverter: ImportConverter = {
             }
 
             // Prefer formatted text 'w', fallback to raw value 'v'
-            const rawVal = cell.w !== undefined ? cell.w : (cell.v !== undefined ? String(cell.v) : "");
+            const rawVal = cell.w !== undefined ? cell.w : cell.v !== undefined ? String(cell.v) : "";
             val = rawVal;
           }
           row.push(val);
@@ -191,7 +218,7 @@ export const xlsxConverter: ImportConverter = {
         } else {
           // Fallback to Excel column letters A, B, C...
           headers = Array.from({ length: colCount }, (_, i) =>
-            XLSX.utils.encode_col(range.s.c + i)
+            XLSX.utils.encode_col(range.s.c + i),
           );
           dataRows = rows;
         }

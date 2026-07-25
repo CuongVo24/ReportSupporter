@@ -1,11 +1,13 @@
 import type { ImportConverter, ImportResult, ImportWarning } from "@/types";
 import { htmlToMarkdown } from "../html-to-markdown";
 import { stripHeadingNumbers } from "../strip-heading-number";
+import { validateZipPreflight, IMPORT_LIMITS } from "../resource-policy";
 
 /**
  * Converter for DOCX documents using Mammoth.
  * Runs on the client side, dynamic imports Mammoth to optimize main bundle size,
- * converts DOCX styles semantic-first, and cleans up heading numbers.
+ * converts DOCX styles semantic-first, cleans up heading numbers,
+ * and enforces zip preflight security budgets.
  */
 export const docxConverter: ImportConverter = {
   format: "docx",
@@ -13,13 +15,31 @@ export const docxConverter: ImportConverter = {
   mimeTypes: [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ],
-  maxBytes: 50 * 1024 * 1024, // 50MB
+  maxBytes: IMPORT_LIMITS.MAX_INPUT_BYTES,
   convert: async (file: File): Promise<ImportResult> => {
+    if (file.size > IMPORT_LIMITS.MAX_INPUT_BYTES) {
+      throw new Error("Dung lượng tệp vượt quá giới hạn 50MB.");
+    }
+
     // 1. Dynamic import mammoth to keep main bundle size minimal
     const mammoth = await import("mammoth");
 
     // 2. Read array buffer from the File object
     const arrayBuffer = await file.arrayBuffer();
+
+    // Preflight zip check against zip bombs & excessive entries
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const preflight = validateZipPreflight(zip);
+      if (!preflight.valid) {
+        throw new Error(preflight.error || "Tệp DOCX không đáp ứng giới hạn an toàn.");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("giới hạn")) {
+        throw err;
+      }
+    }
 
     // 3. Define style mapping options for Mammoth
     const options = {
@@ -67,7 +87,7 @@ export const docxConverter: ImportConverter = {
           code,
           message: viMessage,
         };
-      }
+      },
     );
 
     return {

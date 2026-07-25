@@ -5,22 +5,34 @@ import {
   parseNotesPathFromRels,
   parseNotesSlideXml,
 } from "../pptx/slide-xml";
+import { validateZipPreflight, IMPORT_LIMITS } from "../resource-policy";
 
 /**
  * Converter for PPTX presentations using JSZip and slide-xml parser.
  * Slide to H2 title, body to nested GFM list, notes to blockquote.
+ * Enforces resource preflight budgets & slide caps.
  */
 export const pptxConverter: ImportConverter = {
   format: "pptx",
   extensions: [".pptx"],
   mimeTypes: ["application/vnd.openxmlformats-officedocument.presentationml.presentation"],
-  maxBytes: 50 * 1024 * 1024, // 50MB
+  maxBytes: IMPORT_LIMITS.MAX_INPUT_BYTES,
   convert: async (file: File, onProgress?: (progress: number) => void): Promise<ImportResult> => {
+    if (file.size > IMPORT_LIMITS.MAX_INPUT_BYTES) {
+      throw new Error("Dung lượng tệp vượt quá giới hạn 50MB.");
+    }
+
     const arrayBuffer = await file.arrayBuffer();
 
     // Dynamic import of JSZip
     const JSZip = (await import("jszip")).default;
     const zip = await JSZip.loadAsync(arrayBuffer);
+
+    // Preflight zip check against zip bombs & excessive entries
+    const preflight = validateZipPreflight(zip);
+    if (!preflight.valid) {
+      throw new Error(preflight.error || "Tệp PPTX không đáp ứng giới hạn an toàn.");
+    }
 
     // Read presentation order definitions
     const presentationXmlFile = zip.file("ppt/presentation.xml");
@@ -38,6 +50,12 @@ export const pptxConverter: ImportConverter = {
     const slidePaths = parsePresentationOrder(presentationXml, relsXml);
     if (slidePaths.length === 0) {
       throw new Error("Tệp PPTX không chứa slide nào.");
+    }
+
+    if (slidePaths.length > IMPORT_LIMITS.MAX_PPTX_SLIDES) {
+      throw new Error(
+        `Tệp PPTX vượt quá giới hạn tối đa ${IMPORT_LIMITS.MAX_PPTX_SLIDES} slide (${slidePaths.length} slide).`,
+      );
     }
 
     const mdBlocks: string[] = [];
