@@ -6,25 +6,20 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self'${isDevelopment ? " 'unsafe-inline' 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self'${isDevelopment ? " ws: wss:" : ""}`,
+  `connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.anthropic.com${isDevelopment ? " ws: wss:" : ""}`,
   "worker-src 'self' blob:",
   "object-src 'none'",
-  "base-uri 'self'",
+  "base-uri 'none'",
   "form-action 'self'",
   "frame-ancestors 'none'",
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  // W24-I: the markdown pipeline runs inside a module Web Worker. Webpack resolves
-  // the `browser` export condition for the worker bundle, which pulls
-  // `decode-named-character-reference/index.dom.js` — a variant that touches
-  // `document` and throws `document is not defined` in a worker. Force the
-  // DOM-free `index.js` (the package's own `worker`/`default` entry) everywhere;
-  // it is a pure lookup and works on the main thread too.
+  // W24-I: force DOM-free decode-named-character-reference entry in Web Worker
   webpack(config) {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
@@ -42,10 +37,11 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
         ],
       },
     ];

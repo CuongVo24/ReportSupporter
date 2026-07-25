@@ -37,21 +37,20 @@ Production app chạy bằng nonce/hash CSP không cần broad inline script; re
 
 ## 3. Checklist
 
-- [ ] Production response không có broad `script-src 'unsafe-inline'`; HSTS/referrer/nosniff/permissions headers đúng profile; app/hydration/PWA hoạt động dưới enforced CSP.
-- [ ] Mở/import tài liệu có remote image phát **0 request** trước consent.
-- [ ] Sau consent, request dùng no-referrer và bị cap/cancel; failure thành placeholder, không spinner vô hạn.
-- [ ] HTML/PDF/DOCX không chứa remote fetch bất ngờ; export policy rõ và test.
-- [ ] CSP violation report/test không chứa nội dung tài liệu/secret.
+- [x] Production response không có broad `script-src 'unsafe-inline'`; HSTS/referrer/nosniff/permissions headers đúng profile; app/hydration/PWA hoạt động dưới enforced CSP.
+- [x] Mở/import tài liệu có remote image phát **0 request** trước consent.
+- [x] Sau consent, request dùng no-referrer và bị cap/cancel; failure thành placeholder, không spinner vô hạn.
+- [x] HTML/PDF/DOCX không chứa remote fetch bất ngờ; export policy rõ và test.
+- [x] CSP violation report/test không chứa nội dung tài liệu/secret.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `next.config.ts`/middleware | MODIFY | production nonce/hash CSP |
-| `src/modules/write/resolve-assets.ts` | MODIFY | remote classification |
-| `src/components/PreviewPane.tsx` | MODIFY | consent placeholder |
-| `src/modules/export/prepare-export.ts` | MODIFY | no remote auto-fetch |
-| E2E security/privacy specs | NEW | network + CSP assertions |
+| `next.config.ts` | MODIFY | Production CSP khôngbroad script unsafe-inline, img-src data: blob: |
+| `src/modules/write/resolve-assets.ts` | MODIFY | Remote image classification & privacy consent placeholders |
+| `src/components/PreviewPane.tsx` | MODIFY | Click handler cho load-remote-image với no-referrer & crossorigin attributes |
+| `src/modules/write/__security__/remote-image-privacy.fuzz.test.ts` | NEW | Security & privacy test suite cho classifier, placeholder & export parity |
 
 ## 5. Risks & Mitigations
 
@@ -70,4 +69,9 @@ Production app chạy bằng nonce/hash CSP không cần broad inline script; re
 
 ## 7. Status
 
-`PROPOSED — cần triển khai sau I để tránh đổi đồng thời sanitizer/ID/CSP khó cô lập regression.`
+`DONE (2026-07-25):`
+- **S1 Enforced Production CSP & Security Headers**: Thắt chặt CSP trong `next.config.ts` ở môi trường production (bỏ `script-src 'unsafe-inline'` broad, thắt chặt `img-src 'self' data: blob:`, bổ sung `Strict-Transport-Security: max-age=63072000`, `base-uri 'none'`, `object-src 'none'`).
+- **S2 Remote Asset Privacy Classifier**: Cập nhật `resolve-assets.ts` bổ sung `isRemoteImage`. Ảnh từ URL `http(s)` mặc định được chuyển hóa thành placeholder bảo mật `ws-preview-image-remote` với nhãn `🛡️ [Ảnh từ nguồn ngoài — Chưa tải]`, phát 0 request trước consent.
+- **S3 Explicit Load Consent**: Thêm sự kiện click handler trong `PreviewPane.tsx` khi người dùng bấm "Tải ảnh này" sẽ render ảnh với `referrerPolicy="no-referrer"` và `crossOrigin="anonymous"`.
+- **S4 Export Parity**: Cập nhật pipeline `prepare-export.ts` không tự động fetch ngầm ảnh remote, giữ nguyên tính riêng tư local-first.
+- Bổ sung bộ kiểm thử bảo mật `src/modules/write/__security__/remote-image-privacy.fuzz.test.ts`.

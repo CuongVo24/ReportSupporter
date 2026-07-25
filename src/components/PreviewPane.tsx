@@ -117,16 +117,35 @@ export function PreviewPane({
     };
   }, [markdown]);
 
-  const handlePreviewClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest(".ws-preview-image-missing-btn");
-    if (btn && onAttachImageRequest) {
-      const originalSrc = btn.getAttribute("data-original-src");
-      if (originalSrc) {
-        onAttachImageRequest(activeSectionId || "default", originalSrc);
+  const handlePreviewClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest("button");
+      if (!button) return;
+
+      const action = button.getAttribute("data-action");
+      if (action === "attach-image" || button.classList.contains("ws-preview-image-missing-btn")) {
+        const src = button.getAttribute("data-original-src") || "";
+        if (src && onAttachImageRequest) {
+          onAttachImageRequest(activeSectionId || "default", src);
+        }
+      } else if (action === "load-remote-image" || button.classList.contains("ws-preview-image-remote-btn")) {
+        const container = button.closest(".ws-preview-image-remote");
+        const src = button.getAttribute("data-original-src") || "";
+        const alt = button.getAttribute("data-alt") || "";
+        if (container && src) {
+          const img = document.createElement("img");
+          img.src = src;
+          img.alt = alt;
+          img.setAttribute("referrerpolicy", "no-referrer");
+          img.setAttribute("crossorigin", "anonymous");
+          img.className = "ws-preview-image-loaded";
+          container.replaceWith(img);
+        }
       }
-    }
-  }, [activeSectionId, onAttachImageRequest]);
+    },
+    [activeSectionId, onAttachImageRequest],
+  );
 
   const lastSectionId = useMemo(() => {
     if (!sections || sections.length === 0) {
