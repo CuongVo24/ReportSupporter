@@ -71,10 +71,18 @@ PDF remote render chỉ nhận job có **proof do server phát** và ngắn hạ
 
 ## 7. Status
 
-`DONE (2026-07-25):`
-- **S1 Render Capability Ticket**: Triển khai `src/lib/server/pdf-access.ts` tạo ticket capability ngắn hạn (5 phút) băm HMAC-SHA256 kèm `jobId`, `exp` và `htmlHash`.
-- **S2 Ticket Issuer Endpoint**: Xây dựng `/api/pdf/ticket` phát ticket cho cùng origin (`Sec-Fetch-Site: same-origin`), áp rate limit độc lập `consumeTicketRateLimit`.
-- **S3 Admission Order**: `/api/pdf` bắt buộc kiểm tra ticket trước khi đọc full body lớn hoặc tiêu tốn slot renderer/rate limit. Từ chối HTTP 403 nếu thiếu, hết hạn, hoặc bị replayed (anti-replay violation).
-- **S4 Client Flow & Fallback**: Client `export-pdf.ts` tự động xin ticket từ `/api/pdf/ticket` trước khi gọi `/api/pdf`, đồng thời tự động đề xuất Print Preview nếu dịch vụ remote không khả dụng.
-- Bổ sung bộ kiểm thử tự động `src/app/api/pdf/__security__/pdf-access.fuzz.test.ts`.
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.6, §1.2) tìm thấy gap trong bản DONE trước: issuer `/api/pdf/ticket` là public anonymous endpoint — "có signed ticket" không tạo ra authorization boundary thật vì bất kỳ ai cũng issue được; ticket được chấp nhận cả từ query string (`?ticket=`), lộ vào log/history/Referer; `verifyPdfTicket` gộp verify+claim-nonce trong MỘT lần gọi và chạy TRƯỚC rate-limit, khiến probe/replay traffic né được quota; replay cache là `Map` in-process (không an toàn multi-instance); secret ký ticket fallback `PDF_TICKET_SECRET -> RATE_LIMIT_SECRET -> UPSTASH_REDIS_REST_TOKEN -> hardcoded string`; `nbf` có trong payload nhưng không verify; thiếu `aud`/`iss`/`ver`; route đọc toàn bộ `request.text()` trước khi verify.
+
+Re-fix 2026-07-25:
+- **Public issuer đóng theo mặc định.** `PDF_REMOTE_ENABLED=false` mặc định (J); `/api/pdf/ticket` trả `404` khi tắt. Khi bật, issuer yêu cầu `PDF_TICKET_TRUSTED_ISSUER_MODE=upstream-identity` + header `X-Verified-Identity` do trusted reverse-proxy đặt (cùng mô hình trust như `TRUSTED_PROXY_MODE` ở B) — anonymous vẫn được phép NGOÀI production (dev/test) nhưng `sub` bị gắn `"anonymous"` để không nhầm với capability đã xác thực.
+- **Tách verify khỏi claim.** `pdf-access.ts` chia `verifyTicketEnvelope()` (chữ ký + `ver`/`iss`/`aud`/`exp`/`nbf`/TTL — không đọc body, không claim nonce) và `claimTicketNonce()` (atomic, gọi async ngay trước khi forward renderer). `/api/pdf/route.ts` theo đúng thứ tự 8 bước ở §4.3: feature/method/media/origin → verify envelope → rate-limit → đọc body qua stream (byte cap 25MiB + idle 10s/total 20s deadline) → so `htmlHash`/`jobId` → claim nonce → gọi renderer → log cause code only.
+- **Ticket payload đầy đủ.** Thêm `ver`, `iss`, `aud`, `sub`, `sizeClass`, `iat`; `nbf` được verify (kèm clock-skew 10s); TTL tối đa 600s (`exp - iat`); token ký `${version}.${payloadB64}.${hmac}` — `PDF_TICKET_SECRET_VERSION` mismatch bị từ chối tường minh (`SECRET_VERSION_MISMATCH`), hỗ trợ rotation.
+- **Secret dedicated, fail-closed.** Bỏ toàn bộ fallback chain; production thiếu `PDF_TICKET_SECRET` → throw (không silently ký bằng secret đoán được); dev/test dùng `DEV_FALLBACK_SECRET` gắn nhãn rõ ràng.
+- **Nonce claim atomic, multi-instance-safe.** `claimTicketNonce()` dùng Upstash Redis `SET NX EX` khi có credentials (cả dev lẫn prod); production không có Redis → fail-closed (`503`, không fallback Map); dev/test không Redis → in-memory Map (documented giới hạn single-instance).
+- **Chỉ nhận ticket ở header.** Bỏ hẳn `searchParams.get("ticket")`; chỉ `x-pdf-ticket` hoặc `Authorization: Bearer`.
+- **Fetch Metadata policy tường minh.** `Sec-Fetch-Site` vắng mặt bị từ chối trong production (trước đây ngầm coi là trusted); lenient ngoài production để không phá dev/test client không phải browser.
+- **Lỗi public generic.** Không còn trả `ticketResult.reason`/cause code cho client; chỉ log cause code phía server (`console.log` structured, không log token/HTML/PDF).
+- Test: `pdf-access.fuzz.test.ts` (10 test — issuer disabled/enabled/prod-anonymous-denied/trusted-identity/envelope tamper/version-rotate/expired/malformed), `route.test.ts` (11 test — bao gồm query-string-ticket-rejected, remote-disabled-503, replay dùng địa chỉ cô lập để không lẫn rate-limit bucket với test khác). 27/27 xanh.
 
