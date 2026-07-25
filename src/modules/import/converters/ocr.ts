@@ -1,4 +1,5 @@
 import type { OcrProgress, OcrResult } from "@/types";
+import { validateCanvasPixels, IMPORT_LIMITS } from "../resource-policy";
 
 /**
  * Renders a specific page of a PDF File to an HTMLCanvasElement.
@@ -17,23 +18,45 @@ export async function renderPdfPageToCanvas(file: File, pageNumber: number): Pro
     standardFontDataUrl: "/standard_fonts/",
   }).promise;
 
-  const page = await pdfDoc.getPage(pageNumber);
-  const viewport = page.getViewport({ scale: 2.0 }); // 2.0 scale for clarity
+  try {
+    const page = await pdfDoc.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 2.0 }); // 2.0 scale for clarity
 
-  const canvas = document.createElement("canvas");
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    throw new Error("Could not get 2D context from canvas");
+    // OCR uses its own (smaller) per-render budget — a single oversized
+    // page must not silently consume the whole document-wide PDF budget.
+    const pixelCheck = validateCanvasPixels(
+      Math.ceil(viewport.width),
+      Math.ceil(viewport.height),
+      0,
+      IMPORT_LIMITS.MAX_OCR_DECODED_PIXELS,
+    );
+    if (!pixelCheck.valid) {
+      throw new Error(`Không thể hiển thị trang để OCR: ${pixelCheck.error}`);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Could not get 2D context from canvas");
+    }
+
+    const renderTask = page.render({
+      canvasContext: context,
+      viewport: viewport,
+    });
+    try {
+      await renderTask.promise;
+    } catch (error) {
+      renderTask.cancel();
+      throw error;
+    }
+
+    return canvas;
+  } finally {
+    await pdfDoc.destroy().catch(() => undefined);
   }
-
-  await page.render({
-    canvasContext: context,
-    viewport: viewport,
-  }).promise;
-
-  return canvas;
 }
 
 /**

@@ -1,4 +1,6 @@
-export const MAX_DROPPED_FILES = 500;
+import { IMPORT_LIMITS } from "./resource-policy";
+
+export const MAX_DROPPED_FILES = IMPORT_LIMITS.MAX_DROPPED_FILES;
 
 type DirectoryReader = Pick<FileSystemDirectoryReader, "readEntries">;
 
@@ -31,15 +33,27 @@ function readFileEntry(entry: FileSystemFileEntry): Promise<File> {
 export async function collectDroppedFiles(
   entries: readonly FileSystemEntry[],
   maxFiles = MAX_DROPPED_FILES,
+  maxTotalBytes = IMPORT_LIMITS.MAX_DROPPED_TOTAL_BYTES,
 ): Promise<File[]> {
   const files: File[] = [];
+  let totalBytes = 0;
 
   async function visit(entry: FileSystemEntry): Promise<void> {
     if (entry.isFile) {
       if (files.length >= maxFiles) {
         throw new Error(`Chỉ có thể nhập tối đa ${maxFiles} tệp mỗi lần.`);
       }
-      files.push(await readFileEntry(entry as FileSystemFileEntry));
+      const file = await readFileEntry(entry as FileSystemFileEntry);
+      // File.size is metadata the OS/browser already knows — cheap to check
+      // before any file content is read, unlike a per-converter byte cap
+      // which only fires once that single file is later processed.
+      totalBytes += file.size;
+      if (totalBytes > maxTotalBytes) {
+        throw new Error(
+          `Tổng dung lượng các tệp vượt quá giới hạn ${Math.round(maxTotalBytes / 1024 / 1024)}MB mỗi lần nhập.`,
+        );
+      }
+      files.push(file);
       return;
     }
 

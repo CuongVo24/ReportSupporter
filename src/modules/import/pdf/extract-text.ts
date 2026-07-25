@@ -1,5 +1,5 @@
 import type { ImportWarning } from "@/types";
-import { extractPageImages, type ImageItem } from "./extract-images";
+import { extractPageImages, createPixelLedger, type ImageItem } from "./extract-images";
 
 export interface TextItem {
   text: string;
@@ -124,82 +124,91 @@ export async function extractTextFromPdf(
 
   const pages: ExtractedPage[] = [];
   const warnings: ImportWarning[] = [];
+  // Shared across every page's images so the total decoded-pixel budget is
+  // enforced for the WHOLE document, not reset per page.
+  const pixelLedger = createPixelLedger();
 
-  for (let i = 1; i <= pdfDoc.numPages; i++) {
-    throwIfCancelled();
-    const page = await pdfDoc.getPage(i);
-    throwIfCancelled();
-    const viewport = page.getViewport({ scale: 1.0 });
-    const textContent = await page.getTextContent();
-    throwIfCancelled();
-    const ops = await page.getOperatorList();
-    throwIfCancelled();
+  try {
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      throwIfCancelled();
+      const page = await pdfDoc.getPage(i);
+      throwIfCancelled();
+      const viewport = page.getViewport({ scale: 1.0 });
+      const textContent = await page.getTextContent();
+      throwIfCancelled();
+      const ops = await page.getOperatorList();
+      throwIfCancelled();
 
-    // Extract images on this page
-    const images = await extractPageImages(page, ops, i, warnings);
-    throwIfCancelled();
+      // Extract images on this page
+      const images = await extractPageImages(page, ops, i, warnings, pixelLedger);
+      throwIfCancelled();
 
-    const rawItems: TextItem[] = [];
+      const rawItems: TextItem[] = [];
 
-    for (const item of textContent.items) {
-      // Cast item safely using typescript properties check
-      const textItem = item as {
-        str?: string;
-        transform?: number[];
-        fontName?: string;
-        width?: number;
-      };
-      if (textItem.str !== undefined && textItem.str.trim().length > 0 && textItem.transform !== undefined) {
-        const str = textItem.str;
-        const transform = textItem.transform; // [a, b, c, d, e, f]
-        const fontSize = Math.round(Math.abs(transform[3]) * 100) / 100;
-        
-        const rawFont = textItem.fontName || "";
-        const lowerRaw = rawFont.toLowerCase();
-        const isBold = lowerRaw.includes("bold") || 
-                       lowerRaw.includes("semibold") || 
-                       lowerRaw.includes("heavy") || 
-                       lowerRaw.includes("black") || 
-                       lowerRaw.includes("-db") || 
-                       lowerRaw.includes("-bold");
+      for (const item of textContent.items) {
+        // Cast item safely using typescript properties check
+        const textItem = item as {
+          str?: string;
+          transform?: number[];
+          fontName?: string;
+          width?: number;
+        };
+        if (textItem.str !== undefined && textItem.str.trim().length > 0 && textItem.transform !== undefined) {
+          const str = textItem.str;
+          const transform = textItem.transform; // [a, b, c, d, e, f]
+          const fontSize = Math.round(Math.abs(transform[3]) * 100) / 100;
 
-        let fontName = rawFont || "unknown";
-        if (textContent.styles && textContent.styles[fontName]) {
-          fontName = textContent.styles[fontName].fontFamily || fontName;
+          const rawFont = textItem.fontName || "";
+          const lowerRaw = rawFont.toLowerCase();
+          const isBold = lowerRaw.includes("bold") ||
+                         lowerRaw.includes("semibold") ||
+                         lowerRaw.includes("heavy") ||
+                         lowerRaw.includes("black") ||
+                         lowerRaw.includes("-db") ||
+                         lowerRaw.includes("-bold");
+
+          let fontName = rawFont || "unknown";
+          if (textContent.styles && textContent.styles[fontName]) {
+            fontName = textContent.styles[fontName].fontFamily || fontName;
+          }
+          if (isBold) {
+            fontName += " (Bold)";
+          }
+
+          const x = transform[4];
+          const y = transform[5];
+
+          rawItems.push({
+            text: str,
+            fontSize: fontSize || 10,
+            fontName,
+            x,
+            y,
+            width: textItem.width || 0,
+          });
         }
-        if (isBold) {
-          fontName += " (Bold)";
-        }
+      }
 
-        const x = transform[4];
-        const y = transform[5];
+      // Sort and merge adjacent items on the same line
+      const sorted = sortTextItems(rawItems);
+      const merged = mergeAdjacentTextItems(sorted);
 
-        rawItems.push({
-          text: str,
-          fontSize: fontSize || 10,
-          fontName,
-          x,
-          y,
-          width: textItem.width || 0,
-        });
+      pages.push({
+        pageNumber: i,
+        width: viewport.width,
+        height: viewport.height,
+        items: merged,
+        images,
+      });
+
+      if (onProgress) {
+        onProgress(i, pdfDoc.numPages);
       }
     }
-
-    // Sort and merge adjacent items on the same line
-    const sorted = sortTextItems(rawItems);
-    const merged = mergeAdjacentTextItems(sorted);
-
-    pages.push({
-      pageNumber: i,
-      width: viewport.width,
-      height: viewport.height,
-      items: merged,
-      images,
-    });
-
-    if (onProgress) {
-      onProgress(i, pdfDoc.numPages);
-    }
+  } finally {
+    // Release pdf.js document/worker resources on every exit path
+    // (success, cancellation, page-cap error, or an unexpected throw).
+    await pdfDoc.destroy().catch(() => undefined);
   }
 
   return { pages, warnings };

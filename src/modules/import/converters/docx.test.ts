@@ -1,6 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
+import JSZip from "jszip";
 import { stripHeadingNumbers } from "../strip-heading-number";
 import { docxConverter } from "./docx";
+
+// A real (if minimal) ZIP structure so the W25-H central-directory preflight
+// passes — mammoth itself is mocked below, so the actual DOCX XML content
+// doesn't matter for these tests, only that the container is a valid ZIP.
+async function fakeDocxFile(name = "test.docx"): Promise<File> {
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", "<Types/>");
+  zip.file("word/document.xml", "<document/>");
+  const buffer = await zip.generateAsync({ type: "arraybuffer" });
+  return new File([buffer], name, {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+}
 
 // Mock mammoth module to test converter flow in isolation without needing a binary DOCX generator
 vi.mock("mammoth", () => {
@@ -39,9 +53,7 @@ describe("Heading Number Stripper", () => {
 
 describe("DOCX Converter", () => {
   it("converts docx file correctly and maps warnings in Vietnamese", async () => {
-    const file = new File([new Uint8Array(10)], "test.docx", {
-      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    });
+    const file = await fakeDocxFile();
 
     const result = await docxConverter.convert(file);
     expect(result.sourceFormat).toBe("docx");

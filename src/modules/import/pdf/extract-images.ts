@@ -1,4 +1,11 @@
 import type { ImportWarning } from "@/types";
+import { validateCanvasPixels } from "../resource-policy";
+
+/** Running pixel budget shared across every image on every page of one PDF import. */
+export type PixelLedger = { totalPixels: number };
+export function createPixelLedger(): PixelLedger {
+  return { totalPixels: 0 };
+}
 
 export interface ImageItem {
   type: "image";
@@ -19,7 +26,8 @@ export async function extractPageImages(
   page: { objs: { get: (key: string) => unknown } },
   ops: { fnArray: number[]; argsArray: unknown[][] },
   pageNum: number,
-  warnings: ImportWarning[]
+  warnings: ImportWarning[],
+  pixelLedger: PixelLedger = createPixelLedger(),
 ): Promise<ImageItem[]> {
   const images: ImageItem[] = [];
 
@@ -51,6 +59,24 @@ export async function extractPageImages(
       try {
         const imgObj = page.objs.get(imgKey);
         if (imgObj) {
+          // Validate NATIVE decoded pixel dimensions (not the on-page
+          // display size in `width`/`height` above) against the per-image
+          // cap and the running total for this whole PDF, BEFORE any
+          // canvas/ImageData allocation happens inside convertImageObjToBase64.
+          const native = imgObj as { width?: number; height?: number };
+          if (native.width && native.height) {
+            const pixelCheck = validateCanvasPixels(native.width, native.height, pixelLedger.totalPixels);
+            if (!pixelCheck.valid) {
+              warnings.push({
+                code: "image-skipped",
+                message: `Bỏ qua hình ảnh vượt ngân sách điểm ảnh ở trang ${pageNum}: ${pixelCheck.error}`,
+                location: `trang ${pageNum}`,
+              });
+              continue;
+            }
+            pixelLedger.totalPixels += native.width * native.height;
+          }
+
           const base64Data = convertImageObjToBase64(imgObj);
           if (base64Data) {
             // Check size gate (5MB)

@@ -89,11 +89,10 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
       expect(response.status).toBe(200);
 
       const reader = response.body!.getReader();
-      const readsBeforeFirstDelta = { count: 0 };
       // Read only the meta event, then check upstream hasn't been drained yet.
       await reader.read();
-      readsBeforeFirstDelta.count = upstreamReadCalls;
-      expect(upstreamReadCalls).toBeLessThan(chunks.length, "must not have drained the whole upstream just to emit the first (meta) chunk");
+      // must not have drained the whole upstream just to emit the first (meta) chunk
+      expect(upstreamReadCalls).toBeLessThan(chunks.length);
 
       // Drain the rest.
       while (true) {

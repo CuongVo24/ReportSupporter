@@ -5,7 +5,7 @@ import {
   parseNotesPathFromRels,
   parseNotesSlideXml,
 } from "../pptx/slide-xml";
-import { validateZipPreflight, IMPORT_LIMITS } from "../resource-policy";
+import { validateZipPreflight, createInflationTracker, IMPORT_LIMITS } from "../resource-policy";
 
 /**
  * Converter for PPTX presentations using JSZip and slide-xml parser.
@@ -24,14 +24,27 @@ export const pptxConverter: ImportConverter = {
 
     const arrayBuffer = await file.arrayBuffer();
 
+    // Preflight zip check against zip bombs & excessive entries — before
+    // even asking JSZip to parse the archive.
+    const preflight = validateZipPreflight(arrayBuffer);
+    if (!preflight.valid) {
+      throw new Error(preflight.error || "Tệp PPTX không đáp ứng giới hạn an toàn.");
+    }
+
     // Dynamic import of JSZip
     const JSZip = (await import("jszip")).default;
     const zip = await JSZip.loadAsync(arrayBuffer);
 
-    // Preflight zip check against zip bombs & excessive entries
-    const preflight = validateZipPreflight(zip);
-    if (!preflight.valid) {
-      throw new Error(preflight.error || "Tệp PPTX không đáp ứng giới hạn an toàn.");
+    // Observed-bytes tracker: defense-in-depth against a Central Directory
+    // that lies about uncompressed size (most zip decompressors don't
+    // strictly enforce the declared size matches the actual inflated DEFLATE
+    // stream length). Every `.async("string")` call below is measured against
+    // the SAME running total already validated by the declared-size preflight.
+    const inflationTracker = createInflationTracker();
+    async function inflateTracked(entry: { async(type: "string"): Promise<string> }): Promise<string> {
+      const text = await entry.async("string");
+      inflationTracker.track(new TextEncoder().encode(text).byteLength);
+      return text;
     }
 
     // Read presentation order definitions
@@ -39,13 +52,13 @@ export const pptxConverter: ImportConverter = {
     if (!presentationXmlFile) {
       throw new Error("Tệp PPTX không hợp lệ (thiếu ppt/presentation.xml).");
     }
-    const presentationXml = await presentationXmlFile.async("string");
+    const presentationXml = await inflateTracked(presentationXmlFile);
 
     const relsXmlFile = zip.file("ppt/_rels/presentation.xml.rels");
     if (!relsXmlFile) {
       throw new Error("Tệp PPTX không hợp lệ (thiếu ppt/_rels/presentation.xml.rels).");
     }
-    const relsXml = await relsXmlFile.async("string");
+    const relsXml = await inflateTracked(relsXmlFile);
 
     const slidePaths = parsePresentationOrder(presentationXml, relsXml);
     if (slidePaths.length === 0) {
@@ -72,7 +85,7 @@ export const pptxConverter: ImportConverter = {
         continue;
       }
 
-      const slideXml = await slideFile.async("string");
+      const slideXml = await inflateTracked(slideFile);
       const parsedSlide = parseSlideXml(slideXml);
 
       // Try to parse notes slide relationships
@@ -85,12 +98,12 @@ export const pptxConverter: ImportConverter = {
 
       const slideRelsFile = zip.file(slideRelsPath);
       if (slideRelsFile) {
-        const slideRelsXml = await slideRelsFile.async("string");
+        const slideRelsXml = await inflateTracked(slideRelsFile);
         const notesPath = parseNotesPathFromRels(slideRelsXml, slidePath);
         if (notesPath) {
           const notesFile = zip.file(notesPath);
           if (notesFile) {
-            const notesXml = await notesFile.async("string");
+            const notesXml = await inflateTracked(notesFile);
             notesText = parseNotesSlideXml(notesXml);
           }
         }

@@ -27,18 +27,14 @@ export const docxConverter: ImportConverter = {
     // 2. Read array buffer from the File object
     const arrayBuffer = await file.arrayBuffer();
 
-    // Preflight zip check against zip bombs & excessive entries
-    try {
-      const JSZip = (await import("jszip")).default;
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const preflight = validateZipPreflight(zip);
-      if (!preflight.valid) {
-        throw new Error(preflight.error || "Tệp DOCX không đáp ứng giới hạn an toàn.");
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.message.includes("giới hạn")) {
-        throw err;
-      }
+    // Preflight zip check against zip bombs & excessive entries — reads the
+    // ZIP's own Central Directory directly (no JSZip parse needed for this
+    // step). Any failure here (including a malformed/unreadable archive)
+    // stops the import; it is never silently swallowed and handed to
+    // Mammoth anyway (fail-closed, not fail-open).
+    const preflight = validateZipPreflight(arrayBuffer);
+    if (!preflight.valid) {
+      throw new Error(preflight.error || "Tệp DOCX không đáp ứng giới hạn an toàn.");
     }
 
     // 3. Define style mapping options for Mammoth

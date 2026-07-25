@@ -43,19 +43,12 @@ export const xlsxConverter: ImportConverter = {
 
     const arrayBuffer = await file.arrayBuffer();
 
-    // Preflight zip check if it's a valid XLSX zip
-    try {
-      const JSZip = (await import("jszip")).default;
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const preflight = validateZipPreflight(zip);
-      if (!preflight.valid) {
-        throw new Error(preflight.error || "Tệp Excel không đáp ứng giới hạn an toàn.");
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.message.includes("giới hạn")) {
-        throw err;
-      }
-      // If JSZip fails to parse zip headers, let SheetJS handle format errors cleanly
+    // Preflight zip check — reads the ZIP's own Central Directory directly.
+    // A malformed/unreadable archive fails closed here instead of being
+    // silently handed to SheetJS (which does its own, separate parsing).
+    const preflight = validateZipPreflight(arrayBuffer);
+    if (!preflight.valid) {
+      throw new Error(preflight.error || "Tệp Excel không đáp ứng giới hạn an toàn.");
     }
 
     // Dynamic import of SheetJS for bundle optimization
