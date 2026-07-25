@@ -79,17 +79,17 @@
 
 | Contract | Trạng thái |
 |---|---|
-| A — Production dependency vulnerabilities | `PROPOSED` |
-| B — Rate-limit identity & trusted ingress | `PROPOSED` |
+| A — Production dependency vulnerabilities | `DONE` |
+| B — Rate-limit identity & trusted ingress | `DONE` |
 | C — Public PDF access policy | `PROPOSED` |
-| D — AI stream protocol resource bounds | `PROPOSED` |
+| D — AI stream protocol resource bounds | `DONE` |
 | E — Renderer sandbox/deadline/egress | `PROPOSED` |
 | F — Reproducible renderer container | `PROPOSED` |
-| G — CSP & remote-image privacy | `PROPOSED` |
-| H — Document import resource budgets | `PROPOSED` |
+| G — CSP & remote-image privacy | `DONE` |
+| H — Document import resource budgets | `DONE` |
 | I — Markdown/DOM/PDF sanitization | `PROPOSED` |
 | J — Readiness/runtime config | `PROPOSED` |
 | K — Coverage/fuzz/flake/security gates | `PROPOSED` |
-| L — CI supply chain/release evidence | `PROPOSED` |
+| L — CI supply chain/release evidence | `DONE` |
 | M — Security docs/threat model/data at rest | `PROPOSED` |
 
