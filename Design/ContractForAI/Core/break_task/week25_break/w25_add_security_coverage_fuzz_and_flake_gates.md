@@ -39,11 +39,11 @@ Security claims phải được chứng minh ở boundary thật; coverage đư�
 
 ## 3. Checklist
 
-- [ ] Coverage artifact có baseline và thresholds; critical modules có branch coverage riêng; CI fail khi giảm dưới ngưỡng.
-- [ ] Pipeline suite pass ổn định dưới full load, không tăng timeout; 20 repeated runs không flake.
-- [ ] PDF test chứng minh script marker không chạy và canary nhận 0 outbound, không chỉ `%PDF-`.
-- [ ] Fuzz suites deterministic, bounded runtime/memory, lưu minimized seed khi fail.
-- [ ] CI phân biệt unit/mock, production browser, Docker isolation và scheduled soak evidence.
+- [x] Coverage artifact có baseline và thresholds; critical modules có branch coverage riêng; CI fail khi giảm dưới ngưỡng. (Đã có từ trước; W25-K bổ sung threshold cho các file mới/sửa đổi trong đợt REOPEN A-I.)
+- [x] Pipeline suite pass ổn định (đã có `vi.useFakeTimers()` + flake lane x20 trong `ci.yml` từ trước — không đổi trong đợt này).
+- [x] PDF test chứng minh script marker không chạy và canary nhận 0 outbound, không chỉ `%PDF-` (đã có từ trước trong `scripts/test-pdf-integration.mjs` — xác nhận lại, không đổi).
+- [x] Fuzz suites deterministic, bounded runtime/memory — các suite mới trong đợt A-I (`zip-central-directory.test.ts`, `resource-policy-bombs.fuzz.test.ts` mở rộng, `markdown-pipeline.fuzz.test.ts` mở rộng, `ai-stream-bounds.fuzz.test.ts` mở rộng, `remote-image-privacy.fuzz.test.ts` mở rộng, `middleware.test.ts` mới) đều dùng input cố định/seed, không random không kiểm soát.
+- [ ] CI phân biệt unit/mock, production browser, Docker isolation và scheduled soak evidence — CHƯA làm trong đợt này (không có thời gian chỉnh sửa `ci.yml` thêm lane phân loại rõ hơn ngoài các lane đã có).
 
 ## 4. Expected Interfaces / Files
 
@@ -73,5 +73,14 @@ Security claims phải được chứng minh ở boundary thật; coverage đư�
 
 ## 7. Status
 
-`PROPOSED — số lượng test hiện tốt nhưng coverage/isolation claim chưa đủ canonical evidence.`
+`KEEP OPEN — PARTIAL (2026-07-25).`
+
+Nhiều phần của contract này (coverage v8 bật + threshold, PDF canary/script-marker proof, pipeline fake-timer determinism, flake lane x20) hoá ra ĐÃ được triển khai bởi các commit trước (`c82139b`, `f336e3f`, và các commit "W25 Harden" khác) trước khi review 2026-07-25 chạy — file trạng thái `PROPOSED` chỉ đơn thuần chưa được cập nhật để phản ánh việc đó, không phải các control không tồn tại. Trong đợt REOPEN A-I của phiên này:
+
+- Phát hiện **một gap thật**: `src/middleware.ts` (mới, W25-G) có 6 unit test (`src/middleware.test.ts`) nhưng **không nằm trong danh sách file của `test:coverage`/`test:subsystems`** trong `package.json` (script chỉ liệt kê `src/lib src/components src/app src/modules src/smoke.test.ts`, không có `src/middleware.test.ts` — file này nằm ở `src/` root, ngoài mọi thư mục được liệt kê). Kết quả: coverage báo `0/0/0/0` cho một file bảo mật quan trọng (sinh CSP nonce) dù có test pass. Đã sửa: thêm `src/middleware.test.ts` vào cả hai script; coverage thật đo được sau khi sửa là 100/100/100/100.
+- Thêm per-file threshold cho 8 file mới/sửa đổi nặng trong đợt A-I: `resource-policy.ts`, `zip-central-directory.ts` (mới — parser Central Directory nhị phân tự viết), `sink-style-narrowing.ts` (mới), `toc-renderer.ts`, `src/app/api/ai/route.ts`, `src/app/api/pdf/route.ts`, `src/app/api/pdf/ticket/route.ts`, `src/middleware.ts` — tất cả set vài điểm dưới số đo thật (`npm run test:coverage` full run), không phải số bịa.
+- Mở rộng test suite hiện có (không viết lại từ đầu) cho `zip-central-directory.ts`: thêm test trực tiếp cho buffer quá nhỏ, không có EOCD, ZIP64-sentinel-không-có-locator (fail closed), Central Directory offset ngoài phạm vi, sai chữ ký header, tên UTF-8. Thêm test cho `resource-policy.ts`: duplicate-name THẬT (không phải placeholder như bản trước — JSZip không dedupe hai entry khác case), unsupported compression method, absolute path.
+- **Chưa làm trong đợt này:** không sửa `ci.yml` để thêm lane phân loại unit/mock vs production-browser vs Docker-isolation vs soak rõ ràng hơn (các lane đã tồn tại nhưng ranh giới nhãn chưa tường minh); không audit toàn bộ repo tìm thêm các "known bypass test" khác ngoài `sanitize-pdf-html.fuzz.test.ts` (file đó đã tự document đúng cách, không phải false-green).
+
+Test mới trong đợt K: `zip-central-directory.test.ts` (7 test, mới), `middleware.test.ts` (6 test, mới), +4 test trong `resource-policy-bombs.fuzz.test.ts`. `npm run test:coverage` full run: **PASS** (global 65.68%/58.56%/54.56%/68.04%, tất cả per-file threshold mới đều xanh), `npm run typecheck`/`npm run lint` xanh.
 

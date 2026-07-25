@@ -60,6 +60,30 @@ export default defineConfig({
         "src/modules/import/directory-reader.ts": { branches: 75, lines: 85, functions: 75, statements: 85 },
         // measured: lines 100 / branches 76.47 / functions 100 / statements 100
         "src/modules/import/extract-assets.ts": { branches: 65, lines: 90, functions: 90, statements: 90 },
+        // W25-K additions, baseline measured 2026-07-25 via `npm run test:coverage`
+        // (single restricted vitest invocation) after this session's A-K fixes.
+        // measured: lines 87.27 / branches 83.33 / functions 100 / statements 87.27
+        "src/modules/import/resource-policy.ts": { branches: 75, lines: 80, functions: 90, statements: 80 },
+        // measured: lines 51.88 / branches 37.87 / functions 80 / statements 51.3 — hand-rolled
+        // binary ZIP64/Central-Directory parser; happy path + core rejection branches covered,
+        // ZIP64 extra-field success path still untested (needs a hand-crafted >4GiB-style fixture).
+        "src/modules/import/zip-central-directory.ts": { branches: 30, lines: 45, functions: 70, statements: 45 },
+        // measured: lines 100 / branches 88.23 / functions 100 / statements 93.18
+        "src/lib/sink-style-narrowing.ts": { branches: 80, lines: 95, functions: 95, statements: 90 },
+        // measured: lines 90.9 / branches 75 / functions 100 / statements 90.9
+        "src/modules/format/toc-renderer.ts": { branches: 65, lines: 85, functions: 90, statements: 85 },
+        // measured: lines 79.76 / branches 66.33 / functions 84 / statements 77.58
+        "src/app/api/ai/route.ts": { branches: 55, lines: 70, functions: 75, statements: 70 },
+        // measured: lines 73.68 / branches 61.94 / functions 38.09 / statements 67.45 — many
+        // renderer-response error branches (401/400/413/oversized-PDF-cap) still uncovered.
+        "src/app/api/pdf/route.ts": { branches: 50, lines: 65, functions: 30, statements: 60 },
+        // measured: lines 83.33 / branches 75 / functions 100 / statements 83.33
+        "src/app/api/pdf/ticket/route.ts": { branches: 65, lines: 75, functions: 90, statements: 75 },
+        // measured: lines 100 / branches 100 / functions 100 / statements 100 — small,
+        // fully covered file. Was silently 0% until this same change added
+        // src/middleware.test.ts to the test:coverage/test:subsystems script file lists
+        // (it lives outside src/lib|components|app|modules, so it was never actually run).
+        "src/middleware.ts": { branches: 90, lines: 95, functions: 95, statements: 95 },
       },
     },
   },

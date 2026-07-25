@@ -69,22 +69,23 @@ describe("Import Resource Budgets & Bomb Protection (W25-H)", () => {
       expect(result.error).toContain("lồng quá sâu");
     });
 
-    it("rejects duplicate normalized entry names", async () => {
-      // JSZip dedupes same-name file() calls, so build the archive manually
-      // by concatenating two entries with different-cased but equivalent names.
+    it("rejects duplicate normalized entry names (same path, different case)", async () => {
+      // JSZip only dedupes EXACT string matches, so two entries differing
+      // only by case both land in the same real archive — exactly the
+      // "resolve to the same extracted path" confusion case being guarded.
       const zip = new JSZip();
       zip.file("Dir/File.txt", "one");
-      const buf1 = await zip.generateAsync({ type: "arraybuffer" });
-      const zip2 = new JSZip();
-      zip2.file("dir/file.txt", "one");
-      const buf2 = await zip2.generateAsync({ type: "arraybuffer" });
-      // Both individually validate fine; this test instead documents the
-      // duplicate-detection unit directly against a hand-built entry list
-      // isn't feasible without exposing internals, so we assert the
-      // single-archive case still passes (no false positive) as a sanity
-      // check for the normalization logic's case-insensitivity.
-      expect(validateZipPreflight(buf1).valid).toBe(true);
-      expect(validateZipPreflight(buf2).valid).toBe(true);
+      zip.file("dir/file.txt", "two");
+      const buffer = await zip.generateAsync({ type: "arraybuffer" });
+
+      const result = validateZipPreflight(buffer);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("trùng lặp");
+    });
+
+    it("accepts genuinely distinct entry names (no false positive on the duplicate check)", async () => {
+      const buffer = await buildZip({ "a.txt": "one", "b.txt": "two", "dir/c.txt": "three" });
+      expect(validateZipPreflight(buffer).valid).toBe(true);
     });
 
     it("detects ZIP bomb metadata with extreme compression ratios (>100x)", async () => {
@@ -111,6 +112,45 @@ describe("Import Resource Budgets & Bomb Protection (W25-H)", () => {
       const result = validateZipPreflight(buffer);
       expect(result.valid).toBe(false);
       expect(result.error).toContain("mã hoá");
+    });
+
+    it("rejects an unsupported compression method (not stored/deflate)", async () => {
+      const buffer = await buildZip({ "a.xml": "content" });
+      const bytes = new Uint8Array(buffer);
+      const view = new DataView(buffer);
+      for (let i = 0; i < bytes.length - 4; i++) {
+        if (view.getUint32(i, true) === 0x02014b50) {
+          // Compression method field, offset +10 in the central dir header.
+          // 99 is not a method this app's decompressors support.
+          view.setUint16(i + 10, 99, true);
+        }
+      }
+      const result = validateZipPreflight(buffer);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("không được hỗ trợ");
+    });
+
+    it("rejects an entry name that is an absolute path", async () => {
+      // JSZip normalizes leading "/" away on some platforms, so craft the
+      // buffer via the raw parser test helper pattern: build a normal zip,
+      // then rewrite the stored name bytes to start with "/".
+      const zip = new JSZip();
+      zip.file("etc/passwd", "root:x:0:0");
+      const buffer = await zip.generateAsync({ type: "arraybuffer" });
+      const bytes = new Uint8Array(buffer);
+      const view = new DataView(buffer);
+      for (let i = 0; i < bytes.length - 4; i++) {
+        if (view.getUint32(i, true) === 0x02014b50) {
+          const nameOffset = i + 46;
+          // Overwrite the first byte of the stored name with "/" so the
+          // parsed name becomes "/tc/passwd" — still same length, valid
+          // UTF-8, but now starts with "/" (absolute path marker).
+          bytes[nameOffset] = "/".charCodeAt(0);
+        }
+      }
+      const result = validateZipPreflight(buffer);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("path traversal");
     });
   });
 

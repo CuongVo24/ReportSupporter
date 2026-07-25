@@ -7,9 +7,10 @@ import { NextResponse, type NextRequest } from "next/server";
 // finds on the CSP response header to its own RSC/hydration inline
 // scripts; app code reads the same nonce via `headers()` (see
 // src/app/layout.tsx) to apply it to the theme-bootstrap inline script.
-const isDevelopment = process.env.NODE_ENV !== "production";
-
 function buildCsp(nonce: string): string {
+  // Read per-call (not module-scope) so tests can stub NODE_ENV and so a
+  // long-lived process never gets stuck with a stale value.
+  const isDevelopment = process.env.NODE_ENV !== "production";
   return [
     "default-src 'self'",
     // 'strict-dynamic' lets nonce'd scripts load further scripts they
