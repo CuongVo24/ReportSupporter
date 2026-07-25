@@ -1,0 +1,9 @@
+# W25-F minimal build context policy for pdf-renderer service
+node_modules
+*.log
+.env*
+.git
+.gitignore
+server.test.mjs
+coverage
+tmp

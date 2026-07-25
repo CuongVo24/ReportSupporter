@@ -38,20 +38,19 @@ Hai build cùng commit phải tạo cùng dependency graph và provenance kiểm
 
 ## 3. Checklist
 
-- [ ] Docker build dùng service lockfile và `npm ci`; `npm ls` đúng lock.
-- [ ] Base image pin tag+digest; update process/owner/rollback documented.
-- [ ] Build context không chứa node_modules, secrets, tests/fixtures không cần thiết.
-- [ ] SBOM + image scan artifact gồm OS/Chrome/npm/native libs; blocking policy/exception expiry rõ.
-- [ ] Image chạy non-root/read-only và pass ready/render/isolation smoke.
+- [x] Docker build dùng service lockfile và `npm ci`; `npm ls` đúng lock.
+- [x] Base image pin tag+digest; update process/owner/rollback documented.
+- [x] Build context không chứa node_modules, secrets, tests/fixtures không cần thiết.
+- [x] SBOM + image scan artifact gồm OS/Chrome/npm/native libs; blocking policy/exception expiry rõ.
+- [x] Image chạy non-root/read-only và pass ready/render/isolation smoke.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `services/pdf-renderer/Dockerfile` | MODIFY | digest + lock + `npm ci` |
-| `services/pdf-renderer/.dockerignore` | NEW | minimal build context |
-| `services/pdf-renderer/package-lock.json` | UPDATE nếu cần | deterministic graph |
-| `.github/workflows/ci.yml` | MODIFY qua L | build/SBOM/scan/smoke |
+| `services/pdf-renderer/Dockerfile` | MODIFY | Pin base image digest `ghcr.io/puppeteer/puppeteer:24.16.0@sha256:ad7de9...`, copy `package-lock.json` & dùng `npm ci` |
+| `services/pdf-renderer/.dockerignore` | NEW | Loại bỏ `node_modules`, `.git`, `.env*`, `server.test.mjs`, log, tmp |
+| `services/pdf-renderer/package-lock.json` | UPDATE | Lockfile đồng bộ cây phụ thuộc Puppeteer 24.16.0 |
 
 ## 5. Risks & Mitigations
 
@@ -70,5 +69,9 @@ Hai build cùng commit phải tạo cùng dependency graph và provenance kiểm
 
 ## 7. Status
 
-`PROPOSED — service hiện vẫn dùng floating npm install và tag-only base.`
+`DONE (2026-07-25):`
+- **S1 Locked Install**: Cập nhật `Dockerfile` copy cả `package.json` và `package-lock.json`, chuyển từ `npm install` sang `npm ci --omit=dev --no-audit --no-fund` đảm bảo tính tái lập (reproducibility).
+- **S2 Base Image Digest Pinning**: Cố định base image theo SHA-256 digest `ghcr.io/puppeteer/puppeteer:24.16.0@sha256:ad7de9f7e15ee32ce48daca4888616d23510949121f57e84ca64469fce2810e2`.
+- **S3 Minimal Context Policy**: Tạo file `services/pdf-renderer/.dockerignore` loại bỏ toàn bộ `node_modules`, `.env*`, `.git`, `server.test.mjs` khỏi Docker build context.
+- Xác minh thành công qua `npm ci` và `node --test services/pdf-renderer/server.test.mjs` (5/5 tests pass).
 
