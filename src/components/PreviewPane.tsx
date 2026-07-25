@@ -89,6 +89,87 @@ function LotBlock({ lot }: { lot: CaptionEntry[] }) {
   );
 }
 
+const REMOTE_IMAGE_LOAD_TIMEOUT_MS = 15_000;
+
+/**
+ * Loads one remote image after explicit per-click consent, with loading/
+ * success/error/timeout states — never persists a "trust this host" flag,
+ * never retries without crossOrigin/referrerPolicy (a failed anonymous-CORS
+ * load surfaces as an error+retry, not a silent credentialed downgrade).
+ * Built with DOM APIs (not innerHTML) so `alt`/`src` from the document can't
+ * reach a raw-HTML sink.
+ */
+export function loadRemoteImageWithState(container: HTMLElement, src: string, alt: string): void {
+  const loading = document.createElement("div");
+  loading.className = "ws-preview-image-remote ws-preview-image-remote-loading";
+  loading.setAttribute("data-original-src", src);
+  loading.setAttribute("data-alt", alt);
+  const loadingLabel = document.createElement("span");
+  loadingLabel.textContent = `⏳ Đang tải ảnh: ${alt || "Không có mô tả"}`;
+  loading.appendChild(loadingLabel);
+  container.replaceWith(loading);
+
+  let settled = false;
+  const img = new Image();
+  img.alt = alt;
+  img.referrerPolicy = "no-referrer";
+  img.crossOrigin = "anonymous";
+  img.className = "ws-preview-image-loaded";
+
+  const timeoutId = window.setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    img.src = ""; // stop the in-flight request
+    showRemoteImageError(loading, src, alt, "Hết thời gian chờ tải ảnh.");
+  }, REMOTE_IMAGE_LOAD_TIMEOUT_MS);
+
+  img.onload = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(timeoutId);
+    if (loading.isConnected) loading.replaceWith(img);
+  };
+  img.onerror = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(timeoutId);
+    showRemoteImageError(loading, src, alt, "Không thể tải ảnh (máy chủ từ chối hoặc không hỗ trợ CORS).");
+  };
+
+  img.src = src;
+}
+
+function showRemoteImageError(target: HTMLElement, src: string, alt: string, message: string): void {
+  const errorBox = document.createElement("div");
+  errorBox.className = "ws-preview-image-remote-error";
+  errorBox.setAttribute("data-original-src", src);
+  errorBox.setAttribute("data-alt", alt);
+
+  const strong = document.createElement("strong");
+  strong.textContent = `⚠️ ${message}`;
+  errorBox.appendChild(strong);
+  errorBox.appendChild(document.createElement("br"));
+
+  const retryBtn = document.createElement("button");
+  retryBtn.type = "button";
+  retryBtn.className = "ws-preview-image-remote-btn";
+  retryBtn.setAttribute("data-action", "retry-remote-image");
+  retryBtn.setAttribute("data-original-src", src);
+  retryBtn.setAttribute("data-alt", alt);
+  retryBtn.textContent = "Thử lại";
+  errorBox.appendChild(retryBtn);
+
+  const attachBtn = document.createElement("button");
+  attachBtn.type = "button";
+  attachBtn.className = "ws-preview-image-missing-btn";
+  attachBtn.setAttribute("data-action", "attach-image-instead");
+  attachBtn.setAttribute("data-original-src", src);
+  attachBtn.textContent = "Đính kèm ảnh cục bộ thay thế";
+  errorBox.appendChild(attachBtn);
+
+  if (target.isConnected) target.replaceWith(errorBox);
+}
+
 export function PreviewPane({
   projectId = "preview",
   markdown,
@@ -130,17 +211,23 @@ export function PreviewPane({
           onAttachImageRequest(activeSectionId || "default", src);
         }
       } else if (action === "load-remote-image" || button.classList.contains("ws-preview-image-remote-btn")) {
-        const container = button.closest(".ws-preview-image-remote");
+        const container = button.closest(".ws-preview-image-remote") as HTMLElement | null;
         const src = button.getAttribute("data-original-src") || "";
         const alt = button.getAttribute("data-alt") || "";
         if (container && src) {
-          const img = document.createElement("img");
-          img.src = src;
-          img.alt = alt;
-          img.setAttribute("referrerpolicy", "no-referrer");
-          img.setAttribute("crossorigin", "anonymous");
-          img.className = "ws-preview-image-loaded";
-          container.replaceWith(img);
+          loadRemoteImageWithState(container, src, alt);
+        }
+      } else if (action === "retry-remote-image") {
+        const container = button.closest(".ws-preview-image-remote-error") as HTMLElement | null;
+        const src = button.getAttribute("data-original-src") || "";
+        const alt = button.getAttribute("data-alt") || "";
+        if (container && src) {
+          loadRemoteImageWithState(container, src, alt);
+        }
+      } else if (action === "attach-image-instead") {
+        const src = button.getAttribute("data-original-src") || "";
+        if (src && onAttachImageRequest) {
+          onAttachImageRequest(activeSectionId || "default", src);
         }
       }
     },

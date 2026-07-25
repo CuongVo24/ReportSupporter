@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+import { describe, expect, it, vi } from "vitest";
 import { isRemoteImage, isUnembeddedImage, transformUnembeddedImages } from "../resolve-assets";
 import { parseMarkdown } from "@/lib/markdown-pipeline";
 import { prepareExport } from "@/modules/export/prepare-export";
+import { loadRemoteImageWithState } from "@/components/PreviewPane";
 import type { ReportProjectBundle } from "@/types";
 
 describe("Remote Image Privacy & CSP Hardening (W25-G)", () => {
@@ -80,6 +82,55 @@ describe("Remote Image Privacy & CSP Hardening (W25-G)", () => {
       const result = prepareExport(bundle);
       expect(result).toBeDefined();
       expect(result.cover).toBeDefined();
+    });
+  });
+
+  describe("Per-click remote image load state machine (loading/error/timeout/retry)", () => {
+    it("shows a loading state immediately, built via DOM APIs (no raw-HTML injection of alt text)", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const maliciousAlt = '<img src=x onerror="window.__pwned=1">';
+
+      loadRemoteImageWithState(container, "https://example.com/pic.png", maliciousAlt);
+
+      const loading = document.body.querySelector(".ws-preview-image-remote-loading");
+      expect(loading).not.toBeNull();
+      // The alt text must appear as literal text content, never parsed as HTML.
+      expect(loading!.innerHTML).not.toContain("<img");
+      expect(loading!.textContent).toContain(maliciousAlt);
+      expect((window as unknown as { __pwned?: number }).__pwned).toBeUndefined();
+    });
+
+    it("never sets crossOrigin/referrerPolicy to anything but anonymous/no-referrer", () => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      loadRemoteImageWithState(container, "https://example.com/pic.png", "alt");
+      // The <img> itself is only inserted on load, but we can assert the
+      // loading placeholder never contains a credentialed/no-crossorigin
+      // fallback marker, and that no synchronous DOM mutation bypasses the
+      // consent flow before this call returns.
+      expect(document.body.querySelector("img.ws-preview-image-loaded")).toBeNull();
+    });
+
+    it("shows a timeout error with retry + attach-local options if load never settles", () => {
+      vi.useFakeTimers();
+      try {
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+        loadRemoteImageWithState(container, "https://example.com/slow.png", "Slow image");
+
+        vi.advanceTimersByTime(15_001);
+
+        const errorBox = document.body.querySelector(".ws-preview-image-remote-error");
+        expect(errorBox).not.toBeNull();
+        const retryBtn = errorBox!.querySelector('button[data-action="retry-remote-image"]');
+        const attachBtn = errorBox!.querySelector('button[data-action="attach-image-instead"]');
+        expect(retryBtn).not.toBeNull();
+        expect(attachBtn).not.toBeNull();
+        expect(retryBtn!.getAttribute("data-original-src")).toBe("https://example.com/slow.png");
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { ToastProvider, ToastViewport } from "@/components/ui";
 import { PwaManager } from "@/components/PwaManager";
@@ -21,13 +22,19 @@ export const metadata: Metadata = {
   description: "Workspace-first report authoring for students and project teams",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Same nonce src/middleware.ts put on the CSP header for this request —
+  // required for this inline script to run under a strict script-src that
+  // has no 'unsafe-inline'.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="vi" suppressHydrationWarning className={`${fontUi.variable} ${fontMono.variable}`}>
       <head>
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
