@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { sanitizeSvgMarkup } from "@/lib/markdown-pipeline";
 
 type MermaidRendererProps = {
   code: string;
@@ -47,9 +48,12 @@ export function MermaidRenderer({ code }: MermaidRendererProps) {
         // Generate a unique ID for each mermaid rendering container
         const id = `mermaid-svg-${Math.random().toString(36).substring(2, 9)}`;
         const { svg: svgHtml } = await mermaid.render(id, code);
+        // Defense-in-depth: sanitize Mermaid's own output through the app's
+        // trusted schema rather than trusting securityLevel:"strict" alone.
+        const sanitizedSvg = sanitizeSvgMarkup(svgHtml);
 
         if (active) {
-          setSvg(svgHtml);
+          setSvg(sanitizedSvg);
           setError("");
         }
       } catch (err: unknown) {

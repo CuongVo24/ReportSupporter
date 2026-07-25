@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
-import { sanitizePdfHtml } from "./sanitize-pdf-html";
+import { stripKnownPdfHazardsBestEffort } from "./sanitize-pdf-html";
 import { issuePdfTicket, hashHtmlPayload } from "@/lib/server/pdf-access";
 
 beforeEach(() => {
@@ -49,7 +49,7 @@ describe("/api/pdf Access Policy & Render Tickets (W25-C)", () => {
   });
 
   it("removes scripts, handlers and outbound resource URLs", () => {
-    const sanitized = sanitizePdfHtml('<!doctype html><img src="https://tracker.test/a" onerror="steal()"><script>steal()</script>');
+    const sanitized = stripKnownPdfHazardsBestEffort('<!doctype html><img src="https://tracker.test/a" onerror="steal()"><script>steal()</script>');
     expect(sanitized).not.toContain("https://");
     expect(sanitized).not.toContain("onerror");
     expect(sanitized).not.toContain("<script");

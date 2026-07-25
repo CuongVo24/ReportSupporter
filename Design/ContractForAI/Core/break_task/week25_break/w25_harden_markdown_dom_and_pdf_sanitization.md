@@ -39,11 +39,11 @@ Heading IDs an toàn và ổn định với prefix canonical; mọi plugin-gener
 
 ## 3. Checklist
 
-- [ ] Heading IDs luôn prefixed/safe; reserved names (`__proto__`, `constructor`, `forms`, `location`...) không clobber; TOC anchors vẫn đúng.
-- [ ] Final output sau KaTeX/highlight/Mermaid/asset transform được sanitize với explicit schema.
-- [ ] iframe/object/embed/svg foreign refs/CSS URL/event attrs/dangerous protocols không tới preview/export/renderer.
-- [ ] PDF regex không còn được mô tả như security boundary; primary renderer defense được link/test.
-- [ ] Mọi HTML sink có source invariant và security regression test.
+- [x] Heading IDs luôn prefixed/safe (`user-content-`); reserved names (`constructor`, `prototype`, `body`, `location`, `attributes`, `children`, `forms`) không clobber; TOC anchors vẫn đúng.
+- [x] Final output sau KaTeX/highlight/Mermaid/asset transform được sanitize với explicit schema — nay có thêm pass thu hẹp `style`/`className` sau `rehypeSanitize`.
+- [x] iframe/object/embed không lọt qua schema (đã có từ trước). SVG `use` href/xlink:href bị chặn (mới). CSS `url()`/`expression()`/`@import` trong `style` bị chặn (mới). Event attrs/dangerous protocols không lọt (đã có từ trước qua rehype-sanitize protocols).
+- [x] PDF regex không còn được mô tả như security boundary — comment sửa lại chính xác (bỏ claim gVisor không có thật), alias `sanitizePdfHtml` (tên gây hiểu nhầm) đã xoá, chỉ còn `stripKnownPdfHazardsBestEffort`.
+- [x] HTML sink có source invariant: `asSanitizedHtml` không còn export (chỉ `markdown-pipeline.ts` tự gọi được); TOC (`toc-renderer.ts`) có brand type riêng (`TrustedTocHtml`) độc lập; Mermaid SVG đi qua `sanitizeSvgMarkup()` (boundary riêng, không còn raw `dangerouslySetInnerHTML` của output third-party chưa qua sanitize).
 
 ## 4. Expected Interfaces / Files
 
@@ -72,5 +72,18 @@ Heading IDs an toàn và ổn định với prefix canonical; mọi plugin-gener
 
 ## 7. Status
 
-`PROPOSED — cần merge trước G CSP để CSP violations phản ánh đúng sink đã làm sạch.`
+`DONE (2026-07-25, re-verified after REOPEN — file status vs index mismatch fixed).`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.4, §1.2) tìm thấy: file này ghi `PROPOSED` trong khi index tổng ghi `DONE` — tự mâu thuẫn; nội dung thực tế: heading prefix + final-sanitize-after-KaTeX/highlight + PDF regex rename ĐÃ có (commit trước), nhưng `asSanitizedHtml` vẫn export công khai (bất kỳ module nào cast raw string thành `SanitizedHtml`), `customSchema` cho `style`/`className` không giới hạn giá trị (chỉ giới hạn tên attribute), `<use>` không bị chặn href, Mermaid SVG đi thẳng `dangerouslySetInnerHTML` không qua sanitize riêng của app, TOC builder trả `string` thường dù tự escape đầy đủ, comment PDF regex tuyên bố "gVisor isolation" không có thật trong deployment, và alias `sanitizePdfHtml` (tên cũ gây hiểu nhầm) vẫn còn.
+
+Re-fix 2026-07-25:
+- **`asSanitizedHtml` không còn export.** Chỉ hàm nội bộ `markdown-pipeline.ts` (đã chạy full parse→sanitize→stringify) mới mint được `SanitizedHtml`; xác nhận trước khi sửa không có external caller nào (grep) nên đổi an toàn, zero breaking change.
+- **Pass thu hẹp `style`/`className` sau `rehypeSanitize`.** File mới `src/lib/sink-style-narrowing.ts` — walk hast tree thủ công (không thêm dependency `unist-util-visit`), giữ `className` chỉ với prefix cho phép (`katex`, `hljs`, `ws-`, `language-`, `mermaid`), giữ `style` chỉ với property allowlist (color/font/spacing/border/display cơ bản — không `position`/`z-index`/`filter`/`transform`), và chặn value chứa `url(`/`expression(`/`javascript:`/`@import` bất kể property. Wire vào cả `renderProcessor` và `astRenderProcessor`, sau `rehypeSanitize`.
+- **`<use>` không còn nhận `href`/`xlink:href`.** `customSchema.attributes.use = []` — rehype-sanitize chỉ allowlist được TÊN attribute chứ không pattern giá trị (không thể chỉ cho phép `href="#..."`), nên lựa chọn an toàn là chặn hẳn tham chiếu.
+- **Mermaid SVG có sink riêng đã sanitize.** `sanitizeSvgMarkup()` mới trong `markdown-pipeline.ts` (dùng `rehype-parse` + cùng `customSchema` + pass thu hẹp ở trên); `MermaidRenderer.tsx` gọi hàm này TRƯỚC khi set state đưa vào `dangerouslySetInnerHTML` — `securityLevel: "strict"` của Mermaid giữ nguyên như defense-in-depth, không còn là boundary duy nhất.
+- **TOC có brand type riêng.** `toc-renderer.ts`: `TrustedTocHtml` (không export constructor) — độc lập với `SanitizedHtml` của markdown pipeline, đúng yêu cầu "builder khác phải trả type qua boundary riêng".
+- **PDF comment sửa chính xác + alias xoá.** Comment không còn nhắc "gVisor" (không có thật); liệt kê đúng control thật (Chromium sandbox mặc định + `cap_drop: ALL` + `internal: true` network từ E). `export const sanitizePdfHtml = ...` (alias) xoá hẳn; mọi caller (`route.ts`, test) đổi sang `stripKnownPdfHazardsBestEffort`.
+- **Phát hiện phụ khi viết test:** `markdown-pipeline.ts` không bật `rehype-raw`/`allowDangerousHtml` — HTML thô gõ trực tiếp trong markdown source KHÔNG trở thành element thật (bị coi là text trơ). Đây là một lớp bảo vệ khác, độc lập với `customSchema`; `customSchema`/pass thu hẹp thực chất chỉ quan trọng cho HTML do KaTeX/rehype-highlight tự sinh và cho `sanitizeSvgMarkup()` (Mermaid). Ghi nhận lại ở đây vì ban đầu viết test sai theo giả định ngược, sửa test để trỏ đúng pathway (`sanitizeSvgMarkup`) thay vì `renderMarkdown` với raw `<span>`.
+
+Test: `markdown-pipeline.fuzz.test.ts` +8 test (asSanitizedHtml không export, style/className narrowing qua `sanitizeSvgMarkup`, Mermaid script/onload/use-href stripped, unparseable input không throw). Toàn bộ `src/lib`, `src/modules/format`, `src/modules/write`, `src/app/api/pdf`, `src/components` (366 test) xanh sau khi wire.
 

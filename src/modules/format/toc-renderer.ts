@@ -1,6 +1,15 @@
 import type { TocNode } from "@/types";
 import { getHeadingAnchorId } from "@/lib/markdown-pipeline";
 
+// A boundary type distinct from markdown-pipeline's SanitizedHtml — this
+// builder is its own trusted producer (every interpolated value below goes
+// through escapeHtml), not a cast of arbitrary input. Not exported: only
+// this module's own renderNodes()/renderTocToHtml() may mint one.
+type TrustedTocHtml = string & { readonly __trustedTocBrand: unique symbol };
+function asTrustedTocHtml(html: string): TrustedTocHtml {
+  return html as TrustedTocHtml;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -14,9 +23,9 @@ function escapeHtml(value: string): string {
  * Renders Table of Contents structure to an identical HTML string
  * for both PreviewPane React injection and Export PDF templates.
  */
-export function renderTocToHtml(nodes: TocNode[]): string {
+export function renderTocToHtml(nodes: TocNode[]): TrustedTocHtml {
   if (nodes.length === 0) {
-    return "";
+    return asTrustedTocHtml("");
   }
 
   function renderNodes(list: TocNode[]): string {
@@ -50,5 +59,5 @@ export function renderTocToHtml(nodes: TocNode[]): string {
     `;
   }
 
-  return renderNodes(nodes);
+  return asTrustedTocHtml(renderNodes(nodes));
 }

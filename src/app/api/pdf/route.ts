@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRateLimiter, pdfAddressIdentity } from "@/lib/server/rate-limit";
 import { verifyTicketEnvelope, claimTicketNonce, hashHtmlPayload } from "@/lib/server/pdf-access";
-import { sanitizePdfHtml } from "./sanitize-pdf-html";
+import { stripKnownPdfHazardsBestEffort } from "./sanitize-pdf-html";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
@@ -204,7 +204,7 @@ export async function POST(request: Request) {
           ? { "x-render-token": process.env.PDF_RENDERER_TOKEN }
           : {}),
       },
-      body: sanitizePdfHtml(rawHtml),
+      body: stripKnownPdfHazardsBestEffort(rawHtml),
       redirect: "manual",
       signal: combined,
     });

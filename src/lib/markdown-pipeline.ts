@@ -7,8 +7,10 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
+import rehypeParse from "rehype-parse";
 import type { MdastRoot } from "./pipeline-types";
 import type { Root as HastRoot } from "hast";
+import { rehypeNarrowStyleAndClassName } from "./sink-style-narrowing";
 
 export const HEADING_DOM_CLOBBER_PREFIX = "user-content-";
 
@@ -25,7 +27,11 @@ export function getHeadingAnchorId(id: string): string {
  */
 export type SanitizedHtml = string & { readonly __sanitizedBrand: unique symbol };
 
-export function asSanitizedHtml(html: string): SanitizedHtml {
+// NOT exported: only this module's own render functions (which always run
+// the full parse -> sanitize -> stringify pipeline first) may mint a
+// SanitizedHtml value. A raw string from anywhere else cannot be cast to
+// this type from outside this file (see w25_fix-all-bugs.md §4.6).
+function asSanitizedHtml(html: string): SanitizedHtml {
   return html as SanitizedHtml;
 }
 
@@ -90,6 +96,12 @@ export const customSchema = {
     svg: ["xmlns", "viewBox", "width", "height", "className", "aria-hidden", "role", "style"],
     path: ["d", "fill", "stroke", "strokeWidth", "className"],
     annotation: ["encoding"],
+    // No href/xlink:href: <use> referencing external or javascript: targets
+    // is a known SVG XSS/DOM-clobbering vector. Only same-document fragment
+    // refs would be safe, but rehype-sanitize's schema can only allowlist
+    // attribute NAMES (not value patterns like "must start with #"), so the
+    // safe choice is disallowing the reference entirely.
+    use: [],
     math: ["xmlns", "display"],
     mo: ["stretchy", "symmetric", "lspace", "rspace", "maxsize", "minsize", "fence", "separator", "accent", "largeop", "movablelimits"],
     mi: ["mathvariant"],
@@ -117,16 +129,42 @@ const renderProcessor = unified()
   .use(rehypeKatex)
   .use(rehypeHighlight)
   .use(rehypeSanitize, customSchema)
+  .use(rehypeNarrowStyleAndClassName)
   .use(rehypeStringify);
 
 const astRenderProcessor = unified()
   .use(remarkRehype)
   .use(rehypeKatex)
   .use(rehypeHighlight)
-  .use(rehypeSanitize, customSchema);
+  .use(rehypeSanitize, customSchema)
+  .use(rehypeNarrowStyleAndClassName);
 
 const htmlProcessor = unified()
   .use(rehypeStringify);
+
+// Dedicated sink for third-party-generated SVG (Mermaid). securityLevel:
+// "strict" in Mermaid's own config is defense-in-depth, not the boundary —
+// this app-owned sanitize pass is the actual boundary before the SVG string
+// reaches a dangerouslySetInnerHTML sink.
+const svgSanitizeProcessor = unified()
+  .use(rehypeParse, { fragment: true })
+  .use(rehypeSanitize, customSchema)
+  .use(rehypeNarrowStyleAndClassName)
+  .use(rehypeStringify);
+
+/**
+ * Sanitizes a raw SVG string (e.g. Mermaid's `render()` output) through the
+ * same trusted schema used for markdown HTML, returning a SanitizedHtml —
+ * the only way to obtain one for non-markdown-derived content.
+ */
+export function sanitizeSvgMarkup(svg: string): SanitizedHtml {
+  try {
+    const result = svgSanitizeProcessor.processSync(svg);
+    return asSanitizedHtml(result.toString());
+  } catch {
+    return asSanitizedHtml("");
+  }
+}
 
 export function parseMarkdown(markdown: string): MdastRoot {
   const ast = parseProcessor.parse(markdown);
