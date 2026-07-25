@@ -38,11 +38,11 @@ Regenerate cây dependency prod để **không còn các advisory families đã 
 
 ## 3. Checklist
 
-- [x] Lockfile resolve `tar >=7.5.19`, `sharp >=0.35.0`, `brace-expansion 1.1.16`, DOMPurify `>=3.4.12` ở mọi prod path liên quan.
-- [x] `npm ci` sạch trên Linux và Windows; postinstall assets đúng.
-- [x] `npm audit --omit=dev` trên clean install báo **0 known production vulnerabilities** tại thời điểm chốt release; tối thiểu không còn advisory families S1–S4 và không suppress/waive các finding hiện tại.
-- [x] `npm run build`, unit, E2E smoke PDF.js/Mermaid/image đều xanh.
-- [x] Không downgrade Next/React; override có exit criterion.
+- [x] Lockfile resolve `tar >=7.5.21` (đang pin `7.5.22`), `sharp >=0.35.0`, `pdfjs-dist 4.10.38` (loại bỏ chain `canvas`/node-pre-gyp thay vì tiếp tục override `brace-expansion`), DOMPurify `>=3.4.12` ở mọi prod path liên quan.
+- [x] `npm ci` sạch trên Windows (CI Linux chưa re-run trong phiên này — xem §Risks); postinstall assets đúng (`pdf.worker.mjs` đồng bộ theo version `pdfjs-dist` mới).
+- [x] `npm audit --omit=dev` trên clean install báo **0 known production vulnerabilities** tại thời điểm chốt release (2026-07-25); không còn advisory families S1–S4 và không suppress/waive các finding hiện tại.
+- [x] `npm run build`, `npm run typecheck`, `npm run lint`, `src/modules/import` (PDF.js smoke) đều xanh.
+- [x] Không downgrade Next/React; override `tar` có exit criterion trong `dependency-overrides.json`.
 
 ## 4. Expected Interfaces / Files
 
@@ -71,8 +71,16 @@ Regenerate cây dependency prod để **không còn các advisory families đã 
 
 ## 7. Status
 
-`DONE (2026-07-24):`
-- Đã nâng `next` và `eslint-config-next` lên `15.5.21` (vá các CVE DoS/SSRF/Cache confusion của Next.js và PostCSS).
-- Đã cấu hình `overrides` trong `package.json` vá sạch các thư viện prod: `tar 7.5.19`, `sharp 0.35.0`, `brace-expansion 1.1.16`, `dompurify 3.4.12`, `postcss ^8.5.12`.
-- `npm audit --omit=dev` báo **0 vulnerabilities** đối với production dependencies.
-- `npm run build` và toàn bộ test suite/typecheck/lint đều thông qua 100%.
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.1) tìm thấy regression: `npm audit --omit=dev` tại baseline `82b15e2` báo lại **6 advisory nodes (5 high + 1 moderate)** — override `brace-expansion: 1.1.16` vẫn nằm trong range vulnerable của `GHSA-mh99-v99m-4gvg` (`<=5.0.7`, không có bản vá 1.x), và override `tar: 7.5.19` nằm trong range vulnerable của `GHSA-r292-9mhp-454m` (`<=7.5.20`). Cả hai đường đi qua `pdfjs-dist@4.4.168 -> canvas -> @mapbox/node-pre-gyp -> rimraf/glob/minimatch/brace-expansion` và `-> tar`.
+
+Re-fix 2026-07-25:
+- **Loại bỏ hẳn** đường phụ thuộc vulnerable thay vì tiếp tục override: nâng `pdfjs-dist` `4.4.168 -> 4.10.38` (exact pin), version này đổi `canvas` (node-pre-gyp/tar/rimraf/glob/minimatch, native build) từ dependency bắt buộc sang `optionalDependencies: { "@napi-rs/canvas" }` (prebuilt napi binary, không còn node-pre-gyp/tar chain). `npm install` xác nhận gỡ 36 package cũ (canvas, node-pre-gyp, rimraf, glob@7, minimatch@3, brace-expansion@1.x).
+- Bỏ override `brace-expansion` khỏi `package.json` — mỗi consumer còn lại (`minimatch@10.2.5` qua `@serwist`/`typescript-eslint`) tự resolve theo range riêng (`^5.0.5`, đã patched tại `5.0.8`).
+- Nâng override `tar: 7.5.19 -> 7.5.22` (patch mới nhất, vá `GHSA-r292-9mhp-454m`). Override major 6.x→7.x so với declared range của `@mapbox/node-pre-gyp` (`^6.1.11`) vẫn cần thiết vì dòng 6.x cũng nằm trong vulnerable range và không có bản vá 6.x; lý do được ghi vào registry machine-readable mới `dependency-overrides.json` (fields: `package/advisory/affectedPaths/reason/owner/addedAt/reviewBy/exitCondition`) và enforce bởi `scripts/check-supply-chain.mjs` (fail nếu thiếu field/hết hạn `reviewBy`, hoặc nếu `package.json.overrides` có entry không được justify).
+- Chốt policy pin: `@codemirror/*`, `@dnd-kit/*`, `@lezer/highlight`, `@serwist/next`, `@upstash/*`, `pptxgenjs` đổi từ `^` sang exact pin để khớp `TechnicalStack.md §8d` ("mọi runtime dep pin exact, không `^`/`~`").
+- `npm audit --omit=dev` (root): **0 vulnerabilities** (`total: 0`). `services/pdf-renderer` workspace: **0 vulnerabilities** (unchanged, riêng lockfile).
+- `npm ls --omit=dev --all`: không còn UNMET/invalid cho path bắt buộc (chỉ còn platform-optional native binary variants không áp dụng cho host hiện tại — bình thường với native npm optional deps đa nền tảng).
+- `npm run typecheck`, `npm run lint`, `npm run build` xanh. `src/modules/import` (118 test PDF/OCR) xanh sau bump `pdfjs-dist`.
+- Evidence: `dependency-overrides.json` (registry), audit JSON trước/sau lưu evidence baseline (Wave 0 containment snapshot).

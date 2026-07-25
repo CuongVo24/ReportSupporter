@@ -1,0 +1,14 @@
+[
+  {
+    "package": "tar",
+    "advisory": "GHSA-r292-9mhp-454m",
+    "affectedPaths": [
+      "pdfjs-dist > canvas > @mapbox/node-pre-gyp > tar"
+    ],
+    "reason": "@mapbox/node-pre-gyp@1.0.11 declares tar@^6.1.11, and the tar@6.x line is within the vulnerable range for GHSA-r292-9mhp-454m (uncontrolled recursion DoS in mapHas/filesFilter, fixed only at tar@7.5.21+). Overriding to a patched tar@7.x is a deliberate major-version bump above the parent's declared range because no patched 6.x release exists; tar's extract() API used by node-pre-gyp is stable across 6.x and 7.x.",
+    "owner": "security-team@report-supporter",
+    "addedAt": "2026-07-25",
+    "reviewBy": "2026-10-25",
+    "exitCondition": "Remove once @mapbox/node-pre-gyp ships a release that declares tar@^7 directly, or once canvas/pdfjs-dist drop the node-pre-gyp/tar dependency chain (e.g. pdfjs-dist stops requiring node canvas for this project's Node-side usage)."
+  }
+]

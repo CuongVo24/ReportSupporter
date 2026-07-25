@@ -7,6 +7,10 @@ import path from "node:path";
 
 const APPROVED_EXTERNAL_DOMAINS = ["cdn.sheetjs.com"];
 const ROOT_DIR = process.cwd();
+// Overrides pinned for reasons other than a specific advisory (build/runtime
+// compat pins chosen by the app, not a deviation from a parent's declared
+// range) do not need a dependency-overrides.json justification entry.
+const UNJUSTIFIED_OVERRIDE_ALLOWLIST = new Set(["dompurify", "postcss", "sharp"]);
 
 function log(msg) {
   console.log(`[supply-chain] ${msg}`);
@@ -95,12 +99,69 @@ function runSupplyChainCheck() {
     }
   }
 
+  // 2b. Check dependency override justification registry (W25-A)
+  const overridesPath = path.join(ROOT_DIR, "dependency-overrides.json");
+  const activeOverrides = [];
+  const rootOverrideNames = Object.keys(rootPkg.overrides || {});
+
+  if (fs.existsSync(overridesPath)) {
+    try {
+      const overrides = JSON.parse(fs.readFileSync(overridesPath, "utf8"));
+      const today = new Date().toISOString().split("T")[0];
+      const requiredFields = [
+        "package",
+        "advisory",
+        "affectedPaths",
+        "reason",
+        "owner",
+        "addedAt",
+        "reviewBy",
+        "exitCondition",
+      ];
+
+      for (const entry of overrides) {
+        const missing = requiredFields.filter((field) => !entry[field] || (Array.isArray(entry[field]) && entry[field].length === 0));
+        if (missing.length > 0) {
+          error(`Invalid dependency-override entry for ${entry.package || "?"}: missing field(s) ${missing.join(", ")}.`);
+          hasErrors = true;
+          continue;
+        }
+        if (Number.isNaN(Date.parse(entry.reviewBy)) || Number.isNaN(Date.parse(entry.addedAt))) {
+          error(`Invalid date in dependency-override entry for ${entry.package}: addedAt/reviewBy must be real dates.`);
+          hasErrors = true;
+          continue;
+        }
+        if (entry.reviewBy < today) {
+          error(`EXPIRED DEPENDENCY OVERRIDE: ${entry.package} (${entry.advisory}) was due for review on ${entry.reviewBy}! Owner: ${entry.owner}`);
+          hasErrors = true;
+          continue;
+        }
+        log(`Justified override: ${entry.package} (${entry.advisory}) review by ${entry.reviewBy} (Owner: ${entry.owner})`);
+        activeOverrides.push(entry);
+      }
+    } catch (err) {
+      error(`Failed to parse dependency-overrides.json: ${err.message}`);
+      hasErrors = true;
+    }
+  }
+
+  // Every entry in package.json "overrides" that deviates from a package's own
+  // requested major version must be justified in dependency-overrides.json.
+  const justifiedPackages = new Set(activeOverrides.map((entry) => entry.package));
+  for (const name of rootOverrideNames) {
+    if (!justifiedPackages.has(name) && !UNJUSTIFIED_OVERRIDE_ALLOWLIST.has(name)) {
+      error(`package.json "overrides.${name}" has no matching entry in dependency-overrides.json.`);
+      hasErrors = true;
+    }
+  }
+
   // 3. Generate Security Release Evidence Artifact
   const evidenceArtifact = {
     generatedAt: new Date().toISOString(),
     commitSha: process.env.GITHUB_SHA || "local-dev",
     externalDependencies: externalDeps,
     activeWaivers: activeWaivers,
+    dependencyOverrides: activeOverrides,
     workspacesChecked: ["root", "services/pdf-renderer"],
     status: hasErrors ? "FAILED" : "PASSED",
   };

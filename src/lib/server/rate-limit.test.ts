@@ -6,7 +6,6 @@ import {
   pdfAddressIdentity,
   aiAddressIdentity,
   aiKeyIdentity,
-  rateLimitIdentity,
   trustedClientAddress,
   wrapDistributedRateLimit,
 } from "./rate-limit";
@@ -42,18 +41,46 @@ describe("trustedClientAddress & Ingress Parsing", () => {
     expect(trustedClientAddress(req)).toBe("direct");
   });
 
-  it("extracts first IP for vercel and forwarded mode", () => {
+  it("vercel mode picks the client IP appended by the first trusted proxy", () => {
     vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    // With exactly 1 trusted proxy in front of us, that proxy appended the
+    // real client's address as the LAST (rightmost) entry.
     const req = new Request("http://localhost", {
-      headers: { "x-forwarded-for": "203.0.113.195, 70.41.3.18, 150.172.238.178" },
+      headers: { "x-forwarded-for": "9.9.9.9, 70.41.3.18" },
     });
-    expect(trustedClientAddress(req)).toBe("203.0.113.195");
+    expect(trustedClientAddress(req)).toBe("70.41.3.18");
   });
 
-  it("extracts cf-connecting-ip for cloudflare mode", () => {
+  it("vercel mode ignores attacker-prepended left-hand entries", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    const spoofed = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "9.9.9.9, 203.0.113.195, 70.41.3.18" },
+    });
+    const clean = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "203.0.113.195, 70.41.3.18" },
+    });
+    // Both resolve to the same trusted-hop-counted position (the last entry,
+    // appended by the one trusted proxy) regardless of what a client
+    // prepends on the left, proving the parser never reads attacker input.
+    expect(trustedClientAddress(spoofed)).toBe("70.41.3.18");
+    expect(trustedClientAddress(clean)).toBe("70.41.3.18");
+  });
+
+  it("vercel mode falls back to direct when the chain is shorter than the trusted hop count", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "3");
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "203.0.113.195, 70.41.3.18" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("extracts cf-connecting-ip for cloudflare mode and ignores XFF", () => {
     vi.stubEnv("TRUSTED_PROXY_MODE", "cloudflare");
     const req = new Request("http://localhost", {
-      headers: { "cf-connecting-ip": "198.51.100.42" },
+      headers: { "cf-connecting-ip": "198.51.100.42", "x-forwarded-for": "9.9.9.9" },
     });
     expect(trustedClientAddress(req)).toBe("198.51.100.42");
   });
@@ -68,33 +95,82 @@ describe("trustedClientAddress & Ingress Parsing", () => {
 
   it("falls back to direct on malformed or invalid IP values", () => {
     vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
     const req = new Request("http://localhost", {
-      headers: { "x-forwarded-for": "invalid-ip-with-spaces and <script>" },
+      headers: { "x-forwarded-for": "70.41.3.18, invalid-ip-with-spaces and <script>" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("strips a valid port suffix from an IPv4 address", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "70.41.3.18, 203.0.113.195:4000" },
+    });
+    expect(trustedClientAddress(req)).toBe("203.0.113.195");
+  });
+
+  it("parses RFC 7239 Forwarded header with quoted, bracketed IPv6", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "forwarded");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    const req = new Request("http://localhost", {
+      headers: { forwarded: 'for=70.41.3.18, for="[2001:db8:cafe::17]:4711"' },
+    });
+    expect(trustedClientAddress(req)).toBe("2001:db8:cafe::17");
+  });
+
+  it("does not trust an obfuscated Forwarded identifier", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "forwarded");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    const req = new Request("http://localhost", {
+      headers: { forwarded: "for=70.41.3.18, for=unknown" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("does not read x-forwarded-for when mode is forwarded (RFC 7239 only)", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "forwarded");
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "203.0.113.195" },
     });
     expect(trustedClientAddress(req)).toBe("direct");
   });
 });
 
 describe("apiKeyFingerprint & Secrets", () => {
-  it("generates a 32-character hex HMAC fingerprint without raw key leakage", () => {
+  it("generates a versioned HMAC fingerprint without raw key leakage", () => {
     vi.stubEnv("RATE_LIMIT_SECRET", "custom-secret-key-123");
     const fp1 = apiKeyFingerprint("sk-proj-secret-api-key-1");
     const fp2 = apiKeyFingerprint("sk-proj-secret-api-key-2");
 
-    expect(fp1).toHaveLength(32);
+    expect(fp1).toMatch(/^v1:[0-9a-f]{32}$/u);
     expect(fp1).not.toContain("sk-proj");
     expect(fp1).not.toBe(fp2);
+  });
+
+  it("embeds RATE_LIMIT_SECRET_VERSION in the fingerprint prefix", () => {
+    vi.stubEnv("RATE_LIMIT_SECRET", "custom-secret-key-123");
+    vi.stubEnv("RATE_LIMIT_SECRET_VERSION", "v7");
+    expect(apiKeyFingerprint("sk-key")).toMatch(/^v7:/u);
+  });
+
+  it("throws in production when RATE_LIMIT_SECRET is missing rather than using a guessable fallback", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("RATE_LIMIT_SECRET", "");
+    expect(() => apiKeyFingerprint("sk-key")).toThrow(/RATE_LIMIT_SECRET/);
   });
 });
 
 describe("PDF Identity Isolation", () => {
   it("does NOT change PDF bucket when x-api-key header is rotated", () => {
     vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
     const req1 = new Request("http://localhost/api/pdf", {
-      headers: { "x-forwarded-for": "198.51.100.1", "x-api-key": "key-alpha" },
+      headers: { "x-forwarded-for": "198.51.100.1, 70.41.3.18", "x-api-key": "key-alpha" },
     });
     const req2 = new Request("http://localhost/api/pdf", {
-      headers: { "x-forwarded-for": "198.51.100.1", "x-api-key": "key-beta" },
+      headers: { "x-forwarded-for": "198.51.100.1, 70.41.3.18", "x-api-key": "key-beta" },
     });
 
     expect(pdfAddressIdentity(req1)).toBe(pdfAddressIdentity(req2));
@@ -102,18 +178,35 @@ describe("PDF Identity Isolation", () => {
 });
 
 describe("AI Dual Limiter Composition & Identity", () => {
-  it("produces distinct identities for address and key", () => {
+  it("produces distinct identities for address and key that both change bucket if the other is rotated", () => {
     vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
     const req = new Request("http://localhost/api/ai", {
-      headers: { "x-forwarded-for": "198.51.100.1" },
+      headers: { "x-forwarded-for": "198.51.100.1, 70.41.3.18" },
     });
     const addrId = aiAddressIdentity(req);
     const keyId = aiKeyIdentity("my-api-key");
-    const combinedId = rateLimitIdentity(req, "my-api-key");
 
     expect(addrId).not.toBe(keyId);
-    expect(combinedId).toBeDefined();
     expect(keyId).toBe(`ai-key-${apiKeyFingerprint("my-api-key")}`);
+  });
+
+  it("keeps two different API keys on the same address in separate key buckets", () => {
+    const keyIdA = aiKeyIdentity("key-a");
+    const keyIdB = aiKeyIdentity("key-b");
+    expect(keyIdA).not.toBe(keyIdB);
+  });
+
+  it("keeps two different addresses using the same API key in separate address buckets", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    const reqA = new Request("http://localhost/api/ai", {
+      headers: { "x-forwarded-for": "70.41.3.18, 198.51.100.1" },
+    });
+    const reqB = new Request("http://localhost/api/ai", {
+      headers: { "x-forwarded-for": "70.41.3.18, 198.51.100.2" },
+    });
+    expect(aiAddressIdentity(reqA)).not.toBe(aiAddressIdentity(reqB));
   });
 });
 

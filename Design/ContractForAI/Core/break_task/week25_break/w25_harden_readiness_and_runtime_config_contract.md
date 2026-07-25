@@ -72,9 +72,13 @@ Public health chỉ tiết lộ `ok/unavailable` tối thiểu; nguyên nhân ch
 
 ## 7. Status
 
-`DONE (2026-07-25):`
-- **S1 Audience Split**: Public `/api/ready` trả về body tối giản `{ ready: boolean }` không làm lộ thông tin hạ tầng. Phân tách kênh cho operator (`x-operator-token` hoặc `?diagnostics=1` trong dev) trả về các mã nguyên nhân safe cause codes.
-- **S2 Numeric Schema & Deadline Hierarchy**: Thêm kiểm tra kiểu và miền giá trị cho các biến số, bắt buộc thứ tự deadline `PDF_RENDER_DEADLINE_MS < PDF_GATEWAY_DEADLINE_MS < PDF_CLIENT_DEADLINE_MS`.
-- **S3 URL & Redirect Security**: Cấu hình `redirect: "manual"` trong `fetch` probe và `/api/pdf/route.ts`. Từ chối tất cả HTTP 30x redirect từ renderer để ngăn lộ token nội bộ. Từ chối URL có chứa user credentials.
-- Bổ sung bộ kiểm thử `src/app/api/ready/route.test.ts` và `src/lib/server/__tests__/production-config-ranges.test.ts`.
+`DONE (2026-07-25, re-verified after same-day REOPEN):`
+
+Review cuối ngày 2026-07-25 (`w25_fix-all-bugs.md` §1.1.3, §1.2) tìm thấy gap trong bản DONE buổi sáng: operator-token so sánh bằng `===` (không constant-time); thiếu validate cho `PDF_REMOTE_ENABLED`, `RATE_LIMIT_SECRET`/`PDF_TICKET_SECRET` (+ version, + cross-purpose reuse), `TRUSTED_PROXY_HOPS`, renderer numeric envs (`PDF_MAX_CONCURRENCY`/`PDF_SHUTDOWN_GRACE_MS`/`PDF_BODY_READ_TIMEOUT_MS`) và hierarchy của chúng với `PDF_RENDER_DEADLINE_MS`; `PDF_RENDERER_URL` chỉ check format bằng regex thay vì `new URL()` (không chặn query/fragment/host-not-in-allowlist); readiness probe forward `PDF_RENDERER_TOKEN` tới endpoint `/ready` của renderer dù endpoint đó không yêu cầu auth (rò token tới host nếu `PDF_RENDERER_URL` bị cấu hình sai).
+
+Re-fix 2026-07-25 (cùng ngày, bản thứ hai):
+- `timingSafeTokenMatch()` mới trong `production-config.ts` (constant-time, so cả khi length lệch để tránh timing signal); `/api/ready` dùng hàm này thay `===`.
+- `validateProductionConfig` mở rộng: `PDF_REMOTE_ENABLED` + `PDF_TICKET_TRUSTED_ISSUER_MODE=upstream-identity` bắt buộc khi bật ở production (§4.2 — public issuer không tự tạo authorization boundary); `RATE_LIMIT_SECRET`/`RATE_LIMIT_SECRET_VERSION`/`PDF_TICKET_SECRET`/`PDF_TICKET_SECRET_VERSION`/`OPERATOR_DIAGNOSTICS_TOKEN` bắt buộc + min-length + cross-purpose-reuse check (không được trùng nhau hoặc trùng `UPSTASH_REDIS_REST_TOKEN`); `TRUSTED_PROXY_HOPS` bắt buộc+range khi mode cần hop count; `PDF_RENDERER_URL` parse bằng `new URL()` — reject userinfo/fragment/query, non-https trong production phải nằm trong `PDF_RENDERER_ALLOWED_HOSTS`; renderer numeric envs (`PDF_MAX_CONCURRENCY`, `PDF_SHUTDOWN_GRACE_MS`, `PDF_BODY_READ_TIMEOUT_MS`) validated + hierarchy `PDF_BODY_READ_TIMEOUT_MS < PDF_RENDER_DEADLINE_MS`.
+- `/api/ready` không còn gửi `PDF_RENDERER_TOKEN` trong probe `/ready` (endpoint renderer không auth cho `/ready`, chỉ `/render`).
+- `.env.example` cập nhật đầy đủ biến mới kèm giải thích; `production-config.test.ts` +18 test case mới, `production-config.fuzz.test.ts` cập nhật baseline env để không false-fail do secret mới bắt buộc.
 

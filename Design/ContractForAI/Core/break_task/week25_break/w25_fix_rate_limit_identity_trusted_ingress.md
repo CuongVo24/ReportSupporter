@@ -71,9 +71,15 @@ Thiết kế identity theo **tín hiệu không do caller tự chọn** và áp 
 
 ## 7. Status
 
-`DONE (2026-07-24):`
-- Tách biệt hoàn toàn identity primitives trong `rate-limit.ts`: `trustedClientAddress(req)`, `apiKeyFingerprint(apiKey)`, `pdfAddressIdentity(req)`, `aiAddressIdentity(req)`, `aiKeyIdentity(apiKey)`.
-- `/api/pdf` loại bỏ hoàn toàn client `x-api-key` header khỏi rate limit identity.
-- `/api/ai` áp dụng dual limiters: bắt buộc thỏa mãn đồng thời per-address và per-key-fingerprint quota; fail closed khi Redis lỗi trong production.
-- Đã bổ sung bộ unit test toàn diện cho trusted ingress parsing, HMAC fingerprinting, PDF bucket isolation và AI dual rate limiting.
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.2, §1.2) tìm thấy gap trong bản `DONE (2026-07-24)`: `trustedClientAddress` chỉ lấy phần tử ĐẦU (`split(",")[0]`) của `x-forwarded-for` — client tự thêm entry giả ở đầu chain vẫn đổi được identity (S3 chưa thật sự đóng); mode `forwarded` chỉ alias sang đọc `x-forwarded-for` thay vì parse header `Forwarded` RFC 7239 thật; không dùng `node:net.isIP` nên IPv6/format lạ không được chuẩn hoá đúng; `apiKeyFingerprint` fallback chuỗi `RATE_LIMIT_SECRET -> UPSTASH_REDIS_REST_TOKEN -> hardcoded string` (secret không dedicated, có thể đụng token khác mục đích); export `rateLimitIdentity` không còn caller production (chỉ dùng trong test cũ).
+
+Re-fix 2026-07-25:
+- **Trusted-hop-counted parsing.** Thêm `TRUSTED_PROXY_HOPS` (validated bởi `production-config.ts`); `pickFromRight()` lấy đúng phần tử được proxy tin cậy đầu tiên append (`chain[length - hops]`), không bao giờ đọc phần client có thể tự thêm ở đầu chain. `mode=vercel` đọc `x-forwarded-for` theo hop count; `mode=forwarded` giờ parse thật header `Forwarded` (RFC 7239: multi-element, `for=` param, quoted value, bracketed IPv6 `for="[2001:db8::1]:1234"`, obfuscated identifier `for=unknown`/`for=_hidden` bị từ chối) — không còn alias XFF.
+- **`node:net.isIP` chuẩn hoá.** Mọi giá trị qua `normalizeIp()`: kiểm `isIP()` trực tiếp, bracket-IPv6-with-port, IPv4-with-port; input không khớp → `"direct"`.
+- **Dedicated versioned HMAC.** Bỏ fallback `UPSTASH_REDIS_REST_TOKEN`/hardcoded string; `apiKeyFingerprint`/address fingerprint dùng `RATE_LIMIT_SECRET` (bắt buộc production, enforced ở `production-config.ts`, ném lỗi fail-closed nếu thiếu ở production runtime) + `RATE_LIMIT_SECRET_VERSION` gắn vào output (`v1:<hex>`) để rotation không âm thầm đụng bucket cũ.
+- Xoá export `rateLimitIdentity` (không còn caller production).
+- `/api/ready` operator-token comparison đổi sang `timingSafeTokenMatch()` (constant-time) thay vì `===`.
+- Test mới: hop-count đúng/spoofed-prefix bị bỏ qua/chain ngắn hơn hop count → `direct`, RFC 7239 quoted+bracketed IPv6, obfuscated identifier bị từ chối, `forwarded` mode không đọc XFF, versioned HMAC prefix, production throw khi thiếu secret. 23/23 test `rate-limit.test.ts` xanh; toàn bộ `src/app/api` (62 test) xanh sau khi đồng bộ 2 test fixture PDF/AI dùng hop-count formula mới.
 

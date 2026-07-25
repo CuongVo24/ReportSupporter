@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
-import { validateProductionConfig } from "@/lib/server/production-config";
+import { validateProductionConfig, timingSafeTokenMatch } from "@/lib/server/production-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,10 +28,10 @@ export async function GET(req: Request) {
   const pdfUrl = process.env.PDF_RENDERER_URL?.trim();
   if (pdfUrl) {
     try {
+      // The renderer's /ready endpoint is intentionally unauthenticated (only
+      // POST /render requires the token) — never forward the render token to
+      // a URL that a misconfiguration could point at an unapproved host.
       const probe = await fetch(`${pdfUrl.replace(/\/$/u, "")}/ready`, {
-        headers: process.env.PDF_RENDERER_TOKEN
-          ? { "x-render-token": process.env.PDF_RENDERER_TOKEN }
-          : {},
         redirect: "manual", // Reject redirects; do not follow or forward tokens to unapproved destinations
         signal: AbortSignal.timeout(3_000),
       });
@@ -47,12 +47,12 @@ export async function GET(req: Request) {
   const ready = causes.length === 0;
 
   // Check if caller is an authorized operator requesting detailed diagnostics
-  const operatorToken = process.env.OPERATOR_DIAGNOSTICS_TOKEN?.trim();
-  const reqOperatorToken = req.headers.get("x-operator-token")?.trim();
+  const operatorToken = process.env.OPERATOR_DIAGNOSTICS_TOKEN?.trim() ?? "";
+  const reqOperatorToken = req.headers.get("x-operator-token")?.trim() ?? "";
   const urlParams = new URL(req.url).searchParams;
   const isOperator =
     (!isProduction && urlParams.get("diagnostics") === "1") ||
-    (operatorToken && reqOperatorToken === operatorToken);
+    (operatorToken.length > 0 && timingSafeTokenMatch(operatorToken, reqOperatorToken));
 
   if (isOperator) {
     return NextResponse.json(

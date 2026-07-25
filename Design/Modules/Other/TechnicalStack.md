@@ -187,6 +187,7 @@ Cài theo nhu cầu thực — **không kéo dep nặng sớm**. Mỗi lần cà
 | **W13 (Phase 4 — UI Foundation)** | `@radix-ui/react-dialog`, `@radix-ui/react-tabs`, `@radix-ui/react-toast`, `@radix-ui/react-select`, `lucide-react` | Bộ UI primitive (`src/components/ui/`) + icon, theo `Design/Frontend/2.Components/*`. Exact pin; chạy `npm install --save-exact` để đồng bộ lockfile. |
 | **W14 (Phase 4 — UI Adoption)** | *(không cài lib mới)* | Refactor panel/flow dùng primitive W13 + patterns (empty/loading/error). Không thêm dependency. |
 | **W15 (Phase 4 — UI Hardening)** | `axe-core` (+ `vitest-axe`) — **devDependency** | A11y automation chạy trong **Vitest + jsdom** (không Playwright — vẫn deferred). Exact pin; `npm install --save-exact`. **Không** runtime dep; axe không vào bundle. |
+| **W25-A (Security patch)** | *(không cài lib mới)* | `pdfjs-dist` bump `4.4.168` → `4.10.38` (exact pin) để loại đường phụ thuộc `canvas`/`@mapbox/node-pre-gyp`/`tar`/`rimraf`/`glob`/`minimatch`/`brace-expansion` dính GHSA-r292-9mhp-454m và GHSA-mh99-v99m-4gvg (`npm audit --omit=dev` sạch). `@codemirror/*`, `@dnd-kit/*`, `@lezer/highlight`, `@serwist/next`, `@upstash/*`, `pptxgenjs` đổi từ `^` sang exact pin để khớp chính sách §8d. Evidence: `src/modules/import` 118 test PDF/OCR xanh sau bump. |
 
 > ⚠️ AI **không** được "cài trước cho tiện". Lib chỉ xuất hiện trong `package.json` đúng tuần dùng nó. Cài lệch lịch / lib ngoài bảng = vi phạm `Rule.md` §2.
 
