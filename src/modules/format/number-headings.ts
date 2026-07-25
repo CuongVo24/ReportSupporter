@@ -18,17 +18,16 @@ export function detectChapterDepthFromHeadings(headings: HeadingNode[]): number 
   const depths = activeHeadings.map((h) => h.depth);
   const minDepth = Math.min(...depths);
 
-  // Mitigation: if minDepth is 1, check if there is exactly 1 H1 heading at the start
   if (minDepth === 1) {
     const h1Count = activeHeadings.filter((h) => h.depth === 1).length;
     const firstHeadingIsH1 = activeHeadings[0]?.depth === 1;
 
     if (h1Count === 1 && firstHeadingIsH1 && activeHeadings.length > 1) {
       const h2Headings = activeHeadings.filter((h) => h.depth === 2);
-      
+
       let hasH2WithSingleNumber = false;
       let hasH2WithSubNumber = false;
-      
+
       for (const h2 of h2Headings) {
         const match = h2.text.match(/^\s*(\d+(?:\.\d+)*)\s*[.)-]?\s+/);
         if (match) {
@@ -55,7 +54,6 @@ export function detectChapterDepthFromHeadings(headings: HeadingNode[]): number 
         }
       }
 
-      // Length heuristic: if H1 is long (>= 6 words or > 25 chars) and H2 is not clearly a sub-number
       const h1WordCount = h1Text.split(/\s+/).filter(Boolean).length;
       const isH1Long = h1WordCount >= 6 || h1Text.length > 25;
 
@@ -65,7 +63,7 @@ export function detectChapterDepthFromHeadings(headings: HeadingNode[]): number 
           return Math.min(...otherDepths);
         }
       }
-      
+
       return 1;
     }
   }
@@ -73,19 +71,11 @@ export function detectChapterDepthFromHeadings(headings: HeadingNode[]): number 
   return minDepth;
 }
 
-/**
- * Extracts author-defined N(.N)* numbers from heading text.
- */
 export function extractAuthorNumber(text: string): string | null {
   const match = text.match(/^\s*(\d{1,2}(?:\.\d{1,2}){0,4})\s*[.)-]?\s+/);
   return match ? match[1] : null;
 }
 
-/**
- * Assigns hierarchical numbers (e.g. "1.1", "1.1.1") to heading nodes.
- * Skips empty headings. Generates slugified ids prefixed by the heading number.
- * Detects level jumps.
- */
 export function numberHeadings(
   headings: HeadingNode[],
   settings?: { respectAuthorNumbering?: boolean }
@@ -93,12 +83,11 @@ export function numberHeadings(
   const respectAuthorNumbering = settings?.respectAuthorNumbering ?? false;
   const chapterDepth = detectChapterDepthFromHeadings(headings);
 
-  const counters = [0, 0, 0, 0, 0, 0, 0]; // 1-indexed counters for levels 1 to 6
+  const counters = [0, 0, 0, 0, 0, 0, 0];
   const numberedHeadings: NumberedHeading[] = [];
   let prevDepth = 0;
 
   for (const heading of headings) {
-    // Empty-text headings excluded from numbering output
     if (!heading.text) {
       continue;
     }
@@ -109,7 +98,6 @@ export function numberHeadings(
     const isTocHeading = cleanText === "mục lục" || cleanText === "table of contents" || cleanText === "toc";
 
     if (effectiveDepth < 1 || effectiveDepth > 6 || isTocHeading) {
-      // Heading is shallower than the base chapter depth (e.g., report title) or is a TOC heading
       const slug = slugify(heading.text);
       numberedHeadings.push({
         ...heading,
@@ -126,7 +114,6 @@ export function numberHeadings(
       if (authorNum) {
         numberStr = authorNum;
 
-        // Synchronize counter arrays
         const parts = authorNum.split(".").map(Number);
         for (let i = 0; i < parts.length; i++) {
           if (i + 1 <= 6) {
@@ -140,22 +127,18 @@ export function numberHeadings(
     }
 
     if (!numberStr) {
-      // Increment current depth counter
       counters[effectiveDepth]++;
 
-      // Ensure all parent levels are at least 1 (avoid 0.x numbering)
       for (let i = 1; i < effectiveDepth; i++) {
         if (counters[i] === 0) {
           counters[i] = 1;
         }
       }
 
-      // Reset deeper levels (k > effectiveDepth)
       for (let k = effectiveDepth + 1; k <= 6; k++) {
         counters[k] = 0;
       }
 
-      // Build hierarchical number string, e.g. "1.2.1"
       const numberParts: number[] = [];
       for (let i = 1; i <= effectiveDepth; i++) {
         numberParts.push(counters[i]);
@@ -174,7 +157,6 @@ export function numberHeadings(
       }
     }
 
-    // Generate anchor id (number prefix replacing '.' with '-' + slugified text)
     const numPrefix = numberStr.replace(/\./g, "-");
     const slug = slugify(heading.text);
     const id = slug ? `${numPrefix}-${slug}` : numPrefix;

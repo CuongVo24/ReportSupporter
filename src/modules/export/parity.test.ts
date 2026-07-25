@@ -72,15 +72,11 @@ describe("Preview and Export Render Parity", () => {
     });
     const previewHtmlCombined = previewHtmlParts.join("");
 
-    // Assertions: heading elements contain the exact same IDs
-    expect(exportHtml).toContain('id="1-muc-tieu-du-an"');
-    expect(previewHtmlCombined).toContain('id="1-muc-tieu-du-an"');
-    expect(exportHtml).toContain('id="1-1-thiet-ke-chi-tiet"');
-    expect(previewHtmlCombined).toContain('id="1-1-thiet-ke-chi-tiet"');
-
-    // Assertions: no clobberPrefix (e.g. user-content-) is present
-    expect(exportHtml).not.toContain('id="user-content-');
-    expect(previewHtmlCombined).not.toContain('id="user-content-');
+    // Assertions: heading elements contain the user-content- prefixed IDs for DOM-clobbering protection
+    expect(exportHtml).toContain('id="user-content-1-muc-tieu-du-an"');
+    expect(previewHtmlCombined).toContain('id="user-content-1-muc-tieu-du-an"');
+    expect(exportHtml).toContain('id="user-content-1-1-thiet-ke-chi-tiet"');
+    expect(previewHtmlCombined).toContain('id="user-content-1-1-thiet-ke-chi-tiet"');
   });
 
   it("handles blank headings cleanly without off-by-one index shifts in both pipelines", () => {
@@ -124,7 +120,7 @@ describe("Preview and Export Render Parity", () => {
     const printableHtml = buildPrintableHtml(exportOutput);
 
     expect(printableHtml).toContain('<div class="ws-toc-container">');
-    expect(printableHtml).toContain('<a href="#1-gioi-thieu" class="ws-toc-link">');
+    expect(printableHtml).toContain('<a href="#user-content-1-gioi-thieu" class="ws-toc-link">');
     expect(printableHtml).toContain('<span class="ws-toc-number">1</span>');
     expect(printableHtml).toContain('<span class="ws-toc-text">Giới thiệu</span>');
   });

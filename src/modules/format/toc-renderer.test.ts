@@ -30,7 +30,7 @@ describe("renderTocToHtml", () => {
     expect(html).not.toContain("<svg");
     expect(html).not.toContain('onclick="alert(1)"');
     expect(html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
-    expect(html).toContain("href=\"#&quot; onclick=&quot;alert(1)\"");
+    expect(html).toContain("href=\"#user-content-&quot; onclick=&quot;alert(1)\"");
   });
 
   it("does not treat raw HTML inside Markdown headings as display text", () => {

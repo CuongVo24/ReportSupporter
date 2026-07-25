@@ -19,9 +19,8 @@ describe("W3 Break: TOC Anchors & Heading Numbering Parity", () => {
     const numberedAst = injectHeadingNumbers(ast, numbered, renderState);
     const html = renderMdastToHtml(numberedAst);
 
-    // Verify that the rendered heading ID matches the TOC href anchor (without user-content- prefix)
-    expect(html).toContain('id="1-gioi-thieu"');
-    expect(html).not.toContain('id="user-content-1-gioi-thieu"');
+    // Verify that the rendered heading ID has the user-content- prefix for DOM clobbering protection
+    expect(html).toContain('id="user-content-1-gioi-thieu"');
   });
 
   it("handles empty headings without shifting subsequent heading numbers", () => {

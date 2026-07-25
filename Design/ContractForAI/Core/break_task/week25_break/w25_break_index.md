@@ -1,17 +1,19 @@
-# W25 Break — Index Contract (Security Closure · Dependency Hygiene · Abuse/Resource Boundaries)
+# Index & Rule — Week 25 Security & Reliability Break
 
-> **Lane:** Core / break_task / week25_break.
-> **Branch (chung cả tuần):** `main`. Mỗi contract = **1 commit logic riêng**; docs contract được review/approve trước khi thi công code.
-> **Nguồn:** security/code-health audit ngày **2026-07-22** trên workspace hiện tại; `npm audit --omit=dev --json`; source review các route AI/PDF, renderer, import pipeline, markdown/CSP, CI và deployment contract.
-> **Cách viết:** giữ format W24 (Lane/Branch/Type · Findings S-mã · Micro-task · Locked · Scope · Checklist · Files · Risks · Verification · Status).
-> **Chủ đề tuần:** đóng các lỗ hổng còn lại theo defense-in-depth, với quota/parser/stream/container đều **hữu hạn**, identity chỉ lấy từ ingress đáng tin, dependency/build có thể tái lập, và security claim phải có test thật.
+> **Context:** Tuần 25 tạm dừng tính năng mới để khắc phục toàn bộ lỗ hổng bảo mật, rủi ro cạn kiệt tài nguyên, lỗ hổng supply-chain và nợ kỹ thuật từ đợt kiểm thử độc lập ngày 2026-07-22.
+> **Mục tiêu:** 100% contract trong đợt break được thực thi có thứ tự, có bằng chứng verification, không rò rỉ dữ liệu, không có đường vây hãm tài nguyên (DDoS/bomb), và không có suy giảm trải nghiệm offline-first của ReportSupporter.
 
-## Kết luận audit đã hiệu chỉnh
+---
 
-- `npm audit --omit=dev` hiện báo **13 node bị ảnh hưởng**: **1 critical, 8 high, 2 moderate, 2 low**; con số “6 lỗ hổng” trong review ban đầu đã cũ/đếm theo advisory thay vì affected package nodes.
-- Đường `tar` thực tế là `pdfjs-dist -> canvas -> @mapbox/node-pre-gyp -> tar`, **không phải** `sharp -> node-pre-gyp -> tar`. Override `tar: 7.5.16` vẫn nằm trong vùng lỗi; critical advisory bao phủ `<=7.5.18`.
-- Không dùng `npm audit fix --force` vì gợi ý downgrade Next không phù hợp. Vá leaf/transitive có kiểm soát và kiểm chứng lockfile/build/runtime.
-- PDF renderer có SSRF defense tốt (JS off + request interception chỉ `about:blank`/`data:` + token timing-safe), nhưng vẫn còn boundary quan trọng: Chromium `--no-sandbox`, slow-body không nằm trong deadline, build container không dùng lockfile.
+## Tóm tắt phát hiện bảo mật đợt 2026-07-22
+
+- Cây phụ thuộc sản phẩm còn rủi ro CVE công khai (`tar`, `sharp`, `brace-expansion`, `DOMPurify` range cũ).
+- Rate limit identity có thể bị qua mặt qua `x-api-key` hoặc IP/forwarded headers nếu không nằm sau trusted ingress.
+- Renderer PDF công khai chạy `--no-sandbox`, thiếu strict network isolation và deadline thống nhất từ byte đọc đầu tiên.
+- Import nén/tài liệu chưa có trần đa tầng (ZIP ratio, entry count, OCR image canvas, memory allocation budget).
+- CSP sản phẩm còn rủi ro inline; remote image chưa có cơ chế bảo vệ quyền riêng tư người dùng.
+- AI stream protocol chưa bounded triệt để đối với buffer fragmentation, stream amplification và rò rỉ lỗi hệ thống ra response.
+- CI/supply-chain dùng mutable Actions tags, thiếu SBOM/container scan tự động và chưa khóa release evidence.
 - Nhận định “coverage xuất sắc/test ~1:1” chưa có bằng chứng: repo có nhiều test nhưng Vitest chưa bật coverage provider/threshold; integration test PDF chưa chứng minh JS/network thực sự bị chặn.
 
 ## Nguyên nhân gốc và owner contract
@@ -87,9 +89,8 @@
 | F — Reproducible renderer container | `DONE` |
 | G — CSP & remote-image privacy | `DONE` |
 | H — Document import resource budgets | `DONE` |
-| I — Markdown/DOM/PDF sanitization | `PROPOSED` |
+| I — Markdown/DOM/PDF sanitization | `DONE` |
 | J — Readiness/runtime config | `DONE` |
 | K — Coverage/fuzz/flake/security gates | `PROPOSED` |
 | L — CI supply chain/release evidence | `DONE` |
 | M — Security docs/threat model/data at rest | `PROPOSED` |
-

@@ -1,4 +1,5 @@
 import type { TocNode } from "@/types";
+import { getHeadingAnchorId } from "@/lib/markdown-pipeline";
 
 function escapeHtml(value: string): string {
   return value
@@ -26,13 +27,13 @@ export function renderTocToHtml(nodes: TocNode[]): string {
             const level = Number.isFinite(node.level)
               ? Math.min(6, Math.max(1, Math.trunc(node.level)))
               : 1;
-            const id = escapeHtml(String(node.id));
+            const anchorId = escapeHtml(getHeadingAnchorId(String(node.id)));
             const number = escapeHtml(String(node.number));
             const label = escapeHtml(String(node.text));
 
             return `
           <li class="ws-toc-item ws-toc-level-${level}">
-            <a href="#${id}" class="ws-toc-link">
+            <a href="#${anchorId}" class="ws-toc-link">
               <span class="ws-toc-left">
                 <span class="ws-toc-number">${number}</span>
                 <span class="ws-toc-text">${label}</span>
