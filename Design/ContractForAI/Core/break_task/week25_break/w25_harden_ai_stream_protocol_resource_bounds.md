@@ -73,10 +73,19 @@ Biến AI streaming thành protocol hữu hạn và cancelable ở mọi chiều
 
 ## 7. Status
 
-`DONE (2026-07-25):`
-- **S1 Canonical correlation ID**: Client `requestId` được chuẩn hóa `<=64` ký tự theo allowlist; rơi về UUID server-side khi không hợp lệ để chống amplification.
-- **S2 Provider parser limits**: Enforce `MAX_OPENAI_LINE_BYTES` (64 KiB), `MAX_ANTHROPIC_LINE_BYTES` (64 KiB), `MAX_GEMINI_BUFFER_BYTES` (128 KiB) và `MAX_GEMINI_BRACE_DEPTH` (32).
-- **S3 Stream budgets & client buffer**: Giới hạn `MAX_UPSTREAM_BYTES` (2 MiB), `MAX_TOTAL_DELTA_CHARS` (50,000 chars), `MAX_EVENTS` (2,000), `MAX_SINGLE_DELTA_CHARS` (16,000 chars), và client-side line buffer cap (`MAX_CLIENT_BUFFER_BYTES` 128 KiB). Tự động ngắt provider controller khi client cancel/abort.
-- **S4 Public error redaction**: Redact toàn bộ `Error.message` thô/secrets; chỉ xuất bản các mã lỗi chuẩn (`AI_PROVIDER_ERROR`, `AI_STREAM_EXCEEDED`, v.v.).
-- Bổ sung bộ fuzzing & security test suite `src/app/api/ai/__security__/ai-stream-bounds.fuzz.test.ts`.
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1, §1.2) tìm thấy gap trong bản DONE trước: `requestId` client-supplied (khi hợp lệ theo allowlist) vẫn được server ECHO lại làm correlation ID chính thức — không phải "server luôn tự sinh"; `requestId` bị lặp lại trên MỌI delta event thay vì chỉ meta/terminal; bridge dùng greedy `while(true)` trong `start()` đọc toàn bộ upstream bất kể downstream có đọc hay không; khi một delta vượt `MAX_SINGLE_DELTA_CHARS`, code TRUNCATE rồi vẫn emit như một delta bình thường (không phải lỗi); parser trả `null` cho JSON malformed và route SILENTLY bỏ qua (không phân biệt được "dòng trống hợp lệ" với "JSON hỏng"); không xử lý dòng cuối thiếu `\n` ở EOF; không có idle deadline riêng; decoder `fatal:false` không reject UTF-8 hỏng.
+
+Re-fix 2026-07-25:
+- **Correlation ID server-canonical tuyệt đối.** `requestId = crypto.randomUUID()` luôn luôn, không đọc `record.requestId` từ client nữa (field vẫn được client gửi nhưng bị bỏ qua hoàn toàn). `AiStreamEvent` (`src/types/ai.ts`) đổi variant `delta` bỏ hẳn field `requestId` — chỉ còn ở `meta`/`done`/`error`. Xác nhận `http-adapter.ts` (client) chưa từng đọc `event.requestId` nên đổi type không phá client.
+- **Pull-aware bridge thật.** Viết lại toàn bộ stream construction: `pull()` chỉ đọc từ upstream khi runtime cần thêm dữ liệu. **Phát hiện + vá một bug ReadableStream nghiêm trọng trong lúc làm**: một `pull()` call xử lý xong một chunk upstream nhưng KHÔNG enqueue gì (vd. frame chỉ có `usage`, không có `delta`) khiến stream treo vĩnh viễn — runtime không tự gọi lại `pull()` nếu `desiredSize` không đổi kể từ lần enqueue trước (đã tái hiện bug này bằng Node thuần, không qua vitest, để xác nhận đây là hành vi ReadableStream thật chứ không phải lỗi test). Sửa bằng vòng lặp NỘI BỘ trong `pull()`: tiếp tục đọc upstream cho tới khi enqueue được ít nhất một event, gặp EOF, hoặc lỗi/limit — mới return.
+- **Không truncate-rồi-tiếp-tục.** `emitDelta()` kiểm `deltaText.length > MAX_SINGLE_DELTA_CHARS` TRƯỚC khi enqueue; vượt giới hạn → `AI_STREAM_EXCEEDED` terminal error ngay, không emit delta đã cắt như thành công.
+- **Malformed event là typed protocol error.** `parseOpenAiLine`/`parseAnthropicLine`/`parseGeminiChunk` đổi return type: `null` chỉ cho case hợp lệ-bỏ-qua (dòng trống, không phải `data:`, `[DONE]`); JSON.parse thất bại trả `{ malformed: true }` — route abort với `AI_PROTOCOL_ERROR` thay vì im lặng bỏ.
+- **EOF salvage đúng theo từng provider.** Dòng/object cuối thiếu `\n` được thử parse một lần nữa ở `finalize()` trước khi coi là lỗi. Gemini cần xử lý riêng: `extractJsonObjects()` trả thêm `incomplete` (true chỉ khi buffer kết thúc GIỮA một object `{...}` chưa đóng) — trailing `]`/`,`/whitespace của định dạng mảng Gemini không còn bị coi nhầm là lỗi (bug phát hiện qua test suite, đã sửa).
+- **Idle + total deadline tách biệt.** `pull()` race `reader.read()` với timer `STREAM_IDLE_TIMEOUT_MS` (20s, reset mỗi lần có tiến triển hợp lệ) bên cạnh `AI_TIMEOUT_MS` (60s) tổng đã có từ trước.
+- **UTF-8 strict.** `TextDecoder(..., {fatal:true})`; decode lỗi giữa chừng → `AI_PROTOCOL_ERROR`; flush cuối stream (`decoder.decode()` không tham số) bắt byte thừa chưa giải mã.
+- **Terminal đúng một lần.** `finishTerminal()`/`abortWithError()` đều check `terminalSent` trước khi enqueue+close; mọi exit path (limit, malformed, idle timeout, abort, EOF sạch) đi qua chung một điểm.
+- Giữ nguyên S2 (parser byte/depth limits) và S4 (redact lỗi công khai) từ bản trước — không đổi.
+- Test: `route.test.ts` (9/9, đã cập nhật kỳ vọng delta không có `requestId`), `ai-stream-bounds.fuzz.test.ts` (11/11 — mới: correlation ID không echo client, pull-aware không đọc hết upstream ngay từ đầu (đo số lần gọi `reader.read()` upstream so với số lần consumer đọc), malformed frame → `AI_PROTOCOL_ERROR` đúng một terminal event, no-newline trailing line được salvage, single-delta-overflow → `AI_STREAM_EXCEEDED` không truncate). `src/modules/write/ai` (48 test, client adapter) xanh không đổi.
 

@@ -5,9 +5,16 @@ export const MAX_OPENAI_LINE_BYTES = 64 * 1024; // 64 KiB
 /**
  * Parses a single SSE line from OpenAI streaming API.
  */
-export function parseOpenAiLine(
-  line: string
-): { delta?: string; usage?: AiUsage; done?: boolean } | null {
+export type OpenAiParsedLine = { delta?: string; usage?: AiUsage; done?: boolean; malformed?: true };
+
+/**
+ * Returns `null` for lines that are legitimately skippable (blank lines,
+ * lines exceeding the byte cap, lines that aren't an SSE `data:` frame).
+ * Returns `{ malformed: true }` for a `data:` frame whose JSON payload
+ * fails to parse — this is a distinct, protocol-error case the caller must
+ * NOT silently ignore (see w25_fix-all-bugs.md §D).
+ */
+export function parseOpenAiLine(line: string): OpenAiParsedLine | null {
   if (line.length > MAX_OPENAI_LINE_BYTES) return null;
   const trimmed = line.trim();
   if (!trimmed) return null;
@@ -40,6 +47,6 @@ export function parseOpenAiLine(
       usage,
     };
   } catch {
-    return null;
+    return { malformed: true };
   }
 }

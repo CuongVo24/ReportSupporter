@@ -13,13 +13,14 @@ type AiProxyRequest = {
   input: string;
   provider: AiProvider;
   model?: string;
-  requestId?: string;
 };
 
 const GENERIC_PROVIDER_ERROR =
   "AI provider request failed. Please check your API key, quota, model, or provider status.";
 const GENERIC_STREAM_EXCEEDED_ERROR =
   "AI response stream exceeded maximum allowed output size.";
+const GENERIC_PROTOCOL_ERROR =
+  "AI provider returned a malformed or incomplete streaming response.";
 const GENERIC_SERVER_ERROR =
   "An internal server error occurred while processing the AI request.";
 
@@ -28,6 +29,7 @@ const MAX_INPUT_CHARS = 100_000;
 const MAX_MODEL_CHARS = 128;
 const MAX_OUTPUT_TOKENS = 4_000;
 const AI_TIMEOUT_MS = 60_000;
+const STREAM_IDLE_TIMEOUT_MS = 20_000; // no upstream progress for this long -> abort
 
 // Stream budget caps
 const MAX_UPSTREAM_BYTES = 2 * 1024 * 1024; // 2 MiB max raw upstream bytes
@@ -47,17 +49,6 @@ const consumeAiKeyRateLimit = createRateLimiter({
 });
 
 class ProviderRequestError extends Error {}
-
-function canonicalRequestId(supplied?: string): string {
-  if (
-    typeof supplied === "string" &&
-    supplied.length <= 64 &&
-    /^[a-zA-Z0-9._:-]+$/u.test(supplied)
-  ) {
-    return supplied;
-  }
-  return crypto.randomUUID();
-}
 
 function validModel(model: string | undefined): boolean {
   return (
@@ -103,7 +94,9 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
   const input = stringValue(record.input);
   const provider = parseProvider(record.provider);
   const model = stringValue(record.model);
-  const suppliedRequestId = stringValue(record.requestId);
+  // record.requestId (if the client sent one) is deliberately never read: a
+  // client-chosen value must not become the server's correlation ID (see
+  // w25_fix-all-bugs.md §D). The server always mints its own below.
 
   if (
     !actionResult.success ||
@@ -121,7 +114,6 @@ function parseRequestBody(body: unknown): AiProxyRequest | null {
     input,
     provider,
     model,
-    requestId: canonicalRequestId(suppliedRequestId),
   };
 }
 
@@ -157,6 +149,11 @@ export async function POST(req: Request) {
     const declaredLength = Number(req.headers.get("content-length") || "0");
     if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
       return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
+    }
+
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.toLowerCase().includes("application/json")) {
+      return NextResponse.json({ error: "Content-Type must be application/json." }, { status: 400 });
     }
 
     const apiKey = req.headers.get("x-api-key")?.trim() ?? "";
@@ -199,8 +196,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { action, input, provider, model, requestId: parsedRequestId } = parsed;
-    const requestId = canonicalRequestId(parsedRequestId);
+    const { action, input, provider, model } = parsed;
+    // Server-generated canonical ID — never derived from client input.
+    const requestId = crypto.randomUUID();
 
     const prompt = buildPrompt(action, input);
     let selectedModel = "";
@@ -286,208 +284,279 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: GENERIC_SERVER_ERROR }, { status: 500 });
     }
 
-    // Create dynamic readable stream to pipe to client
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        const decoder = new TextDecoder("utf-8", { fatal: false });
+    // ------------------------------------------------------------------
+    // Pull-aware NDJSON bridge (§D): each `pull()` call performs AT MOST one
+    // upstream read, so the stream machinery only asks for more when the
+    // downstream consumer actually wants it (governed by desiredSize) —
+    // never a greedy loop that drains the whole upstream regardless of
+    // whether anyone is reading.
+    // ------------------------------------------------------------------
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder("utf-8", { fatal: true });
 
-        let totalUpstreamBytes = 0;
-        let totalDeltaChars = 0;
-        let totalEvents = 0;
+    let totalUpstreamBytes = 0;
+    let totalDeltaChars = 0;
+    let totalEvents = 0;
+    let buffer = "";
+    let anthropicInputTokens: number | undefined;
+    let anthropicOutputTokens: number | undefined;
+    let parsedUsage: AiUsage | undefined;
+    let terminalSent = false;
+    let geminiIncompleteObject = false; // true only if buffer ends mid-{object}, not trailing `]`/`,`
+    const reader = response.body?.getReader();
 
-        function emitEvent(event: AiStreamEvent): void {
-          if (totalEvents >= MAX_EVENTS) {
-            throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
-          }
-          totalEvents++;
-          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+    type ChunkResult = { ok: true } | { ok: false; code: string; message: string };
+
+    function emitDelta(controller: ReadableStreamDefaultController<Uint8Array>, deltaText: string): ChunkResult {
+      if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
+      totalDeltaChars += deltaText.length;
+      if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
+      if (totalEvents >= MAX_EVENTS) {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
+      totalEvents += 1;
+      controller.enqueue(encoder.encode(JSON.stringify({ event: "delta", text: deltaText } satisfies AiStreamEvent) + "\n"));
+      return { ok: true };
+    }
+
+    function processGeminiText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
+      buffer += text;
+      let extracted: { objects: string[]; remaining: string; incomplete: boolean };
+      try {
+        extracted = extractJsonObjects(buffer);
+      } catch {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
+      buffer = extracted.remaining;
+      geminiIncompleteObject = extracted.incomplete;
+      for (const objText of extracted.objects) {
+        const parsedChunk = parseGeminiChunk(objText);
+        if (!parsedChunk) continue;
+        if (parsedChunk.malformed) {
+          return { ok: false, code: "AI_PROTOCOL_ERROR", message: GENERIC_PROTOCOL_ERROR };
         }
+        if (parsedChunk.delta) {
+          const result = emitDelta(controller, parsedChunk.delta);
+          if (!result.ok) return result;
+        }
+        if (parsedChunk.usage) parsedUsage = parsedChunk.usage;
+      }
+      return { ok: true };
+    }
 
-        // Meta event must go out first
-        emitEvent({
-          event: "meta",
-          requestId,
-          provider,
-          model: selectedModel,
-        });
+    function processOpenAiText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
+      buffer += text;
+      let lineEndIndex: number;
+      while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, lineEndIndex);
+        buffer = buffer.slice(lineEndIndex + 1);
+        const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
+        const parsedChunk = parseOpenAiLine(cleanLine);
+        if (!parsedChunk) continue;
+        if (parsedChunk.malformed) {
+          return { ok: false, code: "AI_PROTOCOL_ERROR", message: GENERIC_PROTOCOL_ERROR };
+        }
+        if (parsedChunk.delta) {
+          const result = emitDelta(controller, parsedChunk.delta);
+          if (!result.ok) return result;
+        }
+        if (parsedChunk.usage) parsedUsage = parsedChunk.usage;
+      }
+      return { ok: true };
+    }
 
-        const reader = response.body?.getReader();
+    function processAnthropicText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
+      buffer += text;
+      let lineEndIndex: number;
+      while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, lineEndIndex);
+        buffer = buffer.slice(lineEndIndex + 1);
+        const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
+        const parsedChunk = parseAnthropicLine(cleanLine);
+        if (!parsedChunk) continue;
+        if (parsedChunk.malformed) {
+          return { ok: false, code: "AI_PROTOCOL_ERROR", message: GENERIC_PROTOCOL_ERROR };
+        }
+        if (parsedChunk.delta) {
+          const result = emitDelta(controller, parsedChunk.delta);
+          if (!result.ok) return result;
+        }
+        if (parsedChunk.inputTokens !== undefined) anthropicInputTokens = parsedChunk.inputTokens;
+        if (parsedChunk.outputTokens !== undefined) anthropicOutputTokens = parsedChunk.outputTokens;
+      }
+      return { ok: true };
+    }
+
+    function processText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
+      if (provider === "gemini") return processGeminiText(controller, text);
+      if (provider === "openai") return processOpenAiText(controller, text);
+      return processAnthropicText(controller, text);
+    }
+
+    function finishTerminal(controller: ReadableStreamDefaultController<Uint8Array>, event: AiStreamEvent): void {
+      if (terminalSent) return;
+      terminalSent = true;
+      clearTimeout(timeoutId);
+      controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+      controller.close();
+    }
+
+    async function abortWithError(
+      controller: ReadableStreamDefaultController<Uint8Array>,
+      code: string,
+      message: string,
+      logExtra?: Record<string, unknown>,
+    ): Promise<void> {
+      await reader?.cancel().catch(() => undefined);
+      providerController.abort();
+      console.error("[AI Stream Error]", { requestId, provider, model: selectedModel, code, ...logExtra });
+      finishTerminal(controller, { event: "error", requestId, code, message });
+    }
+
+    // Handles the EOF case: flush the decoder (rejects invalid/incomplete
+    // trailing UTF-8), then try to salvage one last unterminated line/object
+    // — a real upstream may end its final `data:` line without a trailing
+    // newline — before deciding whether the stream ended cleanly.
+    async function finalize(controller: ReadableStreamDefaultController<Uint8Array>): Promise<void> {
+      try {
+        decoder.decode();
+      } catch {
+        await abortWithError(controller, "AI_PROTOCOL_ERROR", "Upstream response ended with invalid/incomplete UTF-8.");
+        return;
+      }
+
+      if (buffer.trim().length > 0) {
+        if (provider === "gemini") {
+          // Only a genuine mid-object truncation is an error — trailing `]`/
+          // `,`/whitespace is expected wire-format boilerplate around
+          // Gemini's `[ {...}, {...} ]` array response.
+          if (geminiIncompleteObject) {
+            await abortWithError(controller, "AI_PROTOCOL_ERROR", GENERIC_PROTOCOL_ERROR, { reason: "trailing_incomplete_object" });
+            return;
+          }
+          buffer = "";
+        } else {
+          const cleanLine = buffer.endsWith("\r") ? buffer.slice(0, -1) : buffer;
+          buffer = "";
+          const parsedChunk = provider === "openai" ? parseOpenAiLine(cleanLine) : parseAnthropicLine(cleanLine);
+          if (parsedChunk?.malformed) {
+            await abortWithError(controller, "AI_PROTOCOL_ERROR", GENERIC_PROTOCOL_ERROR, { reason: "trailing_incomplete_line" });
+            return;
+          }
+          if (parsedChunk?.delta) {
+            const result = emitDelta(controller, parsedChunk.delta);
+            if (!result.ok) {
+              await abortWithError(controller, result.code, result.message);
+              return;
+            }
+          }
+          if (provider === "openai" && parsedChunk && "usage" in parsedChunk && parsedChunk.usage) {
+            parsedUsage = parsedChunk.usage;
+          }
+          if (provider === "anthropic" && parsedChunk) {
+            if ("inputTokens" in parsedChunk && parsedChunk.inputTokens !== undefined) anthropicInputTokens = parsedChunk.inputTokens;
+            if ("outputTokens" in parsedChunk && parsedChunk.outputTokens !== undefined) anthropicOutputTokens = parsedChunk.outputTokens;
+          }
+        }
+      }
+
+      if (provider === "anthropic" && (anthropicInputTokens !== undefined || anthropicOutputTokens !== undefined)) {
+        parsedUsage = { inputTokens: anthropicInputTokens, outputTokens: anthropicOutputTokens, estimated: false };
+      }
+
+      clearTimeout(timeoutId);
+      finishTerminal(controller, { event: "done", requestId, usage: parsedUsage });
+    }
+
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        // Meta event must go out first, before any pull-driven reads.
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ event: "meta", requestId, provider, model: selectedModel } satisfies AiStreamEvent) + "\n"),
+        );
         if (!reader) {
-          emitEvent({
-            event: "error",
-            requestId,
-            code: "AI_PROVIDER_ERROR",
-            message: GENERIC_PROVIDER_ERROR,
-          });
-          controller.close();
-          clearTimeout(timeoutId);
-          return;
+          void abortWithError(controller, "AI_PROVIDER_ERROR", GENERIC_PROVIDER_ERROR, { reason: "no_response_body" });
         }
+      },
+      async pull(controller) {
+        if (terminalSent || !reader) return;
 
-        let buffer = "";
-        let anthropicInputTokens: number | undefined;
-        let anthropicOutputTokens: number | undefined;
-        let parsedUsage: AiUsage | undefined;
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            totalUpstreamBytes += value.byteLength;
-            if (totalUpstreamBytes > MAX_UPSTREAM_BYTES) {
-              throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
-            }
-
-            const text = decoder.decode(value, { stream: true });
-
-            if (provider === "gemini") {
-              buffer += text;
-              const { objects, remaining } = extractJsonObjects(buffer);
-              buffer = remaining;
-
-              for (const objText of objects) {
-                const parsedChunk = parseGeminiChunk(objText);
-                if (parsedChunk) {
-                  if (parsedChunk.delta) {
-                    let deltaText = parsedChunk.delta;
-                    if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
-                      deltaText = deltaText.slice(0, MAX_SINGLE_DELTA_CHARS);
-                    }
-                    totalDeltaChars += deltaText.length;
-                    if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
-                      throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
-                    }
-                    emitEvent({
-                      event: "delta",
-                      requestId,
-                      text: deltaText,
-                    });
-                  }
-                  if (parsedChunk.usage) {
-                    parsedUsage = parsedChunk.usage;
-                  }
-                }
-              }
-            } else if (provider === "openai") {
-              buffer += text;
-              let lineEndIndex;
-              while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
-                const line = buffer.slice(0, lineEndIndex);
-                buffer = buffer.slice(lineEndIndex + 1);
-                const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
-
-                const parsedChunk = parseOpenAiLine(cleanLine);
-                if (parsedChunk) {
-                  if (parsedChunk.delta) {
-                    let deltaText = parsedChunk.delta;
-                    if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
-                      deltaText = deltaText.slice(0, MAX_SINGLE_DELTA_CHARS);
-                    }
-                    totalDeltaChars += deltaText.length;
-                    if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
-                      throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
-                    }
-                    emitEvent({
-                      event: "delta",
-                      requestId,
-                      text: deltaText,
-                    });
-                  }
-                  if (parsedChunk.usage) {
-                    parsedUsage = parsedChunk.usage;
-                  }
-                }
-              }
-            } else if (provider === "anthropic") {
-              buffer += text;
-              let lineEndIndex;
-              while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
-                const line = buffer.slice(0, lineEndIndex);
-                buffer = buffer.slice(lineEndIndex + 1);
-                const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
-
-                const parsedChunk = parseAnthropicLine(cleanLine);
-                if (parsedChunk) {
-                  if (parsedChunk.delta) {
-                    let deltaText = parsedChunk.delta;
-                    if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
-                      deltaText = deltaText.slice(0, MAX_SINGLE_DELTA_CHARS);
-                    }
-                    totalDeltaChars += deltaText.length;
-                    if (totalDeltaChars > MAX_TOTAL_DELTA_CHARS) {
-                      throw new Error(GENERIC_STREAM_EXCEEDED_ERROR);
-                    }
-                    emitEvent({
-                      event: "delta",
-                      requestId,
-                      text: deltaText,
-                    });
-                  }
-                  if (parsedChunk.inputTokens !== undefined) {
-                    anthropicInputTokens = parsedChunk.inputTokens;
-                  }
-                  if (parsedChunk.outputTokens !== undefined) {
-                    anthropicOutputTokens = parsedChunk.outputTokens;
-                  }
-                }
-              }
-            }
-          }
-
-          if (
-            provider === "anthropic" &&
-            (anthropicInputTokens !== undefined || anthropicOutputTokens !== undefined)
-          ) {
-            parsedUsage = {
-              inputTokens: anthropicInputTokens,
-              outputTokens: anthropicOutputTokens,
-              estimated: false,
-            };
-          }
-
-          emitEvent({
-            event: "done",
-            requestId,
-            usage: parsedUsage,
-          });
-          controller.close();
-        } catch (err: unknown) {
-          const isExceeded = err instanceof Error && err.message === GENERIC_STREAM_EXCEEDED_ERROR;
-          const code = isExceeded ? "AI_STREAM_EXCEEDED" : "AI_PROVIDER_ERROR";
-          const message = isExceeded ? GENERIC_STREAM_EXCEEDED_ERROR : GENERIC_PROVIDER_ERROR;
-
-          console.error("[AI Stream Error]", {
-            requestId,
-            provider,
-            model: selectedModel,
-            code,
-          });
-
+        // A pull() call MUST enqueue at least one chunk (or close/error)
+        // before returning — the stream is only re-invoked on desiredSize
+        // changes caused by an enqueue/dequeue, so a pull() that reads
+        // upstream data but produces no visible output (e.g. a usage-only
+        // frame with no delta text) would otherwise stall the stream
+        // forever. Loop internally until we have something to enqueue.
+        while (!terminalSent) {
+          let idleTimer: ReturnType<typeof setTimeout> | undefined;
+          type ReadOutcome = ReadableStreamReadResult<Uint8Array> | "idle";
+          let outcome: ReadOutcome;
           try {
-            controller.enqueue(
-              encoder.encode(
-                JSON.stringify({
-                  event: "error",
-                  requestId,
-                  code,
-                  message,
-                } as AiStreamEvent) + "\n",
-              ),
-            );
+            outcome = await Promise.race<ReadOutcome>([
+              reader.read(),
+              new Promise<"idle">((resolve) => {
+                idleTimer = setTimeout(() => resolve("idle"), STREAM_IDLE_TIMEOUT_MS);
+              }),
+            ]);
           } catch {
-            // Controller might be closed
+            clearTimeout(idleTimer);
+            if (providerController.signal.aborted || (req.signal?.aborted ?? false)) {
+              terminalSent = true;
+              clearTimeout(timeoutId);
+              controller.error(new Error("aborted"));
+              return;
+            }
+            await abortWithError(controller, "AI_PROVIDER_ERROR", GENERIC_PROVIDER_ERROR, { reason: "read_error" });
+            return;
           }
-          controller.close();
-        } finally {
-          reader.releaseLock();
-          clearTimeout(timeoutId);
+          clearTimeout(idleTimer);
+
+          if (outcome === "idle") {
+            await abortWithError(controller, "AI_STREAM_IDLE_TIMEOUT", "AI provider stream stalled (no data received in time).");
+            return;
+          }
+
+          const { done, value } = outcome;
+          if (done) {
+            await finalize(controller);
+            return;
+          }
+          if (!value) continue;
+
+          totalUpstreamBytes += value.byteLength;
+          if (totalUpstreamBytes > MAX_UPSTREAM_BYTES) {
+            await abortWithError(controller, "AI_STREAM_EXCEEDED", GENERIC_STREAM_EXCEEDED_ERROR, { reason: "upstream_bytes" });
+            return;
+          }
+
+          let text: string;
+          try {
+            text = decoder.decode(value, { stream: true });
+          } catch {
+            await abortWithError(controller, "AI_PROTOCOL_ERROR", "Invalid UTF-8 in upstream response.");
+            return;
+          }
+
+          const eventsBefore = totalEvents;
+          const result = processText(controller, text);
+          if (!result.ok) {
+            await abortWithError(controller, result.code, result.message);
+            return;
+          }
+          if (totalEvents > eventsBefore) return; // enqueued something — let the stream re-pull when it wants more
+          // else: this chunk produced no visible event (e.g. usage-only
+          // frame) — loop and read the next upstream chunk immediately.
         }
       },
       cancel() {
-        providerController.abort();
+        terminalSent = true;
         clearTimeout(timeoutId);
+        providerController.abort();
+        void reader?.cancel().catch(() => undefined);
       },
     });
 

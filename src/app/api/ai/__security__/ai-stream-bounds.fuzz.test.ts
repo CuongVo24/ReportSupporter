@@ -25,8 +25,8 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
   });
 
   describe("Correlation ID & Request ID Bounding", () => {
-    it("fallbacks to canonical UUID when client sends an oversized requestId (>64 chars)", async () => {
-      const hugeRequestId = "a".repeat(10_000);
+    it("always mints its own server-side UUID and never echoes a client-supplied requestId", async () => {
+      const clientRequestId = "attacker-chosen-id-not-a-uuid";
       const encoder = new TextEncoder();
       const mockStream = new ReadableStream({
         start(controller) {
@@ -45,17 +45,62 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
         action: "rewrite",
         input: "Hello",
         provider: "openai",
-        requestId: hugeRequestId,
+        requestId: clientRequestId,
       }));
 
       expect(response.status).toBe(200);
       const text = await response.text();
-      const firstLine = text.split("\n")[0];
-      const meta = JSON.parse(firstLine);
+      const lines = text.trim().split("\n");
+      const meta = JSON.parse(lines[0]);
+      const delta = JSON.parse(lines[1]);
 
       expect(meta.event).toBe("meta");
-      expect(meta.requestId).not.toBe(hugeRequestId);
-      expect(meta.requestId.length).toBeLessThanOrEqual(64);
+      expect(meta.requestId).not.toBe(clientRequestId);
+      expect(meta.requestId).toMatch(/^[0-9a-f-]{36}$/u);
+      // delta events carry no requestId at all (only meta/terminal do).
+      expect(delta).toEqual({ event: "delta", text: "hi" });
+    });
+  });
+
+  describe("Pull-aware backpressure & greedy-read regression guard", () => {
+    it("reads upstream incrementally (one chunk per outer read), not the whole stream up front", async () => {
+      const encoder = new TextEncoder();
+      let upstreamReadCalls = 0;
+      const chunks = [
+        'data: {"choices": [{"delta": {"content": "a"}}]}\n\n',
+        'data: {"choices": [{"delta": {"content": "b"}}]}\n\n',
+        'data: {"choices": [{"delta": {"content": "c"}}]}\n\n',
+      ];
+      let i = 0;
+      const fakeReader = {
+        read: async () => {
+          upstreamReadCalls += 1;
+          if (i >= chunks.length) return { done: true, value: undefined };
+          return { done: false, value: encoder.encode(chunks[i++]) };
+        },
+        cancel: async () => undefined,
+      };
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+        ok: true,
+        body: { getReader: () => fakeReader },
+      } as unknown as Response));
+
+      const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
+      expect(response.status).toBe(200);
+
+      const reader = response.body!.getReader();
+      const readsBeforeFirstDelta = { count: 0 };
+      // Read only the meta event, then check upstream hasn't been drained yet.
+      await reader.read();
+      readsBeforeFirstDelta.count = upstreamReadCalls;
+      expect(upstreamReadCalls).toBeLessThan(chunks.length, "must not have drained the whole upstream just to emit the first (meta) chunk");
+
+      // Drain the rest.
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+      expect(upstreamReadCalls).toBe(chunks.length + 1); // + the final `done` read
     });
   });
 
@@ -83,6 +128,78 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
     it("Anthropic parseAnthropicLine returns null for line exceeding 64 KiB", () => {
       const hugeLine = "data: " + "x".repeat(70 * 1024);
       expect(parseAnthropicLine(hugeLine)).toBeNull();
+    });
+  });
+
+  describe("Malformed/incomplete frame handling (no silent drop)", () => {
+    async function collectEvents(response: Response): Promise<Array<Record<string, unknown>>> {
+      const text = await response.text();
+      return text
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line));
+    }
+
+    it("emits a typed AI_PROTOCOL_ERROR terminal event for a malformed data: frame instead of silently dropping it", async () => {
+      const encoder = new TextEncoder();
+      const mockStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"choices": [{"delta": {"content": "ok"}}]}\n\n'));
+          controller.enqueue(encoder.encode("data: {not valid json\n\n"));
+          controller.close();
+        },
+      });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: mockStream } as Response));
+
+      const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
+      const events = await collectEvents(response);
+      const terminal = events[events.length - 1];
+
+      expect(terminal.event).toBe("error");
+      expect(terminal.code).toBe("AI_PROTOCOL_ERROR");
+      // exactly one terminal event
+      expect(events.filter((e) => e.event === "done" || e.event === "error")).toHaveLength(1);
+    });
+
+    it("salvages a trailing data: line with no final newline instead of dropping it", async () => {
+      const encoder = new TextEncoder();
+      const mockStream = new ReadableStream({
+        start(controller) {
+          // No trailing \n on the last chunk.
+          controller.enqueue(encoder.encode('data: {"choices": [{"delta": {"content": "tail"}}]}'));
+          controller.close();
+        },
+      });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: mockStream } as Response));
+
+      const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
+      const events = await collectEvents(response);
+      const deltas = events.filter((e) => e.event === "delta");
+
+      expect(deltas.map((e) => e.text)).toEqual(["tail"]);
+      expect(events[events.length - 1].event).toBe("done");
+    });
+
+    it("aborts with AI_STREAM_EXCEEDED (not truncate-and-continue) when a single delta exceeds the per-event cap", async () => {
+      const encoder = new TextEncoder();
+      const hugeDelta = "x".repeat(20_000); // > MAX_SINGLE_DELTA_CHARS (16,000)
+      const mockStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(`data: {"choices": [{"delta": {"content": "${hugeDelta}"}}]}\n\n`));
+          controller.close();
+        },
+      });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: mockStream } as Response));
+
+      const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
+      const events = await collectEvents(response);
+
+      // Must NOT contain a truncated 16,000-char delta emitted as a normal event.
+      expect(events.some((e) => e.event === "delta")).toBe(false);
+      const terminal = events[events.length - 1];
+      expect(terminal.event).toBe("error");
+      expect(terminal.code).toBe("AI_STREAM_EXCEEDED");
     });
   });
 

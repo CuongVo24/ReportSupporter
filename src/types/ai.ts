@@ -54,9 +54,12 @@ export type AiUsage = {
   catalogUpdatedAt?: string;
 };
 
+// Correlation ID is only carried on the meta (first) and terminal
+// (done/error, exactly one) events — not repeated on every delta, where it
+// would be pure overhead with no consumer (see w25_fix-all-bugs.md §D).
 export type AiStreamEvent =
   | { event: "meta"; requestId: string; provider: string; model: string }
-  | { event: "delta"; requestId: string; text: string }
+  | { event: "delta"; text: string }
   | { event: "done"; requestId: string; usage?: AiUsage }
   | { event: "error"; requestId: string; code?: string; message: string };
 

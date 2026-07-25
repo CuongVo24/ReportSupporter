@@ -148,8 +148,8 @@ describe("/api/ai route", () => {
     const lines = await readResponseStream(response);
     expect(lines).toHaveLength(4);
     expect(JSON.parse(lines[0])).toMatchObject({ event: "meta", provider: "openai" });
-    expect(JSON.parse(lines[1])).toEqual({ event: "delta", requestId: expect.any(String), text: "Hello" });
-    expect(JSON.parse(lines[2])).toEqual({ event: "delta", requestId: expect.any(String), text: " world" });
+    expect(JSON.parse(lines[1])).toEqual({ event: "delta", text: "Hello" });
+    expect(JSON.parse(lines[2])).toEqual({ event: "delta", text: " world" });
     expect(JSON.parse(lines[3])).toEqual({ event: "done", requestId: expect.any(String), usage: { inputTokens: 10, outputTokens: 5, estimated: false } });
   });
 
@@ -182,8 +182,8 @@ describe("/api/ai route", () => {
     const lines = await readResponseStream(response);
     expect(lines).toHaveLength(4);
     expect(JSON.parse(lines[0])).toMatchObject({ event: "meta", provider: "gemini" });
-    expect(JSON.parse(lines[1])).toEqual({ event: "delta", requestId: expect.any(String), text: "Hello" });
-    expect(JSON.parse(lines[2])).toEqual({ event: "delta", requestId: expect.any(String), text: " world" });
+    expect(JSON.parse(lines[1])).toEqual({ event: "delta", text: "Hello" });
+    expect(JSON.parse(lines[2])).toEqual({ event: "delta", text: " world" });
     expect(JSON.parse(lines[3])).toEqual({ event: "done", requestId: expect.any(String), usage: { inputTokens: 12, outputTokens: 6, estimated: false } });
   });
 
@@ -215,8 +215,8 @@ describe("/api/ai route", () => {
     const lines = await readResponseStream(response);
     expect(lines).toHaveLength(4);
     expect(JSON.parse(lines[0])).toMatchObject({ event: "meta", provider: "anthropic" });
-    expect(JSON.parse(lines[1])).toEqual({ event: "delta", requestId: expect.any(String), text: "Hello" });
-    expect(JSON.parse(lines[2])).toEqual({ event: "delta", requestId: expect.any(String), text: " world" });
+    expect(JSON.parse(lines[1])).toEqual({ event: "delta", text: "Hello" });
+    expect(JSON.parse(lines[2])).toEqual({ event: "delta", text: " world" });
     expect(JSON.parse(lines[3])).toEqual({ event: "done", requestId: expect.any(String), usage: { inputTokens: 15, outputTokens: 7, estimated: false } });
   });
 

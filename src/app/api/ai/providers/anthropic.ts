@@ -1,11 +1,19 @@
 export const MAX_ANTHROPIC_LINE_BYTES = 64 * 1024; // 64 KiB
 
+export type AnthropicParsedLine = {
+  delta?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  malformed?: true;
+};
+
 /**
- * Parses a single SSE line from Anthropic streaming API.
+ * Parses a single SSE line from Anthropic streaming API. Returns
+ * `{ malformed: true }` (not `null`) when a `data:` frame's JSON fails to
+ * parse, so callers can treat it as a protocol error instead of silently
+ * dropping it (see w25_fix-all-bugs.md §D).
  */
-export function parseAnthropicLine(
-  line: string
-): { delta?: string; inputTokens?: number; outputTokens?: number } | null {
+export function parseAnthropicLine(line: string): AnthropicParsedLine | null {
   if (line.length > MAX_ANTHROPIC_LINE_BYTES) return null;
   const trimmed = line.trim();
   if (!trimmed) return null;
@@ -34,6 +42,6 @@ export function parseAnthropicLine(
 
     return {};
   } catch {
-    return null;
+    return { malformed: true };
   }
 }

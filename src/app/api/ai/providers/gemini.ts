@@ -3,12 +3,15 @@ import type { AiUsage } from "@/types/ai";
 export const MAX_GEMINI_BUFFER_BYTES = 128 * 1024; // 128 KiB
 export const MAX_GEMINI_BRACE_DEPTH = 32;
 
+export type GeminiParsedChunk = { delta?: string; usage?: AiUsage; malformed?: true };
+
 /**
- * Parses a single complete Gemini response object from the stream.
+ * Parses a single complete Gemini response object from the stream. Returns
+ * `{ malformed: true }` (not `null`) when a syntactically-balanced object
+ * still fails JSON.parse, so callers treat it as a protocol error instead of
+ * silently dropping it (see w25_fix-all-bugs.md §D).
  */
-export function parseGeminiChunk(
-  jsonText: string
-): { delta?: string; usage?: AiUsage } | null {
+export function parseGeminiChunk(jsonText: string): GeminiParsedChunk | null {
   if (jsonText.length > MAX_GEMINI_BUFFER_BYTES) {
     return null;
   }
@@ -34,7 +37,7 @@ export function parseGeminiChunk(
       usage,
     };
   } catch {
-    return null;
+    return { malformed: true };
   }
 }
 
@@ -47,7 +50,7 @@ export function parseGeminiChunk(
 export function extractJsonObjects(
   buffer: string,
   maxBufferBytes = MAX_GEMINI_BUFFER_BYTES,
-): { objects: string[]; remaining: string } {
+): { objects: string[]; remaining: string; incomplete: boolean } {
   if (buffer.length > maxBufferBytes) {
     throw new Error("Gemini stream buffer limit exceeded");
   }
@@ -95,6 +98,11 @@ export function extractJsonObjects(
 
   return {
     objects,
+    // true only when the buffer ends mid-object (an actual truncated JSON
+    // object) — NOT for harmless trailing array syntax like `]`, `,`, or
+    // whitespace between/after objects in Gemini's `[ {...}, {...} ]` wire
+    // format, which legitimately remains unconsumed after the last object.
+    incomplete: braceDepth > 0,
     remaining: buffer.slice(lastEndIndex),
   };
 }
