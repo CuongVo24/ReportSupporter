@@ -28,6 +28,11 @@ services:
       - "127.0.0.1:9000:9000"
   pdf-renderer:
     build: ./services/pdf-renderer
+    # A fixed local tag so CI can `docker build -t report-supporter/pdf-renderer:ci`
+    # once, SBOM + scan that exact image, then `docker compose up` (no
+    # --build) reuses it verbatim for the integration test — SBOM, scan, and
+    # integration test all run against the SAME image, never a rebuild.
+    image: report-supporter/pdf-renderer:ci
     environment:
       PORT: 8080
       # Fail fast with a clear message at `docker-compose up` if the

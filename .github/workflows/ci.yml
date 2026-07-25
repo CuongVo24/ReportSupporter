@@ -26,6 +26,8 @@ jobs:
       - run: npm run check:production-config
 
       # --- Lane: Supply chain security & dual workspace audit ----------------
+      - name: "CI Actions pinned to full commit SHA (no mutable tags/branches)"
+        run: node scripts/check-ci-actions.mjs
       - name: "Supply chain check — external URLs, integrity, & security waivers"
         run: node scripts/check-supply-chain.mjs
       - name: "Production audit — root workspace"
@@ -73,13 +75,39 @@ jobs:
         env:
           PLAYWRIGHT_USE_BUILD: "1"
 
+      # --- Lane: PDF renderer image — build ONCE, SBOM + scan that exact
+      # digest, then reuse it (no rebuild) for the Docker isolation lane
+      # below, so evidence is bound to the image that's actually tested.
+      - name: "Build pdf-renderer image (single build, tag reused everywhere below)"
+        run: docker build -t report-supporter/pdf-renderer:ci services/pdf-renderer
+      - name: "Resolve pdf-renderer image digest"
+        run: |
+          DIGEST=$(docker image inspect report-supporter/pdf-renderer:ci --format '{{.Id}}')
+          echo "PDF_RENDERER_IMAGE_DIGEST=$DIGEST" >> "$GITHUB_ENV"
+      - name: "SBOM — pdf-renderer image (SPDX)"
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: report-supporter/pdf-renderer:ci
+          format: spdx-json
+          output-file: test-results/pdf-renderer-sbom.spdx.json
+      - name: "Vulnerability scan — pdf-renderer image (Trivy, fails on Critical/High)"
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: report-supporter/pdf-renderer:ci
+          format: json
+          output: test-results/pdf-renderer-trivy.json
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+          ignore-unfixed: true
+
       # --- Lane: Docker isolation (PDF renderer sandbox) ----------------------
       # docker-compose.pdf.yml requires PDF_RENDERER_TOKEN (no default) — the
       # image bakes NODE_ENV=production, and server.mjs's startup guard
       # refuses to boot with the local dev default token in production, so
       # this MUST be a real (CI-only, non-default) value here, not just on
       # the later test step that only talks to the already-running container.
-      - run: docker compose -f docker-compose.pdf.yml up --build -d
+      # No --build here: reuses the exact image just built/SBOM'd/scanned above.
+      - run: docker compose -f docker-compose.pdf.yml up -d
         env:
           PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
       - name: "Docker isolation — PDF render, script/JS-off proof, egress canary, admission control"
@@ -91,6 +119,12 @@ jobs:
           PDF_CANARY_URL_FROM_RENDERER: http://canary:9000
       - if: always()
         run: docker compose -f docker-compose.pdf.yml down
+
+      # --- Release evidence manifest — links commit, lockfile hashes, image
+      # digest, SBOM, scan, and both audits into one offline-verifiable file.
+      - name: "Generate release evidence manifest"
+        if: always()
+        run: node scripts/generate-release-evidence.mjs --strict
 
       - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         if: always()

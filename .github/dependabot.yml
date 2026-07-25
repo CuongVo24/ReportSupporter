@@ -12,11 +12,26 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     ignore:
+      # Only block MAJOR bumps (need a manual compat pass) — minor/patch
+      # security updates must still flow through automatically instead of
+      # being blocked indefinitely (W25-L review finding).
       - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
+    directory: "/services/pdf-renderer"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # W25-L/F: track the pinned base image digest in services/pdf-renderer/Dockerfile
+  # (ghcr.io/puppeteer/puppeteer@sha256:...) so security updates to the base
+  # image/bundled Chromium aren't silently missed.
+  - package-ecosystem: "docker"
     directory: "/services/pdf-renderer"
     schedule:
       interval: "weekly"

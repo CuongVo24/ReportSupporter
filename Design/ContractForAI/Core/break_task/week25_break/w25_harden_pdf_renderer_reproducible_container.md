@@ -69,9 +69,16 @@ Hai build cùng commit phải tạo cùng dependency graph và provenance kiểm
 
 ## 7. Status
 
-`DONE (2026-07-25):`
-- **S1 Locked Install**: Cập nhật `Dockerfile` copy cả `package.json` và `package-lock.json`, chuyển từ `npm install` sang `npm ci --omit=dev --no-audit --no-fund` đảm bảo tính tái lập (reproducibility).
-- **S2 Base Image Digest Pinning**: Cố định base image theo SHA-256 digest `ghcr.io/puppeteer/puppeteer:24.16.0@sha256:ad7de9f7e15ee32ce48daca4888616d23510949121f57e84ca64469fce2810e2`.
-- **S3 Minimal Context Policy**: Tạo file `services/pdf-renderer/.dockerignore` loại bỏ toàn bộ `node_modules`, `.env*`, `.git`, `server.test.mjs` khỏi Docker build context.
-- Xác minh thành công qua `npm ci` và `node --test services/pdf-renderer/server.test.mjs` (5/5 tests pass).
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.7/§2 F row) tìm thấy gap: digest/`npm ci` đã có nhưng SBOM và image scan chưa tồn tại — bản DONE trước đó không có bằng chứng SBOM/scan thật gắn với digest, vi phạm chính "Nghiệm thu" của contract này ("Checklist F không tự nhận SBOM/scan hoàn tất nếu chỉ L có placeholder").
+
+Re-fix 2026-07-25 (thực hiện cùng L vì đây là cùng một CI lane):
+- **SBOM thật, gắn đúng digest.** CI (`ci.yml`) build image MỘT lần (`docker build -t report-supporter/pdf-renderer:ci services/pdf-renderer`), resolve digest qua `docker image inspect --format '{{.Id}}'`, rồi chạy `anchore/sbom-action` (SPDX JSON) trên CHÍNH image đó — không phải filesystem root, không phải build riêng.
+- **Image scan thật.** `aquasecurity/trivy-action` scan cùng image digest, `severity: CRITICAL,HIGH`, `exit-code: 1` (build đỏ nếu có finding không waived), `ignore-unfixed: true`.
+- **Không rebuild ngầm.** `docker-compose.pdf.yml` thêm `image: report-supporter/pdf-renderer:ci`; bước `docker compose up` bỏ `--build` — Docker isolation integration test dùng CHÍNH image đã SBOM/scan, không phải bản build lại.
+- **Evidence liên kết.** `scripts/generate-release-evidence.mjs` (mới, W25-L) ghi digest + SBOM path/hash + scan path/hash + cả hai audit vào `test-results/release-evidence-manifest.json`, verify offline được, không chứa secret.
+- **Dependabot base-image digest.** `.github/dependabot.yml` thêm `package-ecosystem: docker` cho `services/pdf-renderer` (trước đây thiếu — base image Chromium có thể lỗi thời mà không ai biết).
+- **⚠️ Chưa chạy thật trong phiên này** (Docker daemon không sẵn sàng trong sandbox — xem ghi chú ở contract E). `docker compose -f docker-compose.pdf.yml config` xác nhận YAML/image reference hợp lệ; CI job `verify` sẽ là lần build+SBOM+scan thật đầu tiên.
+- Xác minh cục bộ: `npm ci` renderer workspace, `node --test services/pdf-renderer/server.test.mjs` (10/10, xem contract E), `docker compose config` hợp lệ, `node scripts/generate-release-evidence.mjs` chạy được (non-strict, thiếu digest/SBOM/scan vì không có Docker daemon — đúng như kỳ vọng).
 

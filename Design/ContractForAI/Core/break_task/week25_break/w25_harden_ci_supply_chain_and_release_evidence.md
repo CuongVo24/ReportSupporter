@@ -72,9 +72,17 @@ CI chỉ chạy third-party Actions ở immutable SHA, permissions tối thiểu
 
 ## 7. Status
 
-`DONE (2026-07-25):`
-- **S1 Action SHA Pins & Permissions**: Pin toàn bộ third-party GitHub Actions sang full 40-character commit SHA kèm version comment (`checkout`, `setup-node`, `upload-artifact`). Cấu hình `permissions: { contents: read }` tối thiểu ở top-level.
-- **S2 Dual Workspace Audit**: Thêm các bước clean-install audit `npm audit --omit=dev --json` cho cả root workspace và `services/pdf-renderer` workspace.
-- **S3 & S4 Supply Chain Gate & Security Waivers**: Xây dựng `scripts/check-supply-chain.mjs` tự động kiểm tra URL domain & SHA-512 integrity của các gói tarball ngoài (SheetJS), kiểm tra thời hạn hết hạn `expiryDate` trong `security-waivers.json` (tự động đánh đỏ CI nếu waiver hết hạn), và sinh artifact bằng chứng máy đọc `security-release-evidence.json`.
-- **Dependabot & Policy Documentation**: Tạo `.github/dependabot.yml` và tài liệu chính thức `Design/Security/SecurityWaiverSchema.md`.
+`DONE (2026-07-25, re-verified after REOPEN):`
+
+Review 2026-07-25 (`w25_fix-all-bugs.md` §1.1.7, §2 L row) tìm thấy gap: action pin/audit/waiver checker có, nhưng KHÔNG có bước SBOM hay image scan nào trong CI (S3 chưa triển khai); không có checker tự động phát hiện action bị đổi sang tag/branch (chỉ đúng vì chưa ai đổi, không phải vì có gate); không có evidence manifest liên kết digest+SBOM+scan+audit; Dependabot chưa theo dõi Docker base-image; policy ignore Next/React chặn vô thời hạn kể cả patch bảo mật; và phát hiện thêm một bug thật: bước `docker compose up --build` trong lane Docker isolation KHÔNG set `PDF_RENDERER_TOKEN`, nên compose rơi về default cũ `local-render-token` — cùng lúc image bake `NODE_ENV=production`, khiến container nhiều khả năng crash-loop lúc boot (xem contract E).
+
+Re-fix 2026-07-25:
+- **`scripts/check-ci-actions.mjs` (mới).** Parse mọi `uses:` trong `.github/workflows/*.yml`, fail nếu ref sau `@` không phải full 40-hex commit SHA (tag/branch bị chặn cứng); cảnh báo (không fail) nếu workflow thiếu `permissions:` top-level tường minh. Chạy sớm trong job `verify`.
+- **SBOM + image scan thật (S3), gắn CI.** Xem chi tiết ở contract F — `anchore/sbom-action` (SPDX) + `aquasecurity/trivy-action` (Critical/High fail-closed) chạy trên chính digest `report-supporter/pdf-renderer:ci` vừa build, trước khi compose tái sử dụng (không rebuild) cho integration test.
+- **`scripts/generate-release-evidence.mjs` (mới).** Sinh `test-results/release-evidence-manifest.json`: `commitSha`, hash `package-lock.json` (root + renderer), digest image renderer, path+hash SBOM, path+hash scan result + `resultsCount`, tổng hợp cả hai audit (`vulnerabilities` object, không phải toàn bộ raw JSON nhạy cảm). `--strict` (dùng trong CI) fail nếu thiếu digest/SBOM/scan; chế độ thường (local dev) chỉ warn. Không chứa secret/token/report content.
+- **Dependency-override registry (W25-A, dùng chung enforcement).** `check-supply-chain.mjs` giờ cũng validate `dependency-overrides.json` (field đầy đủ + `reviewBy` chưa hết hạn) và đối chiếu với `package.json.overrides` — override thiếu justification làm CI đỏ.
+- **Dependabot mở rộng.** Thêm `package-ecosystem: docker` cho `services/pdf-renderer` (theo dõi digest base image). `ignore` cho `next`/`react`/`react-dom` đổi từ chặn tuyệt đối sang chỉ chặn `version-update:semver-major` — minor/patch (nơi security fix thường nằm) tự động qua.
+- **Sửa bug token CI (chung với E).** Bước `docker compose up` trong lane Docker isolation giờ set `PDF_RENDERER_TOKEN` CI-only, khớp giá trị dùng ở bước test sau đó.
+- Kiểm chứng cục bộ: `node scripts/check-ci-actions.mjs` xanh trên `ci.yml` hiện tại (đã tự pin 2 action mới `sbom-action`/`trivy-action` sang commit SHA thật, resolve qua `gh api` — không đoán SHA); `docker compose config` hợp lệ với `image:`/network mới; `node scripts/generate-release-evidence.mjs` chạy được cục bộ (không strict).
+- **Dependabot & Policy Documentation** (giữ từ bản trước): `.github/dependabot.yml`, `Design/Security/SecurityWaiverSchema.md`.
 
