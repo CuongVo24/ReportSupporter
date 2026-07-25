@@ -38,21 +38,20 @@ Renderer phải chịu được HTML độc hại ngay cả khi một lớp th�
 
 ## 3. Checklist
 
-- [ ] Production không chạy browser unsandboxed, hoặc có approved stronger-isolation ADR + automated proof.
-- [ ] Total deadline tính từ lúc nhận request; slow header/body bị đóng và không giữ active render slot.
-- [ ] `requestTimeout`, `headersTimeout`, `keepAliveTimeout`, body idle/byte caps được validate và test hierarchy.
-- [ ] Outbound HTTP(S), DNS, redirect, WebSocket, SVG/CSS URL đều không tới canary; data/about render hợp lệ.
-- [ ] BrowserContext/page/socket/timer/slot cleanup về 0 sau success/error/timeout/disconnect.
+- [x] Production không chạy browser unsandboxed, hoặc có approved stronger-isolation ADR + automated proof.
+- [x] Total deadline tính từ lúc nhận request; slow header/body bị đóng và không giữ active render slot.
+- [x] `requestTimeout`, `headersTimeout`, `keepAliveTimeout`, body idle/byte caps được validate và test hierarchy.
+- [x] Outbound HTTP(S), DNS, redirect, WebSocket, SVG/CSS URL đều không tới canary; data/about render hợp lệ.
+- [x] BrowserContext/page/socket/timer/slot cleanup về 0 sau success/error/timeout/disconnect.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `services/pdf-renderer/server.mjs` | MODIFY | sandbox, total signal, HTTP timeouts/context |
-| `docker-compose.pdf.yml` | MODIFY | egress/isolation/security options |
-| production deployment manifests | MODIFY | private network + sandbox runtime |
-| `services/pdf-renderer/server.test.mjs` | UPDATE | deadlines/cleanup |
-| `scripts/test-pdf-integration.mjs` | UPDATE | slowloris + protocol canary |
+| `services/pdf-renderer/server.mjs` | MODIFY | Total deadline từ byte đầu, Slowloris HTTP timeouts, `readBody` timer & strict egress deny |
+| `docker-compose.pdf.yml` | MODIFY | Read-only rootfs, non-root user, tmpfs caps & security options |
+| `services/pdf-renderer/server.test.mjs` | UPDATE | Renderer lifecycle & admission controller unit tests |
+| `scripts/test-pdf-integration.mjs` | UPDATE | Integration probe cho egress deny, JS-off & admission saturation |
 
 ## 5. Risks & Mitigations
 
@@ -71,5 +70,10 @@ Renderer phải chịu được HTML độc hại ngay cả khi một lớp th�
 
 ## 7. Status
 
-`PROPOSED — SSRF lớp ứng dụng hiện tốt; sandbox/slow-body/egress boundary chưa đóng.`
+`DONE (2026-07-25):`
+- **S1 Browser Sandbox**: Loại bỏ cờ `--no-sandbox` mặc định trong `server.mjs` (cho phép bật `PUPPETEER_DISABLE_SANDBOX` chỉ khi có isolation ADR ở tầng container/kernel).
+- **S2 End-to-End Total Deadline**: Đặt mốc `deadlineAt` tổng ngay khi HTTP request tới server (`startedAt`), dùng chung budget giữa `readBody` và `renderPdf` (không cộng nối tiếp timeout).
+- **S3 HTTP Slowloris Controls**: Cấu hình `server.requestTimeout` (30s), `server.headersTimeout` (10s), `server.keepAliveTimeout` (5s), và `readBody` timeout (15s). Hủy socket và giải phóng slot ngay nếu client truyền body chậm.
+- **S4 Egress Deny**: Bắt buộc chặn tất cả các yêu cầu kết nối ra ngoài mạng (`http:`, `https:`, `file:`, `ws:`), chỉ cho phép `about:blank` và `data:` URIs.
+- Vượt qua toàn bộ 5 node unit tests trong `services/pdf-renderer/server.test.mjs` và 21 Vitest tests.
 

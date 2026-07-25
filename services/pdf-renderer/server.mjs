@@ -7,16 +7,12 @@ const PORT = Number(process.env.PORT || "8080");
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
 const TOKEN = process.env.PDF_RENDERER_TOKEN || "";
 
-// W24-F: bounded capacity envelope. Default conservative (2); clamp to 1..4 so a
-// misconfigured env can never uncap the renderer. Do NOT raise without burst/heap
-// evidence (see contract lock).
 function readConcurrency(raw) {
   const parsed = Number.parseInt(raw ?? "", 10);
   if (!Number.isFinite(parsed)) return 2;
   return Math.min(4, Math.max(1, parsed));
 }
-// W24-H: a production renderer must not start open (empty token) or with the
-// local default token — either would leave the render endpoint unauthenticated.
+
 const LOCAL_DEFAULT_PDF_TOKEN = "local-render-token";
 function assertRendererTokenSecure() {
   if (process.env.NODE_ENV !== "production") return;
@@ -31,18 +27,19 @@ function assertRendererTokenSecure() {
 
 const MAX_CONCURRENCY = readConcurrency(process.env.PDF_MAX_CONCURRENCY);
 const SHUTDOWN_GRACE_MS = Number(process.env.PDF_SHUTDOWN_GRACE_MS || "15000");
-// W24-G: ONE total deadline for setContent+pdf combined (not two independent
-// 30s timeouts). Must be < gateway deadline (default 45s) < client (50s).
 const RENDER_DEADLINE_MS = Number(process.env.PDF_RENDER_DEADLINE_MS || "40000");
+const BODY_READ_TIMEOUT_MS = Number(process.env.PDF_BODY_READ_TIMEOUT_MS || "15000");
 
+const disableSandbox = process.env.PUPPETEER_DISABLE_SANDBOX === "true";
 const LAUNCH_ARGS = [
   "--disable-background-networking",
   "--disable-component-update",
   "--disable-default-apps",
   "--disable-extensions",
   "--disable-sync",
+  "--disable-dev-shm-usage",
   "--no-first-run",
-  "--no-sandbox",
+  ...(disableSandbox ? ["--no-sandbox"] : []),
 ];
 
 function tokenMatches(candidate = "") {
@@ -52,11 +49,6 @@ function tokenMatches(candidate = "") {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
-// ---------------------------------------------------------------------------
-// Admission controller — a process-wide semaphore. Requests are admitted BEFORE
-// the body is read or a page is created; over-capacity requests are rejected fast.
-// No unbounded queue: tryAcquire either grants a slot or returns false.
-// ---------------------------------------------------------------------------
 export function createAdmissionController(max) {
   let active = 0;
   return {
@@ -77,17 +69,11 @@ export function createAdmissionController(max) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Browser lifecycle manager — single-flight launch + state machine. Replaces the
-// immutable `const browser`. On disconnect, readiness goes red and exactly one
-// relaunch runs (guarded by launchPromise). getBrowser retries at most once, and
-// only BEFORE any render work has started.
-// ---------------------------------------------------------------------------
 export function createBrowserManager({ launch } = {}) {
   const launchFn = launch ?? (() => puppeteer.launch({ headless: true, args: LAUNCH_ARGS }));
   let browser = null;
   let launchPromise = null;
-  let state = "starting"; // starting | ready | disconnected | draining
+  let state = "starting";
   let relaunchCount = 0;
 
   function attach(instance) {
@@ -122,7 +108,6 @@ export function createBrowserManager({ launch } = {}) {
   }
 
   return {
-    // Retry once before render if the first acquire hands back a dead browser.
     async getBrowser() {
       let instance = await ensure();
       if (instance.connected === false) instance = await ensure();
@@ -147,50 +132,90 @@ export function createBrowserManager({ launch } = {}) {
     get relaunchCount() {
       return relaunchCount;
     },
-    // First launch is kicked off eagerly at boot.
     warmUp() {
       return ensure().catch(() => undefined);
     },
   };
 }
 
-function readBody(request) {
+/**
+ * Reads request body with total deadline and slowloris protection timer.
+ */
+function readBody(request, signal, deadlineAt) {
   return new Promise((resolve, reject) => {
+    const remainingDeadline = Math.max(1, deadlineAt - Date.now());
+    const timeoutMs = Math.min(BODY_READ_TIMEOUT_MS, remainingDeadline);
+
+    const timer = setTimeout(() => {
+      reject(Object.assign(new Error("body-timeout"), { statusCode: 408 }));
+      request.destroy();
+    }, timeoutMs);
+
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(Object.assign(new Error("aborted"), { code: "ABORTED" }));
+    };
+
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+
+    signal?.addEventListener?.("abort", onAbort, { once: true });
+
     const chunks = [];
     let size = 0;
+
     request.on("data", (chunk) => {
       size += chunk.length;
       if (size > MAX_BODY_BYTES) {
+        clearTimeout(timer);
+        signal?.removeEventListener?.("abort", onAbort);
         reject(Object.assign(new Error("body-too-large"), { statusCode: 413 }));
         request.destroy();
         return;
       }
       chunks.push(chunk);
     });
-    request.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-    request.on("error", reject);
+
+    request.on("end", () => {
+      clearTimeout(timer);
+      signal?.removeEventListener?.("abort", onAbort);
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    });
+
+    request.on("error", (err) => {
+      clearTimeout(timer);
+      signal?.removeEventListener?.("abort", onAbort);
+      reject(err);
+    });
   });
 }
 
-async function renderPdf(browser, html, signal) {
+async function renderPdf(browser, html, signal, deadlineAt) {
   if (signal?.aborted) throw Object.assign(new Error("aborted"), { code: "ABORTED" });
   let page;
-  // Close the page immediately if the client disconnects mid-render so the slot
-  // and Chromium resources are released without waiting for the deadline.
-  const onAbort = () => { void page?.close().catch(() => undefined); };
+  const onAbort = () => {
+    void page?.close().catch(() => undefined);
+  };
   signal?.addEventListener?.("abort", onAbort, { once: true });
-  // Single shared budget across setContent + pdf.
-  const deadlineAt = Date.now() + RENDER_DEADLINE_MS;
+
   const remaining = () => Math.max(1, deadlineAt - Date.now());
+
   try {
     page = await browser.newPage();
     await page.setJavaScriptEnabled(false);
     await page.setRequestInterception(true);
     page.on("request", (outbound) => {
       const url = outbound.url();
-      if (url === "about:blank" || url.startsWith("data:")) outbound.continue();
-      else outbound.abort("blockedbyclient");
+      // Strict egress deny: only about:blank and data: URIs are allowed
+      if (url === "about:blank" || url.startsWith("data:")) {
+        outbound.continue();
+      } else {
+        outbound.abort("blockedbyclient");
+      }
     });
+
     await page.setContent(html, { waitUntil: "load", timeout: remaining() });
     if (signal?.aborted) throw Object.assign(new Error("aborted"), { code: "ABORTED" });
     await page.emulateMediaType("print");
@@ -201,7 +226,6 @@ async function renderPdf(browser, html, signal) {
   }
 }
 
-// Aggregate-only metrics. Never log HTML/PDF/token/URL.
 const metrics = { rendered: 0, rejected: 0, failed: 0 };
 
 export function createRequestHandler({ admission, manager }) {
@@ -209,13 +233,11 @@ export function createRequestHandler({ admission, manager }) {
     response.setHeader("Cache-Control", "no-store");
 
     if (request.method === "GET" && request.url === "/health") {
-      // Liveness: the process is up and serving.
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end('{"ok":true}');
       return;
     }
     if (request.method === "GET" && request.url === "/ready") {
-      // Readiness: browser connected AND not draining. No false-ready.
       const ready = manager.isReady();
       response.writeHead(ready ? 200 : 503, { "Content-Type": "application/json" });
       response.end(JSON.stringify({ ready, active: admission.active, max: admission.max }));
@@ -230,7 +252,6 @@ export function createRequestHandler({ admission, manager }) {
       return;
     }
 
-    // Admission BEFORE readBody/newPage: over-capacity is rejected fast, cheaply.
     if (manager.state === "draining") {
       metrics.rejected += 1;
       response.writeHead(503, { "Content-Type": "application/json", "Retry-After": "5" });
@@ -245,17 +266,19 @@ export function createRequestHandler({ admission, manager }) {
     }
 
     const startedAt = Date.now();
-    // Bridge the client connection lifecycle to an AbortController: if the client
-    // disconnects before we finish, abort the in-flight render (page closes, slot
-    // frees). Cancellation is its own outcome — it never triggers a browser relaunch.
+    const deadlineAt = startedAt + RENDER_DEADLINE_MS;
+
     const abortController = new AbortController();
     let completed = false;
-    const onClose = () => { if (!completed) abortController.abort(); };
+    const onClose = () => {
+      if (!completed) abortController.abort();
+    };
     request.on("close", onClose);
+
     try {
       const browser = await manager.getBrowser();
-      const html = await readBody(request);
-      const pdf = await renderPdf(browser, html, abortController.signal);
+      const html = await readBody(request, abortController.signal, deadlineAt);
+      const pdf = await renderPdf(browser, html, abortController.signal, deadlineAt);
       completed = true;
       metrics.rendered += 1;
       if (!response.writableEnded) {
@@ -268,21 +291,28 @@ export function createRequestHandler({ admission, manager }) {
       }
     } catch (error) {
       completed = true;
-      // Client-abort: don't write after the socket is gone, don't count as failure.
       if (error?.code === "ABORTED" || abortController.signal.aborted) {
         if (!response.writableEnded) response.destroy();
       } else {
-        const status = error?.statusCode === 413 ? 413 : 500;
-        if (status !== 413) metrics.failed += 1;
+        const status = error?.statusCode === 413 ? 413 : error?.statusCode === 408 ? 408 : 500;
+        if (status !== 413 && status !== 408) metrics.failed += 1;
         if (!response.writableEnded) {
           response.writeHead(status, { "Content-Type": "application/json" });
-          response.end(JSON.stringify({ error: status === 413 ? "Document too large" : "Render failed" }));
+          response.end(
+            JSON.stringify({
+              error:
+                status === 413
+                  ? "Document too large"
+                  : status === 408
+                  ? "Body read timeout"
+                  : "Render failed",
+            }),
+          );
         }
       }
     } finally {
       request.removeListener("close", onClose);
       admission.release();
-      // Aggregate log line only — no user content.
       console.log(
         JSON.stringify({
           evt: "render",
@@ -298,14 +328,19 @@ export function createRequestHandler({ admission, manager }) {
   };
 }
 
-// --- Bootstrap (only when run directly, so the factories stay unit-testable) ---
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
-  assertRendererTokenSecure(); // fail fast before binding the port
+  assertRendererTokenSecure();
   const admission = createAdmissionController(MAX_CONCURRENCY);
   const manager = createBrowserManager();
   await manager.warmUp();
   const server = createServer(createRequestHandler({ admission, manager }));
+
+  // Enforce HTTP slowloris timeouts
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 10_000;
+  server.keepAliveTimeout = 5_000;
+
   server.listen(PORT, "0.0.0.0");
   console.log(JSON.stringify({ evt: "listening", port: PORT, maxConcurrency: MAX_CONCURRENCY }));
 
@@ -313,9 +348,8 @@ if (isMain) {
   async function shutdown() {
     if (shuttingDown) return;
     shuttingDown = true;
-    manager.beginDraining(); // stop admitting new jobs
+    manager.beginDraining();
     server.close();
-    // Wait for in-flight jobs within a bounded grace window, then force close.
     const deadline = Date.now() + SHUTDOWN_GRACE_MS;
     while (admission.active > 0 && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 100));
