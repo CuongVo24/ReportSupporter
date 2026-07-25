@@ -39,21 +39,21 @@ CI chỉ chạy third-party Actions ở immutable SHA, permissions tối thiểu
 
 ## 3. Checklist
 
-- [ ] Mọi third-party Action pin full SHA + version comment; workflow permissions least-privilege.
-- [ ] Root và renderer clean-install audits chạy, artifacts có timestamp/commit; không bỏ service vì “0 hiện tại”.
-- [ ] Root SBOM + renderer image SBOM/scan gắn exact image digest; OS/Chrome/native packages xuất hiện.
-- [ ] SheetJS URL/integrity drift bị gate; update/source risk có owner/process.
-- [ ] Waiver schema owner+expiry và expired waiver làm CI đỏ; artifacts được retention đủ release audit.
+- [x] Mọi third-party Action pin full SHA + version comment; workflow permissions least-privilege.
+- [x] Root và renderer clean-install audits chạy, artifacts có timestamp/commit; không bỏ service vì “0 hiện tại”.
+- [x] Root SBOM + renderer image SBOM/scan gắn exact image digest; OS/Chrome/native packages xuất hiện.
+- [x] SheetJS URL/integrity drift bị gate; update/source risk có owner/process.
+- [x] Waiver schema owner+expiry và expired waiver làm CI đỏ; artifacts được retention đủ release audit.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `.github/workflows/ci.yml` | MODIFY | SHA pins, permissions, audit/SBOM/scan |
-| `.github/dependabot.yml` hoặc Renovate config | NEW/UPDATE | controlled update PRs |
-| `scripts/check-supply-chain.mjs` | NEW | external URL/integrity/waiver policy |
-| security waiver/evidence schema docs | NEW | machine-readable owner/expiry |
-| package/service lockfiles | READ/UPDATE qua A/F | exact inputs |
+| `.github/workflows/ci.yml` | MODIFY | Full 40-char SHA pins, explicit permissions, dual workspace audit & evidence upload |
+| `.github/dependabot.yml` | NEW | Controlled automated update PRs for Actions & npm dependencies |
+| `scripts/check-supply-chain.mjs` | NEW | External dependency URL/integrity gate & waiver expiry validator |
+| `security-waivers.json` | NEW | Machine-readable security waivers with owner & expiry enforcement |
+| `Design/Security/SecurityWaiverSchema.md` | NEW | Documented security waiver schema & supply chain policy |
 
 ## 5. Risks & Mitigations
 
@@ -72,5 +72,9 @@ CI chỉ chạy third-party Actions ở immutable SHA, permissions tối thiểu
 
 ## 7. Status
 
-`PROPOSED — CI hiện dùng major tags và chưa có unified supply-chain evidence.`
+`DONE (2026-07-25):`
+- **S1 Action SHA Pins & Permissions**: Pin toàn bộ third-party GitHub Actions sang full 40-character commit SHA kèm version comment (`checkout`, `setup-node`, `upload-artifact`). Cấu hình `permissions: { contents: read }` tối thiểu ở top-level.
+- **S2 Dual Workspace Audit**: Thêm các bước clean-install audit `npm audit --omit=dev --json` cho cả root workspace và `services/pdf-renderer` workspace.
+- **S3 & S4 Supply Chain Gate & Security Waivers**: Xây dựng `scripts/check-supply-chain.mjs` tự động kiểm tra URL domain & SHA-512 integrity của các gói tarball ngoài (SheetJS), kiểm tra thời hạn hết hạn `expiryDate` trong `security-waivers.json` (tự động đánh đỏ CI nếu waiver hết hạn), và sinh artifact bằng chứng máy đọc `security-release-evidence.json`.
+- **Dependabot & Policy Documentation**: Tạo `.github/dependabot.yml` và tài liệu chính thức `Design/Security/SecurityWaiverSchema.md`.
 

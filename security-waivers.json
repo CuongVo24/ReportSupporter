@@ -1,0 +1,12 @@
+[
+  {
+    "id": "SW-2026-001",
+    "cve": "GHSA-52cp-r559-cp3m",
+    "package": "js-yaml",
+    "scope": "devOnly",
+    "reason": "Dev-dependency transitively pulled by eslint for local linting only. Not included in client bundle or server production runtime.",
+    "compensatingControl": "Dev dependency omitted in production build via --omit=dev; no untrusted YAML parsed at runtime.",
+    "owner": "security-team@report-supporter",
+    "expiryDate": "2026-12-31"
+  }
+]
