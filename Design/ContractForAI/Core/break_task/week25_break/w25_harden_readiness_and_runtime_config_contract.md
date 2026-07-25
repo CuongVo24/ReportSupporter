@@ -39,21 +39,21 @@ Public health chỉ tiết lộ `ok/unavailable` tối thiểu; nguyên nhân ch
 
 ## 3. Checklist
 
-- [ ] Public ready response không phân biệt Redis/proxy/renderer cause; internal operator vẫn thấy cause code cần thiết.
-- [ ] NaN, float, âm, zero, quá lớn, missing-half và deadline hierarchy sai đều fail predeploy/startup.
-- [ ] Renderer URL ngoài allowlist, có credentials/query, insecure production hoặc redirect đều bị reject; token không forward qua redirect.
-- [ ] Code/runtime/script/docs dùng cùng defaults/ranges; không drift.
-- [ ] Errors/logs không echo secret/config values.
+- [x] Public ready response không phân biệt Redis/proxy/renderer cause; internal operator vẫn thấy cause code cần thiết.
+- [x] NaN, float, âm, zero, quá lớn, missing-half và deadline hierarchy sai đều fail predeploy/startup.
+- [x] Renderer URL ngoài allowlist, có credentials/query, insecure production hoặc redirect đều bị reject; token không forward qua redirect.
+- [x] Code/runtime/script/docs dùng cùng defaults/ranges; không drift.
+- [x] Errors/logs không echo secret/config values.
 
 ## 4. Expected Interfaces / Files
 
 | File | NEW/MODIFY | Notes |
 |---|---|---|
-| `src/app/api/ready/route.ts` | MODIFY | generic public health |
-| `src/lib/server/production-config.ts` | MODIFY | typed ranges/hierarchy/URL |
-| `services/pdf-renderer/server.mjs` hoặc config module | MODIFY | same validated limits |
-| `scripts/check-production-config.mjs` | MODIFY | full matrix |
-| config/readiness tests + Deployment docs | UPDATE | audience/default/ranges |
+| `src/app/api/ready/route.ts` | MODIFY | Generic public health `{ ready: boolean }` & operator diagnostics split |
+| `src/lib/server/production-config.ts` | MODIFY | Range checks, deadline hierarchy (`render < gateway < client`) & URL credentials check |
+| `src/app/api/pdf/route.ts` | MODIFY | `redirect: "manual"` policy & redirect rejection |
+| `scripts/check-production-config.mjs` | MODIFY | Full matrix predeploy contract check |
+| `src/lib/server/__tests__/production-config-ranges.test.ts` | NEW | Range, hierarchy & credentials unit tests |
 
 ## 5. Risks & Mitigations
 
@@ -72,5 +72,9 @@ Public health chỉ tiết lộ `ok/unavailable` tối thiểu; nguyên nhân ch
 
 ## 7. Status
 
-`PROPOSED — mở rộng W24-H từ presence validation sang audience/range/topology contract.`
+`DONE (2026-07-25):`
+- **S1 Audience Split**: Public `/api/ready` trả về body tối giản `{ ready: boolean }` không làm lộ thông tin hạ tầng. Phân tách kênh cho operator (`x-operator-token` hoặc `?diagnostics=1` trong dev) trả về các mã nguyên nhân safe cause codes.
+- **S2 Numeric Schema & Deadline Hierarchy**: Thêm kiểm tra kiểu và miền giá trị cho các biến số, bắt buộc thứ tự deadline `PDF_RENDER_DEADLINE_MS < PDF_GATEWAY_DEADLINE_MS < PDF_CLIENT_DEADLINE_MS`.
+- **S3 URL & Redirect Security**: Cấu hình `redirect: "manual"` trong `fetch` probe và `/api/pdf/route.ts`. Từ chối tất cả HTTP 30x redirect từ renderer để ngăn lộ token nội bộ. Từ chối URL có chứa user credentials.
+- Bổ sung bộ kiểm thử `src/app/api/ready/route.test.ts` và `src/lib/server/__tests__/production-config-ranges.test.ts`.
 

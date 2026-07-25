@@ -81,8 +81,13 @@ export async function POST(request: Request) {
           : {}),
       },
       body: sanitizePdfHtml(rawHtml),
+      redirect: "manual",
       signal: combined,
     });
+    if (response.status >= 300 && response.status < 400) {
+      await response.body?.cancel().catch(() => undefined);
+      return jsonError("PDF renderer redirected unexpectedly.", 502);
+    }
   } catch (error: unknown) {
     if (request.signal.aborted) return new Response(null, { status: 499 });
     const timedOut = error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError");
