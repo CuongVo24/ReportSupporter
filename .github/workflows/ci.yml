@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - run: npm install -g npm@10.9.2 # keep in sync with "packageManager" in package.json
       - run: npm ci
       - run: npm run check:encoding
       - run: npm run lint
@@ -149,6 +150,8 @@ jobs:
           PDF_CANARY_URL_FROM_RENDERER: http://canary:9000
       - if: always()
         run: docker compose -f docker-compose.pdf.yml down
+        env:
+          PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
 
       # --- Release evidence manifest — links commit, lockfile hashes, image
       # digest, SBOM, scan, and both audits into one offline-verifiable file.
