@@ -83,3 +83,8 @@ Re-fix 2026-07-25:
 - `/api/ready` operator-token comparison đổi sang `timingSafeTokenMatch()` (constant-time) thay vì `===`.
 - Test mới: hop-count đúng/spoofed-prefix bị bỏ qua/chain ngắn hơn hop count → `direct`, RFC 7239 quoted+bracketed IPv6, obfuscated identifier bị từ chối, `forwarded` mode không đọc XFF, versioned HMAC prefix, production throw khi thiếu secret. 23/23 test `rate-limit.test.ts` xanh; toàn bộ `src/app/api` (62 test) xanh sau khi đồng bộ 2 test fixture PDF/AI dùng hop-count formula mới.
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+Ngoài parser hop canonical/fail-closed, review cuối còn sửa canonical IPv6, giới hạn port, giữ đúng vị trí trong proxy chain, từ chối slot rỗng và `Forwarded` có nhiều thuộc tính `for`. Regression test bao phủ malformed/missing/out-of-range hop, IPv6 tương đương, empty XFF/Forwarded position và duplicate `for`.
+
+**Trạng thái:** `CODE FIXED — DEPLOY TOPOLOGY EVIDENCE PENDING`; cần xác nhận topology proxy thật trước khi gọi `DONE`.

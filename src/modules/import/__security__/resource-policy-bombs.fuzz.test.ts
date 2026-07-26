@@ -162,6 +162,15 @@ describe("Import Resource Budgets & Bomb Protection (W25-H)", () => {
 
       expect(() => tracker.track(6 * 1024 * 1024)).toThrow(ImportBudgetExceededError);
     });
+
+    it("rejects non-finite, negative and per-entry-overflow observations", () => {
+      const tracker = createInflationTracker(100, 60);
+      expect(() => tracker.track(Number.NaN, "a.xml")).toThrow(ImportBudgetExceededError);
+      expect(() => tracker.track(-1, "a.xml")).toThrow(ImportBudgetExceededError);
+      tracker.track(40, "a.xml");
+      expect(() => tracker.track(21, "a.xml")).toThrow(ImportBudgetExceededError);
+      expect(tracker.getObservedBytes()).toBe(40);
+    });
   });
 
   describe("Canvas & Decoded Pixel Budgets", () => {
@@ -175,6 +184,17 @@ describe("Import Resource Budgets & Bomb Protection (W25-H)", () => {
       const result = validateCanvasPixels(4000, 4000, 90_000_000, IMPORT_LIMITS.MAX_PDF_TOTAL_DECODED_PIXELS);
       expect(result.valid).toBe(false);
       expect(result.error).toContain("Tổng số điểm ảnh");
+    });
+
+    it.each([
+      [Number.NaN, 100, 0],
+      [-1, 100, 0],
+      [1.5, 100, 0],
+      [100, 0, 0],
+      [100, 100, -1],
+      [100, 100, Number.POSITIVE_INFINITY],
+    ])("rejects invalid pixel arithmetic (%s x %s, current=%s)", (width, height, current) => {
+      expect(validateCanvasPixels(width, height, current).valid).toBe(false);
     });
   });
 });

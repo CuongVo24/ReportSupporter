@@ -90,6 +90,18 @@ function LotBlock({ lot }: { lot: CaptionEntry[] }) {
 }
 
 const REMOTE_IMAGE_LOAD_TIMEOUT_MS = 15_000;
+const MAX_REMOTE_IMAGE_URL_CHARS = 4_096;
+
+export function normalizeRemoteImageUrl(src: string): string | null {
+  if (src.length === 0 || src.length > MAX_REMOTE_IMAGE_URL_CHARS) return null;
+  try {
+    const parsed = new URL(src);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) return null;
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Loads one remote image after explicit per-click consent, with loading/
@@ -109,12 +121,23 @@ export function loadRemoteImageWithState(container: HTMLElement, src: string, al
   loading.appendChild(loadingLabel);
   container.replaceWith(loading);
 
+  const normalizedSrc = normalizeRemoteImageUrl(src);
+  if (!normalizedSrc) {
+    showRemoteImageError(loading, src, alt, "URL ảnh không hợp lệ hoặc không dùng HTTPS.");
+    return;
+  }
+
   let settled = false;
   const img = new Image();
   img.alt = alt;
   img.referrerPolicy = "no-referrer";
   img.crossOrigin = "anonymous";
   img.className = "ws-preview-image-loaded";
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "ws-preview-image-remote-btn";
+  cancelButton.textContent = "Hủy";
+  loading.appendChild(cancelButton);
 
   const timeoutId = window.setTimeout(() => {
     if (settled) return;
@@ -136,7 +159,15 @@ export function loadRemoteImageWithState(container: HTMLElement, src: string, al
     showRemoteImageError(loading, src, alt, "Không thể tải ảnh (máy chủ từ chối hoặc không hỗ trợ CORS).");
   };
 
-  img.src = src;
+  cancelButton.addEventListener("click", () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(timeoutId);
+    img.src = "";
+    showRemoteImageError(loading, src, alt, "Đã hủy tải ảnh.");
+  }, { once: true });
+
+  img.src = normalizedSrc;
 }
 
 function showRemoteImageError(target: HTMLElement, src: string, alt: string, message: string): void {

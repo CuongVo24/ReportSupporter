@@ -82,5 +82,10 @@ Nhiều phần của contract này (coverage v8 bật + threshold, PDF canary/sc
 - Mở rộng test suite hiện có (không viết lại từ đầu) cho `zip-central-directory.ts`: thêm test trực tiếp cho buffer quá nhỏ, không có EOCD, ZIP64-sentinel-không-có-locator (fail closed), Central Directory offset ngoài phạm vi, sai chữ ký header, tên UTF-8. Thêm test cho `resource-policy.ts`: duplicate-name THẬT (không phải placeholder như bản trước — JSZip không dedupe hai entry khác case), unsupported compression method, absolute path.
 - **Chưa làm trong đợt này:** không sửa `ci.yml` để thêm lane phân loại unit/mock vs production-browser vs Docker-isolation vs soak rõ ràng hơn (các lane đã tồn tại nhưng ranh giới nhãn chưa tường minh); không audit toàn bộ repo tìm thêm các "known bypass test" khác ngoài `sanitize-pdf-html.fuzz.test.ts` (file đó đã tự document đúng cách, không phải false-green).
 
-Test mới trong đợt K: `zip-central-directory.test.ts` (7 test, mới), `middleware.test.ts` (6 test, mới), +4 test trong `resource-policy-bombs.fuzz.test.ts`. `npm run test:coverage` full run: **PASS** (global 65.68%/58.56%/54.56%/68.04%, tất cả per-file threshold mới đều xanh), `npm run typecheck`/`npm run lint` xanh.
+### Pass 2 — 2026-07-26 (review cuối)
 
+Đã thay các regression false-green ở AI oversize và middleware nonce bằng assertion bắt buộc fail trên code cũ; flake loop CI bao phủ AI adapter/route, worker và renderer, chạy `maxWorkers=1`; workflow có schedule/manual trigger và retention rõ ràng.
+
+**Vẫn mở:** chưa tách rõ browser/Docker/soak lane và chưa có run evidence trên commit này. Trạng thái giữ `KEEP OPEN — PARTIAL`.
+
+Test mới trong đợt K: `zip-central-directory.test.ts` (7 test, mới), `middleware.test.ts` (6 test, mới), +4 test trong `resource-policy-bombs.fuzz.test.ts`. `npm run test:coverage` full run: **PASS** (global 65.68%/58.56%/54.56%/68.04%, tất cả per-file threshold mới đều xanh), `npm run typecheck`/`npm run lint` xanh.

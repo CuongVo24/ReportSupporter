@@ -74,6 +74,24 @@ function parseBoundedInt(
   return { valid: true, value: num };
 }
 
+const TRUSTED_PROXY_HOPS_MIN = 1;
+const TRUSTED_PROXY_HOPS_MAX = 10;
+
+/**
+ * Canonical TRUSTED_PROXY_HOPS parser (W25-2-B) — the single source of truth
+ * for what counts as a valid hop count, shared by the boot-time/predeploy
+ * validator below AND rate-limit.ts's runtime request-path parsing. Returns
+ * `null` for missing/invalid input; callers must fail closed (never
+ * silently default to 1), since a wrong hop count lets a client spoof its
+ * position in the X-Forwarded-For chain.
+ */
+export function parseTrustedProxyHops(raw: string | undefined): number | null {
+  const trimmedValue = (raw ?? "").trim();
+  if (!trimmedValue) return null;
+  const parsed = parseBoundedInt(trimmedValue, TRUSTED_PROXY_HOPS_MIN, TRUSTED_PROXY_HOPS_MAX);
+  return parsed.valid ? parsed.value : null;
+}
+
 function requireBoundedInt(
   problems: ConfigProblem[],
   env: ConfigEnv,
@@ -162,7 +180,7 @@ export function validateProductionConfig(
         variable: "TRUSTED_PROXY_HOPS",
         message: "TRUSTED_PROXY_HOPS bắt buộc khi TRUSTED_PROXY_MODE=forwarded|vercel trong production (số hop proxy tin cậy đếm từ bên phải chuỗi XFF).",
       });
-    } else if (hopsRaw && !parseBoundedInt(hopsRaw, 1, 10).valid) {
+    } else if (hopsRaw && parseTrustedProxyHops(hopsRaw) === null) {
       problems.push({
         code: "proxy_hops_invalid",
         variable: "TRUSTED_PROXY_HOPS",

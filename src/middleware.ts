@@ -17,7 +17,10 @@ function buildCsp(nonce: string): string {
     // insert (Next's own chunking) without allowlisting each URL.
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    // https: is required for the post-consent remote-image load flow
+    // (PreviewPane sets img.src to a user-approved https URL); the privacy
+    // boundary is the placeholder/consent state machine, not the CSP.
+    "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     `connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.anthropic.com${isDevelopment ? " ws: wss:" : ""}`,
     "worker-src 'self' blob:",

@@ -6,8 +6,6 @@ import { xlsxConverter } from "./converters/xlsx";
 import { pptxConverter } from "./converters/pptx";
 import { runInWorker } from "./worker-client";
 import { extractTextFromPdf } from "./pdf/extract-text";
-import { buildHeadingMap } from "./pdf/heading-heuristic";
-import { convertPdfPagesToMarkdown } from "./pdf/paragraph-merge";
 
 const converters: ImportConverter[] = [];
 
@@ -115,11 +113,11 @@ export async function convertImportFile(
       } catch (err: unknown) {
         const error = err as Error;
         if (error.message === "FALLBACK_TO_MAIN_THREAD") {
-          // Fallback to main thread execution
-          throwIfImportCancelled(abortSignal);
-          const result = await converter.convert(file, onProgress, abortSignal);
-          throwIfImportCancelled(abortSignal);
-          return result;
+          const unsupported = new Error(
+            "Trình duyệt không hỗ trợ parser an toàn trong Worker; import đã dừng để tránh block giao diện.",
+          ) as Error & { code?: string };
+          unsupported.code = "worker-parser-unavailable";
+          throw unsupported;
         }
         throw error;
       }
@@ -153,19 +151,12 @@ export async function convertImportFile(
         if (isImportCancellation(error, abortSignal)) {
           throw new Error("Import cancelled");
         }
-        // Fallback to main thread heuristic
-        throwIfImportCancelled(abortSignal);
-        const { bodySize, headingMap } = buildHeadingMap(pages);
-        const { markdown, warnings: layoutWarnings, assets } = convertPdfPagesToMarkdown(pages, bodySize, headingMap);
-        throwIfImportCancelled(abortSignal);
-        return {
-          sourceFormat: "pdf",
-          fileName: file.name,
-          markdown,
-          assets,
-          warnings: [...extractionWarnings, ...layoutWarnings],
-          convertedAt: new Date().toISOString(),
-        };
+        const workerError = new Error(
+          "Không thể hoàn tất phân tích PDF trong Worker; import đã dừng để giữ giao diện phản hồi.",
+        ) as Error & { code?: string; cause?: unknown };
+        workerError.code = "worker-conversion-failed";
+        workerError.cause = error;
+        throw workerError;
       }
     }
   }

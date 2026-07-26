@@ -93,3 +93,8 @@ Re-fix 2026-07-25 (chưa đóng hết — xem mục "Còn lại" bên dưới):
 
 Test: `resource-policy-bombs.fuzz.test.ts` viết lại hoàn toàn dùng buffer ZIP thật (qua JSZip `generateAsync`, không còn mock `_data`) — 12 test bao gồm round-trip Central Directory, non-ZIP/truncated fail-closed, path traversal, depth, duplicate name sanity check, ratio bomb thật, encrypted entry. `directory-reader.test.ts` +2 test cho aggregate byte cap. Toàn bộ `src/modules/import` (123 test) và `test:subsystems` (808 test) xanh.
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+Đã đóng thêm các gap: mọi arithmetic budget từ chối `NaN`/âm/không-safe-integer và kiểm per-entry + aggregate; ZIP parser yêu cầu cursor kết thúc đúng Central Directory; PPTX dùng `@xmldom/xmldom` trực tiếp trong worker; bỏ main-thread fallback cho Office/PDF; worker có idle/total timeout và terminate khi timeout. Media entry của PPTX đi qua tracker chung.
+
+**Vẫn mở:** streaming inflation phải enforce trước allocation cho mọi format, và XLSX XML/shared-strings/styles cần pre-parse budget trước `XLSX.read`. Trạng thái giữ `KEEP OPEN — PARTIAL`.

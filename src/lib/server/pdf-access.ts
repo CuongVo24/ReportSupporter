@@ -16,6 +16,9 @@ const TICKET_AUDIENCE = "report-supporter-pdf-gateway";
 const TICKET_VERSION = 1;
 const MAX_TTL_SECONDS = 600; // reject tickets minted with an unreasonably long TTL
 const CLOCK_SKEW_SECONDS = 10;
+const MAX_TICKET_CHARS = 8 * 1024;
+const MAX_SUB_CHARS = 256;
+const MAX_JOB_ID_CHARS = 128;
 
 function ticketSigningSecret(): { secret: string; version: string } {
   const secret = process.env.PDF_TICKET_SECRET?.trim();
@@ -110,6 +113,9 @@ export function verifyTicketEnvelope(ticket: string | undefined | null): TicketE
   if (!ticket || typeof ticket !== "string") {
     return { valid: false, code: "MISSING_TICKET", reason: "Missing PDF render capability ticket." };
   }
+  if (ticket.length > MAX_TICKET_CHARS) {
+    return { valid: false, code: "MALFORMED_PAYLOAD", reason: "Ticket exceeds maximum length." };
+  }
 
   const parts = ticket.split(".");
   if (parts.length !== 3) {
@@ -148,11 +154,16 @@ export function verifyTicketEnvelope(ticket: string | undefined | null): TicketE
     payload === null ||
     typeof payload.jobId !== "string" ||
     !payload.jobId ||
+    payload.jobId.length > MAX_JOB_ID_CHARS ||
     typeof payload.htmlHash !== "string" ||
+    !/^[a-f0-9]{64}$/u.test(payload.htmlHash) ||
     typeof payload.sub !== "string" ||
-    !Number.isFinite(payload.exp) ||
-    !Number.isFinite(payload.nbf) ||
-    !Number.isFinite(payload.iat)
+    payload.sub.trim().length === 0 ||
+    payload.sub.length > MAX_SUB_CHARS ||
+    payload.sizeClass !== "default" ||
+    !Number.isSafeInteger(payload.exp) ||
+    !Number.isSafeInteger(payload.nbf) ||
+    !Number.isSafeInteger(payload.iat)
   ) {
     return { valid: false, code: "MALFORMED_PAYLOAD", reason: "Ticket payload failed schema validation." };
   }
@@ -168,11 +179,16 @@ export function verifyTicketEnvelope(ticket: string | undefined | null): TicketE
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (payload.exp - payload.iat > MAX_TTL_SECONDS) {
-    return { valid: false, code: "TTL_TOO_LONG", reason: "Ticket TTL exceeds the maximum allowed window." };
-  }
   if (payload.exp <= now) {
     return { valid: false, code: "EXPIRED_TICKET", reason: "PDF render ticket has expired." };
+  }
+  if (
+    payload.iat > payload.exp ||
+    payload.nbf > payload.exp ||
+    payload.nbf < payload.iat - CLOCK_SKEW_SECONDS ||
+    payload.exp - payload.iat > MAX_TTL_SECONDS
+  ) {
+    return { valid: false, code: "TTL_TOO_LONG", reason: "Ticket TTL exceeds the maximum allowed window." };
   }
   if (payload.nbf - CLOCK_SKEW_SECONDS > now) {
     return { valid: false, code: "NOT_YET_VALID", reason: "PDF render ticket is not yet valid (nbf in the future)." };

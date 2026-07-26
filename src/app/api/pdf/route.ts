@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRateLimiter, pdfAddressIdentity } from "@/lib/server/rate-limit";
 import { verifyTicketEnvelope, claimTicketNonce, hashHtmlPayload } from "@/lib/server/pdf-access";
+import { readBoundedBody } from "@/lib/server/bounded-body";
 import { stripKnownPdfHazardsBestEffort } from "./sanitize-pdf-html";
 
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
@@ -28,75 +29,30 @@ function remoteEnabled(): boolean {
 
 function extractTicket(request: Request): string | null {
   // Header only — a capability ticket in the query string leaks into logs,
-  // browser history, and Referer headers.
-  return (
-    request.headers.get("x-pdf-ticket") ||
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
-    null
-  );
+  // browser history, and Referer headers. Keep exactly one canonical header
+  // so proxies/log filters have one secret-bearing surface to protect.
+  return request.headers.get("x-pdf-ticket");
 }
 
-type BoundedBodyResult =
-  | { ok: true; text: string }
-  | { ok: false; status: number; message: string };
-
-async function readBoundedBody(
-  request: Request,
-  maxBytes: number,
-  idleMs: number,
-  totalMs: number,
-): Promise<BoundedBodyResult> {
-  const body = request.body;
-  if (!body) return { ok: true, text: "" };
-
-  const reader = body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  const deadlineAt = Date.now() + totalMs;
-
+function rendererConfig(): { url: string; token: string } | null {
+  const rawUrl = process.env.PDF_RENDERER_URL?.trim();
+  const token = process.env.PDF_RENDERER_TOKEN?.trim();
+  if (!rawUrl || !token) return null;
   try {
-    while (true) {
-      const remaining = deadlineAt - Date.now();
-      if (remaining <= 0) {
-        await reader.cancel().catch(() => undefined);
-        return { ok: false, status: 408, message: "PDF gateway body read total deadline exceeded." };
-      }
-
-      let idleTimer: ReturnType<typeof setTimeout>;
-      const idleSignal = new Promise<"idle">((resolve) => {
-        idleTimer = setTimeout(() => resolve("idle"), Math.min(idleMs, remaining));
-      });
-
-      const result = await Promise.race([reader.read(), idleSignal]);
-      clearTimeout(idleTimer!);
-
-      if (result === "idle") {
-        await reader.cancel().catch(() => undefined);
-        return { ok: false, status: 408, message: "PDF gateway body read idle timeout." };
-      }
-
-      const { done, value } = result;
-      if (done) break;
-      if (value) {
-        total += value.byteLength;
-        if (total > maxBytes) {
-          await reader.cancel().catch(() => undefined);
-          return { ok: false, status: 413, message: "HTML tạo PDF vượt quá giới hạn 25 MiB." };
-        }
-        chunks.push(value);
-      }
+    const parsed = new URL(rawUrl);
+    if (
+      (parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
+      parsed.username ||
+      parsed.password ||
+      parsed.search ||
+      parsed.hash
+    ) {
+      return null;
     }
+    return { url: parsed.toString().replace(/\/$/u, ""), token };
   } catch {
-    return { ok: false, status: 400, message: "Failed to read PDF gateway request body." };
+    return null;
   }
-
-  const combined = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    combined.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return { ok: true, text: new TextDecoder("utf-8", { fatal: false }).decode(combined) };
 }
 
 export async function POST(request: Request) {
@@ -104,6 +60,16 @@ export async function POST(request: Request) {
   if (!remoteEnabled()) {
     return jsonError(
       "Dịch vụ tạo PDF từ xa hiện không bật trên triển khai này. Hãy dùng Print Preview cục bộ.",
+      503,
+    );
+  }
+
+  // Validate every non-consuming dependency before inspecting/claiming a
+  // one-time capability. A deployment fault must never burn a valid ticket.
+  const renderer = rendererConfig();
+  if (!renderer) {
+    return jsonError(
+      "Dịch vụ tạo PDF hiện không khả dụng. Hãy dùng Print Preview cục bộ hoặc thử lại sau.",
       503,
     );
   }
@@ -156,7 +122,10 @@ export async function POST(request: Request) {
   const bodyResult = await readBoundedBody(request, MAX_BODY_BYTES, BODY_READ_IDLE_MS, BODY_READ_TOTAL_MS);
   if (!bodyResult.ok) {
     console.log(JSON.stringify({ evt: "pdf_gateway_denied", phase: "body_read", status: bodyResult.status }));
-    return jsonError(bodyResult.status === 413 ? bodyResult.message : GENERIC_ERROR, bodyResult.status);
+    return jsonError(
+      bodyResult.status === 413 ? "HTML tạo PDF vượt quá giới hạn 25 MiB." : GENERIC_ERROR,
+      bodyResult.status,
+    );
   }
   const rawHtml = bodyResult.text;
   if (!/^\s*<!doctype html>/iu.test(rawHtml)) {
@@ -170,7 +139,8 @@ export async function POST(request: Request) {
     return jsonError(DENIED_MESSAGE, 403);
   }
 
-  // Step 6: atomically claim the single-use nonce — only now, right before
+  // Step 6: atomically claim the single-use nonce — only now, after renderer
+  // configuration is known to be usable and immediately before the call.
   // the renderer call, so an earlier failure (rate limit, oversized body)
   // never burns a still-valid ticket.
   const claim = await claimTicketNonce(envelope.payload);
@@ -179,30 +149,20 @@ export async function POST(request: Request) {
       return jsonError("PDF gateway anti-replay store is unavailable.", 503);
     }
     console.log(JSON.stringify({ evt: "pdf_gateway_denied", phase: "replay" }));
-    return jsonError(`${DENIED_MESSAGE} (anti-replay).`, 403);
+    return jsonError(DENIED_MESSAGE, 403);
   }
 
   // Step 7: call the internal renderer service with a bounded request.
-  const rendererUrl = process.env.PDF_RENDERER_URL?.trim();
-  if (!rendererUrl) {
-    return jsonError(
-      "Dịch vụ tạo PDF hiện không khả dụng. Hãy dùng Print Preview cục bộ hoặc thử lại sau.",
-      503,
-    );
-  }
-
   const deadline = AbortSignal.timeout(GATEWAY_DEADLINE_MS);
   const combined = AbortSignal.any([request.signal, deadline]);
 
   let response: globalThis.Response;
   try {
-    response = await fetch(`${rendererUrl.replace(/\/$/u, "")}/render`, {
+    response = await fetch(`${renderer.url}/render`, {
       method: "POST",
       headers: {
         "Content-Type": "text/html;charset=utf-8",
-        ...(process.env.PDF_RENDERER_TOKEN
-          ? { "x-render-token": process.env.PDF_RENDERER_TOKEN }
-          : {}),
+        "x-render-token": renderer.token,
       },
       body: stripKnownPdfHazardsBestEffort(rawHtml),
       redirect: "manual",
@@ -238,6 +198,12 @@ export async function POST(request: Request) {
   if (!response.ok || !response.body) {
     await response.body?.cancel().catch(() => undefined);
     return jsonError("PDF renderer rejected the document.", 502);
+  }
+
+  const rendererContentType = response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
+  if (rendererContentType !== "application/pdf") {
+    await response.body.cancel().catch(() => undefined);
+    return jsonError("PDF renderer returned an invalid content type.", 502);
   }
 
   const declaredPdfLength = Number(response.headers.get("content-length") || "0");

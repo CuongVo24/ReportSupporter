@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { createRateLimiter, pdfAddressIdentity } from "@/lib/server/rate-limit";
 import { issuePdfTicket, hashHtmlPayload } from "@/lib/server/pdf-access";
+import { readBoundedBody } from "@/lib/server/bounded-body";
 
 const consumeTicketRateLimit = createRateLimiter({ namespace: "pdf-ticket", requests: 10, windowSeconds: 60 });
+
+// A ticket request body only ever needs to carry a 64-hex htmlHash (or,
+// pre-hash, the raw HTML to hash) — 25 MiB matches the gateway's own HTML
+// cap so a client that sends the full document here isn't rejected before
+// hashing, but the body is never allowed to grow unbounded either way.
+const MAX_TICKET_BODY_BYTES = 25 * 1024 * 1024;
+const TICKET_BODY_READ_IDLE_MS = 10_000;
+const TICKET_BODY_READ_TOTAL_MS = 20_000;
 
 function remoteEnabled(): boolean {
   return process.env.PDF_REMOTE_ENABLED?.trim().toLowerCase() === "true";
@@ -33,8 +42,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Remote PDF rendering is disabled on this deployment." }, { status: 404 });
   }
 
-  const contentType = req.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
+  const declaredLength = Number(req.headers.get("content-length") || "0");
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_TICKET_BODY_BYTES) {
+    return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
+  }
+
+  const contentType = (req.headers.get("content-type") || "").split(";", 1)[0].trim().toLowerCase();
+  if (contentType !== "application/json") {
     return NextResponse.json({ error: "Content-Type must be application/json." }, { status: 400 });
   }
 
@@ -67,9 +81,22 @@ export async function POST(req: Request) {
     );
   }
 
+  const bodyResult = await readBoundedBody(
+    req,
+    MAX_TICKET_BODY_BYTES,
+    TICKET_BODY_READ_IDLE_MS,
+    TICKET_BODY_READ_TOTAL_MS,
+  );
+  if (!bodyResult.ok) {
+    return NextResponse.json(
+      { error: bodyResult.status === 413 ? "Request body is too large." : "Invalid JSON request body." },
+      { status: bodyResult.status },
+    );
+  }
+
   try {
-    const body = await req.json();
-    let htmlHash = typeof body.htmlHash === "string" ? body.htmlHash.trim() : "";
+    const body = JSON.parse(bodyResult.text);
+    let htmlHash = typeof body.htmlHash === "string" ? body.htmlHash.trim().toLowerCase() : "";
     if (!htmlHash && typeof body.html === "string") {
       htmlHash = hashHtmlPayload(body.html);
     }

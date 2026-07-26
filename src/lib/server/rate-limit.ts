@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import { isIP } from "node:net";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { parseTrustedProxyHops } from "@/lib/server/production-config";
 
 export type RateLimitDecision = {
   allowed: boolean;
@@ -102,24 +103,50 @@ export class BoundedMemorySlidingWindow {
 function normalizeIp(candidate: string): string | null {
   const trimmedValue = candidate.trim();
   if (!trimmedValue) return null;
-  if (isIP(trimmedValue)) return trimmedValue;
+  const canonicalize = (value: string): string | null => {
+    const version = isIP(value);
+    if (version === 4) return value;
+    if (version === 6) {
+      try {
+        const hostname = new URL(`http://[${value}]/`).hostname;
+        return hostname.startsWith("[") && hostname.endsWith("]")
+          ? hostname.slice(1, -1)
+          : hostname;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+  const direct = canonicalize(trimmedValue);
+  if (direct) return direct;
 
   // Bracketed IPv6 with optional port: "[2001:db8::1]:8080" or "[2001:db8::1]"
-  const bracketed = /^\[([^\]]+)\](?::\d{1,5})?$/u.exec(trimmedValue);
-  if (bracketed && isIP(bracketed[1])) return bracketed[1];
+  const bracketed = /^\[([^\]]+)\](?::(\d{1,5}))?$/u.exec(trimmedValue);
+  if (
+    bracketed &&
+    (!bracketed[2] || Number(bracketed[2]) <= 65_535)
+  ) {
+    return canonicalize(bracketed[1]);
+  }
 
   // IPv4 with a port suffix: "203.0.113.5:8080"
-  const ipv4WithPort = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}$/u.exec(trimmedValue);
-  if (ipv4WithPort && isIP(ipv4WithPort[1]) === 4) return ipv4WithPort[1];
+  const ipv4WithPort = /^(\d{1,3}(?:\.\d{1,3}){3}):(\d{1,5})$/u.exec(trimmedValue);
+  if (ipv4WithPort && Number(ipv4WithPort[2]) <= 65_535) {
+    return canonicalize(ipv4WithPort[1]);
+  }
 
   return null;
 }
 
-function readTrustedHops(): number {
-  const raw = process.env.TRUSTED_PROXY_HOPS?.trim();
-  const parsed = raw ? Number(raw) : 1;
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) return 1;
-  return parsed;
+// Uses the same canonical parser as production-config.ts's boot-time
+// validator (parseTrustedProxyHops) — a single source of truth for what
+// counts as a valid hop count. Returns `null` on missing/invalid input;
+// callers MUST fail closed (never silently default to 1), since defaulting
+// to the wrong hop count lets a client spoof its position in the
+// X-Forwarded-For/Forwarded chain.
+function readTrustedHops(): number | null {
+  return parseTrustedProxyHops(process.env.TRUSTED_PROXY_HOPS);
 }
 
 /**
@@ -139,8 +166,8 @@ function pickFromRight(chain: string[], hops: number): string | null {
 }
 
 function parseXForwardedFor(header: string, hops: number): string | null {
-  const chain = header.split(",").map((entry) => entry.trim()).filter(Boolean);
-  if (chain.length === 0) return null;
+  const chain = header.split(",").map((entry) => entry.trim());
+  if (chain.length === 0 || chain.some((entry) => entry.length === 0)) return null;
   return pickFromRight(chain, hops);
 }
 
@@ -151,17 +178,18 @@ function parseXForwardedFor(header: string, hops: number): string | null {
  * (`for=unknown`, `for=_hidden`) never resolve to a usable address.
  */
 function parseForwardedHeader(header: string, hops: number): string | null {
-  const elements = header.split(",").map((entry) => entry.trim()).filter(Boolean);
-  if (elements.length === 0) return null;
+  const elements = header.split(",").map((entry) => entry.trim());
+  if (elements.length === 0 || elements.some((entry) => entry.length === 0)) return null;
 
   const forValues: string[] = [];
   for (const element of elements) {
     const params = element.split(";").map((p) => p.trim());
-    const forParam = params.find((p) => /^for=/iu.test(p));
-    if (!forParam) {
+    const forParams = params.filter((p) => /^for=/iu.test(p));
+    if (forParams.length !== 1) {
       forValues.push(""); // preserve position even when this element has no for=
       continue;
     }
+    const forParam = forParams[0];
     let value = forParam.slice(forParam.indexOf("=") + 1).trim();
     if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
       value = value.slice(1, -1);
@@ -169,10 +197,7 @@ function parseForwardedHeader(header: string, hops: number): string | null {
     forValues.push(value);
   }
 
-  const nonEmpty = forValues.filter(Boolean);
-  if (nonEmpty.length === 0) return null;
-  const picked = pickFromRight(nonEmpty, hops);
-  return picked;
+  return pickFromRight(forValues, hops);
 }
 
 /**
@@ -181,15 +206,22 @@ function parseForwardedHeader(header: string, hops: number): string | null {
  */
 export function trustedClientAddress(request: Request): string {
   const mode = process.env.TRUSTED_PROXY_MODE?.trim().toLowerCase() ?? "none";
-  const hops = readTrustedHops();
   let ip: string | null = null;
 
-  if (mode === "vercel") {
-    const header = request.headers.get("x-forwarded-for");
-    if (header) ip = parseXForwardedFor(header, hops);
-  } else if (mode === "forwarded") {
-    const header = request.headers.get("forwarded");
-    if (header) ip = parseForwardedHeader(header, hops);
+  if (mode === "vercel" || mode === "forwarded") {
+    // A missing/invalid hop count must never silently fall back to 1 — that
+    // would let a client spoof its position in the chain. Fail closed to
+    // "direct" instead, same as a chain too short to trust.
+    const hops = readTrustedHops();
+    if (hops !== null) {
+      if (mode === "vercel") {
+        const header = request.headers.get("x-forwarded-for");
+        if (header) ip = parseXForwardedFor(header, hops);
+      } else {
+        const header = request.headers.get("forwarded");
+        if (header) ip = parseForwardedHeader(header, hops);
+      }
+    }
   } else if (mode === "cloudflare") {
     // Cloudflare sets exactly this header at the edge; never a client-supplied chain.
     const header = request.headers.get("cf-connecting-ip");

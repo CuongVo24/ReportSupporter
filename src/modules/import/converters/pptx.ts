@@ -41,9 +41,12 @@ export const pptxConverter: ImportConverter = {
     // stream length). Every `.async("string")` call below is measured against
     // the SAME running total already validated by the declared-size preflight.
     const inflationTracker = createInflationTracker();
-    async function inflateTracked(entry: { async(type: "string"): Promise<string> }): Promise<string> {
+    async function inflateTracked(
+      entry: { async(type: "string"): Promise<string> },
+      entryKey: string,
+    ): Promise<string> {
       const text = await entry.async("string");
-      inflationTracker.track(new TextEncoder().encode(text).byteLength);
+      inflationTracker.track(new TextEncoder().encode(text).byteLength, entryKey);
       return text;
     }
 
@@ -52,13 +55,13 @@ export const pptxConverter: ImportConverter = {
     if (!presentationXmlFile) {
       throw new Error("Tệp PPTX không hợp lệ (thiếu ppt/presentation.xml).");
     }
-    const presentationXml = await inflateTracked(presentationXmlFile);
+    const presentationXml = await inflateTracked(presentationXmlFile, "ppt/presentation.xml");
 
     const relsXmlFile = zip.file("ppt/_rels/presentation.xml.rels");
     if (!relsXmlFile) {
       throw new Error("Tệp PPTX không hợp lệ (thiếu ppt/_rels/presentation.xml.rels).");
     }
-    const relsXml = await inflateTracked(relsXmlFile);
+    const relsXml = await inflateTracked(relsXmlFile, "ppt/_rels/presentation.xml.rels");
 
     const slidePaths = parsePresentationOrder(presentationXml, relsXml);
     if (slidePaths.length === 0) {
@@ -85,7 +88,7 @@ export const pptxConverter: ImportConverter = {
         continue;
       }
 
-      const slideXml = await inflateTracked(slideFile);
+      const slideXml = await inflateTracked(slideFile, slidePath);
       const parsedSlide = parseSlideXml(slideXml);
 
       // Try to parse notes slide relationships
@@ -98,12 +101,12 @@ export const pptxConverter: ImportConverter = {
 
       const slideRelsFile = zip.file(slideRelsPath);
       if (slideRelsFile) {
-        const slideRelsXml = await inflateTracked(slideRelsFile);
+        const slideRelsXml = await inflateTracked(slideRelsFile, slideRelsPath);
         const notesPath = parseNotesPathFromRels(slideRelsXml, slidePath);
         if (notesPath) {
           const notesFile = zip.file(notesPath);
           if (notesFile) {
-            const notesXml = await inflateTracked(notesFile);
+            const notesXml = await inflateTracked(notesFile, notesPath);
             notesText = parseNotesSlideXml(notesXml);
           }
         }

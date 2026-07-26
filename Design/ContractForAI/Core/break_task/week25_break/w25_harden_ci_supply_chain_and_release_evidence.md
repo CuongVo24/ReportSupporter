@@ -86,3 +86,8 @@ Re-fix 2026-07-25:
 - Kiểm chứng cục bộ: `node scripts/check-ci-actions.mjs` xanh trên `ci.yml` hiện tại (đã tự pin 2 action mới `sbom-action`/`trivy-action` sang commit SHA thật, resolve qua `gh api` — không đoán SHA); `docker compose config` hợp lệ với `image:`/network mới; `node scripts/generate-release-evidence.mjs` chạy được cục bộ (không strict).
 - **Dependabot & Policy Documentation** (giữ từ bản trước): `.github/dependabot.yml`, `Design/Security/SecurityWaiverSchema.md`.
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+Đã bỏ `ignore-unfixed`, thêm schedule/manual trigger, mở rộng flake loop và retention evidence. Supply-chain checker nay parse ngày `YYYY-MM-DD` thật, so timestamp thay vì lexical và fail-closed cho schema waiver/override (`affectedPaths`, `types`, owner/date).
+
+**Trạng thái:** `CODE FIXED — CI EVIDENCE PENDING`. Docker/SBOM/Trivy workflow tồn tại nhưng chưa chạy trên commit này; nếu scan cần exception phải thêm waiver có owner/expiry, không khôi phục ignore toàn cục.

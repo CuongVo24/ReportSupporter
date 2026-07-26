@@ -73,9 +73,41 @@ describe("/api/ai route", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("rejects an oversized streamed body enforced by actual bytes, not a trusted/missing Content-Length header", async () => {
+    // No content-length is set (streamed body), so the early declared-length
+    // check can't catch this — the bounded reader must enforce the cap
+    // while reading, not after fully materializing the body into memory.
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const encoder = new TextEncoder();
+    const chunk = encoder.encode("x".repeat(100 * 1024)); // 100 KiB per chunk
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (let i = 0; i < 6; i++) controller.enqueue(chunk); // 600 KiB > 512 KiB cap
+        controller.close();
+      },
+    });
+
+    const req = new Request("http://localhost/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": "client-key" },
+      body,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+    expect(req.headers.get("content-length")).toBeNull();
+
+    const response = await POST(req);
+
+    expect(response.status).toBe(413);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("sends a Gemini key in a header instead of the URL and caps output", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
+      headers: new Headers({ "Content-Type": "application/json" }),
+      body: new Response("[]").body,
       json: async () => ({ candidates: [{ content: { parts: [{ text: "Suggestion" }] } }] }),
     } as Response);
     vi.stubGlobal("fetch", fetchMock);
@@ -134,6 +166,7 @@ describe("/api/ai route", () => {
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
+      headers: new Headers({ "Content-Type": "text/event-stream" }),
       body: mockOpenAiStream,
     } as Response);
     vi.stubGlobal("fetch", fetchMock);
@@ -168,6 +201,7 @@ describe("/api/ai route", () => {
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
+      headers: new Headers({ "Content-Type": "application/json" }),
       body: mockGeminiStream,
     } as Response);
     vi.stubGlobal("fetch", fetchMock);
@@ -201,6 +235,7 @@ describe("/api/ai route", () => {
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
+      headers: new Headers({ "Content-Type": "text/event-stream" }),
       body: mockAnthropicStream,
     } as Response);
     vi.stubGlobal("fetch", fetchMock);
@@ -228,6 +263,7 @@ describe("/api/ai route", () => {
       fetchSignal = init.signal;
       return Promise.resolve({
         ok: true,
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
         body: new ReadableStream({
           start(controller) {
             controller.enqueue(encoder.encode('data: {"choices": [{"delta": {"content": "Hello"}}]}\n\n'));
@@ -268,14 +304,16 @@ describe("/api/ai route", () => {
   });
 
   it("enforces dual rate limiting (per-address and per-key)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve({
       ok: true,
-      json: async () => ({ candidates: [{ content: { parts: [{ text: "OK" }] } }] }),
-    } as Response);
+      headers: new Headers({ "Content-Type": "application/json" }),
+      body: new Response("[]").body,
+    } as Response));
     vi.stubGlobal("fetch", fetchMock);
 
     // 1. Consume 20 requests with same IP but rotated API keys -> 21st must be blocked by address quota
     vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
     const addressHeaders = { "Content-Type": "application/json", "x-forwarded-for": "198.51.100.99" };
 
     for (let i = 0; i < 20; i++) {

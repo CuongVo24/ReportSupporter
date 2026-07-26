@@ -77,6 +77,66 @@ describe("trustedClientAddress & Ingress Parsing", () => {
     expect(trustedClientAddress(req)).toBe("direct");
   });
 
+  it("vercel mode fails closed to direct (never defaults to hops=1) when TRUSTED_PROXY_HOPS is missing", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    // TRUSTED_PROXY_HOPS deliberately not set.
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "9.9.9.9, 70.41.3.18" },
+    });
+    // With the old silent-default-to-1 behavior this would resolve to
+    // "70.41.3.18" (treating the rightmost entry as trusted). It must
+    // instead fail closed to "direct" since the hop count was never
+    // actually configured/validated.
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("vercel mode fails closed to direct (never defaults to hops=1) when TRUSTED_PROXY_HOPS is invalid", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "not-a-number");
+    const req = new Request("http://localhost", {
+      headers: { "x-forwarded-for": "9.9.9.9, 70.41.3.18" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("forwarded mode fails closed to direct when TRUSTED_PROXY_HOPS is out of range", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "forwarded");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "0");
+    const req = new Request("http://localhost", {
+      headers: { forwarded: "for=70.41.3.18" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("preserves empty Forwarded elements instead of shifting the trusted hop position", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "forwarded");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "2");
+    const req = new Request("http://localhost", {
+      headers: { forwarded: "for=198.51.100.1, , for=203.0.113.9" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
+  it("canonicalizes equivalent IPv6 spellings into the same trusted address", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "cloudflare");
+    const expanded = new Request("http://localhost", {
+      headers: { "cf-connecting-ip": "2001:0db8:0000:0000:0000:0000:0000:0001" },
+    });
+    const compressed = new Request("http://localhost", {
+      headers: { "cf-connecting-ip": "2001:db8::1" },
+    });
+    expect(trustedClientAddress(expanded)).toBe("2001:db8::1");
+    expect(trustedClientAddress(expanded)).toBe(trustedClientAddress(compressed));
+  });
+
+  it("rejects invalid port suffixes instead of accepting them as trusted IPs", () => {
+    vi.stubEnv("TRUSTED_PROXY_MODE", "x-real-ip");
+    const req = new Request("http://localhost", {
+      headers: { "x-real-ip": "203.0.113.8:99999" },
+    });
+    expect(trustedClientAddress(req)).toBe("direct");
+  });
+
   it("extracts cf-connecting-ip for cloudflare mode and ignores XFF", () => {
     vi.stubEnv("TRUSTED_PROXY_MODE", "cloudflare");
     const req = new Request("http://localhost", {

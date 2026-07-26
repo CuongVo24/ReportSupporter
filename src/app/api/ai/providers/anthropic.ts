@@ -5,6 +5,7 @@ export type AnthropicParsedLine = {
   inputTokens?: number;
   outputTokens?: number;
   malformed?: true;
+  limitExceeded?: true;
 };
 
 /**
@@ -14,7 +15,9 @@ export type AnthropicParsedLine = {
  * dropping it (see w25_fix-all-bugs.md §D).
  */
 export function parseAnthropicLine(line: string): AnthropicParsedLine | null {
-  if (line.length > MAX_ANTHROPIC_LINE_BYTES) return null;
+  if (new TextEncoder().encode(line).byteLength > MAX_ANTHROPIC_LINE_BYTES) {
+    return { limitExceeded: true };
+  }
   const trimmed = line.trim();
   if (!trimmed) return null;
   if (!trimmed.startsWith("data: ")) return null;

@@ -219,5 +219,12 @@ export function parseZipCentralDirectory(buffer: ArrayBuffer): ZipCentralDirecto
     cursor = nameOffset + nameLength + extraLength + commentLength;
   }
 
+  if (cursor !== centralDirEnd) {
+    return {
+      valid: false,
+      error: "Kích thước Central Directory không khớp số lượng/header mục đã khai báo.",
+    };
+  }
+
   return { valid: true, entries };
 }

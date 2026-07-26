@@ -5,6 +5,7 @@ import { issuePdfTicket, hashHtmlPayload } from "@/lib/server/pdf-access";
 
 beforeEach(() => {
   vi.stubEnv("PDF_REMOTE_ENABLED", "true");
+  vi.stubEnv("PDF_RENDERER_TOKEN", "test-renderer-token");
 });
 
 afterEach(() => {
@@ -116,7 +117,7 @@ describe("/api/pdf Access Policy & Render Tickets (W25-C)", () => {
     const res2 = await POST(req2);
     expect(res2.status).toBe(403);
     const data = await res2.json();
-    expect(data.error).toContain("anti-replay");
+    expect(data.error).toBe("Yêu cầu tạo PDF bị từ chối.");
   });
 
   it("returns 503 without creating a fake PDF when renderer is disabled", async () => {
@@ -165,6 +166,7 @@ describe("/api/pdf Access Policy & Render Tickets (W25-C)", () => {
   it("shares rate limit bucket across requests even if x-api-key header is rotated", async () => {
     vi.stubEnv("PDF_RENDERER_URL", "http://renderer.internal");
     vi.stubEnv("TRUSTED_PROXY_MODE", "vercel");
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
     const html = "<!doctype html><html><body>Report</body></html>";
     const pdfBytes = new TextEncoder().encode("%PDF-1.7\ncontent");
     vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(new Response(pdfBytes, {

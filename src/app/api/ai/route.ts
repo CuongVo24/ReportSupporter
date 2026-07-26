@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { aiActionSchema } from "@/types/ai";
 import type { AiAction, AiStreamEvent, AiUsage } from "@/types/ai";
 import { createRateLimiter, aiAddressIdentity, aiKeyIdentity } from "@/lib/server/rate-limit";
-import { parseGeminiChunk, extractJsonObjects } from "./providers/gemini";
-import { parseOpenAiLine } from "./providers/openai";
-import { parseAnthropicLine } from "./providers/anthropic";
+import { readBoundedBody } from "@/lib/server/bounded-body";
+import {
+  parseGeminiChunk,
+  extractJsonObjects,
+  MAX_GEMINI_BUFFER_BYTES,
+} from "./providers/gemini";
+import { parseOpenAiLine, MAX_OPENAI_LINE_BYTES } from "./providers/openai";
+import { parseAnthropicLine, MAX_ANTHROPIC_LINE_BYTES } from "./providers/anthropic";
 
 type AiProvider = "gemini" | "openai" | "anthropic";
 
@@ -25,6 +30,8 @@ const GENERIC_SERVER_ERROR =
   "An internal server error occurred while processing the AI request.";
 
 const MAX_BODY_BYTES = 512 * 1024;
+const REQUEST_BODY_IDLE_MS = 10_000;
+const REQUEST_BODY_TOTAL_MS = 20_000;
 const MAX_INPUT_CHARS = 100_000;
 const MAX_MODEL_CHARS = 128;
 const MAX_OUTPUT_TOKENS = 4_000;
@@ -183,10 +190,27 @@ export async function POST(req: Request) {
       );
     }
 
-    const rawBody = await req.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
-      return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
+    const bodyResult = await readBoundedBody(
+      req,
+      MAX_BODY_BYTES,
+      REQUEST_BODY_IDLE_MS,
+      REQUEST_BODY_TOTAL_MS,
+    );
+    if (!bodyResult.ok) {
+      if (bodyResult.status === 499) return new Response(null, { status: 499 });
+      return NextResponse.json(
+        {
+          error:
+            bodyResult.status === 413
+              ? "Request body is too large."
+              : bodyResult.status === 408
+                ? "Request body timed out."
+                : "Request body must be valid UTF-8 JSON.",
+        },
+        { status: bodyResult.status },
+      );
     }
+    const rawBody = bodyResult.text;
     const parsed = parseRequestBody(JSON.parse(rawBody));
 
     if (!parsed) {
@@ -261,7 +285,7 @@ export async function POST(req: Request) {
       } else {
         req.signal.addEventListener("abort", () => {
           providerController.abort(req.signal.reason);
-        });
+        }, { once: true });
       }
     }
 
@@ -284,6 +308,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: GENERIC_SERVER_ERROR }, { status: 500 });
     }
 
+    const providerContentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+    const validProviderContentType =
+      provider === "gemini"
+        ? providerContentType.includes("application/json")
+        : providerContentType.includes("text/event-stream");
+    if (!validProviderContentType) {
+      clearTimeout(timeoutId);
+      providerController.abort();
+      await response.body?.cancel().catch(() => undefined);
+      return NextResponse.json({ error: GENERIC_PROTOCOL_ERROR }, { status: 502 });
+    }
+
     // ------------------------------------------------------------------
     // Pull-aware NDJSON bridge (§D): each `pull()` call performs AT MOST one
     // upstream read, so the stream machinery only asks for more when the
@@ -297,6 +333,7 @@ export async function POST(req: Request) {
     let totalUpstreamBytes = 0;
     let totalDeltaChars = 0;
     let totalEvents = 0;
+    let totalFrames = 0;
     let buffer = "";
     let anthropicInputTokens: number | undefined;
     let anthropicOutputTokens: number | undefined;
@@ -306,6 +343,13 @@ export async function POST(req: Request) {
     const reader = response.body?.getReader();
 
     type ChunkResult = { ok: true } | { ok: false; code: string; message: string };
+
+    function countFrame(): ChunkResult {
+      totalFrames += 1;
+      return totalFrames > MAX_EVENTS
+        ? { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR }
+        : { ok: true };
+    }
 
     function emitDelta(controller: ReadableStreamDefaultController<Uint8Array>, deltaText: string): ChunkResult {
       if (deltaText.length > MAX_SINGLE_DELTA_CHARS) {
@@ -325,6 +369,9 @@ export async function POST(req: Request) {
 
     function processGeminiText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
       buffer += text;
+      if (new TextEncoder().encode(buffer).byteLength > MAX_GEMINI_BUFFER_BYTES) {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
       let extracted: { objects: string[]; remaining: string; incomplete: boolean };
       try {
         extracted = extractJsonObjects(buffer);
@@ -334,8 +381,13 @@ export async function POST(req: Request) {
       buffer = extracted.remaining;
       geminiIncompleteObject = extracted.incomplete;
       for (const objText of extracted.objects) {
+        const frameResult = countFrame();
+        if (!frameResult.ok) return frameResult;
         const parsedChunk = parseGeminiChunk(objText);
         if (!parsedChunk) continue;
+        if (parsedChunk.limitExceeded) {
+          return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+        }
         if (parsedChunk.malformed) {
           return { ok: false, code: "AI_PROTOCOL_ERROR", message: GENERIC_PROTOCOL_ERROR };
         }
@@ -350,13 +402,26 @@ export async function POST(req: Request) {
 
     function processOpenAiText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
       buffer += text;
+      if (
+        buffer.indexOf("\n") === -1 &&
+        new TextEncoder().encode(buffer).byteLength > MAX_OPENAI_LINE_BYTES
+      ) {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
       let lineEndIndex: number;
       while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, lineEndIndex);
         buffer = buffer.slice(lineEndIndex + 1);
         const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
+        if (cleanLine.trim().startsWith("data:")) {
+          const frameResult = countFrame();
+          if (!frameResult.ok) return frameResult;
+        }
         const parsedChunk = parseOpenAiLine(cleanLine);
         if (!parsedChunk) continue;
+        if (parsedChunk.limitExceeded) {
+          return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+        }
         if (parsedChunk.malformed) {
           return { ok: false, code: "AI_PROTOCOL_ERROR", message: GENERIC_PROTOCOL_ERROR };
         }
@@ -371,13 +436,26 @@ export async function POST(req: Request) {
 
     function processAnthropicText(controller: ReadableStreamDefaultController<Uint8Array>, text: string): ChunkResult {
       buffer += text;
+      if (
+        buffer.indexOf("\n") === -1 &&
+        new TextEncoder().encode(buffer).byteLength > MAX_ANTHROPIC_LINE_BYTES
+      ) {
+        return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+      }
       let lineEndIndex: number;
       while ((lineEndIndex = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, lineEndIndex);
         buffer = buffer.slice(lineEndIndex + 1);
         const cleanLine = line.endsWith("\r") ? line.slice(0, -1) : line;
+        if (cleanLine.trim().startsWith("data:")) {
+          const frameResult = countFrame();
+          if (!frameResult.ok) return frameResult;
+        }
         const parsedChunk = parseAnthropicLine(cleanLine);
         if (!parsedChunk) continue;
+        if (parsedChunk.limitExceeded) {
+          return { ok: false, code: "AI_STREAM_EXCEEDED", message: GENERIC_STREAM_EXCEEDED_ERROR };
+        }
         if (parsedChunk.malformed) {
           return { ok: false, code: "AI_PROTOCOL_ERROR", message: GENERIC_PROTOCOL_ERROR };
         }
@@ -442,7 +520,18 @@ export async function POST(req: Request) {
         } else {
           const cleanLine = buffer.endsWith("\r") ? buffer.slice(0, -1) : buffer;
           buffer = "";
+          if (cleanLine.trim().startsWith("data:")) {
+            const frameResult = countFrame();
+            if (!frameResult.ok) {
+              await abortWithError(controller, frameResult.code, frameResult.message);
+              return;
+            }
+          }
           const parsedChunk = provider === "openai" ? parseOpenAiLine(cleanLine) : parseAnthropicLine(cleanLine);
+          if (parsedChunk?.limitExceeded) {
+            await abortWithError(controller, "AI_STREAM_EXCEEDED", GENERIC_STREAM_EXCEEDED_ERROR);
+            return;
+          }
           if (parsedChunk?.malformed) {
             await abortWithError(controller, "AI_PROTOCOL_ERROR", GENERIC_PROTOCOL_ERROR, { reason: "trailing_incomplete_line" });
             return;
@@ -491,7 +580,9 @@ export async function POST(req: Request) {
         // upstream data but produces no visible output (e.g. a usage-only
         // frame with no delta text) would otherwise stall the stream
         // forever. Loop internally until we have something to enqueue.
-        while (!terminalSent) {
+        let readsThisPull = 0;
+        while (!terminalSent && readsThisPull < 1) {
+          readsThisPull += 1;
           let idleTimer: ReturnType<typeof setTimeout> | undefined;
           type ReadOutcome = ReadableStreamReadResult<Uint8Array> | "idle";
           let outcome: ReadOutcome;
@@ -504,10 +595,14 @@ export async function POST(req: Request) {
             ]);
           } catch {
             clearTimeout(idleTimer);
-            if (providerController.signal.aborted || (req.signal?.aborted ?? false)) {
+            if (req.signal?.aborted ?? false) {
               terminalSent = true;
               clearTimeout(timeoutId);
               controller.error(new Error("aborted"));
+              return;
+            }
+            if (providerController.signal.aborted) {
+              await abortWithError(controller, "AI_TIMEOUT", "AI provider request timed out.");
               return;
             }
             await abortWithError(controller, "AI_PROVIDER_ERROR", GENERIC_PROVIDER_ERROR, { reason: "read_error" });
@@ -551,6 +646,7 @@ export async function POST(req: Request) {
           // else: this chunk produced no visible event (e.g. usage-only
           // frame) — loop and read the next upstream chunk immediately.
         }
+        if (!terminalSent) controller.enqueue(new Uint8Array());
       },
       cancel() {
         terminalSent = true;

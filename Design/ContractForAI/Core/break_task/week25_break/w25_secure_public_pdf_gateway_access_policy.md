@@ -86,3 +86,10 @@ Re-fix 2026-07-25:
 - **Lỗi public generic.** Không còn trả `ticketResult.reason`/cause code cho client; chỉ log cause code phía server (`console.log` structured, không log token/HTML/PDF).
 - Test: `pdf-access.fuzz.test.ts` (10 test — issuer disabled/enabled/prod-anonymous-denied/trusted-identity/envelope tamper/version-rotate/expired/malformed), `route.test.ts` (11 test — bao gồm query-string-ticket-rejected, remote-disabled-503, replay dùng địa chỉ cô lập để không lẫn rate-limit bucket với test khác). 27/27 xanh.
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+Ticket issuer và gateway nay cùng dùng bounded reader có byte cap + idle/total deadline. Ticket claims được kiểm chặt kiểu/độ dài/timestamp/hash; header capability chỉ còn `x-pdf-ticket`; renderer config được kiểm trước khi consume nonce; replay trả lỗi generic; và renderer response bắt buộc `application/pdf`.
+
+Review cuối cũng sửa một edge case self-incompatibility: `htmlHash` viết hoa hợp lệ được issuer chuẩn hoá về lowercase trước khi ký, khớp verifier và hash thực tế.
+
+**Trạng thái:** `CODE FIXED — REDIS/RENDERER INTEGRATION EVIDENCE PENDING`.

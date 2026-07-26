@@ -3,8 +3,17 @@
 // injecting a fake `launch`. Run with: node --test services/pdf-renderer/
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
+import { createServer, request as httpRequest } from "node:http";
 import { test } from "node:test";
-import { createAdmissionController, createBrowserManager, createRequestHandler, renderPdf } from "./server.mjs";
+import {
+  assertRendererTokenSecure,
+  createAdmissionController,
+  createBrowserManager,
+  createRequestHandler,
+  parseBoundedInt,
+  renderPdf,
+  withDeadline,
+} from "./server.mjs";
 
 test("admission controller caps concurrent slots and rejects over capacity", () => {
   const admission = createAdmissionController(2);
@@ -174,7 +183,12 @@ test("renderPdf rejects immediately if the signal is already aborted, without op
 
 // --- request handler admission ordering (body admission before render slot) ---
 
-function fakeRequest({ method = "POST", url = "/render", headers = {}, chunks = [] } = {}) {
+function fakeRequest({
+  method = "POST",
+  url = "/render",
+  headers = { "content-type": "text/html;charset=utf-8" },
+  chunks = [],
+} = {}) {
   const req = new EventEmitter();
   req.method = method;
   req.url = url;
@@ -251,7 +265,7 @@ test("body admission is acquired and released BEFORE the render slot is ever acq
   };
 
   const handle = createRequestHandler({ bodyAdmission, admission, manager });
-  const req = fakeRequest({ headers: {}, chunks: ["<!doctype html><body>Hi</body>"] });
+  const req = fakeRequest({ chunks: ["<!doctype html><body>Hi</body>"] });
   const res = fakeResponse();
 
   await handle(req, res);
@@ -295,4 +309,137 @@ test("a body-admission-at-capacity request never reaches the render slot or the 
   assert.equal(res.statusCode, 503);
   assert.ok(!log.includes("render:acquire"), "render slot never acquired when body admission is full");
   assert.ok(!log.includes("manager:getBrowser"), "browser never fetched when body admission is full");
+});
+
+// ---------------------------------------------------------------------------
+// W25-2-E: overall deadline must also bound browser acquisition, not just
+// body-read and page rendering — a hung `getBrowser()` must not hang forever.
+// ---------------------------------------------------------------------------
+
+test("withDeadline rejects with a stable cause code when the wrapped promise never settles", async () => {
+  const neverSettles = new Promise(() => {});
+  const deadlineAt = Date.now() + 30;
+  await assert.rejects(
+    () => withDeadline(neverSettles, deadlineAt, "browser-acquisition-timeout"),
+    (error) => error.code === "BROWSER_DEADLINE" && error.statusCode === 503,
+  );
+});
+
+test("withDeadline resolves normally when the wrapped promise settles before the deadline", async () => {
+  const fast = Promise.resolve("ok");
+  const result = await withDeadline(fast, Date.now() + 5_000, "should-not-fire");
+  assert.equal(result, "ok");
+});
+
+test("parseBoundedInt rejects partial, decimal, and unsafe integer strings instead of parseInt-truncating", () => {
+  const original = process.env.NODE_ENV;
+  process.env.NODE_ENV = "test";
+  try {
+    assert.equal(parseBoundedInt("2abc", 1, 10, 7), 7);
+    assert.equal(parseBoundedInt("1.5", 1, 10, 7), 7);
+    assert.equal(parseBoundedInt("9007199254740992", 1, Number.MAX_SAFE_INTEGER, 7), 7);
+    assert.equal(parseBoundedInt("2", 1, 10, 7), 2);
+  } finally {
+    if (original === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = original;
+  }
+});
+
+test("renderPdf bounds a hung BrowserContext acquisition by the overall deadline", async () => {
+  const browser = {
+    createBrowserContext: () => new Promise(() => {}),
+  };
+  await assert.rejects(
+    () => renderPdf(browser, "<!doctype html>", undefined, Date.now() + 30),
+    (error) => error.code === "BROWSER_DEADLINE",
+  );
+});
+
+test("a real Node request that emits normal end/close still renders successfully", async () => {
+  const bodyAdmission = createAdmissionController(2);
+  const admission = createAdmissionController(1);
+  const browser = fakeBrowserWithContexts();
+  const manager = {
+    state: "ready",
+    isReady: () => true,
+    getBrowser: async () => browser,
+    get relaunchCount() {
+      return 0;
+    },
+  };
+  const server = createServer(createRequestHandler({ bodyAdmission, admission, manager }));
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  assert.equal(typeof address, "object");
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const request = httpRequest(
+        {
+          host: "127.0.0.1",
+          port: address.port,
+          path: "/render",
+          method: "POST",
+          headers: { "content-type": "text/html;charset=utf-8" },
+        },
+        (response) => {
+          const chunks = [];
+          response.on("data", (chunk) => chunks.push(chunk));
+          response.on("end", () => resolve({ status: response.statusCode, body: Buffer.concat(chunks) }));
+        },
+      );
+      request.on("error", reject);
+      request.end("<!doctype html><body>normal close</body>");
+    });
+    assert.equal(result.status, 200);
+    assert.match(result.body.toString("utf8"), /^%PDF-/u);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// W25-2-E: auth token must fail-closed outside explicit test env
+// ---------------------------------------------------------------------------
+
+test("assertRendererTokenSecure fails boot on empty token when NODE_ENV is unset (not just 'production')", () => {
+  const original = { NODE_ENV: process.env.NODE_ENV, PDF_RENDERER_TOKEN: process.env.PDF_RENDERER_TOKEN };
+  delete process.env.NODE_ENV;
+  process.env.PDF_RENDERER_TOKEN = "";
+  try {
+    assert.throws(() => assertRendererTokenSecure(), /rỗng/);
+  } finally {
+    if (original.NODE_ENV === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = original.NODE_ENV;
+    if (original.PDF_RENDERER_TOKEN === undefined) delete process.env.PDF_RENDERER_TOKEN;
+    else process.env.PDF_RENDERER_TOKEN = original.PDF_RENDERER_TOKEN;
+  }
+});
+
+test("assertRendererTokenSecure fails boot on empty token when NODE_ENV is 'staging'", () => {
+  const original = { NODE_ENV: process.env.NODE_ENV, PDF_RENDERER_TOKEN: process.env.PDF_RENDERER_TOKEN };
+  process.env.NODE_ENV = "staging";
+  process.env.PDF_RENDERER_TOKEN = "";
+  try {
+    assert.throws(() => assertRendererTokenSecure(), /rỗng/);
+  } finally {
+    if (original.NODE_ENV === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = original.NODE_ENV;
+    if (original.PDF_RENDERER_TOKEN === undefined) delete process.env.PDF_RENDERER_TOKEN;
+    else process.env.PDF_RENDERER_TOKEN = original.PDF_RENDERER_TOKEN;
+  }
+});
+
+test("assertRendererTokenSecure allows empty token only under explicit NODE_ENV=test", () => {
+  const original = { NODE_ENV: process.env.NODE_ENV, PDF_RENDERER_TOKEN: process.env.PDF_RENDERER_TOKEN };
+  process.env.NODE_ENV = "test";
+  process.env.PDF_RENDERER_TOKEN = "";
+  try {
+    assert.doesNotThrow(() => assertRendererTokenSecure());
+  } finally {
+    if (original.NODE_ENV === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = original.NODE_ENV;
+    if (original.PDF_RENDERER_TOKEN === undefined) delete process.env.PDF_RENDERER_TOKEN;
+    else process.env.PDF_RENDERER_TOKEN = original.PDF_RENDERER_TOKEN;
+  }
 });

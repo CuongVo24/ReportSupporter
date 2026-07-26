@@ -82,3 +82,9 @@ Re-fix 2026-07-25:
 - **Chưa làm trong đợt này (ghi nhận, không claim xong):** chưa chạy full Playwright E2E suite (`npm run test:e2e`) trong phiên — dựa vào xác minh thủ công qua production server thật + console/nonce kiểm tra trực tiếp; CI lane E2E (`ci.yml`) sẽ là lần chạy đầy đủ tiếp theo. Report-Only rollout giai đoạn (contract §Containment gợi ý chạy `Content-Security-Policy-Report-Only` trước khi enforce) bị bỏ qua vì đã verify trực tiếp bằng production build thật thay vì suy đoán — nếu muốn thận trọng hơn khi deploy thật, nên thêm bước Report-Only + theo dõi violation aggregate trước khi enforce trên traffic thật.
 
 Test: `remote-image-privacy.fuzz.test.ts` +3 test cho `loadRemoteImageWithState` (loading state dùng DOM API an toàn, không leak crossOrigin/referrer sai, timeout → error UI có retry+attach-local). Toàn bộ `test:subsystems` (819 test) xanh. `npm run build` xanh; `npm run typecheck`/`npm run lint` xanh.
+
+### Pass 2 — 2026-07-26 (review cuối)
+
+`img-src https:` và nonce-forwarding regression đã được sửa. Review cuối bổ sung boundary ngay tại UI: URL remote tối đa 4096 ký tự, chỉ HTTPS, cấm credentials, chuẩn hoá URL trước khi dùng và có thao tác cancel đưa ảnh về placeholder. Test component xác minh URL không hợp lệ không tạo network load.
+
+**Trạng thái:** `CODE FIXED — PRODUCTION BROWSER EVIDENCE PENDING`; cần browser/CSP probe trên production build để đóng.

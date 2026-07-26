@@ -1,3 +1,5 @@
+import { DOMParser } from "@xmldom/xmldom";
+
 export interface ParsedSlide {
   title?: string;
   paragraphs: { text: string; indentLevel: number }[];

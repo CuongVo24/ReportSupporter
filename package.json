@@ -45,6 +45,7 @@
     "@serwist/next": "9.5.11",
     "@upstash/ratelimit": "2.0.8",
     "@upstash/redis": "1.38.0",
+    "@xmldom/xmldom": "0.8.13",
     "docx": "9.7.1",
     "idb": "8.0.3",
     "jszip": "3.10.1",

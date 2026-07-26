@@ -12,10 +12,14 @@ const TOKEN = process.env.PDF_RENDERER_TOKEN || "";
  * safe default AND log a config_invalid event instead of silently producing
  * NaN (which would otherwise poison every downstream deadline computation).
  */
-function parseBoundedInt(raw, min, max, fallback) {
+export function parseBoundedInt(raw, min, max, fallback) {
   if (raw === undefined || raw === null || raw === "") return fallback;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+  const normalized = String(raw).trim();
+  const parsed = /^\d+$/u.test(normalized) ? Number(normalized) : Number.NaN;
+  if (!Number.isSafeInteger(parsed) || parsed < min || parsed > max) {
+    if (process.env.NODE_ENV !== "test") {
+      throw new Error(`Invalid integer renderer config: expected ${min}..${max}.`);
+    }
     console.error(JSON.stringify({ evt: "config_invalid", raw: String(raw), min, max, fallback }));
     return fallback;
   }
@@ -23,8 +27,11 @@ function parseBoundedInt(raw, min, max, fallback) {
 }
 
 const LOCAL_DEFAULT_PDF_TOKEN = "local-render-token";
-function assertRendererTokenSecure() {
-  if (process.env.NODE_ENV !== "production") return;
+export function assertRendererTokenSecure() {
+  // Only explicit test runs may skip auth entirely. Any other environment
+  // (production, staging, plain `node server.mjs` with NODE_ENV unset) must
+  // fail boot on an empty/default token rather than silently fail open.
+  if (process.env.NODE_ENV === "test") return;
   const token = (process.env.PDF_RENDERER_TOKEN || "").trim();
   if (!token) {
     throw new Error("PDF_RENDERER_TOKEN rỗng trong production — renderer sẽ mở cho mọi request. Cấp token bí mật.");
@@ -46,8 +53,17 @@ const BODY_ADMISSION_MAX = parseBoundedInt(
 );
 const SHUTDOWN_GRACE_MS = parseBoundedInt(process.env.PDF_SHUTDOWN_GRACE_MS, 1_000, 60_000, 15_000);
 const RENDER_DEADLINE_MS = parseBoundedInt(process.env.PDF_RENDER_DEADLINE_MS, 5_000, 120_000, 40_000);
+const MAX_OUTPUT_BYTES = parseBoundedInt(
+  process.env.PDF_MAX_OUTPUT_BYTES,
+  1 * 1024 * 1024,
+  100 * 1024 * 1024,
+  50 * 1024 * 1024,
+);
 let BODY_READ_TIMEOUT_MS = parseBoundedInt(process.env.PDF_BODY_READ_TIMEOUT_MS, 1_000, 60_000, 15_000);
 if (BODY_READ_TIMEOUT_MS >= RENDER_DEADLINE_MS) {
+  if (process.env.NODE_ENV !== "test") {
+    throw new Error("PDF_BODY_READ_TIMEOUT_MS must be < PDF_RENDER_DEADLINE_MS.");
+  }
   console.error(
     JSON.stringify({
       evt: "config_invalid",
@@ -176,52 +192,111 @@ export function createBrowserManager({ launch } = {}) {
  */
 function readBody(request, signal, deadlineAt) {
   return new Promise((resolve, reject) => {
-    const remainingDeadline = Math.max(1, deadlineAt - Date.now());
-    const timeoutMs = Math.min(BODY_READ_TIMEOUT_MS, remainingDeadline);
+    const chunks = [];
+    let size = 0;
+    let idleTimer;
+    let settled = false;
 
-    const timer = setTimeout(() => {
-      reject(Object.assign(new Error("body-timeout"), { statusCode: 408 }));
-      request.destroy();
-    }, timeoutMs);
-
-    const onAbort = () => {
-      clearTimeout(timer);
-      reject(Object.assign(new Error("aborted"), { code: "ABORTED" }));
+    const cleanup = () => {
+      clearTimeout(idleTimer);
+      signal?.removeEventListener?.("abort", onAbort);
+      request.removeListener("data", onData);
+      request.removeListener("end", onEnd);
+      request.removeListener("error", onError);
+      request.removeListener("aborted", onRequestAborted);
     };
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+    const resetIdleTimer = () => {
+      clearTimeout(idleTimer);
+      const remaining = deadlineAt - Date.now();
+      if (remaining <= 0) {
+        fail(Object.assign(new Error("body-total-timeout"), { code: "DEADLINE", statusCode: 408 }));
+        request.destroy();
+        return;
+      }
+      idleTimer = setTimeout(() => {
+        fail(Object.assign(new Error("body-idle-timeout"), { code: "BODY_IDLE", statusCode: 408 }));
+        request.destroy();
+      }, Math.min(BODY_READ_TIMEOUT_MS, remaining));
+    };
+    const onAbort = () => {
+      const reason = signal?.reason;
+      fail(
+        reason instanceof Error
+          ? reason
+          : Object.assign(new Error("aborted"), { code: "ABORTED" }),
+      );
+    };
+    const onRequestAborted = () => {
+      fail(Object.assign(new Error("aborted"), { code: "ABORTED" }));
+    };
+    const onData = (chunk) => {
+      if (settled) return;
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        fail(Object.assign(new Error("body-too-large"), { statusCode: 413 }));
+        request.destroy();
+        return;
+      }
+      chunks.push(chunk);
+      resetIdleTimer();
+    };
+    const onEnd = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    };
+    const onError = (error) => fail(error);
 
     if (signal?.aborted) {
       onAbort();
       return;
     }
-
     signal?.addEventListener?.("abort", onAbort, { once: true });
+    request.on("data", onData);
+    request.on("end", onEnd);
+    request.on("error", onError);
+    request.on("aborted", onRequestAborted);
+    resetIdleTimer();
+  });
+}
 
-    const chunks = [];
-    let size = 0;
-
-    request.on("data", (chunk) => {
-      size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
-        clearTimeout(timer);
-        signal?.removeEventListener?.("abort", onAbort);
-        reject(Object.assign(new Error("body-too-large"), { statusCode: 413 }));
-        request.destroy();
-        return;
-      }
-      chunks.push(chunk);
-    });
-
-    request.on("end", () => {
-      clearTimeout(timer);
-      signal?.removeEventListener?.("abort", onAbort);
-      resolve(Buffer.concat(chunks).toString("utf8"));
-    });
-
-    request.on("error", (err) => {
-      clearTimeout(timer);
-      signal?.removeEventListener?.("abort", onAbort);
-      reject(err);
-    });
+/**
+ * Races `promise` against the overall render deadline. A hung/slow browser
+ * launch (e.g. Chromium fails to start) must not block a request forever —
+ * it has to fail at the SAME deadline that already bounds body-read and
+ * page rendering, not get its own unbounded wait (§4.3: "deadline là timer
+ * thật ... phải bao phủ ... dependency acquisition").
+ */
+export function withDeadline(promise, deadlineAt, message, signal) {
+  const remainingMs = Math.max(1, deadlineAt - Date.now());
+  let timer;
+  let onAbort;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(Object.assign(new Error(message), { code: "BROWSER_DEADLINE", statusCode: 503 }));
+    }, remainingMs);
+    if (signal) {
+      onAbort = () => {
+        reject(
+          signal.reason instanceof Error
+            ? signal.reason
+            : Object.assign(new Error("aborted"), { code: "ABORTED" }),
+        );
+      };
+      if (signal.aborted) onAbort();
+      else signal.addEventListener("abort", onAbort, { once: true });
+    }
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    clearTimeout(timer);
+    if (onAbort) signal?.removeEventListener("abort", onAbort);
   });
 }
 
@@ -242,12 +317,13 @@ export async function renderPdf(browser, html, signal, deadlineAt) {
   signal?.addEventListener?.("abort", onAbort, { once: true });
 
   const remaining = () => Math.max(1, deadlineAt - Date.now());
+  const bounded = (promise, phase) => withDeadline(promise, deadlineAt, phase, signal);
 
   try {
-    context = await browser.createBrowserContext();
-    page = await context.newPage();
-    await page.setJavaScriptEnabled(false);
-    await page.setRequestInterception(true);
+    context = await bounded(browser.createBrowserContext(), "context-deadline");
+    page = await bounded(context.newPage(), "page-deadline");
+    await bounded(page.setJavaScriptEnabled(false), "javascript-policy-deadline");
+    await bounded(page.setRequestInterception(true), "request-policy-deadline");
     page.on("request", (outbound) => {
       const url = outbound.url();
       // Strict egress deny: only about:blank and data: URIs are allowed
@@ -258,10 +334,13 @@ export async function renderPdf(browser, html, signal, deadlineAt) {
       }
     });
 
-    await page.setContent(html, { waitUntil: "load", timeout: remaining() });
+    await bounded(page.setContent(html, { waitUntil: "load", timeout: remaining() }), "content-deadline");
     if (signal?.aborted) throw Object.assign(new Error("aborted"), { code: "ABORTED" });
-    await page.emulateMediaType("print");
-    return await page.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true, timeout: remaining() });
+    await bounded(page.emulateMediaType("print"), "media-deadline");
+    return await bounded(
+      page.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true, timeout: remaining() }),
+      "pdf-deadline",
+    );
   } finally {
     signal?.removeEventListener?.("abort", onAbort);
     await page?.close().catch(() => undefined);
@@ -271,7 +350,7 @@ export async function renderPdf(browser, html, signal, deadlineAt) {
 
 const metrics = { rendered: 0, rejected: 0, failed: 0 };
 
-export function createRequestHandler({ bodyAdmission, admission, manager }) {
+export function createRequestHandler({ bodyAdmission, admission, manager, activeJobs = new Set() }) {
   return async function handle(request, response) {
     response.setHeader("Cache-Control", "no-store");
 
@@ -292,6 +371,18 @@ export function createRequestHandler({ bodyAdmission, admission, manager }) {
     }
     if (!tokenMatches(request.headers["x-render-token"])) {
       response.writeHead(401).end();
+      return;
+    }
+    const contentType = String(request.headers["content-type"] ?? "").toLowerCase();
+    if (!contentType.startsWith("text/html")) {
+      response.writeHead(415, { "Content-Type": "application/json" });
+      response.end('{"error":"Content-Type must be text/html"}');
+      return;
+    }
+    const declaredLength = Number(request.headers["content-length"] ?? "0");
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+      response.writeHead(413, { "Content-Type": "application/json" });
+      response.end('{"error":"Document too large"}');
       return;
     }
 
@@ -316,21 +407,50 @@ export function createRequestHandler({ bodyAdmission, admission, manager }) {
     const deadlineAt = startedAt + RENDER_DEADLINE_MS;
 
     const abortController = new AbortController();
-    let completed = false;
-    const onClose = () => {
-      if (!completed) abortController.abort();
+    activeJobs.add(abortController);
+    let responseCompleted = false;
+    let bodyAdmissionHeld = true;
+    let renderAdmissionHeld = false;
+    const deadlineError = Object.assign(new Error("render-deadline"), {
+      code: "DEADLINE",
+      statusCode: 408,
+    });
+    const deadlineTimer = setTimeout(() => abortController.abort(deadlineError), RENDER_DEADLINE_MS);
+    const onRequestAborted = () => {
+      abortController.abort(Object.assign(new Error("client-aborted-upload"), { code: "ABORTED" }));
     };
-    request.on("close", onClose);
+    const onResponseClose = () => {
+      if (!responseCompleted && !response.writableEnded) {
+        abortController.abort(Object.assign(new Error("client-disconnected"), { code: "ABORTED" }));
+      }
+    };
+    request.on("aborted", onRequestAborted);
+    response.on?.("close", onResponseClose);
+    const releaseBodyAdmission = () => {
+      if (!bodyAdmissionHeld) return;
+      bodyAdmissionHeld = false;
+      bodyAdmission.release();
+    };
+    const cleanupJob = () => {
+      clearTimeout(deadlineTimer);
+      request.removeListener("aborted", onRequestAborted);
+      response.removeListener?.("close", onResponseClose);
+      activeJobs.delete(abortController);
+    };
 
     let html;
     try {
       html = await readBody(request, abortController.signal, deadlineAt);
     } catch (error) {
-      completed = true;
-      bodyAdmission.release();
-      request.removeListener("close", onClose);
+      releaseBodyAdmission();
+      cleanupJob();
       if (error?.code === "ABORTED" || abortController.signal.aborted) {
-        if (!response.writableEnded) response.destroy();
+        if (error?.code === "DEADLINE" || abortController.signal.reason?.code === "DEADLINE") {
+          if (!response.writableEnded) {
+            response.writeHead(408, { "Content-Type": "application/json" });
+            response.end('{"error":"Render deadline exceeded"}');
+          }
+        } else if (!response.writableEnded) response.destroy();
       } else {
         const status = error?.statusCode === 413 ? 413 : error?.statusCode === 408 ? 408 : 400;
         if (!response.writableEnded) {
@@ -347,24 +467,31 @@ export function createRequestHandler({ bodyAdmission, admission, manager }) {
       );
       return;
     }
-    bodyAdmission.release();
+    releaseBodyAdmission();
 
     // Only NOW — after auth + body fully validated — acquire the expensive
     // render concurrency slot and fetch the browser (§4.4: "Không lấy
     // browser trước khi body hoàn tất").
     if (!admission.tryAcquire()) {
       metrics.rejected += 1;
-      completed = true;
-      request.removeListener("close", onClose);
+      cleanupJob();
       response.writeHead(503, { "Content-Type": "application/json", "Retry-After": "2" });
       response.end('{"error":"Renderer at capacity"}');
       return;
     }
+    renderAdmissionHeld = true;
 
     try {
-      const browser = await manager.getBrowser();
+      const browser = await withDeadline(
+        manager.getBrowser(),
+        deadlineAt,
+        "browser-acquisition-timeout",
+        abortController.signal,
+      );
       const pdf = await renderPdf(browser, html, abortController.signal, deadlineAt);
-      completed = true;
+      if (pdf.byteLength > MAX_OUTPUT_BYTES) {
+        throw Object.assign(new Error("pdf-output-too-large"), { statusCode: 413 });
+      }
       metrics.rendered += 1;
       if (!response.writableEnded) {
         response.writeHead(200, {
@@ -373,15 +500,29 @@ export function createRequestHandler({ bodyAdmission, admission, manager }) {
           "X-Content-Type-Options": "nosniff",
         });
         response.end(pdf);
+        responseCompleted = true;
       }
     } catch (error) {
-      completed = true;
       if (error?.code === "ABORTED" || abortController.signal.aborted) {
-        if (!response.writableEnded) response.destroy();
+        if (error?.code === "DEADLINE" || abortController.signal.reason?.code === "DEADLINE") {
+          if (!response.writableEnded) {
+            response.writeHead(408, { "Content-Type": "application/json" });
+            response.end('{"error":"Render deadline exceeded"}');
+            responseCompleted = true;
+          }
+        } else if (!response.writableEnded) response.destroy();
       } else {
-        const status = error?.statusCode === 413 ? 413 : error?.statusCode === 408 ? 408 : 500;
-        if (status !== 413 && status !== 408) metrics.failed += 1;
+        const status =
+          error?.statusCode === 413
+            ? 413
+            : error?.statusCode === 408
+            ? 408
+            : error?.statusCode === 503
+            ? 503
+            : 500;
+        if (status !== 413 && status !== 408 && status !== 503) metrics.failed += 1;
         if (!response.writableEnded) {
+          if (status === 503) response.setHeader("Retry-After", "2");
           response.writeHead(status, { "Content-Type": "application/json" });
           response.end(
             JSON.stringify({
@@ -390,14 +531,18 @@ export function createRequestHandler({ bodyAdmission, admission, manager }) {
                   ? "Document too large"
                   : status === 408
                   ? "Body read timeout"
+                  : status === 503
+                  ? "Renderer unavailable"
                   : "Render failed",
             }),
           );
+          responseCompleted = true;
         }
       }
     } finally {
-      request.removeListener("close", onClose);
-      admission.release();
+      cleanupJob();
+      releaseBodyAdmission();
+      if (renderAdmissionHeld) admission.release();
       console.log(
         JSON.stringify({
           evt: "render",
@@ -420,8 +565,9 @@ if (isMain) {
   const bodyAdmission = createAdmissionController(BODY_ADMISSION_MAX);
   const admission = createAdmissionController(MAX_CONCURRENCY);
   const manager = createBrowserManager();
+  const activeJobs = new Set();
   await manager.warmUp();
-  const server = createServer(createRequestHandler({ bodyAdmission, admission, manager }));
+  const server = createServer(createRequestHandler({ bodyAdmission, admission, manager, activeJobs }));
 
   // Enforce HTTP slowloris timeouts
   server.requestTimeout = 30_000;
@@ -445,8 +591,11 @@ if (isMain) {
     manager.beginDraining();
     server.close();
     const deadline = Date.now() + SHUTDOWN_GRACE_MS;
-    while (admission.active > 0 && Date.now() < deadline) {
+    while ((admission.active > 0 || bodyAdmission.active > 0) && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    for (const controller of activeJobs) {
+      controller.abort(Object.assign(new Error("shutdown"), { code: "ABORTED" }));
     }
     await manager.close();
     process.exit(0);

@@ -16,6 +16,9 @@ export const IMPORT_LIMITS = {
   MAX_ZIP_COMPRESSION_RATIO: 100, // max ratio (uncompressed / compressed)
   MAX_ZIP_PATH_DEPTH: 20,
   MAX_ZIP_PATH_LENGTH: 512,
+  MAX_OFFICE_XML_ENTRY_BYTES: 16 * 1024 * 1024,
+  MAX_OFFICE_XML_TOTAL_BYTES: 64 * 1024 * 1024,
+  MAX_OFFICE_MEDIA_TOTAL_BYTES: 128 * 1024 * 1024,
 
   // DOCX Limits
   MAX_DOCX_MEDIA_FILES: 500,
@@ -64,6 +67,8 @@ export function validateZipPreflight(buffer: ArrayBuffer): { valid: boolean; err
   }
 
   let totalDeclaredBytes = 0;
+  let totalOfficeXmlBytes = 0;
+  let totalOfficeMediaBytes = 0;
   const seenNormalizedNames = new Set<string>();
 
   for (const entry of entries) {
@@ -132,6 +137,34 @@ export function validateZipPreflight(buffer: ArrayBuffer): { valid: boolean; err
     seenNormalizedNames.add(normalized);
 
     const { uncompressedSize, compressedSize } = entry;
+    if (
+      !Number.isSafeInteger(uncompressedSize) ||
+      uncompressedSize < 0 ||
+      !Number.isSafeInteger(compressedSize) ||
+      compressedSize < 0
+    ) {
+      return { valid: false, error: `Mục ${name} có metadata kích thước không hợp lệ.` };
+    }
+
+    const normalizedLowerName = normalized.toLowerCase();
+    if (normalizedLowerName.endsWith(".xml") || normalizedLowerName.endsWith(".rels")) {
+      if (uncompressedSize > IMPORT_LIMITS.MAX_OFFICE_XML_ENTRY_BYTES) {
+        return {
+          valid: false,
+          error: `Mục XML ${name} vượt giới hạn an toàn 16MB.`,
+        };
+      }
+      totalOfficeXmlBytes += uncompressedSize;
+      if (totalOfficeXmlBytes > IMPORT_LIMITS.MAX_OFFICE_XML_TOTAL_BYTES) {
+        return { valid: false, error: "Tổng dữ liệu XML Office vượt giới hạn an toàn 64MB." };
+      }
+    }
+    if (/\/media\//u.test(normalizedLowerName)) {
+      totalOfficeMediaBytes += uncompressedSize;
+      if (totalOfficeMediaBytes > IMPORT_LIMITS.MAX_OFFICE_MEDIA_TOTAL_BYTES) {
+        return { valid: false, error: "Tổng media Office vượt giới hạn an toàn 128MB." };
+      }
+    }
 
     if (uncompressedSize > IMPORT_LIMITS.MAX_ZIP_SINGLE_ENTRY_BYTES) {
       return {
@@ -182,17 +215,34 @@ export function validateZipPreflight(buffer: ArrayBuffer): { valid: boolean; err
  */
 export function createInflationTracker(
   maxTotalBytes = IMPORT_LIMITS.MAX_ZIP_TOTAL_UNCOMPRESSED_BYTES,
+  maxEntryBytes = IMPORT_LIMITS.MAX_ZIP_SINGLE_ENTRY_BYTES,
 ) {
   let observedTotalBytes = 0;
+  const observedEntryBytes = new Map<string, number>();
 
   return {
-    track(bytesCount: number) {
+    track(bytesCount: number, entryKey = "__default__") {
+      if (
+        !Number.isSafeInteger(bytesCount) ||
+        bytesCount < 0 ||
+        typeof entryKey !== "string" ||
+        entryKey.length === 0
+      ) {
+        throw new ImportBudgetExceededError("Số byte giải nén quan sát được không hợp lệ.");
+      }
+      const entryTotal = (observedEntryBytes.get(entryKey) ?? 0) + bytesCount;
+      if (!Number.isSafeInteger(entryTotal) || entryTotal > maxEntryBytes) {
+        throw new ImportBudgetExceededError(
+          `Mục ${entryKey} giải nén thực tế vượt giới hạn ${Math.round(maxEntryBytes / 1024 / 1024)}MB.`,
+        );
+      }
       observedTotalBytes += bytesCount;
-      if (observedTotalBytes > maxTotalBytes) {
+      if (!Number.isSafeInteger(observedTotalBytes) || observedTotalBytes > maxTotalBytes) {
         throw new ImportBudgetExceededError(
           `Dung lượng giải nén thực tế vượt giới hạn an toàn (${Math.round(observedTotalBytes / 1024 / 1024)}MB; tối đa ${Math.round(maxTotalBytes / 1024 / 1024)}MB).`,
         );
       }
+      observedEntryBytes.set(entryKey, entryTotal);
     },
     getObservedBytes() {
       return observedTotalBytes;
@@ -209,6 +259,18 @@ export function validateCanvasPixels(
   currentTotalPixels = 0,
   maxTotalPixels = IMPORT_LIMITS.MAX_PDF_TOTAL_DECODED_PIXELS,
 ): { valid: boolean; error?: string } {
+  if (
+    !Number.isSafeInteger(width) ||
+    width <= 0 ||
+    !Number.isSafeInteger(height) ||
+    height <= 0 ||
+    !Number.isSafeInteger(currentTotalPixels) ||
+    currentTotalPixels < 0 ||
+    !Number.isSafeInteger(maxTotalPixels) ||
+    maxTotalPixels <= 0
+  ) {
+    return { valid: false, error: "Kích thước hoặc ngân sách pixel không hợp lệ." };
+  }
   if (width > IMPORT_LIMITS.MAX_OCR_CANVAS_DIMENSION || height > IMPORT_LIMITS.MAX_OCR_CANVAS_DIMENSION) {
     return {
       valid: false,
@@ -217,10 +279,11 @@ export function validateCanvasPixels(
   }
 
   const framePixels = width * height;
-  if (currentTotalPixels + framePixels > maxTotalPixels) {
+  const nextTotalPixels = currentTotalPixels + framePixels;
+  if (!Number.isSafeInteger(framePixels) || !Number.isSafeInteger(nextTotalPixels) || nextTotalPixels > maxTotalPixels) {
     return {
       valid: false,
-      error: `Tổng số điểm ảnh (pixels) giải nén vượt quá giới hạn an toàn (${Math.round((currentTotalPixels + framePixels) / 1_000_000)}Mpx; tối đa ${Math.round(maxTotalPixels / 1_000_000)}Mpx).`,
+      error: `Tổng số điểm ảnh (pixels) giải nén vượt quá giới hạn an toàn (${Math.round(nextTotalPixels / 1_000_000)}Mpx; tối đa ${Math.round(maxTotalPixels / 1_000_000)}Mpx).`,
     };
   }
 

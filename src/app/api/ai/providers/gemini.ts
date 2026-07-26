@@ -3,7 +3,12 @@ import type { AiUsage } from "@/types/ai";
 export const MAX_GEMINI_BUFFER_BYTES = 128 * 1024; // 128 KiB
 export const MAX_GEMINI_BRACE_DEPTH = 32;
 
-export type GeminiParsedChunk = { delta?: string; usage?: AiUsage; malformed?: true };
+export type GeminiParsedChunk = {
+  delta?: string;
+  usage?: AiUsage;
+  malformed?: true;
+  limitExceeded?: true;
+};
 
 /**
  * Parses a single complete Gemini response object from the stream. Returns
@@ -12,8 +17,8 @@ export type GeminiParsedChunk = { delta?: string; usage?: AiUsage; malformed?: t
  * silently dropping it (see w25_fix-all-bugs.md §D).
  */
 export function parseGeminiChunk(jsonText: string): GeminiParsedChunk | null {
-  if (jsonText.length > MAX_GEMINI_BUFFER_BYTES) {
-    return null;
+  if (new TextEncoder().encode(jsonText).byteLength > MAX_GEMINI_BUFFER_BYTES) {
+    return { limitExceeded: true };
   }
   try {
     const data = JSON.parse(jsonText);
@@ -51,7 +56,7 @@ export function extractJsonObjects(
   buffer: string,
   maxBufferBytes = MAX_GEMINI_BUFFER_BYTES,
 ): { objects: string[]; remaining: string; incomplete: boolean } {
-  if (buffer.length > maxBufferBytes) {
+  if (new TextEncoder().encode(buffer).byteLength > maxBufferBytes) {
     throw new Error("Gemini stream buffer limit exceeded");
   }
 

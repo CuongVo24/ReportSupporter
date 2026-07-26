@@ -82,3 +82,8 @@ Re-fix 2026-07-25 (cùng ngày, bản thứ hai):
 - `/api/ready` không còn gửi `PDF_RENDERER_TOKEN` trong probe `/ready` (endpoint renderer không auth cho `/ready`, chỉ `/render`).
 - `.env.example` cập nhật đầy đủ biến mới kèm giải thích; `production-config.test.ts` +18 test case mới, `production-config.fuzz.test.ts` cập nhật baseline env để không false-fail do secret mới bắt buộc.
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+CI nay chạy production-config checker bằng fixture hợp lệ và một negative fixture bắt buộc fail, nên không còn false-green do thiếu `NODE_ENV=production`. Parser hop được dùng chung giữa validator và runtime.
+
+**Trạng thái:** `CODE FIXED — TARGET ENV EVIDENCE PENDING`; fixture CI không thay thế kiểm tra secret/URL/topology của môi trường triển khai thật.

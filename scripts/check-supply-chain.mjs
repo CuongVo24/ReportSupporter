@@ -6,6 +6,14 @@ import fs from "node:fs";
 import path from "node:path";
 
 const APPROVED_EXTERNAL_DOMAINS = ["cdn.sheetjs.com"];
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/u;
+
+function parseDateOnly(value) {
+  if (typeof value !== "string" || !DATE_ONLY_RE.test(value)) return null;
+  const timestamp = Date.parse(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(timestamp)) return null;
+  return new Date(timestamp).toISOString().slice(0, 10) === value ? timestamp : null;
+}
 const ROOT_DIR = process.cwd();
 // Overrides pinned for reasons other than a specific advisory (build/runtime
 // compat pins chosen by the app, not a deviation from a parent's declared
@@ -76,16 +84,28 @@ function runSupplyChainCheck() {
   if (fs.existsSync(waiversPath)) {
     try {
       const waivers = JSON.parse(fs.readFileSync(waiversPath, "utf8"));
-      const today = new Date().toISOString().split("T")[0];
+      const todayTimestamp = Date.parse(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
 
       for (const w of waivers) {
-        if (!w.id || !w.cve || !w.owner || !w.expiryDate || !w.compensatingControl) {
-          error(`Invalid waiver schema for ${w.id || w.cve}: missing required fields.`);
+        if (
+          typeof w !== "object" ||
+          w === null ||
+          typeof w.id !== "string" ||
+          typeof w.cve !== "string" ||
+          typeof w.owner !== "string" ||
+          typeof w.expiryDate !== "string" ||
+          typeof w.compensatingControl !== "string"
+        ) {
+          error(`Invalid waiver schema for ${w?.id || w?.cve || "?"}: missing required fields.`);
           hasErrors = true;
           continue;
         }
 
-        if (w.expiryDate < today) {
+        const expiryTimestamp = parseDateOnly(w.expiryDate);
+        if (expiryTimestamp === null) {
+          error(`Invalid waiver expiryDate for ${w.id}: expected a real YYYY-MM-DD date.`);
+          hasErrors = true;
+        } else if (expiryTimestamp < todayTimestamp) {
           error(`EXPIRED WAIVER: ${w.id} (${w.cve} for ${w.package}) expired on ${w.expiryDate}! Owner: ${w.owner}`);
           hasErrors = true;
         } else {
@@ -107,7 +127,7 @@ function runSupplyChainCheck() {
   if (fs.existsSync(overridesPath)) {
     try {
       const overrides = JSON.parse(fs.readFileSync(overridesPath, "utf8"));
-      const today = new Date().toISOString().split("T")[0];
+      const todayTimestamp = Date.parse(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
       const requiredFields = [
         "package",
         "advisory",
@@ -120,18 +140,26 @@ function runSupplyChainCheck() {
       ];
 
       for (const entry of overrides) {
-        const missing = requiredFields.filter((field) => !entry[field] || (Array.isArray(entry[field]) && entry[field].length === 0));
+        const missing = requiredFields.filter((field) => {
+          const value = entry?.[field];
+          if (field === "affectedPaths") {
+            return !Array.isArray(value) || value.length === 0 || value.some((pathValue) => typeof pathValue !== "string" || !pathValue.trim());
+          }
+          return typeof value !== "string" || !value.trim();
+        });
         if (missing.length > 0) {
           error(`Invalid dependency-override entry for ${entry.package || "?"}: missing field(s) ${missing.join(", ")}.`);
           hasErrors = true;
           continue;
         }
-        if (Number.isNaN(Date.parse(entry.reviewBy)) || Number.isNaN(Date.parse(entry.addedAt))) {
-          error(`Invalid date in dependency-override entry for ${entry.package}: addedAt/reviewBy must be real dates.`);
+        const reviewTimestamp = parseDateOnly(entry.reviewBy);
+        const addedTimestamp = parseDateOnly(entry.addedAt);
+        if (reviewTimestamp === null || addedTimestamp === null || reviewTimestamp < addedTimestamp) {
+          error(`Invalid date in dependency-override entry for ${entry.package}: addedAt/reviewBy must be ordered real YYYY-MM-DD dates.`);
           hasErrors = true;
           continue;
         }
-        if (entry.reviewBy < today) {
+        if (reviewTimestamp < todayTimestamp) {
           error(`EXPIRED DEPENDENCY OVERRIDE: ${entry.package} (${entry.advisory}) was due for review on ${entry.reviewBy}! Owner: ${entry.owner}`);
           hasErrors = true;
           continue;

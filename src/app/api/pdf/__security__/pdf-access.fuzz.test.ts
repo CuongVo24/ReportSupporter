@@ -72,6 +72,28 @@ describe("PDF Render Access Policy & Capability Fuzzing (W25-C)", () => {
       expect(withIdentity.status).toBe(200);
     });
 
+    it("rejects an oversized streamed ticket body enforced by actual bytes, not a trusted/missing Content-Length header", async () => {
+      const encoder = new TextEncoder();
+      const chunk = encoder.encode(JSON.stringify({ htmlHash: "a".repeat(64) }) + " ".repeat(1024 * 1024)); // ~1 MiB per chunk
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          for (let i = 0; i < 26; i++) controller.enqueue(chunk); // ~26 MiB > 25 MiB cap
+          controller.close();
+        },
+      });
+
+      const req = new Request("http://localhost/api/pdf/ticket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        duplex: "half",
+      } as RequestInit & { duplex: "half" });
+      expect(req.headers.get("content-length")).toBeNull();
+
+      const res = await issueTicketRoute(req);
+      expect(res.status).toBe(413);
+    });
+
     it("rejects cross-site ticket requests from browser clients with 403", async () => {
       const htmlHash = hashHtmlPayload("<!doctype html><html><body>Cross Site</body></html>");
       const req = new Request("http://localhost/api/pdf/ticket", {

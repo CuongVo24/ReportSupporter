@@ -30,15 +30,6 @@ self.onmessage = async (e: MessageEvent) => {
       });
       self.postMessage({ id, type: "success", result });
     } else if (format === "pptx") {
-      if (typeof DOMParser === "undefined") {
-        // Signal fallback to main thread due to missing DOMParser in Web Worker
-        self.postMessage({
-          id,
-          type: "error",
-          error: "FALLBACK_TO_MAIN_THREAD",
-        });
-        return;
-      }
       const mockFile = {
         name: fileName,
         arrayBuffer: async () => arrayBuffer,

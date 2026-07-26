@@ -69,6 +69,18 @@ describe("zip-central-directory — parser edge cases (W25-H/K)", () => {
     expect(result.valid).toBe(false);
   });
 
+  it("fails closed when declared central-directory size does not match parsed entries", async () => {
+    const buffer = await buildZip({ "a.txt": "hello" });
+    const eocdOffset = findEocdOffset(buffer);
+    const view = new DataView(buffer);
+    const declaredSize = view.getUint32(eocdOffset + 12, true);
+    view.setUint32(eocdOffset + 12, declaredSize + 1, true);
+
+    const result = parseZipCentralDirectory(buffer);
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.error).toContain("không khớp");
+  });
+
   it("reports the general-purpose encryption bit accurately per entry", async () => {
     const buffer = await buildZip({ "plain.txt": "hello", "also-plain.txt": "world" });
     const result = parseZipCentralDirectory(buffer);

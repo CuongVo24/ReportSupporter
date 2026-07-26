@@ -41,10 +41,10 @@ describe("HttpAiAdapter", () => {
       model: "gemini-1.5-pro",
     });
 
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ suggestion: "improved text" }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValue(new Response(
+      JSON.stringify({ suggestion: "improved text" }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    ));
 
     const suggestion = await httpAdapter.request("rewrite", "input text");
     
@@ -80,11 +80,10 @@ describe("HttpAiAdapter", () => {
       apiKey: "client-key",
     });
 
-    vi.mocked(fetch).mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: "Failed to connect to OpenAI" }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValue(new Response(
+      JSON.stringify({ error: "Failed to connect to OpenAI" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    ));
 
     await expect(httpAdapter.request("rewrite", "input text")).rejects.toThrow("Failed to connect to OpenAI");
   });
@@ -124,8 +123,8 @@ describe("HttpAiAdapter", () => {
     expect(result.suggestion).toBe("Hello world!");
     expect(events).toHaveLength(4);
     expect(events[0]).toEqual({ event: "meta", requestId: "123", provider: "openai", model: "gpt-4" });
-    expect(events[1]).toEqual({ event: "delta", requestId: "123", text: "Hello " });
-    expect(events[2]).toEqual({ event: "delta", requestId: "123", text: "world!" });
+    expect(events[1]).toEqual({ event: "delta", text: "Hello " });
+    expect(events[2]).toEqual({ event: "delta", text: "world!" });
     expect(events[3]).toEqual({ event: "done", requestId: "123" });
   });
 

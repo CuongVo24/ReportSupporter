@@ -83,3 +83,10 @@ Re-fix 2026-07-25:
 - **⚠️ Chưa verify bằng probe thật trong phiên này.** Docker daemon không chạy trong sandbox hiện tại (`docker compose config` chạy được và YAML hợp lệ, nhưng không thể `up`/build thật). `cap_drop: ALL` có rủi ro lý thuyết xung đột với Chromium namespace sandbox trên vài kernel — CI (`ci.yml` job `verify`, lane "Docker isolation") SẼ là lần chạy thật đầu tiên xác nhận container boot + `test:pdf-integration` xanh. Nếu CI đỏ ở lane này, việc đầu tiên cần kiểm là `cap_drop: ALL` có chặn Chromium sandbox hay không trước khi nghi ngờ chỗ khác.
 - Test: `services/pdf-renderer/server.test.mjs` 10/10 xanh (mới: context isolation per-job, context/page luôn đóng kể cả khi render throw, abort sớm không mở context, thứ tự `body:release` trước `render:acquire` trước `manager.getBrowser()`, request bị chặn ở body-admission-full không bao giờ chạm render slot/browser).
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+Review runtime xác nhận `request.on("close")` là lỗi thật: Node có thể phát `close` sau khi request body kết thúc bình thường nhưng trước khi response hoàn tất, nên guard `completed` cũ vẫn abort một render hợp lệ. Handler nay chỉ dùng `request.aborted` cho client abort và `response.close` khi response chưa kết thúc.
+
+Pass này đồng thời siết token fail-closed ngoài test; parse integer chính xác và fail boot khi cấu hình sai; áp idle/total/overall deadline cho body, browser/context/page/content/media/PDF; cap output; theo dõi body/render jobs riêng; và graceful shutdown chờ/abort đúng hạn. Unit test gồm request HTTP thật và browser-context treo đều xanh.
+
+**Trạng thái:** `CODE FIXED — DOCKER/ISOLATION EVIDENCE PENDING`. Chưa được gọi `DONE` cho tới khi clean image build, non-root/seccomp/egress probe và runtime timeout test chạy trên artifact phát hành.

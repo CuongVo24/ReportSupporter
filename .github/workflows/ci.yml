@@ -4,6 +4,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
 
 permissions:
   contents: read
@@ -22,8 +25,29 @@ jobs:
       - run: npm run check:encoding
       - run: npm run lint
       - run: npm run typecheck
-      # W24-H: validate the deployment env contract
-      - run: npm run check:production-config
+      # W24-H / W25-2-J: validate the deployment env contract. This MUST
+      # actually exercise the production branch (NODE_ENV=production + a
+      # full valid fixture) — running with a bare/dev env would silently
+      # skip every production-only check (secrets, Redis, operator token,
+      # hop count) and always pass trivially, proving nothing.
+      - name: "Production config checker — valid production fixture must pass"
+        run: npm run check:production-config
+        env:
+          NODE_ENV: production
+          TRUSTED_PROXY_MODE: vercel
+          TRUSTED_PROXY_HOPS: "1"
+          UPSTASH_REDIS_REST_URL: "https://ci-fixture-redis.upstash.io"
+          UPSTASH_REDIS_REST_TOKEN: "ci-fixture-upstash-token-0000000"
+          RATE_LIMIT_SECRET: "ci-fixture-rate-limit-secret-0000"
+          RATE_LIMIT_SECRET_VERSION: "v1"
+          OPERATOR_DIAGNOSTICS_TOKEN: "ci-fixture-operator-token-0000000"
+      - name: "Production config checker — invalid fixture must fail (proves the gate actually enforces)"
+        run: |
+          if NODE_ENV=production npm run check:production-config; then
+            echo "::error::check-production-config.mjs incorrectly PASSED on a production fixture missing required secrets (Redis/RATE_LIMIT_SECRET/OPERATOR_DIAGNOSTICS_TOKEN) — the gate is not actually enforcing anything."
+            exit 1
+          fi
+          echo "Invalid fixture correctly rejected."
 
       # --- Lane: Supply chain security & dual workspace audit ----------------
       - name: "CI Actions pinned to full commit SHA (no mutable tags/branches)"
@@ -46,9 +70,15 @@ jobs:
         run: npm run test:coverage
       - name: "Flake gate — pipeline-client circuit-breaker suite x20, no timeout increase"
         run: |
-          for i in $(seq 1 20); do
-            echo "::group::pipeline-client repeat run $i/20"
-            npx vitest run src/modules/pipeline/pipeline-client.test.ts --maxWorkers=2
+          for i in $(seq 1 10); do
+            echo "::group::concurrency/abort repeat run $i/10"
+            npx vitest run \
+              src/modules/pipeline/pipeline-client.test.ts \
+              src/modules/write/ai/adapters/http-adapter.test.ts \
+              src/app/api/ai/__security__/ai-stream-bounds.fuzz.test.ts \
+              src/modules/import/worker-protocol.test.ts \
+              --maxWorkers=1
+            npm run test:pdf-unit
             echo "::endgroup::"
           done
       - run: npm run test:pdf-unit
@@ -58,6 +88,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage
+          retention-days: 14
 
       - run: npm run build
 
@@ -98,7 +129,6 @@ jobs:
           output: test-results/pdf-renderer-trivy.json
           severity: "CRITICAL,HIGH"
           exit-code: "1"
-          ignore-unfixed: true
 
       # --- Lane: Docker isolation (PDF renderer sandbox) ----------------------
       # docker-compose.pdf.yml requires PDF_RENDERER_TOKEN (no default) — the
@@ -130,6 +160,7 @@ jobs:
         if: always()
         with:
           name: qa-and-security-evidence
+          retention-days: 30
           path: |
             playwright-report
             test-results

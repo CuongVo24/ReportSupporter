@@ -38,6 +38,7 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
 
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
         ok: true,
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
         body: mockStream,
       } as Response));
 
@@ -82,6 +83,7 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
       };
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
         ok: true,
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
         body: { getReader: () => fakeReader },
       } as unknown as Response));
 
@@ -114,19 +116,19 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
       expect(() => extractJsonObjects(nestedBuffer)).toThrow("Gemini stream nesting depth exceeded");
     });
 
-    it("Gemini parseGeminiChunk returns null for oversized JSON string", () => {
+    it("Gemini parseGeminiChunk returns an explicit limit error for oversized JSON", () => {
       const hugeChunk = JSON.stringify({ candidates: [{ content: { parts: [{ text: "x".repeat(130 * 1024) }] } }] });
-      expect(parseGeminiChunk(hugeChunk)).toBeNull();
+      expect(parseGeminiChunk(hugeChunk)).toEqual({ limitExceeded: true });
     });
 
-    it("OpenAI parseOpenAiLine returns null for line exceeding 64 KiB", () => {
+    it("OpenAI parseOpenAiLine returns an explicit limit error for a line exceeding 64 KiB", () => {
       const hugeLine = "data: " + "x".repeat(70 * 1024);
-      expect(parseOpenAiLine(hugeLine)).toBeNull();
+      expect(parseOpenAiLine(hugeLine)).toEqual({ limitExceeded: true });
     });
 
-    it("Anthropic parseAnthropicLine returns null for line exceeding 64 KiB", () => {
+    it("Anthropic parseAnthropicLine returns an explicit limit error for a line exceeding 64 KiB", () => {
       const hugeLine = "data: " + "x".repeat(70 * 1024);
-      expect(parseAnthropicLine(hugeLine)).toBeNull();
+      expect(parseAnthropicLine(hugeLine)).toEqual({ limitExceeded: true });
     });
   });
 
@@ -149,7 +151,11 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
           controller.close();
         },
       });
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: mockStream } as Response));
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
+        body: mockStream,
+      } as Response));
 
       const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
       const events = await collectEvents(response);
@@ -170,7 +176,11 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
           controller.close();
         },
       });
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: mockStream } as Response));
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
+        body: mockStream,
+      } as Response));
 
       const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
       const events = await collectEvents(response);
@@ -189,7 +199,11 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
           controller.close();
         },
       });
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: mockStream } as Response));
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
+        body: mockStream,
+      } as Response));
 
       const response = await POST(aiRequest({ action: "rewrite", input: "Hello", provider: "openai" }));
       const events = await collectEvents(response);

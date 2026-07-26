@@ -33,8 +33,22 @@ export function runInWorker(
 
     const jobId = crypto.randomUUID();
     let settled = false;
+    const totalTimer = setTimeout(
+      () => rejectOnce(new Error("Import worker total deadline exceeded")),
+      120_000,
+    );
+    let idleTimer: ReturnType<typeof setTimeout>;
+    const resetIdleTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(
+        () => rejectOnce(new Error("Import worker idle deadline exceeded")),
+        30_000,
+      );
+    };
 
     const cleanup = () => {
+      clearTimeout(totalTimer);
+      clearTimeout(idleTimer);
       abortSignal?.removeEventListener("abort", onAbort);
       worker.onmessage = null;
       worker.onerror = null;
@@ -68,6 +82,7 @@ export function runInWorker(
     worker.onmessage = (e) => {
       const { id, type, progress, result, error } = e.data;
       if (id !== jobId) return;
+      resetIdleTimer();
 
       if (type === "progress") {
         if (onProgress && progress) {
@@ -104,5 +119,6 @@ export function runInWorker(
       },
       transferables
     );
+    resetIdleTimer();
   });
 }

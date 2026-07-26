@@ -89,3 +89,10 @@ Re-fix 2026-07-25:
 - Giữ nguyên S2 (parser byte/depth limits) và S4 (redact lỗi công khai) từ bản trước — không đổi.
 - Test: `route.test.ts` (9/9, đã cập nhật kỳ vọng delta không có `requestId`), `ai-stream-bounds.fuzz.test.ts` (11/11 — mới: correlation ID không echo client, pull-aware không đọc hết upstream ngay từ đầu (đo số lần gọi `reader.read()` upstream so với số lần consumer đọc), malformed frame → `AI_PROTOCOL_ERROR` đúng một terminal event, no-newline trailing line được salvage, single-delta-overflow → `AI_STREAM_EXCEEDED` không truncate). `src/modules/write/ai` (48 test, client adapter) xanh không đổi.
 
+### Pass 2 — 2026-07-26 (review cuối)
+
+Kết luận trước rằng response/client side đã bounded đầy đủ là sai. Pass cuối thay request body bằng reader có byte cap + idle/total deadline; siết provider content type, byte/line/frame/depth caps và malformed/oversize fail-closed; giữ mỗi downstream `pull()` tối đa một upstream read; và phát terminal event exactly once.
+
+`http-adapter.ts` đã được viết lại để không dùng `.json()`/`.text()` không giới hạn: response/error body có cap, UTF-8 fatal, schema Zod runtime, giới hạn event/line/total/suggestion, thứ tự `meta`/terminal bắt buộc và hủy reader khi lỗi/cancel. Regression/fuzz cho oversized và invalid protocol đều xanh.
+
+**Trạng thái:** `CODE FIXED — FULL SOAK EVIDENCE PENDING`.

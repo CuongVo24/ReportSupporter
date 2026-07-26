@@ -54,6 +54,14 @@ export type AiUsage = {
   catalogUpdatedAt?: string;
 };
 
+export const aiUsageSchema = z.object({
+  inputTokens: z.number().int().nonnegative().optional(),
+  outputTokens: z.number().int().nonnegative().optional(),
+  estimated: z.boolean(),
+  estimatedCostUsd: z.number().finite().nonnegative().optional(),
+  catalogUpdatedAt: z.string().max(64).optional(),
+});
+
 // Correlation ID is only carried on the meta (first) and terminal
 // (done/error, exactly one) events — not repeated on every delta, where it
 // would be pure overhead with no consumer (see w25_fix-all-bugs.md §D).
@@ -62,6 +70,30 @@ export type AiStreamEvent =
   | { event: "delta"; text: string }
   | { event: "done"; requestId: string; usage?: AiUsage }
   | { event: "error"; requestId: string; code?: string; message: string };
+
+export const aiStreamEventSchema = z.discriminatedUnion("event", [
+  z.object({
+    event: z.literal("meta"),
+    requestId: z.string().min(1).max(128),
+    provider: z.string().min(1).max(64),
+    model: z.string().min(1).max(128),
+  }),
+  z.object({
+    event: z.literal("delta"),
+    text: z.string().max(16_000),
+  }),
+  z.object({
+    event: z.literal("done"),
+    requestId: z.string().min(1).max(128),
+    usage: aiUsageSchema.optional(),
+  }),
+  z.object({
+    event: z.literal("error"),
+    requestId: z.string().min(1).max(128),
+    code: z.string().max(128).optional(),
+    message: z.string().min(1).max(1_024),
+  }),
+]);
 
 export type AiRequestContext = {
   projectId?: string;
@@ -88,13 +120,7 @@ export const aiSuggestionSchema = z.object({
   baseRevision: z.number().int().nonnegative().optional(),
   baseHash: z.string().optional(),
   createdAt: z.string().optional(),
-  usage: z.object({
-    inputTokens: z.number().int().nonnegative().optional(),
-    outputTokens: z.number().int().nonnegative().optional(),
-    estimated: z.boolean(),
-    estimatedCostUsd: z.number().nonnegative().optional(),
-    catalogUpdatedAt: z.string().optional(),
-  }).optional(),
+  usage: aiUsageSchema.optional(),
   accepted: z.boolean().optional(),
 });
 

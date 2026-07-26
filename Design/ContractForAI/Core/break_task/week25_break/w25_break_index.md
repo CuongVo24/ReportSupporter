@@ -81,18 +81,20 @@
 
 > **Cập nhật 2026-07-25 (re-verification pass sau `w25_fix-all-bugs.md`):** review cùng ngày phát hiện A–M đều có gap thật giữa nhãn `DONE`/`PROPOSED` cũ và implementation (chi tiết § Kết luận trong `w25_fix-all-bugs.md`). Toàn bộ đã được REOPEN và vá lại trong cùng ngày, commit riêng từng contract (`w25/*` branch naming theo `w25_fix-all-bugs.md` §10). Trạng thái dưới đây phản ánh kết quả SAU re-fix, không phải trạng thái tại thời điểm review ban đầu.
 
+> **Cập nhật review cuối 2026-07-26 (`w25_fix-all-bugs-2.md`):** pass triển khai ban đầu chỉ vá một phần và có một số kết luận `STALE` sai. Review runtime xác nhận lại các lỗi thật ở E (`request.close`, numeric config, deadline/output/shutdown), D (provider/client stream bounds và schema), C (claim ordering/renderer response), G (URL validation/cancel), B (canonical IP/header chain), H (arithmetic/worker/fallback/ZIP consistency) và L/K (gate/evidence). Các lỗi code tái hiện được đã được vá và có regression test. Tuy nhiên Docker/browser/Redis/CI target evidence không có trên máy review, và H/K vẫn còn hạng mục kiến trúc mở; vì vậy không nâng trạng thái vượt quá bằng chứng.
+
 | Contract | Trạng thái |
 |---|---|
 | A — Production dependency vulnerabilities | `DONE` (re-verified 2026-07-25) |
-| B — Rate-limit identity & trusted ingress | `DONE` (re-verified 2026-07-25) |
-| C — Public PDF access policy | `DONE` (re-verified 2026-07-25) |
-| D — AI stream protocol resource bounds | `DONE` (re-verified 2026-07-25) |
-| E — Renderer sandbox/deadline/egress | `DONE` (re-verified 2026-07-25; SBOM/scan/container probe chưa chạy thật — không có Docker daemon trong sandbox, CI job `verify` là lần chạy thật đầu tiên) |
-| F — Reproducible renderer container | `DONE` (re-verified 2026-07-25; cùng ghi chú "chưa verify Docker thật" như E) |
-| G — CSP & remote-image privacy | `DONE` (re-verified 2026-07-25; verify thật bằng production build + browser, xem file contract §7) |
-| H — Document import resource budgets | `KEEP OPEN — PARTIAL` (re-verified 2026-07-25; ZIP bomb/inflation/pixel budget đã đóng thật, PPTX DOMParser worker-fallback + OCR idle-deadline còn mở — xem file contract §7 "Còn lại") |
+| B — Rate-limit identity & trusted ingress | `CODE FIXED — DEPLOY TOPOLOGY EVIDENCE PENDING` (canonical IPv4/IPv6, empty/duplicate/header-chain fail-closed có test) |
+| C — Public PDF access policy | `CODE FIXED — REDIS/RENDERER INTEGRATION EVIDENCE PENDING` |
+| D — AI stream protocol resource bounds | `CODE FIXED — FULL SOAK EVIDENCE PENDING` |
+| E — Renderer sandbox/deadline/egress | `CODE FIXED — DOCKER/ISOLATION EVIDENCE PENDING` |
+| F — Reproducible renderer container | `KEEP OPEN — EVIDENCE PARTIAL` (chưa có clean Docker build/runtime/SBOM/scan proof cho commit này) |
+| G — CSP & remote-image privacy | `CODE FIXED — PRODUCTION BROWSER EVIDENCE PENDING` |
+| H — Document import resource budgets | `KEEP OPEN — PARTIAL` (đã vá arithmetic, worker deadline, DOMParser fallback và ZIP consistency; streaming inflation/pre-allocation và XLSX pre-parse ordering còn mở) |
 | I — Markdown/DOM/PDF sanitization | `DONE` (re-verified 2026-07-25; đồng thời sửa mismatch file `PROPOSED` vs index `DONE` cũ) |
-| J — Readiness/runtime config | `DONE` (re-verified 2026-07-25, 2 lần trong cùng ngày — lần đầu buổi sáng còn thiếu secret/URL validation) |
-| K — Coverage/fuzz/flake/security gates | `KEEP OPEN — PARTIAL` (2026-07-25; coverage threshold + fuzz mở rộng cho file mới, nhưng `ci.yml` chưa phân lane unit/browser/Docker/soak rõ ràng hơn) |
-| L — CI supply chain/release evidence | `DONE` (re-verified 2026-07-25; SBOM/scan/evidence-manifest mới, cùng ghi chú "chưa chạy thật" như E/F) |
-| M — Security docs/threat model/data at rest | `DONE` (2026-07-25 — pass này) |
+| J — Readiness/runtime config | `CODE FIXED — TARGET ENV EVIDENCE PENDING` |
+| K — Coverage/fuzz/flake/security gates | `KEEP OPEN — PARTIAL` (flake loop/schedule/retention đã cải thiện; browser/Docker/soak lanes và evidence còn thiếu) |
+| L — CI supply chain/release evidence | `CODE FIXED — CI EVIDENCE PENDING` (waiver date parser và Trivy policy đã siết; workflow chưa chạy trên commit này) |
+| M — Security docs/threat model/data at rest | `REOPEN — DO LAST` (chỉ đóng sau khi evidence và trạng thái A–L đồng bộ) |
