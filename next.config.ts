@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
         process.cwd(),
         "node_modules/decode-named-character-reference/index.js",
       ),
+      // Same W24-I class of bug: rehype-katex → hast-util-from-html-isomorphic
+      // resolves its "browser" export (lib/browser.js), which calls
+      // `new DOMParser()` at module scope — a ReferenceError inside
+      // pipeline.worker.ts, crashing the worker at boot. Its parse5-based
+      // default entry works in both window and worker contexts.
+      "hast-util-from-html-isomorphic$": path.resolve(
+        process.cwd(),
+        "node_modules/hast-util-from-html-isomorphic/index.js",
+      ),
     };
     return config;
   },
