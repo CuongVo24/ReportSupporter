@@ -2,7 +2,13 @@ FROM ghcr.io/puppeteer/puppeteer:25.3.0@sha256:9665f5b57abc5cc7080a641878964018d
 
 USER root
 WORKDIR /app
-ENV NODE_ENV=production PUPPETEER_SKIP_DOWNLOAD=true
+# Chrome still needs writable config/cache storage for Crashpad even when its
+# profile lives under /tmp. The runtime root filesystem is read-only, while
+# docker-compose.pdf.yml provides /tmp as a bounded writable tmpfs.
+ENV NODE_ENV=production \
+  PUPPETEER_SKIP_DOWNLOAD=true \
+  XDG_CONFIG_HOME=/tmp/.chromium \
+  XDG_CACHE_HOME=/tmp/.chromium
 
 # Pull Debian security fixes released after the base image was built —
 # the Trivy CI gate fails on any fixable Critical/High CVE in the image.
