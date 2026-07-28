@@ -107,7 +107,7 @@
     "prettier": "3.8.4",
     "serwist": "^9.5.11",
     "typescript": "6.0.3",
-    "vitest": "4.1.9",
+    "vitest": "4.1.10",
     "vitest-axe": "0.1.0"
   },
   "overrides": {
