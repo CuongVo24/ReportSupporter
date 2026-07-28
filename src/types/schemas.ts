@@ -15,6 +15,7 @@ export const reportProjectSchema = z.object({
   id: z.string(),
   title: z.string(),
   templateId: z.string(),
+  initializationState: z.enum(["pending", "complete"]).default("complete"),
   metadata: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
   sections: z.array(reportSectionSchema),
   updatedAt: z.string(),
