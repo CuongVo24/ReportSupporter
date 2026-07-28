@@ -122,13 +122,27 @@ jobs:
           image: report-supporter/pdf-renderer:ci
           format: spdx-json
           output-file: test-results/pdf-renderer-sbom.spdx.json
-      - name: "Vulnerability scan — pdf-renderer image (Trivy, fails on Critical/High)"
+      # Keep the complete Critical/High report as release evidence, including
+      # vulnerabilities for which Debian has not published a fixed package.
+      - name: "Vulnerability report — pdf-renderer image (Trivy, all Critical/High)"
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: report-supporter/pdf-renderer:ci
           format: json
           output: test-results/pdf-renderer-trivy.json
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: "false"
+          exit-code: "0"
+      # Fail only when an actionable fixed version exists. Unfixed findings
+      # remain visible in the JSON evidence above instead of making CI
+      # permanently red while the upstream Debian package has no fix.
+      - name: "Vulnerability gate — fixable Critical/High must be zero"
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: report-supporter/pdf-renderer:ci
+          format: table
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: "true"
           exit-code: "1"
 
       # --- Lane: Docker isolation (PDF renderer sandbox) ----------------------

@@ -12,10 +12,16 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --no-audit --no-fund
+RUN npm ci --omit=dev --no-audit --no-fund \
+  && rm -rf \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /home/pptruser/.npm \
+    /root/.npm
 
 COPY server.mjs ./
 USER pptruser
 
 EXPOSE 8080
-CMD ["npm", "start"]
+CMD ["node", "server.mjs"]
