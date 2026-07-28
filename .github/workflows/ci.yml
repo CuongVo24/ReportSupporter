@@ -152,7 +152,10 @@ jobs:
       # this MUST be a real (CI-only, non-default) value here, not just on
       # the later test step that only talks to the already-running container.
       # No --build here: reuses the exact image just built/SBOM'd/scanned above.
-      - run: docker compose -f docker-compose.pdf.yml up -d
+      # Wait on the service's real /ready healthcheck before starting the
+      # host-side probe. Chromium cold-start can legitimately overlap the old
+      # probe's 30s polling window on a constrained shared runner.
+      - run: docker compose -f docker-compose.pdf.yml up -d --wait --wait-timeout 60
         env:
           PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
       - name: "Docker isolation — PDF render, script/JS-off proof, egress canary, admission control"
