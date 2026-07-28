@@ -1,15 +1,14 @@
 # W25-E: pdf-internal is `internal: true` — Docker refuses this network a
 # default route to the outside world, so pdf-renderer cannot reach the real
 # internet even if the app-level request-interception in server.mjs ever
-# regressed. It does NOT block host<->container published ports (Docker
-# implements those via host-side DNAT, not via the bridge's WAN route), so
-# 127.0.0.1:8080 stays reachable, and it does NOT block container<->container
-# traffic within the same network, so pdf-renderer can still resolve/reach
-# the "canary" container — which is the point: canary simulates "any host
-# the renderer might try to call" for the interception proof in
-# scripts/test-pdf-integration.mjs, while this network config is the
-# separate container-level egress-deny layer (defense-in-depth, not the same
-# control as page.on('request') interception).
+# regressed. Host access to published ports on an internal network is not
+# portable across Docker runtimes, so CI runs its probe from the integration
+# service on this network. Container-to-container traffic remains available:
+# pdf-renderer can resolve/reach the "canary" container — which is the point:
+# canary simulates "any host the renderer might try to call" for the
+# interception proof in scripts/test-pdf-integration.mjs, while this network
+# config is the separate container-level egress-deny layer (defense-in-depth,
+# not the same control as page.on('request') interception).
 networks:
   pdf-internal:
     internal: true
@@ -74,3 +73,28 @@ services:
       retries: 3
       start_period: 20s
     restart: unless-stopped
+  integration:
+    profiles:
+      - integration
+    # Reuse the exact renderer image already built, SBOM'd, and scanned. The
+    # repository bind mount supplies the host-installed integration-test
+    # dependencies without creating a second untracked test image.
+    image: report-supporter/pdf-renderer:ci
+    working_dir: /workspace
+    command: ["node", "scripts/test-pdf-integration.mjs"]
+    volumes:
+      - ./:/workspace:ro
+    environment:
+      PDF_RENDERER_URL: http://pdf-renderer:8080
+      PDF_RENDERER_TOKEN: ${PDF_RENDERER_TOKEN:?Set PDF_RENDERER_TOKEN before running the integration profile}
+      PDF_CANARY_URL: http://canary:9000
+      PDF_CANARY_URL_FROM_RENDERER: http://canary:9000
+    networks:
+      - pdf-internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

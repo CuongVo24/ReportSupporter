@@ -160,16 +160,13 @@ jobs:
           PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
       - name: "Docker isolation — PDF render, script/JS-off proof, egress canary, admission control"
         run: |
-          if ! npm run test:pdf-integration; then
+          if ! docker compose -f docker-compose.pdf.yml --profile integration run --rm --no-deps integration; then
             docker compose -f docker-compose.pdf.yml ps
             docker compose -f docker-compose.pdf.yml logs --no-color
             exit 1
           fi
         env:
-          PDF_RENDERER_URL: http://127.0.0.1:8080
           PDF_RENDERER_TOKEN: ci-integration-test-token-not-local-default
-          PDF_CANARY_URL: http://127.0.0.1:9000
-          PDF_CANARY_URL_FROM_RENDERER: http://canary:9000
       - if: always()
         run: docker compose -f docker-compose.pdf.yml down
         env:
