@@ -26,6 +26,13 @@ jobs:
       - run: npm run check:encoding
       - run: npm run lint
       - run: npm run typecheck
+      - name: "QA package — fixtures, catalog, traceability and meta-gates"
+        run: |
+          npm run qa:check
+          git diff --exit-code -- \
+            Design/QA/fixtures/manifest.json \
+            Design/QA/generated \
+            Design/QA/templates/case-results.template.csv
       # W24-H / W25-2-J: validate the deployment env contract. This MUST
       # actually exercise the production branch (NODE_ENV=production + a
       # full valid fixture) — running with a bare/dev env would silently
@@ -89,7 +96,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage
-          retention-days: 14
+          retention-days: 90
 
       - run: npm run build
 
@@ -182,7 +189,7 @@ jobs:
         if: always()
         with:
           name: qa-and-security-evidence
-          retention-days: 30
+          retention-days: 90
           path: |
             playwright-report
             test-results

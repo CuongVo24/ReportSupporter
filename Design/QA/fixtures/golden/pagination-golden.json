@@ -1,0 +1,17 @@
+{
+  "schema": "qa-pagination-golden@1",
+  "fixture": {
+    "title": "Pagination fixture",
+    "sections": 6,
+    "containsHeadingNearPageEnd": true,
+    "containsLongTable": true,
+    "containsLargeImage": true
+  },
+  "expected": {
+    "orphanHeadingCount": 0,
+    "tableHeaderRepeats": true,
+    "imageWithinPrintableArea": true,
+    "minimumPages": 3
+  },
+  "reviewed": true
+}

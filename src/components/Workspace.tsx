@@ -260,10 +260,7 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
         const next = existing ?? createProjectFromTemplate(softwareProjectTemplate);
         setBundle(next);
         setActiveId(next.project.sections[0]?.id ?? null);
-        setIsInitializing(!existing || (
-          next.project.title === softwareProjectTemplate.name &&
-          Object.keys(next.project.metadata).length === 0
-        ));
+        setIsInitializing(next.project.initializationState === "pending");
         if (!existing) {
           try {
             await saveBundle(next);
@@ -785,6 +782,7 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
       project: {
         ...bundle.project,
         title,
+        initializationState: "complete",
         metadata: cleanMetadata,
         sections: generatedSections,
         updatedAt: new Date().toISOString(),
@@ -811,6 +809,7 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
       project: {
         ...bundle.project,
         title: "Báo cáo chưa đặt tên",
+        initializationState: "complete",
         metadata: {},
         sections: [blankSection],
         updatedAt: new Date().toISOString(),
@@ -836,6 +835,7 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
       project: {
         ...replaced.project,
         title,
+        initializationState: "complete",
       },
     };
 
@@ -856,6 +856,7 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
       project: {
         ...replaced.project,
         title: title || "Báo cáo tạo từ AI",
+        initializationState: "complete",
       },
     };
 
@@ -1666,4 +1667,3 @@ export function Workspace({ projectId }: { projectId?: string } = {}) {
     </>
   );
 }
-

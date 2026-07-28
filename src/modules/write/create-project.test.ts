@@ -24,6 +24,7 @@ describe("createProjectFromTemplate", () => {
     expect(bundle.formatSettings).toEqual(DEFAULT_FORMAT_SETTINGS);
     expect(bundle.schemaVersion).toBe(SCHEMA_VERSION);
     expect(bundle.project.templateId).toBe(softwareProjectTemplate.id);
+    expect(bundle.project.initializationState).toBe("pending");
   });
 
   it("round-trips through storedBundleSchema (type ↔ schema parity)", () => {

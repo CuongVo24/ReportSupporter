@@ -1,0 +1,51 @@
+{
+  "schema": "qa-run@1",
+  "runId": "RS-E2E-YYYYMMDD-NN",
+  "planVersion": "3.0.0",
+  "commitSha": "0000000",
+  "build": "production",
+  "scope": "full",
+  "tester": "",
+  "startedAt": "",
+  "endedAt": "",
+  "finalized": false,
+  "catalogSha256": "",
+  "fixtureManifestSha256": "",
+  "environments": [
+    {
+      "id": "ENV-D1",
+      "os": "Windows 11",
+      "browser": "Chrome",
+      "browserVersion": "",
+      "viewportOrDevice": "1440x900"
+    },
+    {
+      "id": "ENV-D2",
+      "os": "Windows 11",
+      "browser": "Edge",
+      "browserVersion": "",
+      "viewportOrDevice": "1440x900"
+    },
+    {
+      "id": "ENV-M1",
+      "os": "Android",
+      "browser": "Chrome",
+      "browserVersion": "",
+      "viewportOrDevice": ""
+    }
+  ],
+  "canonicalCi": {
+    "pass": false,
+    "runId": "",
+    "runUrl": "",
+    "workflowSha": ""
+  },
+  "securityGates": {
+    "pass": false,
+    "evidenceIds": []
+  },
+  "manualEvidenceRelease": {
+    "url": "",
+    "assetSha256": ""
+  }
+}

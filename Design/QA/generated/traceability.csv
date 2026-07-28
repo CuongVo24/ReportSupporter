@@ -1,0 +1,26 @@
+requirementId,area,title,source,section,risk,owner,testInstances
+QA-REQ-A-001,A,Thư viện và vòng đời dự án,Design/ProductPRD.md,Multi-project library,high,QA/Project owner,A01;A02;A03;A04;A05;A06;A07;A08;A09;A10;A11
+QA-REQ-B-001,B,"Template, metadata và AI",Design/ProductPRD.md,Template Catalog và AI workflow,medium,QA/Project owner,B01;B02[software-project];B02[lab-report];B02[internship-report];B02[readme-report];B03[software-project];B03[lab-report];B03[internship-report];B03[readme-report];B04;B05;B06;B07;B08;B09;B10;B11;B12;B13
+QA-REQ-C-001,C,Soạn thảo và asset,Design/Modules/1.Write.md,"Editor, autosave và asset",high,QA/Project owner,C01;C02;C03;C04;C05;C06;C07;C08;C09;C10;C11;C12;C13;C14;C15;C16;C17;C18
+QA-REQ-D-001,D,Định dạng và Preview,Design/Modules/2.Format.md,Format và deterministic preview,medium,QA/Project owner,D01;D02;D03;D04;D05;D06;D07;D08;D09;D10
+QA-REQ-E-001,E,Checker và Readiness,Design/Modules/3.Check.md,"Rules, severity và readiness",medium,QA/Project owner,E01;E02;E03;E04;E05;E06;E07;E08;E09;E10;E11
+QA-REQ-F-001,F,Import và OCR,Design/Modules/6.Import.md,"Converters, review, OCR và limits",high,QA/Project owner,F01;F02;F03;F04[FX-XLSX-01];F04[FX-XLSX-02];F05[FX-PPTX-01];F05[FX-PPTX-02];F06;F07;F08;F09;F10;F11;F12[FX-IMP-05];F12[FX-IMP-04];F13[FX-IMP-01];F13[FX-IMP-02];F13[FX-IMP-03];F14;F15;F16;F17
+QA-REQ-G-001,G,Evidence Kit,Design/Modules/Support.Evidence.md,"Evidence registry, QR và appendix",medium,QA/Project owner,G01[video];G01[github];G01[deploy];G01[drive];G01[figma];G01[account];G01[api-docs];G01[slide];G01[other];G02;G03;G04;G05;G06;G07;G08
+QA-REQ-H-001,H,Export HTML/PDF/DOCX,Design/Modules/4.Export.md,Export gates và artifact verification,high,QA/Project owner,H01;H02;H03;H04;H05[html];H05[pdf];H05[docx];H06[html];H06[pdf];H06[docx];H07;H08;H09;H10[html];H10[pdf];H10[docx];H11;H12;H13;H14
+QA-REQ-I-001,I,Nộp bài,Design/ProductPRD.md,Submission package,high,QA/Project owner,I01;I02;I03;I04;I05;I06;I07;I08;I09;I10
+QA-REQ-J-001,J,Thuyết trình,Design/Modules/5.Present.md,"Present, defense và PPTX",medium,QA/Project owner,J01;J02;J03;J04;J05;J06;J07;J08;J09;J10
+QA-REQ-K-001,K,Command Palette và shortcut,Design/Frontend/Other/SignatureInteractions.md,Commands và keyboard interactions,medium,QA/Project owner,K01;K02;K03[create-section];K03[duplicate-section];K03[move-section-up];K03[move-section-down];K03[save-draft];K03[import-markdown];K03[create-report];K03[run-check];K03[open-preview];K03[toggle-focus-mode];K03[open-export];K03[open-ai-settings];K04[Ctrl+S];K04[Ctrl+Shift+N];K04[Ctrl+Shift+D];K04[Alt+Up];K04[Alt+Down];K04[Ctrl+Enter];K04[Ctrl+P];K04[Ctrl+Shift+F];K04[Ctrl+Shift+E];K05;K06;K07[Ctrl+B];K07[Ctrl+I];K07[Ctrl+Backtick];K07[Ctrl+Shift+C];K07[Ctrl+Shift+T];K07[Ctrl+Shift+M];K07[Ctrl+Shift+Q];K07[Ctrl+H];K07[Ctrl+Alt+1];K07[Ctrl+Alt+2];K07[Ctrl+Alt+3]
+QA-REQ-L-001,L,"Persistence, recovery, offline và PWA",Design/Decisions/ADR-025-indexeddb-multi-project.md,Persistence và migration,high,QA/Project owner,L01;L02;L03;L04;L05;L06;L07;L08;L09;L10[FX-REC-01];L10[FX-REC-02];L10[FX-REC-03];L11
+QA-REQ-M-001,M,"Responsive, accessibility, privacy và performance",Design/Conventions/TestStrategy.md,"Offline, security và browser QA",high,QA/Project owner,M01[320x568];M01[375x667];M01[768x1024];M02;M03;M04;M05;M06;M07;M08;M09;M10;M11;M12;M13;M14;M15;M16
+QA-REQ-N-001,N,Server và API security,Design/Security/ThreatModel.md,Server/API trust boundaries,high,QA/Project owner,N01
+QA-REQ-O-001,O,Supply-chain và release evidence,.github/workflows/ci.yml,Canonical release pipeline,high,QA/Project owner,O01;O02
+QA-REQ-F-002,F,Import resource exhaustion controls,Design/Security/ThreatModel.md,T8–T10,critical,QA/Security,F18;F19;F20;F21;F22;F23
+QA-REQ-M-002,M,"CSP, remote image và DOM sanitization",Design/Security/ThreatModel.md,T1–T3,critical,QA/Security,M17;M18;M19
+QA-REQ-M-003,M,Data-at-rest privacy boundary,Design/Decisions/ADR-028-data-at-rest-encryption.md,Decision,high,QA/Security,M20
+QA-REQ-N-002,N,Trusted ingress và shared rate limiting,Design/Security/ThreatModel.md,T7,critical,QA/Security,N02;N03;N04
+QA-REQ-N-003,N,PDF access policy và renderer admission,Design/Security/ThreatModel.md,PDF renderer boundary,critical,QA/Security,N05;N06;N07
+QA-REQ-N-004,N,AI stream resource bounds,Design/Security/ThreatModel.md,T11,critical,QA/Security,N08;N09
+QA-REQ-N-005,N,Diagnostics và sensitive logging,Design/Security/ThreatModel.md,Data Classification,critical,QA/Security,N10;N11;N12
+QA-REQ-O-002,O,SBOM và container vulnerability gate,Design/Security/ThreatModel.md,T5,critical,Release Engineering,O03;O04
+QA-REQ-O-003,O,Docker renderer isolation,Design/Security/ThreatModel.md,T3,critical,Release Engineering,O05;O06
+QA-REQ-O-004,O,Canonical release evidence,Design/Conventions/TestStrategy.md,W36 mandatory release pipeline,critical,Release Engineering,O07;O08;O09;O10;O11;O12

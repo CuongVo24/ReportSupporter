@@ -1,0 +1,231 @@
+{
+  "schema": "qa-requirements@1",
+  "version": "3.0.0",
+  "requirements": [
+    {
+      "id": "QA-REQ-A-001",
+      "area": "A",
+      "title": "Thư viện và vòng đời dự án",
+      "source": "Design/ProductPRD.md",
+      "section": "Multi-project library",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-B-001",
+      "area": "B",
+      "title": "Template, metadata và AI",
+      "source": "Design/ProductPRD.md",
+      "section": "Template Catalog và AI workflow",
+      "risk": "medium",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-C-001",
+      "area": "C",
+      "title": "Soạn thảo và asset",
+      "source": "Design/Modules/1.Write.md",
+      "section": "Editor, autosave và asset",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-D-001",
+      "area": "D",
+      "title": "Định dạng và Preview",
+      "source": "Design/Modules/2.Format.md",
+      "section": "Format và deterministic preview",
+      "risk": "medium",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-E-001",
+      "area": "E",
+      "title": "Checker và Readiness",
+      "source": "Design/Modules/3.Check.md",
+      "section": "Rules, severity và readiness",
+      "risk": "medium",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-F-001",
+      "area": "F",
+      "title": "Import và OCR",
+      "source": "Design/Modules/6.Import.md",
+      "section": "Converters, review, OCR và limits",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-G-001",
+      "area": "G",
+      "title": "Evidence Kit",
+      "source": "Design/Modules/Support.Evidence.md",
+      "section": "Evidence registry, QR và appendix",
+      "risk": "medium",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-H-001",
+      "area": "H",
+      "title": "Export HTML/PDF/DOCX",
+      "source": "Design/Modules/4.Export.md",
+      "section": "Export gates và artifact verification",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-I-001",
+      "area": "I",
+      "title": "Nộp bài",
+      "source": "Design/ProductPRD.md",
+      "section": "Submission package",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-J-001",
+      "area": "J",
+      "title": "Thuyết trình",
+      "source": "Design/Modules/5.Present.md",
+      "section": "Present, defense và PPTX",
+      "risk": "medium",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-K-001",
+      "area": "K",
+      "title": "Command Palette và shortcut",
+      "source": "Design/Frontend/Other/SignatureInteractions.md",
+      "section": "Commands và keyboard interactions",
+      "risk": "medium",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-L-001",
+      "area": "L",
+      "title": "Persistence, recovery, offline và PWA",
+      "source": "Design/Decisions/ADR-025-indexeddb-multi-project.md",
+      "section": "Persistence và migration",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-M-001",
+      "area": "M",
+      "title": "Responsive, accessibility, privacy và performance",
+      "source": "Design/Conventions/TestStrategy.md",
+      "section": "Offline, security và browser QA",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-N-001",
+      "area": "N",
+      "title": "Server và API security",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "Server/API trust boundaries",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-O-001",
+      "area": "O",
+      "title": "Supply-chain và release evidence",
+      "source": ".github/workflows/ci.yml",
+      "section": "Canonical release pipeline",
+      "risk": "high",
+      "owner": "QA/Project owner"
+    },
+    {
+      "id": "QA-REQ-F-002",
+      "area": "F",
+      "title": "Import resource exhaustion controls",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "T8–T10",
+      "risk": "critical",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-M-002",
+      "area": "M",
+      "title": "CSP, remote image và DOM sanitization",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "T1–T3",
+      "risk": "critical",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-M-003",
+      "area": "M",
+      "title": "Data-at-rest privacy boundary",
+      "source": "Design/Decisions/ADR-028-data-at-rest-encryption.md",
+      "section": "Decision",
+      "risk": "high",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-N-002",
+      "area": "N",
+      "title": "Trusted ingress và shared rate limiting",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "T7",
+      "risk": "critical",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-N-003",
+      "area": "N",
+      "title": "PDF access policy và renderer admission",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "PDF renderer boundary",
+      "risk": "critical",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-N-004",
+      "area": "N",
+      "title": "AI stream resource bounds",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "T11",
+      "risk": "critical",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-N-005",
+      "area": "N",
+      "title": "Diagnostics và sensitive logging",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "Data Classification",
+      "risk": "critical",
+      "owner": "QA/Security"
+    },
+    {
+      "id": "QA-REQ-O-002",
+      "area": "O",
+      "title": "SBOM và container vulnerability gate",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "T5",
+      "risk": "critical",
+      "owner": "Release Engineering"
+    },
+    {
+      "id": "QA-REQ-O-003",
+      "area": "O",
+      "title": "Docker renderer isolation",
+      "source": "Design/Security/ThreatModel.md",
+      "section": "T3",
+      "risk": "critical",
+      "owner": "Release Engineering"
+    },
+    {
+      "id": "QA-REQ-O-004",
+      "area": "O",
+      "title": "Canonical release evidence",
+      "source": "Design/Conventions/TestStrategy.md",
+      "section": "W36 mandatory release pipeline",
+      "risk": "critical",
+      "owner": "Release Engineering"
+    }
+  ]
+}

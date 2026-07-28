@@ -42,10 +42,50 @@ function main() {
   const sbomPath = path.join(OUT_DIR, "pdf-renderer-sbom.spdx.json");
   const scanPath = path.join(OUT_DIR, "pdf-renderer-trivy.json");
   const scanSummary = readJsonSafe(scanPath);
+  const qaPlanPath = path.join(ROOT_DIR, "Design", "QA", "KichBan-Test-Tong-The.md");
+  const qaCatalogPath = path.join(ROOT_DIR, "Design", "QA", "catalog", "test-cases.json");
+  const qaFixtureManifestPath = path.join(ROOT_DIR, "Design", "QA", "fixtures", "manifest.json");
+  const qaCatalog = readJsonSafe(qaCatalogPath);
+  const workflowPath = path.join(ROOT_DIR, ".github", "workflows", "ci.yml");
+  const qaBundlePath = process.env.QA_BUNDLE_PATH
+    ? path.resolve(ROOT_DIR, process.env.QA_BUNDLE_PATH)
+    : null;
+  const ciRunUrl = process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
+    ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+    : null;
 
   const manifest = {
+    schema: "report-supporter-release-evidence@2",
     generatedAt: new Date().toISOString(),
     commitSha: gitCommitSha(),
+    ci: {
+      runId: process.env.GITHUB_RUN_ID || null,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+      runUrl: ciRunUrl,
+      workflowPath: ".github/workflows/ci.yml",
+      workflowSha256: sha256File(workflowPath),
+    },
+    qa: {
+      planVersion: qaCatalog?.version ?? null,
+      plan: {
+        path: "Design/QA/KichBan-Test-Tong-The.md",
+        sha256: sha256File(qaPlanPath),
+      },
+      catalog: {
+        path: "Design/QA/catalog/test-cases.json",
+        sha256: sha256File(qaCatalogPath),
+      },
+      fixtureManifest: {
+        path: "Design/QA/fixtures/manifest.json",
+        sha256: sha256File(qaFixtureManifestPath),
+      },
+      bundle: qaBundlePath && fs.existsSync(qaBundlePath)
+        ? {
+            path: path.relative(ROOT_DIR, qaBundlePath),
+            sha256: sha256File(qaBundlePath),
+          }
+        : null,
+    },
     lockfile: {
       root: {
         path: "package-lock.json",
@@ -84,6 +124,11 @@ function main() {
   if (!manifest.commitSha) missing.push("commitSha");
   if (!manifest.lockfile.root.sha256) missing.push("lockfile.root.sha256");
   if (!manifest.lockfile.renderer.sha256) missing.push("lockfile.renderer.sha256");
+  if (!manifest.ci.workflowSha256) missing.push("ci.workflowSha256");
+  if (!manifest.qa.planVersion) missing.push("qa.planVersion");
+  if (!manifest.qa.plan.sha256) missing.push("qa.plan.sha256");
+  if (!manifest.qa.catalog.sha256) missing.push("qa.catalog.sha256");
+  if (!manifest.qa.fixtureManifest.sha256) missing.push("qa.fixtureManifest.sha256");
   if (!manifest.audits.root) missing.push("audits.root (run npm audit --omit=dev --json > test-results/root-audit.json first)");
   if (!manifest.audits.renderer) missing.push("audits.renderer");
   if (STRICT) {

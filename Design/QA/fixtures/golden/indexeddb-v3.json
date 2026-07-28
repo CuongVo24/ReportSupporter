@@ -1,0 +1,26 @@
+{
+  "schema": "qa-indexeddb-seed@1",
+  "dbVersion": 3,
+  "stores": {
+    "drafts": {
+      "current": {
+        "schemaVersion": 2,
+        "project": {
+          "id": "qa-v3",
+          "title": "Legacy v3",
+          "templateId": "internship-report",
+          "metadata": {},
+          "sections": [],
+          "updatedAt": "2026-01-03T00:00:00.000Z"
+        },
+        "assets": [],
+        "evidence": [],
+        "formatSettings": {}
+      }
+    }
+  },
+  "expected": {
+    "projectCount": 1,
+    "migrationIdempotent": true
+  }
+}

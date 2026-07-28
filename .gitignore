@@ -40,6 +40,7 @@ next-env.d.ts
 # test artifacts
 playwright-report/
 test-results/
+Design/QA/fixtures/generated/
 
 # codegraph index
 .codegraph/

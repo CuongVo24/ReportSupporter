@@ -16,6 +16,11 @@ export type ReportProject = {
   id: string;
   title: string;
   templateId: string;
+  /**
+   * Explicit lifecycle marker for the first-run project setup flow.
+   * Legacy persisted projects are normalized to `complete` during loading.
+   */
+  initializationState?: "pending" | "complete";
   metadata: Record<string, string | string[]>;
   sections: ReportSection[];
   updatedAt: string; // ISO 8601

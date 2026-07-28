@@ -1,0 +1,18 @@
+{
+  "schema": "qa-invalid-draft@1",
+  "project": {
+    "id": "qa-invalid",
+    "title": "Draft lỗi có chủ đích",
+    "sections": [
+      {
+        "id": "missing-project-link",
+        "projectId": "another-project",
+        "order": -1
+      }
+    ]
+  },
+  "expected": {
+    "recoveryItems": 1,
+    "healthyProjectsUnaffected": true
+  }
+}

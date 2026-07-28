@@ -1,0 +1,28 @@
+{
+  "schema": "qa-checker-golden@1",
+  "input": {
+    "title": "Báo cáo fixture checker",
+    "sections": [
+      {
+        "id": "intro",
+        "title": "Giới thiệu",
+        "markdown": "Nội dung có một hình chưa có caption.\\n\\n![Ảnh](asset://fixture-image)"
+      }
+    ]
+  },
+  "expected": {
+    "before": {
+      "errorCount": 0,
+      "warningCount": 1,
+      "issueIds": ["missing-image-caption"],
+      "readinessMin": 80
+    },
+    "afterCaptionFix": {
+      "errorCount": 0,
+      "warningCount": 0,
+      "issueIds": [],
+      "readinessMin": 80
+    }
+  },
+  "reviewed": true
+}

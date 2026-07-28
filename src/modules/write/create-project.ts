@@ -32,6 +32,7 @@ export function createProjectFromTemplate(
     id: crypto.randomUUID(),
     title: input.title ?? template.name,
     templateId: template.id,
+    initializationState: "pending",
     metadata: input.metadata ?? {},
     sections,
     updatedAt: new Date().toISOString(),

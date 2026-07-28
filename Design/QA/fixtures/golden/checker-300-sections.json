@@ -1,0 +1,14 @@
+{
+  "schema": "qa-checker-stress@1",
+  "generator": {
+    "sectionCount": 300,
+    "titlePattern": "Mục {index}",
+    "markdownPattern": "Nội dung kiểm thử xác định cho mục {index}."
+  },
+  "expected": {
+    "sectionCount": 300,
+    "pageErrorCount": 0,
+    "deterministicIssueCount": true
+  },
+  "reviewed": true
+}

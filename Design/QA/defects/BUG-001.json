@@ -1,0 +1,27 @@
+{
+  "schema": "qa-defect@1",
+  "id": "BUG-001",
+  "title": "Project software-project luôn quay về màn khởi tạo",
+  "severity": "S1",
+  "priority": "TP0",
+  "state": "OPEN",
+  "detectedBuild": "3281f9a",
+  "fixedBuild": null,
+  "owner": null,
+  "caseIds": ["A02", "B03[software-project]", "L01", "L02"],
+  "historicalReport": "Design/QA/tester-result/RS-E2E-20260724-01.md",
+  "reproduction": [
+    "Tạo project software-project từ Library hoặc Catalog.",
+    "Xác nhận bundle đã có sections rồi mở hoặc reload Workspace.",
+    "Quan sát initializer xuất hiện thay editor và có đường ghi đè sections."
+  ],
+  "acceptanceRetest": [
+    "Library và Catalog software-project mở editor trước/sau reload.",
+    "Marker trong section còn sau save/reload và initializer không xuất hiện.",
+    "Bốn template có lifecycle đúng.",
+    "Legacy bundle có sections được mở an toàn.",
+    "Reinitialize project có nội dung yêu cầu confirm và snapshot."
+  ],
+  "evidenceIds": [],
+  "waiver": null
+}
