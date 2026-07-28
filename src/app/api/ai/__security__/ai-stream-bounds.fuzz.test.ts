@@ -143,6 +143,7 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
     }
 
     it("emits a typed AI_PROTOCOL_ERROR terminal event for a malformed data: frame instead of silently dropping it", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const encoder = new TextEncoder();
       const mockStream = new ReadableStream({
         start(controller) {
@@ -165,6 +166,10 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
       expect(terminal.code).toBe("AI_PROTOCOL_ERROR");
       // exactly one terminal event
       expect(events.filter((e) => e.event === "done" || e.event === "error")).toHaveLength(1);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[AI Stream Error]",
+        expect.objectContaining({ code: "AI_PROTOCOL_ERROR" }),
+      );
     });
 
     it("salvages a trailing data: line with no final newline instead of dropping it", async () => {
@@ -191,6 +196,7 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
     });
 
     it("aborts with AI_STREAM_EXCEEDED (not truncate-and-continue) when a single delta exceeds the per-event cap", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const encoder = new TextEncoder();
       const hugeDelta = "x".repeat(20_000); // > MAX_SINGLE_DELTA_CHARS (16,000)
       const mockStream = new ReadableStream({
@@ -213,6 +219,10 @@ describe("AI Stream Resource Bounds & Parser Fuzzing (W25-D)", () => {
       const terminal = events[events.length - 1];
       expect(terminal.event).toBe("error");
       expect(terminal.code).toBe("AI_STREAM_EXCEEDED");
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[AI Stream Error]",
+        expect.objectContaining({ code: "AI_STREAM_EXCEEDED" }),
+      );
     });
   });
 
