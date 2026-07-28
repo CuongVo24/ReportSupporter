@@ -15,6 +15,8 @@
   z-index: var(--rs-z-toast);
   outline: none;
   box-sizing: border-box;
+  /* The fixed viewport must not block controls beneath empty stack space. */
+  pointer-events: none;
 }
 
 .ws-toast-root {
@@ -28,6 +30,8 @@
   gap: var(--rs-space-3);
   box-sizing: border-box;
   width: 100%;
+  /* Restore interaction for visible toast actions and swipe handling. */
+  pointer-events: auto;
 }
 
 .ws-toast-root[data-state="open"] {
