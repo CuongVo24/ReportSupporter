@@ -60,6 +60,7 @@ export function migrateBundle(bundle: ReportProjectBundle): ReportProjectBundle 
     schemaVersion: SCHEMA_VERSION,
     project: {
       ...bundle.project,
+      initializationState: bundle.project.initializationState === "pending" ? "pending" : "complete",
       sections: bundle.project.sections.map((section) => ({
         ...section,
         revision: Number.isInteger(section.revision) && section.revision >= 0 ? section.revision : 0,
