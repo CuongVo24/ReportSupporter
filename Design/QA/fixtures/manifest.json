@@ -1,0 +1,566 @@
+{
+  "schema": "qa-fixture-manifest@1",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "id": "FX-DOCX-01",
+      "path": "src/modules/import/__fixtures__/vn_mon_hoc_report.docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "generated": false,
+      "oracle": {
+        "kind": "docx",
+        "unicode": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "52dabae6c79a5d05c09913f72c54fa24285a02f5be2c9b7887f3d7f361cb271e",
+      "byteLength": 9235
+    },
+    {
+      "id": "FX-DOCX-02",
+      "path": "src/modules/import/__fixtures__/vn_anh_nhung_report.docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "generated": false,
+      "oracle": {
+        "kind": "docx",
+        "embeddedImages": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "f842d4a593c0400e1105ce17aedcff766c874f48b15a4c7a816ea19cd8c672bd",
+      "byteLength": 9475
+    },
+    {
+      "id": "FX-DOCX-03",
+      "path": "src/modules/import/__fixtures__/vn_track_changes_report.docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "generated": false,
+      "oracle": {
+        "kind": "docx",
+        "trackChanges": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "4351350046800fa2e1c78af9aab78d9df67c16b0e516a3dbb37b50053153d248",
+      "byteLength": 8802
+    },
+    {
+      "id": "FX-PDF-01",
+      "path": "src/modules/import/__fixtures__/report-word.pdf",
+      "mime": "application/pdf",
+      "generated": false,
+      "oracle": {
+        "kind": "pdf",
+        "source": "word"
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "7b15d6147a3a04197ab7ee9949e18a594d3a1db20dda9d3e91de7f7c620b2711",
+      "byteLength": 837
+    },
+    {
+      "id": "FX-PDF-02",
+      "path": "src/modules/import/__fixtures__/paper-latex.pdf",
+      "mime": "application/pdf",
+      "generated": false,
+      "oracle": {
+        "kind": "pdf",
+        "source": "latex"
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "19f83e0bbb507897abbdc7578fae980343b0956047cd4dff6d8276fa3675cf07",
+      "byteLength": 727
+    },
+    {
+      "id": "FX-PDF-03",
+      "path": "src/modules/import/__fixtures__/scan-vn.pdf",
+      "mime": "application/pdf",
+      "generated": false,
+      "oracle": {
+        "kind": "pdf",
+        "scanned": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "d7a31a3dc6af0445b29c538e15061835734f0b19ab6a4ff526dbb0d6cfbdb86e",
+      "byteLength": 1065
+    },
+    {
+      "id": "FX-XLSX-01",
+      "path": "src/modules/import/__fixtures__/bang_diem_merges.xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "generated": false,
+      "oracle": {
+        "mergedCells": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "72d3dd430572217e68479566aa0a87ea081974bef710d691bb938a4646c9ea78",
+      "byteLength": 16667
+    },
+    {
+      "id": "FX-XLSX-02",
+      "path": "src/modules/import/__fixtures__/sheet_an.xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "generated": false,
+      "oracle": {
+        "hiddenSheet": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "44fac99e4fb54ffee16f05c28cc863086ad92c64833876cb72aa349964959215",
+      "byteLength": 17234
+    },
+    {
+      "id": "FX-PPTX-01",
+      "path": "src/modules/import/__fixtures__/defense-ppt.pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "generated": false,
+      "oracle": {
+        "source": "powerpoint"
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "0cb8c518ca25693d1b6a53e472cfa72623c95ad19aa6fd9e99a3064819d1da8e",
+      "byteLength": 46019
+    },
+    {
+      "id": "FX-PPTX-02",
+      "path": "src/modules/import/__fixtures__/defense-gslides.pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "generated": false,
+      "oracle": {
+        "source": "google-slides"
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "0cb8c518ca25693d1b6a53e472cfa72623c95ad19aa6fd9e99a3064819d1da8e",
+      "byteLength": 46019
+    },
+    {
+      "id": "FX-PERF-S",
+      "path": "e2e/fixtures/performance-project.ts",
+      "mime": "text/typescript",
+      "generated": false,
+      "oracle": {
+        "variant": "small",
+        "sections": 4
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "87a2830bad40be414445254c883fe2d959664fdbc13d514834b68ae825cf16ac",
+      "byteLength": 5559
+    },
+    {
+      "id": "FX-PERF-L",
+      "path": "e2e/fixtures/performance-project.ts",
+      "mime": "text/typescript",
+      "generated": false,
+      "oracle": {
+        "variant": "large",
+        "sections": 40
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "87a2830bad40be414445254c883fe2d959664fdbc13d514834b68ae825cf16ac",
+      "byteLength": 5559
+    },
+    {
+      "id": "FX-MD-01",
+      "path": "Design/QA/fixtures/golden/basic-vietnamese.md",
+      "mime": "text/markdown",
+      "generated": false,
+      "oracle": {
+        "headings": 3,
+        "paragraphs": 2,
+        "tables": 1,
+        "codeBlocks": 1
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "3dbfb3f94fd5fa45d93f1b466e24855043ba152c00977af6edcda683fbfa58dd",
+      "byteLength": 270
+    },
+    {
+      "id": "FX-MD-02",
+      "path": "Design/QA/fixtures/golden/missing-image.md",
+      "mime": "text/markdown",
+      "generated": false,
+      "oracle": {
+        "missingRefs": 1
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "f9eab0074c0e2a307f174c940406b6c31a66f750b9d586fac723e07fa99ea261",
+      "byteLength": 52
+    },
+    {
+      "id": "FX-MD-03",
+      "path": "Design/QA/fixtures/generated/embedded-image.md",
+      "mime": "text/markdown",
+      "generated": true,
+      "oracle": {
+        "dataUrlImages": 1
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "ea01630f8120cfb9adbeb0747ab4c3b63c2b8bc4b39093ce952db2db134d871e",
+      "byteLength": 393
+    },
+    {
+      "id": "FX-MD-04",
+      "path": "Design/QA/fixtures/golden/xss-payloads.md",
+      "mime": "text/markdown",
+      "generated": false,
+      "oracle": {
+        "dangerousPayloadClasses": 4
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "bca36b605a44054e6444a5ca1845c231ec302941a6975d2265703b753a6b9828",
+      "byteLength": 199
+    },
+    {
+      "id": "FX-MD-05",
+      "path": "Design/QA/fixtures/golden/remote-image.md",
+      "mime": "text/markdown",
+      "generated": false,
+      "oracle": {
+        "remoteImages": 1
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "5ecac1c0978bf362e70ee7b4cd143ef0ab5248f519795de33e318af50386e962",
+      "byteLength": 82
+    },
+    {
+      "id": "FX-MD-06",
+      "path": "Design/QA/fixtures/golden/dom-clobbering.md",
+      "mime": "text/markdown",
+      "generated": false,
+      "oracle": {
+        "domClobbering": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "6d2efa87525c754485d22d4c312d040a4d03f31c91713e8dc89788624493996b",
+      "byteLength": 200
+    },
+    {
+      "id": "FX-IMG-01",
+      "path": "Design/QA/fixtures/generated/image-5m-minus-1.png",
+      "mime": "image/png",
+      "generated": true,
+      "oracle": {
+        "exactBytes": 5242879
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "294ba8d878eaabb62c192561e530ad746465fe453ac4b448979608bbf88aa8ab",
+      "byteLength": 5242879
+    },
+    {
+      "id": "FX-IMG-02",
+      "path": "Design/QA/fixtures/generated/image-exactly-5m.png",
+      "mime": "image/png",
+      "generated": true,
+      "oracle": {
+        "exactBytes": 5242880
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "078a1b479431825479c66a7bd482dc6f0630b4fe2ba6b6f26f697170f08e124e",
+      "byteLength": 5242880
+    },
+    {
+      "id": "FX-IMG-03",
+      "path": "Design/QA/fixtures/generated/image-5m-plus-1.png",
+      "mime": "image/png",
+      "generated": true,
+      "oracle": {
+        "exactBytes": 5242881
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "2f45a1ea14afb1cfe6f051bb321dbf0fa1130a82e96368974b7b1f8d61ae5d85",
+      "byteLength": 5242881
+    },
+    {
+      "id": "FX-IMP-01",
+      "path": "Design/QA/fixtures/generated/empty.md",
+      "mime": "text/markdown",
+      "generated": true,
+      "oracle": {
+        "exactBytes": 0
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byteLength": 0
+    },
+    {
+      "id": "FX-IMP-02",
+      "path": "Design/QA/fixtures/generated/corrupt.docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "generated": true,
+      "oracle": {
+        "intentionallyCorrupt": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "22fcade078ea79195207e7489c6e7cf3a73e26301656bd57b78368330c703c0e",
+      "byteLength": 32
+    },
+    {
+      "id": "FX-IMP-03",
+      "path": "Design/QA/fixtures/generated/mime-spoof.pdf",
+      "mime": "application/pdf",
+      "generated": true,
+      "oracle": {
+        "intentionallySpoofed": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "d4f040b2b897adafa1a4b24913074880bc8aaa13d261f01f115c1a3bbf179477",
+      "byteLength": 33
+    },
+    {
+      "id": "FX-IMP-04",
+      "path": "Design/QA/fixtures/generated/markdown-50m-plus-1.md",
+      "mime": "text/markdown",
+      "generated": true,
+      "oracle": {
+        "exactBytes": 52428801
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "66862681785fec53f5717a5c36308bd399b557119ac02deb958ab8e0d232b752",
+      "byteLength": 52428801
+    },
+    {
+      "id": "FX-IMP-05",
+      "path": "Design/QA/fixtures/generated/markdown-exactly-50m.md",
+      "mime": "text/markdown",
+      "generated": true,
+      "oracle": {
+        "exactBytes": 52428800
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "42a1ac368f6cd171017ea22ce6a9a1d5d17abde37cb5f05e1e45658f73428bf1",
+      "byteLength": 52428800
+    },
+    {
+      "id": "FX-MAP-01",
+      "path": "Design/QA/fixtures/generated/duplicate-basename",
+      "mime": "inode/directory",
+      "generated": true,
+      "oracle": {
+        "duplicateBasenames": 2
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "f161f3fcbddd6c5a6e360e2b3e4ca843c19dd4f262983b880a440e9e8ace7223",
+      "byteLength": 697,
+      "fileCount": 3
+    },
+    {
+      "id": "FX-CHK-01",
+      "path": "Design/QA/fixtures/golden/checker-golden.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "reviewedGolden": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "4752269ad93ab6007eb1f84098e73f1ec8173fd48646052d0466994d974da4dd",
+      "byteLength": 609
+    },
+    {
+      "id": "FX-PAGE-01",
+      "path": "Design/QA/fixtures/golden/pagination-golden.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "reviewedGolden": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "3906adba65415fdbb7c2a1610f2c30f3de27812138806bc7421531bf754d76c3",
+      "byteLength": 379
+    },
+    {
+      "id": "FX-STRESS-01",
+      "path": "Design/QA/fixtures/golden/checker-300-sections.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "sections": 300,
+        "reviewedGolden": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "2fa9e3eebf56de362c4751cce79e0d594dc2404b6884d9db22be538da683f2e7",
+      "byteLength": 330
+    },
+    {
+      "id": "FX-REC-01",
+      "path": "Design/QA/fixtures/golden/indexeddb-v1.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "dbVersion": 1
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "139b35248ffcb6dcdaa359d063d5f5d168908c3597a37ea343e44abab29ea20d",
+      "byteLength": 538
+    },
+    {
+      "id": "FX-REC-02",
+      "path": "Design/QA/fixtures/golden/indexeddb-v2.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "dbVersion": 2
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "c75015ff368d0259f99212dd60944fab9b6ee267a4f20d86e296a5deb1d2cdfa",
+      "byteLength": 532
+    },
+    {
+      "id": "FX-REC-03",
+      "path": "Design/QA/fixtures/golden/indexeddb-v3.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "dbVersion": 3
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "0952d566863ee6bc912d615f1a68b4a360485c40cce05b5986ab6a21193db919",
+      "byteLength": 539
+    },
+    {
+      "id": "FX-REC-04",
+      "path": "Design/QA/fixtures/golden/invalid-draft.json",
+      "mime": "application/json",
+      "generated": false,
+      "oracle": {
+        "intentionallyInvalid": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": null,
+      "sha256": "12eed8ef113f5b2b4658d36097bb39d324abc40e53ea6edf1c6dee07c2d637d6",
+      "byteLength": 347
+    },
+    {
+      "id": "FX-IMP-06",
+      "path": "Design/QA/fixtures/generated/archive-ratio-bomb.zip",
+      "mime": "application/zip",
+      "generated": true,
+      "oracle": {
+        "compressionRatioBomb": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "dad1300973cbede22bc1290e8baac03af8504b6eb5cab4012a64f23f1e22921b",
+      "byteLength": 12355
+    },
+    {
+      "id": "FX-IMP-07",
+      "path": "Design/QA/fixtures/generated/archive-total-bomb.zip",
+      "mime": "application/zip",
+      "generated": true,
+      "oracle": {
+        "uncompressedTotalBomb": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "76911de86daf1f63c04e40bf3129b05852ea3b717ae852a4a9ef13230d7966a5",
+      "byteLength": 24754
+    },
+    {
+      "id": "FX-IMP-08",
+      "path": "Design/QA/fixtures/generated/archive-entry-count.zip",
+      "mime": "application/zip",
+      "generated": true,
+      "oracle": {
+        "entryCount": 1001
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "7dcbe6361d4e88e884ad4deb1b7940c643826b9f1995bde6c7999c5f2b867ac6",
+      "byteLength": 104126
+    },
+    {
+      "id": "FX-IMP-09",
+      "path": "Design/QA/fixtures/generated/archive-path-traversal.zip",
+      "mime": "application/zip",
+      "generated": true,
+      "oracle": {
+        "pathTraversal": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "87f9253a91bc04617d2b543d0f90a780177115f46e8d24d812bab1791e9e90db",
+      "byteLength": 364
+    },
+    {
+      "id": "FX-OCR-01",
+      "path": "Design/QA/fixtures/generated/ocr-budget.json",
+      "mime": "application/json",
+      "generated": true,
+      "oracle": {
+        "pages": 501,
+        "pixelBudgetExceeded": true
+      },
+      "sensitivity": "synthetic-non-sensitive",
+      "license": "project-test-fixture",
+      "generatorVersion": "qa-fixtures@1",
+      "sha256": "ad03428ba3b476296ba2af56c880f9d933137b269dce707647f0ceecb8997b9f",
+      "byteLength": 156
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reportsupporter.local/qa/qa-schemas.json",
+  "title": "ReportSupporter QA contracts",
+  "$defs": {
+    "qaTestCase": {
+      "type": "object",
+      "required": ["id", "priority", "requirementIds", "environments", "steps", "evidence", "estimatedMinutes", "timeoutMinutes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-O][0-9]{2}$" },
+        "priority": { "enum": ["TP0", "TP1", "TP2"] },
+        "requirementIds": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^QA-REQ-[A-O]-[0-9]{3}$" } },
+        "environments": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["action", "expected"],
+            "properties": {
+              "action": { "type": "string", "minLength": 1 },
+              "expected": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "evidence": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "estimatedMinutes": { "type": "number", "exclusiveMinimum": 0 },
+        "timeoutMinutes": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "qaRun": {
+      "type": "object",
+      "required": ["schema", "runId", "planVersion", "commitSha", "build", "scope", "tester", "startedAt", "environments", "canonicalCi", "securityGates", "finalized"],
+      "properties": {
+        "schema": { "const": "qa-run@1" },
+        "runId": { "type": "string", "pattern": "^RS-E2E-[0-9]{8}-[0-9]{2}$" },
+        "commitSha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "scope": { "enum": ["smoke", "critical", "full"] },
+        "finalized": { "type": "boolean" }
+      }
+    },
+    "qaCaseResult": {
+      "type": "object",
+      "required": ["schema", "instanceId", "priority", "environment", "status", "actualResult", "evidenceIds", "bugIds", "runner", "durationMinutes"],
+      "properties": {
+        "schema": { "const": "qa-case-result@1" },
+        "instanceId": { "type": "string", "pattern": "^[A-O][0-9]{2}(\\[[^\\]]+\\])?$" },
+        "priority": { "enum": ["TP0", "TP1", "TP2"] },
+        "status": { "enum": ["NOT_RUN", "IN_PROGRESS", "PASS", "FAIL", "BLOCKED", "NA", "RETEST_PASS", "RETEST_FAIL"] },
+        "evidenceIds": { "type": "array", "items": { "type": "string" } },
+        "bugIds": { "type": "array", "items": { "type": "string", "pattern": "^BUG-[0-9]{3}$" } },
+        "durationMinutes": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "qaDefect": {
+      "type": "object",
+      "required": ["schema", "id", "title", "severity", "priority", "state", "detectedBuild", "owner", "reproduction", "acceptanceRetest"],
+      "properties": {
+        "schema": { "const": "qa-defect@1" },
+        "id": { "type": "string", "pattern": "^BUG-[0-9]{3}$" },
+        "severity": { "enum": ["S0", "S1", "S2", "S3"] },
+        "priority": { "enum": ["TP0", "TP1", "TP2"] },
+        "state": { "enum": ["OPEN", "IN_PROGRESS", "FIXED", "RETEST_PASS", "RETEST_FAIL", "CLOSED"] },
+        "owner": { "type": ["string", "null"] }
+      }
+    },
+    "qaEvidenceIndex": {
+      "type": "object",
+      "required": ["schema", "runId", "entries"],
+      "properties": {
+        "schema": { "const": "qa-evidence-index@1" },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "path", "caseIds", "kind", "mime", "byteLength", "sha256", "redactionStatus"],
+            "properties": {
+              "redactionStatus": { "const": "PASS" },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "qaFixtureManifest": {
+      "type": "object",
+      "required": ["schema", "version", "entries"],
+      "properties": {
+        "schema": { "const": "qa-fixture-manifest@1" },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "path", "mime", "generated", "oracle", "sensitivity", "license", "byteLength", "sha256"]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "qa-defect@1",
+  "id": "BUG-002",
+  "title": "Toast viewport chặn click các tab bên phải",
+  "severity": "S1",
+  "priority": "TP0",
+  "state": "OPEN",
+  "detectedBuild": "3281f9a",
+  "fixedBuild": null,
+  "owner": null,
+  "caseIds": ["H01", "H05", "I01", "J01"],
+  "historicalReport": "Design/QA/tester-result/RS-E2E-20260724-01.md",
+  "reproduction": [
+    "Mở Workspace và tạo một toast.",
+    "Đóng hoặc chờ toast biến mất.",
+    "Click các tab Xuất bản, Nộp bài và Slide.",
+    "Kiểm elementFromPoint tại tâm tab."
+  ],
+  "acceptanceRetest": [
+    "Tab ngoài card toast click được trước, trong và sau toast.",
+    "Toast action/close vẫn click được.",
+    "Stack một đến ba toast không mở rộng vùng chặn.",
+    "Retest desktop, 375x667 và Android thật.",
+    "Keyboard Arrow/Home/End/Enter/Space được kiểm độc lập."
+  ],
+  "evidenceIds": [],
+  "waiver": null
+}
