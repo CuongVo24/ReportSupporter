@@ -43,6 +43,10 @@ services:
       PDF_RENDERER_TOKEN: ${PDF_RENDERER_TOKEN:?Set PDF_RENDERER_TOKEN (see .env.example) before running docker-compose -f docker-compose.pdf.yml up}
       # W24-F: conservative capacity envelope (clamped 1..4 in server.mjs).
       PDF_MAX_CONCURRENCY: ${PDF_MAX_CONCURRENCY:-2}
+      # Chromium's setuid/user-namespace sandbox cannot initialize after
+      # cap_drop: ALL + no-new-privileges. The container itself supplies the
+      # isolation boundary (read-only FS, no caps, internal-only network).
+      PUPPETEER_DISABLE_SANDBOX: "true"
     networks:
       - pdf-internal
     ports:

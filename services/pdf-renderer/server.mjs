@@ -178,7 +178,15 @@ export function createBrowserManager({ launch } = {}) {
       return relaunchCount;
     },
     warmUp() {
-      return ensure().catch(() => undefined);
+      return ensure().catch((error) => {
+        console.error(
+          JSON.stringify({
+            evt: "browser_warmup_failed",
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        );
+        return undefined;
+      });
     },
   };
 }
