@@ -30,6 +30,7 @@ jobs:
         run: |
           npm run qa:check
           git diff --exit-code -- \
+            Design/QA/KichBan-Test-Tong-The.md \
             Design/QA/fixtures/manifest.json \
             Design/QA/generated \
             Design/QA/templates/case-results.template.csv
