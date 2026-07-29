@@ -11,6 +11,7 @@ import {
   expandCatalog,
   parseCsv,
   readJson,
+  resultKey,
   resolveRepoPath,
   resolveWithin,
   scanSecrets,
@@ -22,21 +23,53 @@ export function validateQaPackage({ runDir = null } = {}) {
   const catalog = readJson(CATALOG_PATH);
   const requirements = readJson(REQUIREMENTS_PATH);
   const fixtureManifest = readJson(FIXTURE_MANIFEST_PATH);
+  const automationRegistry = readJson(path.join(QA_DIR, "catalog", "automation-suites.json"));
+  const packageJson = readJson(path.resolve("package.json"));
 
   if (catalog.schema !== "qa-test-case@1") errors.push(`Catalog schema must be qa-test-case@1, got ${catalog.schema}`);
   if (requirements.schema !== "qa-requirements@1") errors.push(`Requirements schema must be qa-requirements@1, got ${requirements.schema}`);
   if (fixtureManifest.schema !== "qa-fixture-manifest@1") errors.push(`Fixture schema must be qa-fixture-manifest@1, got ${fixtureManifest.schema}`);
+  if (automationRegistry.schema !== "qa-automation-suites@1") {
+    errors.push(`Automation schema must be qa-automation-suites@1, got ${automationRegistry.schema}`);
+  }
 
   const caseIds = new Set();
+  const environmentIds = new Set(Object.keys(catalog.environments ?? {}));
   const requirementIds = new Set(requirements.requirements.map((requirement) => requirement.id));
   const fixtureIds = new Set(fixtureManifest.entries.map((entry) => entry.id));
   const requirementCoverage = new Map(requirements.requirements.map((requirement) => [requirement.id, []]));
+  const allowedTestLevels = new Set(["unit", "integration", "component", "e2e", "manual", "security", "performance", "release"]);
+  const allowedExecutionModes = new Set(["automated", "hybrid", "manual"]);
   for (const testCase of catalog.cases) {
     if (caseIds.has(testCase.id)) errors.push(`Duplicate case ID: ${testCase.id}`);
     caseIds.add(testCase.id);
     if (!/^[A-O]\d{2}$/.test(testCase.id)) errors.push(`Invalid case ID: ${testCase.id}`);
     if (!["TP0", "TP1", "TP2"].includes(testCase.priority)) errors.push(`Invalid priority: ${testCase.id}`);
-    if (!Array.isArray(testCase.steps) || testCase.steps.length === 0) errors.push(`No steps: ${testCase.id}`);
+    if (!Array.isArray(testCase.testLevels) || testCase.testLevels.length === 0) {
+      errors.push(`No test levels: ${testCase.id}`);
+    } else {
+      for (const level of testCase.testLevels) {
+        if (!allowedTestLevels.has(level)) errors.push(`Invalid test level ${level}: ${testCase.id}`);
+      }
+      if (new Set(testCase.testLevels).size !== testCase.testLevels.length) errors.push(`Duplicate test level: ${testCase.id}`);
+    }
+    if (!allowedExecutionModes.has(testCase.executionMode)) errors.push(`Invalid execution mode: ${testCase.id}`);
+    if (testCase.executionMode === "manual" && (testCase.automation?.length ?? 0) > 0) {
+      errors.push(`Manual case declares automation: ${testCase.id}`);
+    }
+    if (testCase.executionMode === "automated" && (testCase.automation?.length ?? 0) === 0) {
+      errors.push(`Automated case has no automation: ${testCase.id}`);
+    }
+    if (typeof testCase.testData !== "string" || testCase.testData.trim().length === 0) errors.push(`No test data: ${testCase.id}`);
+    if (!Array.isArray(testCase.steps) || testCase.steps.length < 5) errors.push(`Insufficient detailed steps: ${testCase.id}`);
+    for (const [stepIndex, step] of (testCase.steps ?? []).entries()) {
+      if (!step?.action?.trim() || !step?.expected?.trim()) errors.push(`Incomplete step ${stepIndex + 1}: ${testCase.id}`);
+    }
+    if (typeof testCase.cleanup !== "string" || testCase.cleanup.trim().length === 0) errors.push(`No cleanup: ${testCase.id}`);
+    if (!Array.isArray(testCase.environments) || testCase.environments.length === 0) errors.push(`No environments: ${testCase.id}`);
+    for (const environment of testCase.environments ?? []) {
+      if (!environmentIds.has(environment)) errors.push(`Unknown environment ${environment}: ${testCase.id}`);
+    }
     if (!Array.isArray(testCase.evidence) || testCase.evidence.length === 0) errors.push(`No evidence policy: ${testCase.id}`);
     if (testCase.priority === "TP0" && testCase.evidence.length === 0) errors.push(`TP0 missing evidence: ${testCase.id}`);
     if (!(testCase.estimatedMinutes > 0) || !(testCase.timeoutMinutes >= testCase.estimatedMinutes)) {
@@ -60,6 +93,28 @@ export function validateQaPackage({ runDir = null } = {}) {
     }
   }
 
+  for (const [environment, overlay] of Object.entries(catalog.environmentOverlays ?? {})) {
+    if (!environmentIds.has(environment)) errors.push(`Unknown overlay environment: ${environment}`);
+    if (!overlay || typeof overlay !== "object") {
+      errors.push(`Invalid environment overlay: ${environment}`);
+      continue;
+    }
+    for (const caseId of overlay.caseIds ?? []) {
+      if (!caseIds.has(caseId)) errors.push(`Unknown overlay case ${caseId}: ${environment}`);
+    }
+    for (const rule of overlay.rules ?? []) {
+      if (rule.groups && (!Array.isArray(rule.groups) || rule.groups.some((group) => !/^[A-O]$/.test(group)))) {
+        errors.push(`Invalid overlay groups: ${environment}`);
+      }
+      if (rule.priority && !["TP0", "TP1", "TP2"].includes(rule.priority)) {
+        errors.push(`Invalid overlay priority: ${environment}`);
+      }
+      if (rule.requiresEnvironment && !environmentIds.has(rule.requiresEnvironment)) {
+        errors.push(`Invalid overlay source environment: ${environment}`);
+      }
+    }
+  }
+
   const expectedLegacyMax = { A: 11, B: 13, C: 18, D: 10, E: 11, F: 17, G: 8, H: 14, I: 10, J: 10, K: 7, L: 11, M: 16 };
   for (const [group, maximum] of Object.entries(expectedLegacyMax)) {
     for (let number = 1; number <= maximum; number += 1) {
@@ -78,6 +133,34 @@ export function validateQaPackage({ runDir = null } = {}) {
     }
   }
 
+  const automationSuiteIds = new Set();
+  for (const suite of automationRegistry.suites ?? []) {
+    if (automationSuiteIds.has(suite.id)) errors.push(`Duplicate automation suite: ${suite.id}`);
+    automationSuiteIds.add(suite.id);
+    if (!/^AUT-[A-Z0-9-]+$/.test(suite.id)) errors.push(`Invalid automation suite ID: ${suite.id}`);
+    if (!Array.isArray(suite.testLevels) || suite.testLevels.length === 0) errors.push(`Automation suite has no test level: ${suite.id}`);
+    for (const level of suite.testLevels ?? []) {
+      if (!allowedTestLevels.has(level)) errors.push(`Invalid automation test level ${level}: ${suite.id}`);
+    }
+    if (!packageJson.scripts?.[suite.command]) errors.push(`Automation npm command missing ${suite.command}: ${suite.id}`);
+    if (!Array.isArray(suite.paths) || suite.paths.length === 0) errors.push(`Automation suite has no paths: ${suite.id}`);
+    for (const sourcePath of suite.paths ?? []) {
+      try {
+        if (!fs.existsSync(resolveRepoPath(sourcePath))) errors.push(`Automation suite path missing ${sourcePath}: ${suite.id}`);
+      } catch (error) {
+        errors.push(String(error.message ?? error));
+      }
+    }
+    if (!Array.isArray(suite.requirementIds) || suite.requirementIds.length === 0) {
+      errors.push(`Automation suite has no requirements: ${suite.id}`);
+    }
+    for (const requirementId of suite.requirementIds ?? []) {
+      if (!requirementIds.has(requirementId)) errors.push(`Unknown automation requirement ${requirementId}: ${suite.id}`);
+    }
+    if (!suite.expected?.trim()) errors.push(`Automation suite has no expected result: ${suite.id}`);
+    if (!Array.isArray(suite.evidence) || suite.evidence.length === 0) errors.push(`Automation suite has no evidence: ${suite.id}`);
+  }
+
   const manifestIds = new Set();
   for (const fixture of fixtureManifest.entries) {
     if (manifestIds.has(fixture.id)) errors.push(`Duplicate fixture ID: ${fixture.id}`);
@@ -94,17 +177,20 @@ export function validateQaPackage({ runDir = null } = {}) {
 
   const instances = expandCatalog(catalog);
   const instanceIds = new Set();
+  const instanceKeys = new Set();
   for (const instance of instances) {
-    if (instanceIds.has(instance.instanceId)) errors.push(`Duplicate expanded instance: ${instance.instanceId}`);
+    const key = resultKey(instance);
+    if (instanceKeys.has(key)) errors.push(`Duplicate expanded instance: ${key}`);
+    instanceKeys.add(key);
     instanceIds.add(instance.instanceId);
   }
-  if (instances.length < 209) errors.push(`Expanded catalog unexpectedly small: ${instances.length}`);
+  if (instances.length !== 386) errors.push(`Expanded catalog matrix mismatch: expected 386, got ${instances.length}`);
 
-  if (runDir) validateRun({ runDir: path.resolve(runDir), instances, instanceIds, errors });
+  if (runDir) validateRun({ runDir: path.resolve(runDir), instances, instanceIds, instanceKeys, errors });
   return { errors, baseCaseCount: catalog.cases.length, instanceCount: instances.length };
 }
 
-function validateRun({ runDir, instances, instanceIds, errors }) {
+function validateRun({ runDir, instances, instanceIds, instanceKeys, errors }) {
   const runPath = path.join(runDir, "run.json");
   const resultsPath = path.join(runDir, "case-results.csv");
   const evidencePath = path.join(runDir, "evidence-index.json");
@@ -119,7 +205,7 @@ function validateRun({ runDir, instances, instanceIds, errors }) {
   const evidenceIndex = readJson(evidencePath);
   const defectList = readJson(defectsPath);
   if (run.schema !== "qa-run@1") errors.push(`Invalid run schema: ${run.schema}`);
-  if (!/^RS-E2E-\d{8}-\d{2}$/.test(run.runId)) errors.push(`Invalid Run ID: ${run.runId}`);
+  if (!/^RS-(QA|E2E)-\d{8}-\d{2}$/.test(run.runId)) errors.push(`Invalid Run ID: ${run.runId}`);
   if (!/^[0-9a-f]{7,40}$/.test(run.commitSha)) errors.push(`Invalid commit SHA: ${run.commitSha}`);
   if (run.build !== "production") errors.push("Formal QA run must use production build");
   if (!["smoke", "critical", "full"].includes(run.scope)) errors.push(`Invalid run scope: ${run.scope}`);
@@ -133,15 +219,20 @@ function validateRun({ runDir, instances, instanceIds, errors }) {
   if (run.catalogSha256 && run.catalogSha256 !== currentCatalogHash) errors.push("Run catalog hash does not match current catalog");
   if (run.fixtureManifestSha256 && run.fixtureManifestSha256 !== currentFixtureHash) errors.push("Run fixture manifest hash does not match current manifest");
 
-  const resultIds = new Set();
+  const runEnvironmentIds = new Set((run.environments ?? []).map((environment) => environment.id));
+  const instancesByKey = new Map(instances.map((instance) => [resultKey(instance), instance]));
+  const resultKeys = new Set();
   for (const result of results) {
-    if (resultIds.has(result.instanceId)) errors.push(`Duplicate run result: ${result.instanceId}`);
-    resultIds.add(result.instanceId);
-    if (!instanceIds.has(result.instanceId)) errors.push(`Unknown run instance: ${result.instanceId}`);
+    const key = resultKey(result);
+    if (resultKeys.has(key)) errors.push(`Duplicate run result: ${key}`);
+    resultKeys.add(key);
+    if (!result.environment) errors.push(`Run result missing environment: ${result.instanceId}`);
+    if (!runEnvironmentIds.has(result.environment)) errors.push(`Run result environment not declared: ${key}`);
+    if (!instanceKeys.has(key)) errors.push(`Unknown run instance: ${key}`);
     if (!QA_STATUSES.includes(result.status)) errors.push(`Invalid status ${result.status}: ${result.instanceId}`);
     if (/PARTIAL/i.test(result.status)) errors.push(`PARTIAL status is forbidden: ${result.instanceId}`);
     if (run.finalized && FINALIZED_FORBIDDEN_STATUSES.has(result.status)) errors.push(`Finalized run contains ${result.status}: ${result.instanceId}`);
-    const expectedPriority = instances.find((instance) => instance.instanceId === result.instanceId)?.priority;
+    const expectedPriority = instancesByKey.get(key)?.priority;
     if (expectedPriority && result.priority !== expectedPriority) errors.push(`Priority drift ${result.instanceId}: ${result.priority} != ${expectedPriority}`);
     if (["FAIL", "RETEST_FAIL"].includes(result.status) && !result.bugIds) errors.push(`Failed case missing bug ID: ${result.instanceId}`);
     if (["PASS", "RETEST_PASS", "FAIL", "RETEST_FAIL"].includes(result.status) && !result.actualResult) {
@@ -175,7 +266,7 @@ function validateRun({ runDir, instances, instanceIds, errors }) {
       const findings = scanSecrets(buffer, evidence.path);
       if (findings.length > 0) errors.push(`Evidence secret findings ${findings.join(",")}: ${evidence.id}`);
       for (const caseId of evidence.caseIds ?? []) {
-        if (!instanceIds.has(caseId) && !/^[A-O]\d{2}$/.test(caseId)) errors.push(`Evidence references unknown case: ${caseId}`);
+        if (!instanceKeys.has(caseId) && !instanceIds.has(caseId) && !/^[A-O]\d{2}$/.test(caseId)) errors.push(`Evidence references unknown case: ${caseId}`);
       }
     } catch (error) {
       errors.push(String(error.message ?? error));
@@ -194,9 +285,9 @@ function validateRun({ runDir, instances, instanceIds, errors }) {
     if (!run.fixtureManifestSha256) errors.push("Finalized run requires fixtureManifestSha256");
     const expectedResults = instances.filter((instance) => run.scope === "full" || instance.suites.includes(run.scope));
     for (const instance of expectedResults) {
-      if (!resultIds.has(instance.instanceId)) errors.push(`Finalized ${run.scope} run missing result: ${instance.instanceId}`);
+      if (!resultKeys.has(resultKey(instance))) errors.push(`Finalized ${run.scope} run missing result: ${resultKey(instance)}`);
     }
-    const requiredEnvironmentIds = new Set(["ENV-D1", "ENV-D2", "ENV-M1"]);
+    const requiredEnvironmentIds = new Set(expectedResults.map((instance) => instance.environment));
     for (const environment of run.environments) {
       requiredEnvironmentIds.delete(environment.id);
       if (!environment.browserVersion) errors.push(`Finalized environment missing browserVersion: ${environment.id}`);

@@ -8,6 +8,7 @@ import {
   parseCsv,
   percent,
   readJson,
+  resultKey,
   sha256File,
   summarizeResults,
   writeJson,
@@ -32,14 +33,14 @@ const allResults = parseCsv(fs.readFileSync(path.join(runDir, "case-results.csv"
 const defectList = readJson(path.join(runDir, "defects.json"));
 const evidenceIndex = readJson(path.join(runDir, "evidence-index.json"));
 const instances = expandCatalog(readJson(CATALOG_PATH));
-const instancesById = new Map(instances.map((instance) => [instance.instanceId, instance]));
-const scopedInstanceIds = new Set(
+const instancesByKey = new Map(instances.map((instance) => [resultKey(instance), instance]));
+const scopedResultKeys = new Set(
   instances
     .filter((instance) => run.scope === "full" || instance.suites.includes(run.scope))
-    .map((instance) => instance.instanceId),
+    .map(resultKey),
 );
-const results = allResults.filter((result) => scopedInstanceIds.has(result.instanceId));
-const summary = summarizeResults(results, instancesById);
+const results = allResults.filter((result) => scopedResultKeys.has(resultKey(result)));
+const summary = summarizeResults(results, instancesByKey);
 const release = computeReleaseDecision({
   summary,
   defects: defectList.defects,

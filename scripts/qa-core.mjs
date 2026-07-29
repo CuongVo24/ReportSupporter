@@ -64,6 +64,27 @@ export function resolveWithin(baseDir, value) {
   return resolved;
 }
 
+function overlayMatches(testCase, rule) {
+  if (rule.groups && !rule.groups.includes(testCase.group)) return false;
+  if (rule.priority && rule.priority !== testCase.priority) return false;
+  if (rule.requiresEnvironment && !testCase.environments?.includes(rule.requiresEnvironment)) return false;
+  return true;
+}
+
+export function getCaseEnvironments(catalog, testCase) {
+  const environments = new Set(testCase.environments ?? []);
+  for (const [environment, overlay] of Object.entries(catalog.environmentOverlays ?? {})) {
+    const includedById = overlay.caseIds?.includes(testCase.id) === true;
+    const includedByRule = overlay.rules?.some((rule) => overlayMatches(testCase, rule)) === true;
+    if (includedById || includedByRule) environments.add(environment);
+  }
+  return [...environments];
+}
+
+export function resultKey({ instanceId, environment }) {
+  return environment ? `${instanceId}@${environment}` : instanceId;
+}
+
 export function expandCatalog(catalog) {
   const instances = [];
   for (const testCase of catalog.cases) {
@@ -71,12 +92,16 @@ export function expandCatalog(catalog) {
       ? testCase.parameters
       : [null];
     for (const parameter of parameters) {
-      instances.push({
-        ...testCase,
-        baseId: testCase.id,
-        instanceId: parameter ? `${testCase.id}[${parameter.id}]` : testCase.id,
-        parameter,
-      });
+      for (const environment of getCaseEnvironments(catalog, testCase)) {
+        instances.push({
+          ...testCase,
+          baseId: testCase.id,
+          instanceId: parameter ? `${testCase.id}[${parameter.id}]` : testCase.id,
+          parameter,
+          environment,
+          environments: [environment],
+        });
+      }
     }
   }
   return instances;
@@ -138,7 +163,7 @@ export function parseCsv(text) {
   return rows.slice(1).map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""])));
 }
 
-export function summarizeResults(results, instancesById = new Map()) {
+export function summarizeResults(results, instancesByKey = new Map()) {
   const priorities = ["TP0", "TP1", "TP2"];
   const summary = Object.fromEntries(priorities.map((priority) => [
     priority,
@@ -158,7 +183,7 @@ export function summarizeResults(results, instancesById = new Map()) {
   ]));
 
   for (const result of results) {
-    const instance = instancesById.get(result.instanceId);
+    const instance = instancesByKey.get(resultKey(result)) ?? instancesByKey.get(result.instanceId);
     const priority = result.priority || instance?.priority;
     if (!summary[priority]) throw new Error(`Unknown priority for ${result.instanceId}: ${priority}`);
     if (!QA_STATUSES.includes(result.status)) throw new Error(`Unknown status for ${result.instanceId}: ${result.status}`);

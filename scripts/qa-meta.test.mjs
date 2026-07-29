@@ -10,21 +10,87 @@ import {
   computeReleaseDecision,
   expandCatalog,
   readJson,
+  resultKey,
   scanSecrets,
   summarizeResults,
+  toCsv,
 } from "./qa-core.mjs";
 import { validateQaPackage } from "./qa-validate.mjs";
 
-test("catalog expansion is stable, unique and preserves every legacy case", () => {
+test("catalog expansion is stable, unique per case-environment pair and preserves every legacy case", () => {
   const catalog = readJson(CATALOG_PATH);
-  const first = expandCatalog(catalog).map((instance) => instance.instanceId);
-  const second = expandCatalog(catalog).map((instance) => instance.instanceId);
+  const automationRegistry = readJson(path.join(QA_DIR, "catalog", "automation-suites.json"));
+  const first = expandCatalog(catalog).map(resultKey);
+  const second = expandCatalog(catalog).map(resultKey);
   assert.deepEqual(first, second);
   assert.equal(new Set(first).size, first.length);
-  assert.ok(first.length >= 209);
-  for (const id of ["A01", "B03[software-project]", "G01[github]", "M01[375x667]", "N12", "O12"]) {
+  assert.equal(first.length, 386);
+  assert.equal(catalog.version, "3.1.0");
+  assert.equal(catalog.cases.length, 190);
+  assert.deepEqual([...new Set(catalog.cases.map((testCase) => testCase.group))], [..."ABCDEFGHIJKLMNO"]);
+  for (const testCase of catalog.cases) {
+    assert.ok(testCase.steps.length >= 5, `${testCase.id} must remain executable, not a one-line checklist`);
+    assert.ok(testCase.steps.every((step) => step.action?.trim() && step.expected?.trim()), `${testCase.id} has incomplete steps`);
+    assert.ok(testCase.testData?.trim(), `${testCase.id} has no test data`);
+    assert.ok(testCase.cleanup?.trim(), `${testCase.id} has no cleanup`);
+    assert.ok(testCase.testLevels?.length > 0, `${testCase.id} has no test level`);
+    assert.ok(["automated", "hybrid", "manual"].includes(testCase.executionMode), `${testCase.id} has invalid execution mode`);
+  }
+  const automatedLevels = new Set(automationRegistry.suites.flatMap((suite) => suite.testLevels));
+  for (const level of ["unit", "component", "integration", "e2e", "security", "performance", "release"]) {
+    assert.ok(automatedLevels.has(level), `automation registry missing ${level}`);
+  }
+  for (const id of [
+    "A01@ENV-D1",
+    "B03[software-project]@ENV-D2",
+    "G01[github]@ENV-D2",
+    "M01[375x667]@ENV-R1",
+    "N12@ENV-CI",
+    "O12@ENV-CI",
+  ]) {
     assert.ok(first.includes(id), `missing ${id}`);
   }
+  assert.deepEqual(
+    expandCatalog(catalog)
+      .filter((instance) => instance.instanceId === "A02")
+      .map((instance) => instance.environment),
+    ["ENV-D1", "ENV-D2", "ENV-A11Y", "ENV-M1"],
+  );
+});
+
+test("run results are unique per case-environment pair", () => {
+  const runDir = fs.mkdtempSync(path.join(os.tmpdir(), "reportsupporter-qa-pair-"));
+  const run = readJson(path.join(QA_DIR, "templates", "run.template.json"));
+  Object.assign(run, {
+    runId: "RS-QA-20260728-98",
+    commitSha: "32b7389",
+    tester: "QA tooling meta-test",
+    startedAt: "2026-07-28T00:00:00.000Z",
+  });
+  fs.writeFileSync(path.join(runDir, "run.json"), `${JSON.stringify(run, null, 2)}\n`);
+  const columns = ["instanceId", "priority", "environment", "status", "actualResult", "evidenceIds", "bugIds", "runner", "durationMinutes", "notes"];
+  const rows = [
+    { instanceId: "A02", priority: "TP0", environment: "ENV-D1", status: "NOT_RUN" },
+    { instanceId: "A02", priority: "TP0", environment: "ENV-D2", status: "NOT_RUN" },
+  ];
+  fs.writeFileSync(path.join(runDir, "case-results.csv"), toCsv(rows, columns));
+  fs.writeFileSync(path.join(runDir, "evidence-index.json"), `${JSON.stringify({ schema: "qa-evidence-index@1", runId: run.runId, entries: [] }, null, 2)}\n`);
+  fs.writeFileSync(path.join(runDir, "defects.json"), `${JSON.stringify({ schema: "qa-defect-list@1", runId: run.runId, defects: [] }, null, 2)}\n`);
+
+  assert.deepEqual(validateQaPackage({ runDir }).errors, []);
+
+  fs.writeFileSync(path.join(runDir, "case-results.csv"), toCsv([...rows, rows[1]], columns));
+  assert.ok(validateQaPackage({ runDir }).errors.includes("Duplicate run result: A02@ENV-D2"));
+
+  Object.assign(run, {
+    finalized: true,
+    endedAt: "2026-07-28T01:00:00.000Z",
+    catalogSha256: "0".repeat(64),
+    fixtureManifestSha256: "0".repeat(64),
+  });
+  fs.writeFileSync(path.join(runDir, "run.json"), `${JSON.stringify(run, null, 2)}\n`);
+  fs.writeFileSync(path.join(runDir, "case-results.csv"), toCsv(rows, columns));
+  assert.ok(validateQaPackage({ runDir }).errors.includes("Finalized full run missing result: A01@ENV-D1"));
 });
 
 test("pass rate excludes blocked/not-run/N/A but execution coverage does not inflate", () => {
@@ -79,11 +145,11 @@ test("package validator passes the committed catalog, requirements and fixtures"
   assert.ok(fs.existsSync(CATALOG_PATH));
 });
 
-test("report and evidence bundle are generated from normalized run data and remain NO_GO with open S1", () => {
+test("report and evidence bundle remain NO_GO while an S1 awaits acceptance retest", () => {
   const runDir = fs.mkdtempSync(path.join(os.tmpdir(), "reportsupporter-qa-run-"));
   const run = readJson(path.join(QA_DIR, "templates", "run.template.json"));
   Object.assign(run, {
-    runId: "RS-E2E-20260728-99",
+    runId: "RS-QA-20260728-99",
     commitSha: "32b7389",
     scope: "smoke",
     tester: "QA tooling meta-test",
