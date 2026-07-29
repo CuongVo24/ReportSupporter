@@ -15,6 +15,7 @@ function createBundle(projectId = "project-1"): ReportProjectBundle {
       id: projectId,
       title: "Test report",
       templateId: "software-project",
+      initializationState: "complete",
       metadata: {},
       sections: [
         {
