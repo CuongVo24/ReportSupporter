@@ -5,15 +5,23 @@
   "$defs": {
     "qaTestCase": {
       "type": "object",
-      "required": ["id", "priority", "requirementIds", "environments", "steps", "evidence", "estimatedMinutes", "timeoutMinutes"],
+      "required": ["id", "priority", "testLevels", "executionMode", "requirementIds", "environments", "testData", "steps", "cleanup", "evidence", "estimatedMinutes", "timeoutMinutes"],
       "properties": {
         "id": { "type": "string", "pattern": "^[A-O][0-9]{2}$" },
         "priority": { "enum": ["TP0", "TP1", "TP2"] },
-        "requirementIds": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^QA-REQ-[A-O]-[0-9]{3}$" } },
-        "environments": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-        "steps": {
+        "testLevels": {
           "type": "array",
           "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["unit", "integration", "component", "e2e", "manual", "security", "performance", "release"] }
+        },
+        "executionMode": { "enum": ["automated", "hybrid", "manual"] },
+        "requirementIds": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^QA-REQ-[A-O]-[0-9]{3}$" } },
+        "environments": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "testData": { "type": "string", "minLength": 1 },
+        "steps": {
+          "type": "array",
+          "minItems": 5,
           "items": {
             "type": "object",
             "required": ["action", "expected"],
@@ -23,9 +31,29 @@
             }
           }
         },
+        "cleanup": { "type": "string", "minLength": 1 },
         "evidence": { "type": "array", "minItems": 1, "items": { "type": "string" } },
         "estimatedMinutes": { "type": "number", "exclusiveMinimum": 0 },
         "timeoutMinutes": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "qaAutomationSuite": {
+      "type": "object",
+      "required": ["id", "title", "testLevels", "command", "paths", "requirementIds", "expected", "evidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^AUT-[A-Z0-9-]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "testLevels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["unit", "integration", "component", "e2e", "security", "performance", "release"] }
+        },
+        "command": { "type": "string", "minLength": 1 },
+        "paths": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "requirementIds": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^QA-REQ-[A-O]-[0-9]{3}$" } },
+        "expected": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
       }
     },
     "qaRun": {
@@ -33,7 +61,7 @@
       "required": ["schema", "runId", "planVersion", "commitSha", "build", "scope", "tester", "startedAt", "environments", "canonicalCi", "securityGates", "finalized"],
       "properties": {
         "schema": { "const": "qa-run@1" },
-        "runId": { "type": "string", "pattern": "^RS-E2E-[0-9]{8}-[0-9]{2}$" },
+        "runId": { "type": "string", "pattern": "^RS-(QA|E2E)-[0-9]{8}-[0-9]{2}$" },
         "commitSha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
         "scope": { "enum": ["smoke", "critical", "full"] },
         "finalized": { "type": "boolean" }

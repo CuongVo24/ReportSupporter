@@ -4,9 +4,9 @@
   "title": "Toast viewport chặn click các tab bên phải",
   "severity": "S1",
   "priority": "TP0",
-  "state": "OPEN",
+  "state": "FIXED",
   "detectedBuild": "3281f9a",
-  "fixedBuild": null,
+  "fixedBuild": "fb8d82b",
   "owner": null,
   "caseIds": ["H01", "H05", "I01", "J01"],
   "historicalReport": "Design/QA/tester-result/RS-E2E-20260724-01.md",
@@ -24,5 +24,12 @@
     "Keyboard Arrow/Home/End/Enter/Space được kiểm độc lập."
   ],
   "evidenceIds": [],
+  "implementation": [
+    "Toast viewport dùng pointer-events:none để vùng stack trống không chặn control phía dưới.",
+    "Toast root dùng pointer-events:auto để action, close và swipe vẫn tương tác."
+  ],
+  "automatedRegression": [
+    "src/components/ui/Toast.css.test.ts"
+  ],
   "waiver": null
 }

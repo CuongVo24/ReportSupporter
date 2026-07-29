@@ -1,0 +1,126 @@
+{
+  "schema": "qa-automation-suites@1",
+  "version": "3.1.0",
+  "suites": [
+    {
+      "id": "AUT-UNIT-SUBSYSTEMS",
+      "title": "Unit và integration regression cho các subsystem",
+      "testLevels": ["unit", "integration"],
+      "command": "test:subsystems",
+      "paths": ["src/lib", "src/modules", "src/components", "src/app"],
+      "requirementIds": ["QA-REQ-A-001", "QA-REQ-B-001", "QA-REQ-C-001", "QA-REQ-D-001", "QA-REQ-E-001", "QA-REQ-F-001", "QA-REQ-G-001", "QA-REQ-H-001", "QA-REQ-I-001", "QA-REQ-J-001", "QA-REQ-K-001", "QA-REQ-L-001", "QA-REQ-M-001", "QA-REQ-N-001"],
+      "expected": "Toàn bộ Vitest subsystem pass; không có skipped/focused test ngoài allowlist.",
+      "evidence": ["test-log", "junit-or-console-summary"]
+    },
+    {
+      "id": "AUT-COMPONENT-A11Y",
+      "title": "Component interaction và accessibility contracts",
+      "testLevels": ["component", "unit"],
+      "command": "test:subsystems",
+      "paths": ["src/components", "src/modules/__a11y__"],
+      "requirementIds": ["QA-REQ-B-001", "QA-REQ-C-001", "QA-REQ-K-001", "QA-REQ-M-001"],
+      "expected": "Component, keyboard, focus, ARIA và primitive accessibility tests pass.",
+      "evidence": ["test-log", "coverage-report"]
+    },
+    {
+      "id": "AUT-COVERAGE",
+      "title": "Coverage gate cho unit/component/integration",
+      "testLevels": ["unit", "component", "integration"],
+      "command": "test:coverage",
+      "paths": ["src/lib", "src/components", "src/app", "src/modules"],
+      "requirementIds": ["QA-REQ-A-001", "QA-REQ-B-001", "QA-REQ-C-001", "QA-REQ-D-001", "QA-REQ-E-001", "QA-REQ-F-001", "QA-REQ-G-001", "QA-REQ-H-001", "QA-REQ-I-001", "QA-REQ-J-001", "QA-REQ-K-001", "QA-REQ-L-001", "QA-REQ-M-001", "QA-REQ-N-001"],
+      "expected": "Coverage command pass đúng threshold của repository và artifact coverage được giữ 90 ngày trên CI.",
+      "evidence": ["coverage-report", "ci-run-url"]
+    },
+    {
+      "id": "AUT-E2E-BROWSER",
+      "title": "Browser E2E trên production-like build",
+      "testLevels": ["e2e"],
+      "command": "test:e2e",
+      "paths": ["e2e"],
+      "requirementIds": ["QA-REQ-A-001", "QA-REQ-B-001", "QA-REQ-L-001", "QA-REQ-M-001"],
+      "expected": "Playwright E2E pass; trace/screenshot/video của failure được upload.",
+      "evidence": ["playwright-report", "trace", "screenshot"]
+    },
+    {
+      "id": "AUT-SECURITY-FUZZ",
+      "title": "API security contracts và fuzz bounds",
+      "testLevels": ["unit", "integration", "security"],
+      "command": "test:subsystems",
+      "paths": ["src/app/api/ai/__security__", "src/app/api/pdf/__security__", "src/lib/server"],
+      "requirementIds": ["QA-REQ-N-001", "QA-REQ-N-002", "QA-REQ-N-003", "QA-REQ-N-004", "QA-REQ-N-005"],
+      "expected": "Security/fuzz tests pass với bound hữu hạn; lỗi trả generic cause và không rò nội dung.",
+      "evidence": ["test-log", "security-summary"]
+    },
+    {
+      "id": "AUT-PERFORMANCE-UNIT",
+      "title": "Pipeline và workspace performance budget",
+      "testLevels": ["performance", "integration"],
+      "command": "test:performance",
+      "paths": ["src/modules/pipeline/pipeline-performance.test.ts", "src/modules/workspace/workspace-performance.test.ts"],
+      "requirementIds": ["QA-REQ-M-001"],
+      "expected": "Các percentile/budget assertion pass trên runner được khai báo.",
+      "evidence": ["performance-json", "test-log"]
+    },
+    {
+      "id": "AUT-PERFORMANCE-E2E",
+      "title": "Workspace performance E2E",
+      "testLevels": ["performance", "e2e"],
+      "command": "test:perf:e2e",
+      "paths": ["e2e/workspace-performance.spec.ts"],
+      "requirementIds": ["QA-REQ-M-001"],
+      "expected": "E2E performance scenario pass và artifact đo có commit/environment.",
+      "evidence": ["playwright-report", "performance-json"]
+    },
+    {
+      "id": "AUT-PDF-UNIT",
+      "title": "PDF renderer unit contracts",
+      "testLevels": ["unit", "security"],
+      "command": "test:pdf-unit",
+      "paths": ["services/pdf-renderer"],
+      "requirementIds": ["QA-REQ-H-001", "QA-REQ-N-003", "QA-REQ-O-003"],
+      "expected": "Renderer unit/security contracts pass khi JavaScript bị vô hiệu và input bị giới hạn.",
+      "evidence": ["test-log", "security-summary"]
+    },
+    {
+      "id": "AUT-PDF-INTEGRATION",
+      "title": "PDF service integration và artifact validation",
+      "testLevels": ["integration", "security"],
+      "command": "test:pdf-integration",
+      "paths": ["scripts/test-pdf-integration.mjs"],
+      "requirementIds": ["QA-REQ-H-001", "QA-REQ-N-003", "QA-REQ-O-003"],
+      "expected": "Renderer readiness, admission, render và PDF parse/open assertions pass.",
+      "evidence": ["integration-log", "pdf-artifact", "artifact-hash"]
+    },
+    {
+      "id": "AUT-PRODUCTION-CONFIG",
+      "title": "Production configuration gate",
+      "testLevels": ["integration", "security", "release"],
+      "command": "check:production-config",
+      "paths": ["scripts/check-production-config.mjs"],
+      "requirementIds": ["QA-REQ-N-001", "QA-REQ-N-002", "QA-REQ-O-004"],
+      "expected": "Valid production config pass; missing/unsafe config fail closed.",
+      "evidence": ["gate-log", "ci-run-url"]
+    },
+    {
+      "id": "AUT-BUNDLE-BUDGET",
+      "title": "Application bundle size gate",
+      "testLevels": ["performance", "release"],
+      "command": "check:bundle",
+      "paths": ["scripts/check-bundle-budget.mjs"],
+      "requirementIds": ["QA-REQ-M-001", "QA-REQ-O-004"],
+      "expected": "Bundle size nằm trong budget và báo cáo gắn exact commit.",
+      "evidence": ["bundle-budget-json", "ci-run-url"]
+    },
+    {
+      "id": "AUT-QA-META",
+      "title": "QA catalog, fixture, report và evidence meta-tests",
+      "testLevels": ["integration", "release"],
+      "command": "qa:check",
+      "paths": ["scripts/qa-meta.test.mjs", "scripts/qa-validate.mjs", "scripts/qa-fixtures.mjs"],
+      "requirementIds": ["QA-REQ-O-004"],
+      "expected": "Catalog/render/traceability/fixture/report/bundle negative và positive tests đều pass.",
+      "evidence": ["qa-check-log", "release-evidence-manifest"]
+    }
+  ]
+}

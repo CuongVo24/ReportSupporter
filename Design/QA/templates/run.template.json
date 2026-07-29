@@ -1,7 +1,7 @@
 {
   "schema": "qa-run@1",
-  "runId": "RS-E2E-YYYYMMDD-NN",
-  "planVersion": "3.0.0",
+  "runId": "RS-QA-YYYYMMDD-NN",
+  "planVersion": "3.1.0",
   "commitSha": "0000000",
   "build": "production",
   "scope": "full",
@@ -32,6 +32,27 @@
       "browser": "Chrome",
       "browserVersion": "",
       "viewportOrDevice": ""
+    },
+    {
+      "id": "ENV-R1",
+      "os": "Windows 11",
+      "browser": "Chrome",
+      "browserVersion": "",
+      "viewportOrDevice": "320x568; 375x667; 768x1024"
+    },
+    {
+      "id": "ENV-A11Y",
+      "os": "Windows 11",
+      "browser": "Chrome + NVDA",
+      "browserVersion": "",
+      "viewportOrDevice": "1440x900"
+    },
+    {
+      "id": "ENV-CI",
+      "os": "GitHub Actions",
+      "browser": "CI runner",
+      "browserVersion": "",
+      "viewportOrDevice": "canonical workflow"
     }
   ],
   "canonicalCi": {

@@ -4,9 +4,9 @@
   "title": "Project software-project luôn quay về màn khởi tạo",
   "severity": "S1",
   "priority": "TP0",
-  "state": "OPEN",
+  "state": "FIXED",
   "detectedBuild": "3281f9a",
-  "fixedBuild": null,
+  "fixedBuild": "fb8d82b",
   "owner": null,
   "caseIds": ["A02", "B03[software-project]", "L01", "L02"],
   "historicalReport": "Design/QA/tester-result/RS-E2E-20260724-01.md",
@@ -23,5 +23,14 @@
     "Reinitialize project có nội dung yêu cầu confirm và snapshot."
   ],
   "evidenceIds": [],
+  "implementation": [
+    "ReportProject có initializationState pending/complete; legacy bundle được migrate thành complete.",
+    "Workspace chỉ mở initializer khi lifecycle marker là pending, không suy luận từ title/metadata.",
+    "Các đường initialize/blank/import/AI outline đều ghi complete."
+  ],
+  "automatedRegression": [
+    "src/modules/write/create-project.test.ts",
+    "src/modules/write/autosave.test.ts"
+  ],
   "waiver": null
 }
