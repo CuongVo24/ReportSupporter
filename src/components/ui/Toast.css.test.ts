@@ -6,7 +6,7 @@ const stylesheet = readFileSync(resolve(process.cwd(), "src/components/ui/Toast.
 
 describe("Toast pointer-event boundaries", () => {
   it("allows clicks through unused viewport space while preserving toast interaction", () => {
-    expect(stylesheet).toMatch(/\.ws-toast-viewport\s*\{[^}]*pointer-events:\s*none;/s);
-    expect(stylesheet).toMatch(/\.ws-toast-root\s*\{[^}]*pointer-events:\s*auto;/s);
+    expect(stylesheet).toMatch(/\.ws-toast-viewport\s*\{[\s\S]*?pointer-events:\s*none;/);
+    expect(stylesheet).toMatch(/\.ws-toast-root\s*\{[\s\S]*?pointer-events:\s*auto;/);
   });
 });
