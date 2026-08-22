@@ -1,4 +1,4 @@
-FROM ghcr.io/puppeteer/puppeteer:25.3.0@sha256:9665f5b57abc5cc7080a641878964018de219055a4d2c9d8d050ceb1161778ba
+FROM ghcr.io/puppeteer/puppeteer:25.8.0@sha256:f3a51ec3cf472044c99c8c48ab9b850ac94652ac541966205985d1afa2c794e8
 
 USER root
 WORKDIR /app
